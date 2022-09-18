@@ -5,6 +5,8 @@
     <packaging>pom</packaging>
     <modules>
         <module>b-eureka</module>
+        <module>b-system</module>
+        <module>b-gateway</module>
     </modules>
     <parent>
         <groupId>org.springframework.boot</groupId>
