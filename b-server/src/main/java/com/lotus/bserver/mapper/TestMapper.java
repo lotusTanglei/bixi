@@ -1,7 +1,8 @@
-package com.lotus.bsystem.mapper;
+package com.lotus.bserver.mapper;
 
-import com.lotus.bsystem.entity.Test;
+import com.lotus.bserver.entity.Test;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Mapper;
 
 /**
  * <p>
@@ -9,8 +10,9 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  * </p>
  *
  * @author 唐磊
- * @since 2022-09-22
+ * @since 2022-09-23 22:22:06
  */
+@Mapper
 public interface TestMapper extends BaseMapper<Test> {
 
 }

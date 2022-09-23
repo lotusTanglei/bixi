@@ -1,10 +1,11 @@
-package com.lotus.bsystem.entity;
+package com.lotus.bserver.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
-import java.io.Serializable;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.Accessors;
 
 /**
@@ -13,18 +14,18 @@ import lombok.experimental.Accessors;
  * </p>
  *
  * @author 唐磊
- * @since 2022-09-22
+ * @since 2022-09-23 22:22:06
  */
-@Data
-@EqualsAndHashCode(callSuper = false)
+@Getter
+@Setter
 @Accessors(chain = true)
-public class Test implements Serializable {
-
-    private static final long serialVersionUID = 1L;
+@TableName("test")
+public class Test {
 
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
 
+    @TableField("`name`")
     private String name;
 
 

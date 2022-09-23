@@ -2,10 +2,10 @@ spring:
   application:
     name: b-system
   datasource:
-    driver-class-name: com.mysql.jdbc.Driver
+    driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://rm-bp1c485wpa4uwapa8ho.mysql.rds.aliyuncs.com:3306/bixi?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
     username: root
-    password: !QAZ4esz
+    password: '!QAZ4esz'
     jackson:
       date-format: yyyy-MM-dd HH:mm:ss
       time-zone: GMT+8
