@@ -12,6 +12,7 @@ logs
 *.log
 
 # User-specific stuff
+!.idea/icon.png
 .idea/**/workspace.xml
 .idea/**/tasks.xml
 .idea/**/usage.statistics.xml

@@ -13,6 +13,8 @@
     <properties>
         <!-- 项目版本号 -->
         <revision>0.0.2</revision>
+        <author>tanglei</author>
+
         <spring-boot.version>3.3.3</spring-boot.version>
         <spring-cloud.version>2023.0.3</spring-cloud.version>
         <spring-cloud-alibaba.version>2023.0.1.2</spring-cloud-alibaba.version>
