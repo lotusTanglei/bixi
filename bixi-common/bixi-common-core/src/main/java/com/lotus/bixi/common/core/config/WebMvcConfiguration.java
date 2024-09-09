@@ -19,6 +19,9 @@ package com.lotus.bixi.common.core.config;
 import cn.hutool.core.date.DatePattern;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.context.MessageSource;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.support.ReloadableResourceBundleMessageSource;
 import org.springframework.format.FormatterRegistry;
 import org.springframework.format.datetime.standard.DateTimeFormatterRegistrar;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -53,15 +56,15 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
 		registrar.registerFormatters(registry);
 	}
 
-//	/**
-//	 * 系统国际化文件配置
-//	 * @return MessageSource
-//	 */
-//	@Bean
-//	public MessageSource messageSource() {
-//		ReloadableResourceBundleMessageSource messageSource = new ReloadableResourceBundleMessageSource();
-//		messageSource.setBasename("classpath:i18n/messages");
-//		return messageSource;
-//	}
+	/**
+	 * 系统国际化文件配置
+	 * @return MessageSource
+	 */
+	@Bean
+	public MessageSource messageSource() {
+		ReloadableResourceBundleMessageSource messageSource = new ReloadableResourceBundleMessageSource();
+		messageSource.setBasename("classpath:i18n/messages");
+		return messageSource;
+	}
 
 }

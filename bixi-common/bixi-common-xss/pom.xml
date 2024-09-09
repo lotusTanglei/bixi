@@ -10,10 +10,43 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>bixi-common-xss</artifactId>
+    <packaging>jar</packaging>
 
+    <description>bixi xss 安全过滤插件 基于 JSOUP</description>
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <jsoup.version>1.18.1</jsoup.version>
     </properties>
 
+    <dependencies>
+        <dependency>
+            <groupId>com.lotus.bixi</groupId>
+            <artifactId>bixi-common-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
+            <version>${jsoup.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-webmvc</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-context</artifactId>
+        </dependency>
+    </dependencies>
 </project>

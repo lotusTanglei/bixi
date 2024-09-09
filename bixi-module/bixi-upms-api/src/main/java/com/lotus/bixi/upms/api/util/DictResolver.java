@@ -5,9 +5,9 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringPool;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
-import com.pig4cloud.pig.admin.api.entity.SysDictItem;
-import com.pig4cloud.pig.admin.api.feign.RemoteDictService;
-import com.pig4cloud.pig.common.core.util.SpringContextHolder;
+import com.lotus.bixi.common.core.util.SpringContextHolder;
+import com.lotus.bixi.upms.api.entity.SysDictItem;
+import com.lotus.bixi.upms.api.feign.RemoteDictService;
 import lombok.experimental.UtilityClass;
 
 import java.util.List;

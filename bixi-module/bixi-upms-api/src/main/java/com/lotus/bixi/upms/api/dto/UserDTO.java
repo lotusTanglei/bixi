@@ -19,7 +19,7 @@
 
 package com.lotus.bixi.upms.api.dto;
 
-import com.pig4cloud.pig.admin.api.entity.SysUser;
+import com.lotus.bixi.upms.api.entity.SysUser;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

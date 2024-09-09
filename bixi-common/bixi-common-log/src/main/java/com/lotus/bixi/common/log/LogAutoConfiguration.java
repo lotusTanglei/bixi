@@ -16,10 +16,10 @@
 
 package com.lotus.bixi.common.log;
 
-import com.pig4cloud.pig.admin.api.feign.RemoteLogService;
-import com.pig4cloud.pig.common.log.aspect.SysLogAspect;
-import com.pig4cloud.pig.common.log.config.PigLogProperties;
-import com.pig4cloud.pig.common.log.event.SysLogListener;
+import com.lotus.bixi.common.log.aspect.SysLogAspect;
+import com.lotus.bixi.common.log.config.PigLogProperties;
+import com.lotus.bixi.common.log.event.SysLogListener;
+import com.lotus.bixi.upms.api.feign.RemoteLogService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
