@@ -5,15 +5,27 @@
     <parent>
         <artifactId>bixi-common</artifactId>
         <groupId>com.lotus.bixi</groupId>
-        <version>0.0.2</version>
+        <version>${revision}</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>bixi-common-datasource</artifactId>
+    <groupId>com.lotus.bixi</groupId>
 
-    <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
-    </properties>
+    <packaging>jar</packaging>
+
+    <description>bixi 动态切换数据源</description>
+
+    <dependencies>
+        <!--mybatis-->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>dynamic-datasource-spring-boot3-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+        </dependency>
+    </dependencies>
 
 </project>

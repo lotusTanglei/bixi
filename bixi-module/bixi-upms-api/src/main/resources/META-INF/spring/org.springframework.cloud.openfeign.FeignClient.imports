@@ -1,0 +1,6 @@
+com.lotus.bixi.admin.api.feign.RemoteClientDetailsService
+com.lotus.bixi.admin.api.feign.RemoteDictService
+com.lotus.bixi.admin.api.feign.RemoteLogService
+com.lotus.bixi.admin.api.feign.RemoteParamService
+com.lotus.bixi.admin.api.feign.RemoteTokenService
+com.lotus.bixi.admin.api.feign.RemoteUserService

@@ -20,7 +20,7 @@
 package com.lotus.bixi.common.core.util;
 
 import cn.hutool.core.util.ObjectUtil;
-import com.pig4cloud.pig.common.core.constant.CommonConstants;
+import com.lotus.bixi.common.core.constant.CommonConstants;
 
 import java.util.Arrays;
 import java.util.Objects;

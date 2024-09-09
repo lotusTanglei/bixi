@@ -19,9 +19,6 @@ package com.lotus.bixi.common.core.config;
 import cn.hutool.core.date.DatePattern;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
-import org.springframework.context.MessageSource;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.support.ReloadableResourceBundleMessageSource;
 import org.springframework.format.FormatterRegistry;
 import org.springframework.format.datetime.standard.DateTimeFormatterRegistrar;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -39,7 +36,7 @@ import static org.springframework.boot.autoconfigure.condition.ConditionalOnWebA
 public class WebMvcConfiguration implements WebMvcConfigurer {
 
 	/**
-	 * 增加GET请求参数中时间类型转换 {@link com.pig4cloud.pig.common.core.jackson.PigJavaTimeModule}
+	 * 增加GET请求参数中时间类型转换
 	 * <ul>
 	 * <li>HH:mm:ss -> LocalTime</li>
 	 * <li>yyyy-MM-dd -> LocalDate</li>
@@ -56,15 +53,15 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
 		registrar.registerFormatters(registry);
 	}
 
-	/**
-	 * 系统国际化文件配置
-	 * @return MessageSource
-	 */
-	@Bean
-	public MessageSource messageSource() {
-		ReloadableResourceBundleMessageSource messageSource = new ReloadableResourceBundleMessageSource();
-		messageSource.setBasename("classpath:i18n/messages");
-		return messageSource;
-	}
+//	/**
+//	 * 系统国际化文件配置
+//	 * @return MessageSource
+//	 */
+//	@Bean
+//	public MessageSource messageSource() {
+//		ReloadableResourceBundleMessageSource messageSource = new ReloadableResourceBundleMessageSource();
+//		messageSource.setBasename("classpath:i18n/messages");
+//		return messageSource;
+//	}
 
 }

@@ -17,7 +17,7 @@
 package com.lotus.bixi.common.core.util;
 
 import cn.hutool.core.codec.Base64;
-import com.pig4cloud.pig.common.core.exception.CheckedException;
+import com.lotus.bixi.common.core.exception.CheckedException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
