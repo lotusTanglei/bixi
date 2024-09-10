@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>bixi</artifactId>
+        <groupId>com.lotus.bixi</groupId>
+        <version>${revision}</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>bixi-auth</artifactId>
+    <packaging>jar</packaging>
+
+    <description>bixi 认证授权中心，基于 spring security oAuth2</description>
+
+    <dependencies>
+        <!--注册中心客户端-->
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+        </dependency>
+        <!--配置中心客户端-->
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+        </dependency>
+        <!--断路器依赖-->
+        <dependency>
+            <groupId>com.lotus.bixi</groupId>
+            <artifactId>bixi-common-feign</artifactId>
+        </dependency>
+        <!--upms api、model 模块-->
+        <dependency>
+            <groupId>com.lotus.bixi</groupId>
+            <artifactId>bixi-upms-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.lotus.bixi</groupId>
+            <artifactId>bixi-common-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+        <!--freemarker-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-freemarker</artifactId>
+        </dependency>
+        <!--undertow容器-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-undertow</artifactId>
+        </dependency>
+        <!-- log -->
+        <dependency>
+            <groupId>com.lotus.bixi</groupId>
+            <artifactId>bixi-common-log</artifactId>
+        </dependency>
+        <!-- 调用验证码核心模块 -->
+        <dependency>
+            <groupId>io.springboot.plugin</groupId>
+            <artifactId>captcha-core</artifactId>
+            <version>${captcha.version}</version>
+        </dependency>
+        <!-- 加解密依赖 -->
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-crypto</artifactId>
+        </dependency>
+    </dependencies>
+
+    <profiles>
+        <profile>
+            <id>boot</id>
+        </profile>
+        <profile>
+            <id>cloud</id>
+            <activation>
+                <!-- 默认环境 -->
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-maven-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <groupId>io.fabric8</groupId>
+                        <artifactId>docker-maven-plugin</artifactId>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+</project>

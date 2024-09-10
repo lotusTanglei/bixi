@@ -88,6 +88,8 @@
     <modules>
         <module>bixi-common</module>
         <module>bixi-module</module>
+        <module>bixi-auth</module>
+        <module>bixi-gateway</module>
     </modules>
 
     <dependencyManagement>
