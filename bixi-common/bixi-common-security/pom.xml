@@ -12,7 +12,7 @@
     <artifactId>bixi-common-security</artifactId>
     <packaging>jar</packaging>
 
-    <description>pig 安全工具类</description>
+    <description>bixi 安全工具类</description>
 
 
     <dependencies>

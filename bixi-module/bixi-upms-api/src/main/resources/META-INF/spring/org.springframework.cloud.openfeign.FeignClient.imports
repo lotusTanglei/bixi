@@ -1,6 +1,6 @@
-com.lotus.bixi.admin.api.feign.RemoteClientDetailsService
-com.lotus.bixi.admin.api.feign.RemoteDictService
-com.lotus.bixi.admin.api.feign.RemoteLogService
-com.lotus.bixi.admin.api.feign.RemoteParamService
-com.lotus.bixi.admin.api.feign.RemoteTokenService
-com.lotus.bixi.admin.api.feign.RemoteUserService
+com.lotus.bixi.upms.api.feign.RemoteClientDetailsService
+com.lotus.bixi.upms.api.feign.RemoteDictService
+com.lotus.bixi.upms.api.feign.RemoteLogService
+com.lotus.bixi.upms.api.feign.RemoteParamService
+com.lotus.bixi.upms.api.feign.RemoteTokenService
+com.lotus.bixi.upms.api.feign.RemoteUserService

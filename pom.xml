@@ -245,6 +245,7 @@
                 <profiles.active>dev</profiles.active>
                 <nacos.username>nacos</nacos.username>
                 <nacos.password>nacos</nacos.password>
+                <nacos.namespace>bixi</nacos.namespace>
             </properties>
             <activation>
                 <!-- 默认环境 -->

@@ -30,7 +30,7 @@
             <groupId>com.lotus.bixi</groupId>
             <artifactId>bixi-common-feign</artifactId>
         </dependency>
-        <!--upms api、model 模块-->
+        <!--upms api model 模块-->
         <dependency>
             <groupId>com.lotus.bixi</groupId>
             <artifactId>bixi-upms-api</artifactId>

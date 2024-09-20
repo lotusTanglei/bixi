@@ -47,6 +47,7 @@
                 <artifactId>bixi-common-core</artifactId>
                 <version>${revision}</version>
             </dependency>
+
             <dependency>
                 <groupId>com.lotus.bixi</groupId>
                 <artifactId>bixi-common-datasource</artifactId>
