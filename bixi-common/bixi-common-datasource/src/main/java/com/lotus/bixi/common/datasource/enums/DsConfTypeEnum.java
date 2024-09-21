@@ -5,7 +5,7 @@ import lombok.Getter;
 
 /**
  * @author 唐磊
- * @date 2020/12/11
+ * @date 2024/09/21
  * <p>
  * 数据源配置类型
  */

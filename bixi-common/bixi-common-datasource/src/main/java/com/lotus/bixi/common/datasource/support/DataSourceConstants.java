@@ -18,7 +18,7 @@ package com.lotus.bixi.common.datasource.support;
 
 /**
  * @author 唐磊
- * @date 2019-04-01
+ * @date 2024/09/21
  * <p>
  * 数据源相关常量
  */

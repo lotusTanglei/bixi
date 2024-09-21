@@ -21,7 +21,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * @author 唐磊
- * @date 2019-05-14
+ * @date 2024/09/21
  * <p>
  */
 @Data

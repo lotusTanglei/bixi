@@ -27,5 +27,4 @@ import java.lang.annotation.*;
 @Inherited
 @Import(DynamicDataSourceAutoConfiguration.class)
 public @interface EnableDynamicDataSource {
-
 }

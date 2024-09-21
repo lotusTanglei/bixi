@@ -22,7 +22,7 @@ import org.aopalliance.intercept.MethodInvocation;
 
 /**
  * @author 唐磊
- * @date 2020/2/6
+ * @date 2024/09/21
  * <p>
  * 参数数据源解析 @DS("#last)
  */
@@ -39,7 +39,6 @@ public class LastParamDsProcessor extends DsProcessor {
     @Override
     public boolean matches(String key) {
         if (key.startsWith(LAST_PREFIX)) {
-            // https://github.com/baomidou/dynamic-datasource-spring-boot-starter/issues/213
             DynamicDataSourceContextHolder.clear();
             return true;
         }
