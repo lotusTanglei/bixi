@@ -30,17 +30,18 @@ import java.util.List;
  * Mapper 接口
  * </p>
  *
- * @author lengleng
+ * @author 唐磊
  * @since 2017-10-29
  */
 @Mapper
 public interface SysRoleMapper extends BaseMapper<SysRole> {
 
-	/**
-	 * 通过用户ID，查询角色信息
-	 * @param userId
-	 * @return
-	 */
-	List<SysRole> listRolesByUserId(Long userId);
+    /**
+     * 通过用户ID，查询角色信息
+     *
+     * @param userId
+     * @return
+     */
+    List<SysRole> listRolesByUserId(Long userId);
 
 }

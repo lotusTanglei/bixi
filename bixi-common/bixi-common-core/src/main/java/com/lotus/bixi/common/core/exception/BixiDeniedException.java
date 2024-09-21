@@ -19,28 +19,29 @@ package com.lotus.bixi.common.core.exception;
 import lombok.NoArgsConstructor;
 
 /**
- * @author lengleng
- * @date 2018年06月22日16:22:03 403 授权拒绝
+ *
+ * @author 唐磊
+ * @date 2024/09/21
  */
 @NoArgsConstructor
-public class PigDeniedException extends RuntimeException {
+public class BixiDeniedException extends RuntimeException {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	public PigDeniedException(String message) {
-		super(message);
-	}
+    public BixiDeniedException(String message) {
+        super(message);
+    }
 
-	public PigDeniedException(Throwable cause) {
-		super(cause);
-	}
+    public BixiDeniedException(Throwable cause) {
+        super(cause);
+    }
 
-	public PigDeniedException(String message, Throwable cause) {
-		super(message, cause);
-	}
+    public BixiDeniedException(String message, Throwable cause) {
+        super(message, cause);
+    }
 
-	public PigDeniedException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-		super(message, cause, enableSuppression, writableStackTrace);
-	}
+    public BixiDeniedException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+        super(message, cause, enableSuppression, writableStackTrace);
+    }
 
 }

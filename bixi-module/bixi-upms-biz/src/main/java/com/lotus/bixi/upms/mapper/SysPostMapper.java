@@ -32,11 +32,12 @@ import java.util.List;
 @Mapper
 public interface SysPostMapper extends BaseMapper<SysPost> {
 
-	/**
-	 * 通过用户ID，查询岗位信息
-	 * @param userId 用户id
-	 * @return 岗位信息
-	 */
-	List<SysPost> listPostsByUserId(Long userId);
+    /**
+     * 通过用户ID，查询岗位信息
+     *
+     * @param userId 用户id
+     * @return 岗位信息
+     */
+    List<SysPost> listPostsByUserId(Long userId);
 
 }

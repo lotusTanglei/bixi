@@ -50,7 +50,10 @@
     </resultMap>
 
     <sql id="userRoleSql">
-        u.user_id,
+        u
+        .
+        user_id
+        ,
         u.username,
         u.password,
         u.salt,
@@ -73,7 +76,10 @@
     </sql>
 
     <sql id="userRoleDeptSql">
-        u.user_id,
+        u
+        .
+        user_id
+        ,
         u.username,
         u.password,
         u.salt,

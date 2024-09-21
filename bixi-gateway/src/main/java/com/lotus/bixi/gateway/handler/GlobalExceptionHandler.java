@@ -42,33 +42,32 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
 
-	private final ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
 
-	@Override
-	public Mono<Void> handle(ServerWebExchange exchange, Throwable ex) {
-		ServerHttpResponse response = exchange.getResponse();
+    @Override
+    public Mono<Void> handle(ServerWebExchange exchange, Throwable ex) {
+        ServerHttpResponse response = exchange.getResponse();
 
-		if (response.isCommitted()) {
-			return Mono.error(ex);
-		}
+        if (response.isCommitted()) {
+            return Mono.error(ex);
+        }
 
-		// header set
-		response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
-		if (ex instanceof ResponseStatusException) {
-			response.setStatusCode(((ResponseStatusException) ex).getStatusCode());
-		}
+        // header set
+        response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
+        if (ex instanceof ResponseStatusException) {
+            response.setStatusCode(((ResponseStatusException) ex).getStatusCode());
+        }
 
-		return response.writeWith(Mono.fromSupplier(() -> {
-			DataBufferFactory bufferFactory = response.bufferFactory();
-			try {
-				log.debug("Error Spring Cloud Gateway : {} {}", exchange.getRequest().getPath(), ex.getMessage());
-				return bufferFactory.wrap(objectMapper.writeValueAsBytes(R.failed(ex.getMessage())));
-			}
-			catch (JsonProcessingException e) {
-				log.error("Error writing response", ex);
-				return bufferFactory.wrap(new byte[0]);
-			}
-		}));
-	}
+        return response.writeWith(Mono.fromSupplier(() -> {
+            DataBufferFactory bufferFactory = response.bufferFactory();
+            try {
+                log.debug("Error Spring Cloud Gateway : {} {}", exchange.getRequest().getPath(), ex.getMessage());
+                return bufferFactory.wrap(objectMapper.writeValueAsBytes(R.failed(ex.getMessage())));
+            } catch (JsonProcessingException e) {
+                log.error("Error writing response", ex);
+                return bufferFactory.wrap(new byte[0]);
+            }
+        }));
+    }
 
 }

@@ -29,31 +29,35 @@ import com.lotus.bixi.common.core.util.R;
  */
 public interface SysPublicParamService extends IService<SysPublicParam> {
 
-	/**
-	 * 通过key查询公共参数指定值
-	 * @param publicKey
-	 * @return
-	 */
-	String getSysPublicParamKeyToValue(String publicKey);
+    /**
+     * 通过key查询公共参数指定值
+     *
+     * @param publicKey
+     * @return
+     */
+    String getSysPublicParamKeyToValue(String publicKey);
 
-	/**
-	 * 更新参数
-	 * @param sysPublicParam
-	 * @return
-	 */
-	R updateParam(SysPublicParam sysPublicParam);
+    /**
+     * 更新参数
+     *
+     * @param sysPublicParam
+     * @return
+     */
+    R updateParam(SysPublicParam sysPublicParam);
 
-	/**
-	 * 删除参数
-	 * @param publicIds 参数列表
-	 * @return
-	 */
-	R removeParamByIds(Long[] publicIds);
+    /**
+     * 删除参数
+     *
+     * @param publicIds 参数列表
+     * @return
+     */
+    R removeParamByIds(Long[] publicIds);
 
-	/**
-	 * 同步缓存
-	 * @return R
-	 */
-	R syncParamCache();
+    /**
+     * 同步缓存
+     *
+     * @return R
+     */
+    R syncParamCache();
 
 }

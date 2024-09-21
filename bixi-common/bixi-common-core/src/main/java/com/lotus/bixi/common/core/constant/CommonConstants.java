@@ -17,79 +17,86 @@
 package com.lotus.bixi.common.core.constant;
 
 /**
- * @author lengleng
- * @date 2019/2/1
+ * 公共常量
+ * @author 唐磊
+ * @date 2024/09/21
  */
 public interface CommonConstants {
 
-	/**
-	 * 删除
-	 */
-	String STATUS_DEL = "1";
+    /**
+     * 前缀
+     */
+    String PROJECT_PREFIX = "bixi";
 
-	/**
-	 * 正常
-	 */
-	String STATUS_NORMAL = "0";
 
-	/**
-	 * 锁定
-	 */
-	String STATUS_LOCK = "9";
+    /**
+     * 删除
+     */
+    String STATUS_DEL = "1";
 
-	/**
-	 * 菜单树根节点
-	 */
-	Long MENU_TREE_ROOT_ID = -1L;
+    /**
+     * 正常
+     */
+    String STATUS_NORMAL = "0";
 
-	/**
-	 * 菜单
-	 */
-	String MENU = "0";
+    /**
+     * 锁定
+     */
+    String STATUS_LOCK = "9";
 
-	/**
-	 * 编码
-	 */
-	String UTF8 = "UTF-8";
+    /**
+     * 菜单树根节点
+     */
+    Long MENU_TREE_ROOT_ID = -1L;
 
-	/**
-	 * JSON 资源
-	 */
-	String CONTENT_TYPE = "application/json; charset=utf-8";
+    /**
+     * 菜单
+     */
+    String MENU = "0";
 
-	/**
-	 * 前端工程名
-	 */
-	String FRONT_END_PROJECT = "pig-ui";
+    /**
+     * 编码
+     */
+    String UTF8 = "UTF-8";
 
-	/**
-	 * 后端工程名
-	 */
-	String BACK_END_PROJECT = "pig";
+    /**
+     * JSON 资源
+     */
+    String CONTENT_TYPE = "application/json; charset=utf-8";
 
-	/**
-	 * 成功标记
-	 */
-	Integer SUCCESS = 0;
+    /**
+     * 前端工程名
+     */
+    String FRONT_END_PROJECT = "bixi-front";
 
-	/**
-	 * 失败标记
-	 */
-	Integer FAIL = 1;
+    /**
+     * 后端工程名
+     */
+    String BACK_END_PROJECT = "bixi";
 
-	/**
-	 * 当前页
-	 */
-	String CURRENT = "current";
+    /**
+     * 成功标记
+     */
+    Integer SUCCESS = 0;
 
-	/**
-	 * size
-	 */
-	String SIZE = "size";
+    /**
+     * 失败标记
+     */
+    Integer FAIL = 1;
 
-	/**
-	 * 请求开始时间
-	 */
-	String REQUEST_START_TIME = "REQUEST-START-TIME";
+    /**
+     * 当前页
+     */
+    String CURRENT = "current";
+
+    /**
+     * size
+     */
+    String SIZE = "size";
+
+    /**
+     * 请求开始时间
+     */
+    String REQUEST_START_TIME = "REQUEST-START-TIME";
 
 }

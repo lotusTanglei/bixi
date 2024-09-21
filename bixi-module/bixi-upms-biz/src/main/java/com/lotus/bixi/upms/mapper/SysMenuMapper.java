@@ -30,17 +30,18 @@ import java.util.List;
  * 菜单权限表 Mapper 接口
  * </p>
  *
- * @author lengleng
+ * @author 唐磊
  * @since 2017-10-29
  */
 @Mapper
 public interface SysMenuMapper extends BaseMapper<SysMenu> {
 
-	/**
-	 * 通过角色编号查询菜单
-	 * @param roleId 角色ID
-	 * @return
-	 */
-	List<SysMenu> listMenusByRoleId(Long roleId);
+    /**
+     * 通过角色编号查询菜单
+     *
+     * @param roleId 角色ID
+     * @return
+     */
+    List<SysMenu> listMenusByRoleId(Long roleId);
 
 }

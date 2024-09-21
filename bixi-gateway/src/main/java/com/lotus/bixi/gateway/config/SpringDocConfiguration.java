@@ -18,24 +18,23 @@ import java.util.stream.Collectors;
 
 /**
  * SpringDoc配置类，实现InitializingBean接口 swagger 3.0 展示
- *
  */
 @RequiredArgsConstructor
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(value = "springdoc.api-docs.enabled", matchIfMissing = true)
 public class SpringDocConfiguration implements InitializingBean {
 
-	private final SwaggerUiConfigProperties swaggerUiConfigProperties;
+    private final SwaggerUiConfigProperties swaggerUiConfigProperties;
 
-	private final DiscoveryClient discoveryClient;
+    private final DiscoveryClient discoveryClient;
 
-	/**
-	 * 在初始化后调用的方法，用于注册SwaggerDocRegister订阅器
-	 */
-	@Override
-	public void afterPropertiesSet() {
-		NotifyCenter.registerSubscriber(new SwaggerDocRegister(swaggerUiConfigProperties, discoveryClient));
-	}
+    /**
+     * 在初始化后调用的方法，用于注册SwaggerDocRegister订阅器
+     */
+    @Override
+    public void afterPropertiesSet() {
+        NotifyCenter.registerSubscriber(new SwaggerDocRegister(swaggerUiConfigProperties, discoveryClient));
+    }
 
 }
 
@@ -45,38 +44,40 @@ public class SpringDocConfiguration implements InitializingBean {
 @RequiredArgsConstructor
 class SwaggerDocRegister extends Subscriber<InstancesChangeEvent> {
 
-	private final SwaggerUiConfigProperties swaggerUiConfigProperties;
+    private final SwaggerUiConfigProperties swaggerUiConfigProperties;
 
-	private final DiscoveryClient discoveryClient;
+    private final DiscoveryClient discoveryClient;
 
-	/**
-	 * 事件回调方法，处理InstancesChangeEvent事件
-	 * @param event 事件对象
-	 */
-	@Override
-	public void onEvent(InstancesChangeEvent event) {
-		Set<AbstractSwaggerUiConfigProperties.SwaggerUrl> swaggerUrlSet = discoveryClient.getServices()
-			.stream()
-			.flatMap(serviceId -> discoveryClient.getInstances(serviceId).stream())
-			.filter(instance -> StringUtils.isNotBlank(instance.getMetadata().get("spring-doc")))
-			.map(instance -> {
-				AbstractSwaggerUiConfigProperties.SwaggerUrl swaggerUrl = new AbstractSwaggerUiConfigProperties.SwaggerUrl();
-				swaggerUrl.setName(instance.getServiceId());
-				swaggerUrl.setUrl(String.format("/%s/v3/api-docs", instance.getMetadata().get("spring-doc")));
-				return swaggerUrl;
-			})
-			.collect(Collectors.toSet());
+    /**
+     * 事件回调方法，处理InstancesChangeEvent事件
+     *
+     * @param event 事件对象
+     */
+    @Override
+    public void onEvent(InstancesChangeEvent event) {
+        Set<AbstractSwaggerUiConfigProperties.SwaggerUrl> swaggerUrlSet = discoveryClient.getServices()
+                .stream()
+                .flatMap(serviceId -> discoveryClient.getInstances(serviceId).stream())
+                .filter(instance -> StringUtils.isNotBlank(instance.getMetadata().get("spring-doc")))
+                .map(instance -> {
+                    AbstractSwaggerUiConfigProperties.SwaggerUrl swaggerUrl = new AbstractSwaggerUiConfigProperties.SwaggerUrl();
+                    swaggerUrl.setName(instance.getServiceId());
+                    swaggerUrl.setUrl(String.format("/%s/v3/api-docs", instance.getMetadata().get("spring-doc")));
+                    return swaggerUrl;
+                })
+                .collect(Collectors.toSet());
 
-		swaggerUiConfigProperties.setUrls(swaggerUrlSet);
-	}
+        swaggerUiConfigProperties.setUrls(swaggerUrlSet);
+    }
 
-	/**
-	 * 订阅类型方法，返回订阅的事件类型
-	 * @return 订阅的事件类型
-	 */
-	@Override
-	public Class<? extends Event> subscribeType() {
-		return InstancesChangeEvent.class;
-	}
+    /**
+     * 订阅类型方法，返回订阅的事件类型
+     *
+     * @return 订阅的事件类型
+     */
+    @Override
+    public Class<? extends Event> subscribeType() {
+        return InstancesChangeEvent.class;
+    }
 
 }

@@ -28,11 +28,11 @@ import java.io.IOException;
 @Getter
 public class JacksonXssException extends IOException implements XssException {
 
-	private final String input;
+    private final String input;
 
-	public JacksonXssException(String input, String message) {
-		super(message);
-		this.input = input;
-	}
+    public JacksonXssException(String input, String message) {
+        super(message);
+        this.input = input;
+    }
 
 }

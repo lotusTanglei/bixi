@@ -29,7 +29,7 @@ import lombok.EqualsAndHashCode;
  * 用户角色表
  * </p>
  *
- * @author lengleng
+ * @author 唐磊
  * @since 2017-10-29
  */
 @Data
@@ -37,18 +37,18 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class SysUserRole extends Model<SysUserRole> {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	/**
-	 * 用户ID
-	 */
-	@Schema(description = "用户id")
-	private Long userId;
+    /**
+     * 用户ID
+     */
+    @Schema(description = "用户id")
+    private Long userId;
 
-	/**
-	 * 角色ID
-	 */
-	@Schema(description = "角色id")
-	private Long roleId;
+    /**
+     * 角色ID
+     */
+    @Schema(description = "角色id")
+    private Long roleId;
 
 }

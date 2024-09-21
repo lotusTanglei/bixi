@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * @author lengleng
+ * @author 唐磊
  * @date 2022/3/30
  * <p>
  * 客户端注册功能 register.user = false
@@ -24,18 +24,19 @@ import org.springframework.web.bind.annotation.RestController;
 @ConditionalOnProperty(name = "register.user", matchIfMissing = true)
 public class SysRegisterController {
 
-	private final SysUserService userService;
+    private final SysUserService userService;
 
-	/**
-	 * 注册用户
-	 * @param userDto 用户信息
-	 * @return success/false
-	 */
-	@Inner(value = false)
-	@SysLog("注册用户")
-	@PostMapping("/user")
-	public R<Boolean> registerUser(@RequestBody UserDTO userDto) {
-		return userService.registerUser(userDto);
-	}
+    /**
+     * 注册用户
+     *
+     * @param userDto 用户信息
+     * @return success/false
+     */
+    @Inner(value = false)
+    @SysLog("注册用户")
+    @PostMapping("/user")
+    public R<Boolean> registerUser(@RequestBody UserDTO userDto) {
+        return userService.registerUser(userDto);
+    }
 
 }

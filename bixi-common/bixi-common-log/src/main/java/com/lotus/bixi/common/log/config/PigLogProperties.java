@@ -33,22 +33,22 @@ import java.util.List;
 @ConfigurationProperties(PigLogProperties.PREFIX)
 public class PigLogProperties {
 
-	public static final String PREFIX = "security.log";
+    public static final String PREFIX = "security.log";
 
-	/**
-	 * 开启日志记录
-	 */
-	private boolean enabled = true;
+    /**
+     * 开启日志记录
+     */
+    private boolean enabled = true;
 
-	/**
-	 * 放行字段，password,mobile,idcard,phone
-	 */
-	@Value("${security.log.exclude-fields:password,mobile,idcard,phone}")
-	private List<String> excludeFields;
+    /**
+     * 放行字段，password,mobile,idcard,phone
+     */
+    @Value("${security.log.exclude-fields:password,mobile,idcard,phone}")
+    private List<String> excludeFields;
 
-	/**
-	 * 请求报文最大存储长度
-	 */
-	private Integer maxLength = 2000;
+    /**
+     * 请求报文最大存储长度
+     */
+    private Integer maxLength = 2000;
 
 }

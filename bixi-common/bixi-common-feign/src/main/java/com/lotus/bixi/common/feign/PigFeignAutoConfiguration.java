@@ -33,7 +33,7 @@ import org.springframework.context.annotation.Scope;
 /**
  * sentinel 配置
  *
- * @author lengleng
+ * @author 唐磊
  * @date 2020-02-12
  */
 @Configuration(proxyBeanMethods = false)
@@ -41,30 +41,32 @@ import org.springframework.context.annotation.Scope;
 @AutoConfigureBefore(SentinelFeignAutoConfiguration.class)
 public class PigFeignAutoConfiguration {
 
-	@Bean
-	@Scope("prototype")
-	@ConditionalOnMissingBean
-	@ConditionalOnProperty(name = "feign.sentinel.enabled")
-	public Feign.Builder feignSentinelBuilder() {
-		return PigSentinelFeign.builder();
-	}
+    @Bean
+    @Scope("prototype")
+    @ConditionalOnMissingBean
+    @ConditionalOnProperty(name = "feign.sentinel.enabled")
+    public Feign.Builder feignSentinelBuilder() {
+        return PigSentinelFeign.builder();
+    }
 
-	/**
-	 * add http connection close header
-	 * @return
-	 */
-	@Bean
-	public PigFeignRequestCloseInterceptor pigFeignRequestCloseInterceptor() {
-		return new PigFeignRequestCloseInterceptor();
-	}
+    /**
+     * add http connection close header
+     *
+     * @return
+     */
+    @Bean
+    public PigFeignRequestCloseInterceptor pigFeignRequestCloseInterceptor() {
+        return new PigFeignRequestCloseInterceptor();
+    }
 
-	/**
-	 * add inner request header
-	 * @return PigFeignInnerRequestInterceptor
-	 */
-	@Bean
-	public PigFeignInnerRequestInterceptor pigFeignInnerRequestInterceptor() {
-		return new PigFeignInnerRequestInterceptor();
-	}
+    /**
+     * add inner request header
+     *
+     * @return PigFeignInnerRequestInterceptor
+     */
+    @Bean
+    public PigFeignInnerRequestInterceptor pigFeignInnerRequestInterceptor() {
+        return new PigFeignInnerRequestInterceptor();
+    }
 
 }

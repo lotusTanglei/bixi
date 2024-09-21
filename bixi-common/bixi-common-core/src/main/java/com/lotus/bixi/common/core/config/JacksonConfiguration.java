@@ -3,7 +3,7 @@ package com.lotus.bixi.common.core.config;
 import cn.hutool.core.date.DatePattern;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
-import com.lotus.bixi.common.core.jackson.PigJavaTimeModule;
+import com.lotus.bixi.common.core.jackson.BixiJavaTimeModule;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -16,21 +16,27 @@ import java.time.ZoneId;
 import java.util.Locale;
 import java.util.TimeZone;
 
+/**
+ * JacksonConfiguration
+ *
+ * @author 唐磊
+ * @date 2024/09/21
+ */
 @AutoConfiguration
 @ConditionalOnClass(ObjectMapper.class)
 @AutoConfigureBefore(JacksonAutoConfiguration.class)
 public class JacksonConfiguration {
 
-	@Bean
-	@ConditionalOnMissingBean
-	public Jackson2ObjectMapperBuilderCustomizer customizer() {
-		return builder -> {
-			builder.locale(Locale.CHINA);
-			builder.timeZone(TimeZone.getTimeZone(ZoneId.systemDefault()));
-			builder.simpleDateFormat(DatePattern.NORM_DATETIME_PATTERN);
-			builder.serializerByType(Long.class, ToStringSerializer.instance);
-			builder.modules(new PigJavaTimeModule());
-		};
-	}
+    @Bean
+    @ConditionalOnMissingBean
+    public Jackson2ObjectMapperBuilderCustomizer customizer() {
+        return builder -> {
+            builder.locale(Locale.CHINA);
+            builder.timeZone(TimeZone.getTimeZone(ZoneId.systemDefault()));
+            builder.simpleDateFormat(DatePattern.NORM_DATETIME_PATTERN);
+            builder.serializerByType(Long.class, ToStringSerializer.instance);
+            builder.modules(new BixiJavaTimeModule());
+        };
+    }
 
 }

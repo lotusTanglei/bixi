@@ -39,108 +39,107 @@ import java.util.Map;
 /**
  * 支持自动降级注入 重写 {@link com.alibaba.cloud.sentinel.feign.SentinelFeign}
  *
- * @author lengleng
+ * @author 唐磊
  * @date 2020/6/9
  */
 public final class PigSentinelFeign {
 
-	private PigSentinelFeign() {
+    private PigSentinelFeign() {
 
-	}
+    }
 
-	public static Builder builder() {
-		return new Builder();
-	}
+    public static Builder builder() {
+        return new Builder();
+    }
 
-	public static final class Builder extends Feign.Builder implements ApplicationContextAware {
+    public static final class Builder extends Feign.Builder implements ApplicationContextAware {
 
-		private Contract contract = new Contract.Default();
+        private Contract contract = new Contract.Default();
 
-		private ApplicationContext applicationContext;
+        private ApplicationContext applicationContext;
 
-		private FeignClientFactory feignClientFactory;
+        private FeignClientFactory feignClientFactory;
 
-		@Override
-		public Feign.Builder invocationHandlerFactory(InvocationHandlerFactory invocationHandlerFactory) {
-			throw new UnsupportedOperationException();
-		}
+        @Override
+        public Feign.Builder invocationHandlerFactory(InvocationHandlerFactory invocationHandlerFactory) {
+            throw new UnsupportedOperationException();
+        }
 
-		@Override
-		public Builder contract(Contract contract) {
-			this.contract = contract;
-			return this;
-		}
+        @Override
+        public Builder contract(Contract contract) {
+            this.contract = contract;
+            return this;
+        }
 
-		@Override
-		public Feign internalBuild() {
-			super.invocationHandlerFactory(new InvocationHandlerFactory() {
-				@Override
-				public InvocationHandler create(Target target, Map<Method, MethodHandler> dispatch) {
+        @Override
+        public Feign internalBuild() {
+            super.invocationHandlerFactory(new InvocationHandlerFactory() {
+                @Override
+                public InvocationHandler create(Target target, Map<Method, MethodHandler> dispatch) {
 
-					// 查找 FeignClient 上的 降级策略
-					FeignClient feignClient = AnnotationUtils.findAnnotation(target.type(), FeignClient.class);
-					Class<?> fallback = feignClient.fallback();
-					Class<?> fallbackFactory = feignClient.fallbackFactory();
+                    // 查找 FeignClient 上的 降级策略
+                    FeignClient feignClient = AnnotationUtils.findAnnotation(target.type(), FeignClient.class);
+                    Class<?> fallback = feignClient.fallback();
+                    Class<?> fallbackFactory = feignClient.fallbackFactory();
 
-					String beanName = feignClient.contextId();
-					if (!StringUtils.hasText(beanName)) {
-						beanName = feignClient.name();
-					}
+                    String beanName = feignClient.contextId();
+                    if (!StringUtils.hasText(beanName)) {
+                        beanName = feignClient.name();
+                    }
 
-					Object fallbackInstance;
-					FallbackFactory<?> fallbackFactoryInstance;
-					if (void.class != fallback) {
-						fallbackInstance = getFromContext(beanName, "fallback", fallback, target.type());
-						return new PigSentinelInvocationHandler(target, dispatch,
-								new FallbackFactory.Default(fallbackInstance));
-					}
+                    Object fallbackInstance;
+                    FallbackFactory<?> fallbackFactoryInstance;
+                    if (void.class != fallback) {
+                        fallbackInstance = getFromContext(beanName, "fallback", fallback, target.type());
+                        return new PigSentinelInvocationHandler(target, dispatch,
+                                new FallbackFactory.Default(fallbackInstance));
+                    }
 
-					if (void.class != fallbackFactory) {
-						fallbackFactoryInstance = (FallbackFactory<?>) getFromContext(beanName, "fallbackFactory",
-								fallbackFactory, FallbackFactory.class);
-						return new PigSentinelInvocationHandler(target, dispatch, fallbackFactoryInstance);
-					}
-					return new PigSentinelInvocationHandler(target, dispatch);
-				}
+                    if (void.class != fallbackFactory) {
+                        fallbackFactoryInstance = (FallbackFactory<?>) getFromContext(beanName, "fallbackFactory",
+                                fallbackFactory, FallbackFactory.class);
+                        return new PigSentinelInvocationHandler(target, dispatch, fallbackFactoryInstance);
+                    }
+                    return new PigSentinelInvocationHandler(target, dispatch);
+                }
 
-				private Object getFromContext(String name, String type, Class<?> fallbackType, Class<?> targetType) {
-					Object fallbackInstance = feignClientFactory.getInstance(name, fallbackType);
-					if (fallbackInstance == null) {
-						throw new IllegalStateException(String
-							.format("No %s instance of type %s found for feign client %s", type, fallbackType, name));
-					}
+                private Object getFromContext(String name, String type, Class<?> fallbackType, Class<?> targetType) {
+                    Object fallbackInstance = feignClientFactory.getInstance(name, fallbackType);
+                    if (fallbackInstance == null) {
+                        throw new IllegalStateException(String
+                                .format("No %s instance of type %s found for feign client %s", type, fallbackType, name));
+                    }
 
-					if (!targetType.isAssignableFrom(fallbackType)) {
-						throw new IllegalStateException(String.format(
-								"Incompatible %s instance. Fallback/fallbackFactory of type %s is not assignable to %s for feign client %s",
-								type, fallbackType, targetType, name));
-					}
-					return fallbackInstance;
-				}
-			});
+                    if (!targetType.isAssignableFrom(fallbackType)) {
+                        throw new IllegalStateException(String.format(
+                                "Incompatible %s instance. Fallback/fallbackFactory of type %s is not assignable to %s for feign client %s",
+                                type, fallbackType, targetType, name));
+                    }
+                    return fallbackInstance;
+                }
+            });
 
-			super.contract(new SentinelContractHolder(contract));
-			return super.internalBuild();
-		}
+            super.contract(new SentinelContractHolder(contract));
+            return super.internalBuild();
+        }
 
-		private Object getFieldValue(Object instance, String fieldName) {
-			Field field = ReflectionUtils.findField(instance.getClass(), fieldName);
-			field.setAccessible(true);
-			try {
-				return field.get(instance);
-			}
-			catch (IllegalAccessException e) {
-				// ignore
-			}
-			return null;
-		}
+        private Object getFieldValue(Object instance, String fieldName) {
+            Field field = ReflectionUtils.findField(instance.getClass(), fieldName);
+            field.setAccessible(true);
+            try {
+                return field.get(instance);
+            } catch (IllegalAccessException e) {
+                // ignore
+            }
+            return null;
+        }
 
-		@Override
-		public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-			this.applicationContext = applicationContext;
-			this.feignClientFactory = this.applicationContext.getBean(FeignClientFactory.class);
-		}
+        @Override
+        public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+            this.applicationContext = applicationContext;
+            this.feignClientFactory = this.applicationContext.getBean(FeignClientFactory.class);
+        }
 
-	}
+    }
 
 }

@@ -37,7 +37,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
- * @author lengleng
+ * @author 唐磊
  * @date 2018/11/14
  * <p>
  * 手机登录相关业务实现
@@ -47,37 +47,38 @@ import java.util.concurrent.TimeUnit;
 @AllArgsConstructor
 public class SysMobileServiceImpl implements SysMobileService {
 
-	private final RedisTemplate redisTemplate;
+    private final RedisTemplate redisTemplate;
 
-	private final SysUserMapper userMapper;
+    private final SysUserMapper userMapper;
 
-	/**
-	 * 发送手机验证码 TODO: 调用短信网关发送验证码,测试返回前端
-	 * @param mobile mobile
-	 * @return code
-	 */
-	@Override
-	public R<Boolean> sendSmsCode(String mobile) {
-		List<SysUser> userList = userMapper
-			.selectList(Wrappers.<SysUser>query().lambda().eq(SysUser::getPhone, mobile));
+    /**
+     * 发送手机验证码 TODO: 调用短信网关发送验证码,测试返回前端
+     *
+     * @param mobile mobile
+     * @return code
+     */
+    @Override
+    public R<Boolean> sendSmsCode(String mobile) {
+        List<SysUser> userList = userMapper
+                .selectList(Wrappers.<SysUser>query().lambda().eq(SysUser::getPhone, mobile));
 
-		if (CollUtil.isEmpty(userList)) {
-			log.info("手机号未注册:{}", mobile);
-			return R.ok(Boolean.FALSE, MsgUtils.getMessage(ErrorCodes.SYS_APP_PHONE_UNREGISTERED, mobile));
-		}
+        if (CollUtil.isEmpty(userList)) {
+            log.info("手机号未注册:{}", mobile);
+            return R.ok(Boolean.FALSE, MsgUtils.getMessage(ErrorCodes.SYS_APP_PHONE_UNREGISTERED, mobile));
+        }
 
-		Object codeObj = redisTemplate.opsForValue().get(CacheConstants.DEFAULT_CODE_KEY + mobile);
+        Object codeObj = redisTemplate.opsForValue().get(CacheConstants.DEFAULT_CODE_KEY + mobile);
 
-		if (codeObj != null) {
-			log.info("手机号验证码未过期:{}，{}", mobile, codeObj);
-			return R.ok(Boolean.FALSE, MsgUtils.getMessage(ErrorCodes.SYS_APP_SMS_OFTEN));
-		}
+        if (codeObj != null) {
+            log.info("手机号验证码未过期:{}，{}", mobile, codeObj);
+            return R.ok(Boolean.FALSE, MsgUtils.getMessage(ErrorCodes.SYS_APP_SMS_OFTEN));
+        }
 
-		String code = RandomUtil.randomNumbers(Integer.parseInt(SecurityConstants.CODE_SIZE));
-		log.debug("手机号生成验证码成功:{},{}", mobile, code);
-		redisTemplate.opsForValue()
-			.set(CacheConstants.DEFAULT_CODE_KEY + mobile, code, SecurityConstants.CODE_TIME, TimeUnit.SECONDS);
-		return R.ok(Boolean.TRUE, code);
-	}
+        String code = RandomUtil.randomNumbers(Integer.parseInt(SecurityConstants.CODE_SIZE));
+        log.debug("手机号生成验证码成功:{},{}", mobile, code);
+        redisTemplate.opsForValue()
+                .set(CacheConstants.DEFAULT_CODE_KEY + mobile, code, SecurityConstants.CODE_TIME, TimeUnit.SECONDS);
+        return R.ok(Boolean.TRUE, code);
+    }
 
 }

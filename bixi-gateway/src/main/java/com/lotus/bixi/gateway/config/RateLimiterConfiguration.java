@@ -24,23 +24,23 @@ import reactor.core.publisher.Mono;
 import java.util.Objects;
 
 /**
- * @author lengleng
+ * @author 唐磊
  * @date 2019/2/1 路由限流配置
  */
 @Configuration(proxyBeanMethods = false)
 public class RateLimiterConfiguration {
 
-	/**
-	 * Remote addr key resolver key resolver.
-	 *
-	 * @link {https://docs.spring.io/spring-cloud-gateway/docs/current/reference/html/#the-requestratelimiter-gatewayfilter-factory}
-	 */
-	@Bean
-	public KeyResolver remoteAddrKeyResolver() {
-		return exchange -> Mono
-			.just(Objects.requireNonNull(Objects.requireNonNull(exchange.getRequest().getRemoteAddress()))
-				.getAddress()
-				.getHostAddress());
-	}
+    /**
+     * Remote addr key resolver key resolver.
+     *
+     * @link {https://docs.spring.io/spring-cloud-gateway/docs/current/reference/html/#the-requestratelimiter-gatewayfilter-factory}
+     */
+    @Bean
+    public KeyResolver remoteAddrKeyResolver() {
+        return exchange -> Mono
+                .just(Objects.requireNonNull(Objects.requireNonNull(exchange.getRequest().getRemoteAddress()))
+                        .getAddress()
+                        .getHostAddress());
+    }
 
 }

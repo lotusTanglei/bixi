@@ -52,82 +52,84 @@ import java.util.Objects;
 @AllArgsConstructor
 public class SysFileServiceImpl extends ServiceImpl<SysFileMapper, SysFile> implements SysFileService {
 
-	private final FileTemplate fileTemplate;
+    private final FileTemplate fileTemplate;
 
-	private final FileProperties properties;
+    private final FileProperties properties;
 
-	/**
-	 * 上传文件
-	 * @param file
-	 * @return
-	 */
-	@Override
-	public R uploadFile(MultipartFile file) {
-		String fileName = IdUtil.simpleUUID() + StrUtil.DOT + FileUtil.extName(file.getOriginalFilename());
-		Map<String, String> resultMap = new HashMap<>(4);
-		resultMap.put("bucketName", properties.getBucketName());
-		resultMap.put("fileName", fileName);
-		resultMap.put("url", String.format("/admin/sys-file/%s/%s", properties.getBucketName(), fileName));
+    /**
+     * 上传文件
+     *
+     * @param file
+     * @return
+     */
+    @Override
+    public R uploadFile(MultipartFile file) {
+        String fileName = IdUtil.simpleUUID() + StrUtil.DOT + FileUtil.extName(file.getOriginalFilename());
+        Map<String, String> resultMap = new HashMap<>(4);
+        resultMap.put("bucketName", properties.getBucketName());
+        resultMap.put("fileName", fileName);
+        resultMap.put("url", String.format("/admin/sys-file/%s/%s", properties.getBucketName(), fileName));
 
-		try (InputStream inputStream = file.getInputStream()) {
-			fileTemplate.putObject(properties.getBucketName(), fileName, inputStream, file.getContentType());
-			// 文件管理数据记录,收集管理追踪文件
-			fileLog(file, fileName);
-		}
-		catch (Exception e) {
-			log.error("上传失败", e);
-			return R.failed(e.getLocalizedMessage());
-		}
-		return R.ok(resultMap);
-	}
+        try (InputStream inputStream = file.getInputStream()) {
+            fileTemplate.putObject(properties.getBucketName(), fileName, inputStream, file.getContentType());
+            // 文件管理数据记录,收集管理追踪文件
+            fileLog(file, fileName);
+        } catch (Exception e) {
+            log.error("上传失败", e);
+            return R.failed(e.getLocalizedMessage());
+        }
+        return R.ok(resultMap);
+    }
 
-	/**
-	 * 读取文件
-	 * @param bucket
-	 * @param fileName
-	 * @param response
-	 */
-	@Override
-	public void getFile(String bucket, String fileName, HttpServletResponse response) {
-		try (S3Object s3Object = fileTemplate.getObject(bucket, fileName)) {
-			response.setContentType("application/octet-stream; charset=UTF-8");
-			IoUtil.copy(s3Object.getObjectContent(), response.getOutputStream());
-		}
-		catch (Exception e) {
-			log.error("文件读取异常: {}", e.getLocalizedMessage());
-		}
-	}
+    /**
+     * 读取文件
+     *
+     * @param bucket
+     * @param fileName
+     * @param response
+     */
+    @Override
+    public void getFile(String bucket, String fileName, HttpServletResponse response) {
+        try (S3Object s3Object = fileTemplate.getObject(bucket, fileName)) {
+            response.setContentType("application/octet-stream; charset=UTF-8");
+            IoUtil.copy(s3Object.getObjectContent(), response.getOutputStream());
+        } catch (Exception e) {
+            log.error("文件读取异常: {}", e.getLocalizedMessage());
+        }
+    }
 
-	/**
-	 * 删除文件
-	 * @param id
-	 * @return
-	 */
-	@Override
-	@SneakyThrows
-	@Transactional(rollbackFor = Exception.class)
-	public Boolean deleteFile(Long id) {
-		SysFile file = this.getById(id);
-		if (Objects.isNull(file)) {
-			return Boolean.FALSE;
-		}
-		fileTemplate.removeObject(properties.getBucketName(), file.getFileName());
-		return this.removeById(id);
-	}
+    /**
+     * 删除文件
+     *
+     * @param id
+     * @return
+     */
+    @Override
+    @SneakyThrows
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean deleteFile(Long id) {
+        SysFile file = this.getById(id);
+        if (Objects.isNull(file)) {
+            return Boolean.FALSE;
+        }
+        fileTemplate.removeObject(properties.getBucketName(), file.getFileName());
+        return this.removeById(id);
+    }
 
-	/**
-	 * 文件管理数据记录,收集管理追踪文件
-	 * @param file 上传文件格式
-	 * @param fileName 文件名
-	 */
-	private void fileLog(MultipartFile file, String fileName) {
-		SysFile sysFile = new SysFile();
-		sysFile.setFileName(fileName);
-		sysFile.setOriginal(file.getOriginalFilename());
-		sysFile.setFileSize(file.getSize());
-		sysFile.setType(FileUtil.extName(file.getOriginalFilename()));
-		sysFile.setBucketName(properties.getBucketName());
-		this.save(sysFile);
-	}
+    /**
+     * 文件管理数据记录,收集管理追踪文件
+     *
+     * @param file     上传文件格式
+     * @param fileName 文件名
+     */
+    private void fileLog(MultipartFile file, String fileName) {
+        SysFile sysFile = new SysFile();
+        sysFile.setFileName(fileName);
+        sysFile.setOriginal(file.getOriginalFilename());
+        sysFile.setFileSize(file.getSize());
+        sysFile.setType(FileUtil.extName(file.getOriginalFilename()));
+        sysFile.setBucketName(properties.getBucketName());
+        this.save(sysFile);
+    }
 
 }

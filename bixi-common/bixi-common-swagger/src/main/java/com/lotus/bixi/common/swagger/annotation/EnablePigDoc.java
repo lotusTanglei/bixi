@@ -28,10 +28,10 @@ import java.lang.annotation.*;
 /**
  * 开启 pig spring doc
  *
- * @author lengleng
+ * @author 唐磊
  * @date 2022-03-26
  */
-@Target({ ElementType.TYPE })
+@Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
@@ -40,16 +40,18 @@ import java.lang.annotation.*;
 @PropertySource(value = "classpath:openapi-config.yaml", factory = YamlPropertySourceFactory.class)
 public @interface EnablePigDoc {
 
-	/**
-	 * 网关路由前缀
-	 * @return String
-	 */
-	String value();
+    /**
+     * 网关路由前缀
+     *
+     * @return String
+     */
+    String value();
 
-	/**
-	 * 是否是微服务架构
-	 * @return true
-	 */
-	boolean isMicro() default true;
+    /**
+     * 是否是微服务架构
+     *
+     * @return true
+     */
+    boolean isMicro() default true;
 
 }

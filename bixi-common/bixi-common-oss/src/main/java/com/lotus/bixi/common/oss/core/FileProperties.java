@@ -25,7 +25,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 /**
  * 文件 配置信息
  *
- * @author lengleng
+ * @author 唐磊
  * <p>
  * bucket 设置公共读权限
  */
@@ -33,19 +33,19 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "file")
 public class FileProperties {
 
-	/**
-	 * 默认的存储桶名称
-	 */
-	private String bucketName = "local";
+    /**
+     * 默认的存储桶名称
+     */
+    private String bucketName = "local";
 
-	/**
-	 * 本地文件配置信息
-	 */
-	private LocalFileProperties local;
+    /**
+     * 本地文件配置信息
+     */
+    private LocalFileProperties local;
 
-	/**
-	 * oss 文件配置信息
-	 */
-	private OssProperties oss;
+    /**
+     * oss 文件配置信息
+     */
+    private OssProperties oss;
 
 }

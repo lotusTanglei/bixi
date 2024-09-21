@@ -20,20 +20,21 @@ import com.lotus.bixi.common.security.component.PigResourceServerAutoConfigurati
 import com.lotus.bixi.common.security.component.PigResourceServerConfiguration;
 import com.lotus.bixi.common.security.feign.PigFeignClientConfiguration;
 import org.springframework.context.annotation.Import;
+
 import java.lang.annotation.*;
 
 /**
- * @author lengleng
+ * @author 唐磊
  * @date 2022-06-04
  * <p>
  * 资源服务注解
  */
 @Documented
 @Inherited
-@Target({ ElementType.TYPE })
+@Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-@Import({ PigResourceServerAutoConfiguration.class, PigResourceServerConfiguration.class,
-		PigFeignClientConfiguration.class })
+@Import({PigResourceServerAutoConfiguration.class, PigResourceServerConfiguration.class,
+        PigFeignClientConfiguration.class})
 public @interface EnablePigResourceServer {
 
 }

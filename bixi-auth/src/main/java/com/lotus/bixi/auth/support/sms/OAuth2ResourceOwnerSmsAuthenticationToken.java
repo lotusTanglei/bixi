@@ -8,14 +8,14 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * @author lengleng
+ * @author 唐磊
  * @description 短信登录token信息
  */
 public class OAuth2ResourceOwnerSmsAuthenticationToken extends OAuth2ResourceOwnerBaseAuthenticationToken {
 
-	public OAuth2ResourceOwnerSmsAuthenticationToken(AuthorizationGrantType authorizationGrantType,
-			Authentication clientPrincipal, Set<String> scopes, Map<String, Object> additionalParameters) {
-		super(authorizationGrantType, clientPrincipal, scopes, additionalParameters);
-	}
+    public OAuth2ResourceOwnerSmsAuthenticationToken(AuthorizationGrantType authorizationGrantType,
+                                                     Authentication clientPrincipal, Set<String> scopes, Map<String, Object> additionalParameters) {
+        super(authorizationGrantType, clientPrincipal, scopes, additionalParameters);
+    }
 
 }

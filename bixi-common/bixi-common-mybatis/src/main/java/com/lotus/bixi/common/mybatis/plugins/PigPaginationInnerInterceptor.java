@@ -27,37 +27,37 @@ import java.sql.SQLException;
 @NoArgsConstructor
 public class PigPaginationInnerInterceptor extends PaginationInnerInterceptor {
 
-	/**
-	 * 数据库类型
-	 * <p>
-	 * 查看 {@link #findIDialect(Executor)} 逻辑
-	 */
-	private DbType dbType;
+    /**
+     * 数据库类型
+     * <p>
+     * 查看 {@link #findIDialect(Executor)} 逻辑
+     */
+    private DbType dbType;
 
-	/**
-	 * 方言实现类
-	 * <p>
-	 * 查看 {@link #findIDialect(Executor)} 逻辑
-	 */
-	private IDialect dialect;
+    /**
+     * 方言实现类
+     * <p>
+     * 查看 {@link #findIDialect(Executor)} 逻辑
+     */
+    private IDialect dialect;
 
-	public PigPaginationInnerInterceptor(DbType dbType) {
-		this.dbType = dbType;
-	}
+    public PigPaginationInnerInterceptor(DbType dbType) {
+        this.dbType = dbType;
+    }
 
-	public PigPaginationInnerInterceptor(IDialect dialect) {
-		this.dialect = dialect;
-	}
+    public PigPaginationInnerInterceptor(IDialect dialect) {
+        this.dialect = dialect;
+    }
 
-	@Override
-	public void beforeQuery(Executor executor, MappedStatement ms, Object parameter, RowBounds rowBounds,
-			ResultHandler resultHandler, BoundSql boundSql) throws SQLException {
-		IPage<?> page = ParameterUtils.findPage(parameter).orElse(null);
-		// size 小于 0 直接设置为 0 , 即不查询任何数据
-		if (null != page && page.getSize() < 0) {
-			page.setSize(0);
-		}
-		super.beforeQuery(executor, ms, page, rowBounds, resultHandler, boundSql);
-	}
+    @Override
+    public void beforeQuery(Executor executor, MappedStatement ms, Object parameter, RowBounds rowBounds,
+                            ResultHandler resultHandler, BoundSql boundSql) throws SQLException {
+        IPage<?> page = ParameterUtils.findPage(parameter).orElse(null);
+        // size 小于 0 直接设置为 0 , 即不查询任何数据
+        if (null != page && page.getSize() < 0) {
+            page.setSize(0);
+        }
+        super.beforeQuery(executor, ms, page, rowBounds, resultHandler, boundSql);
+    }
 
 }

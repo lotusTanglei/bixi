@@ -33,18 +33,20 @@ import java.util.List;
  */
 public interface SysPostService extends IService<SysPost> {
 
-	/**
-	 * 导出excel 表格
-	 * @return
-	 */
-	List<PostExcelVO> listPost();
+    /**
+     * 导出excel 表格
+     *
+     * @return
+     */
+    List<PostExcelVO> listPost();
 
-	/**
-	 * 导入岗位
-	 * @param excelVOList 岗位列表
-	 * @param bindingResult 错误信息列表
-	 * @return ok fail
-	 */
-	R importPost(List<PostExcelVO> excelVOList, BindingResult bindingResult);
+    /**
+     * 导入岗位
+     *
+     * @param excelVOList   岗位列表
+     * @param bindingResult 错误信息列表
+     * @return ok fail
+     */
+    R importPost(List<PostExcelVO> excelVOList, BindingResult bindingResult);
 
 }

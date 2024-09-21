@@ -30,27 +30,27 @@ import org.springframework.context.annotation.Primary;
 /**
  * aws 自动配置类
  *
- * @author lengleng
+ * @author 唐磊
  * @author 858695266
  */
 @AllArgsConstructor
 public class OssAutoConfiguration {
 
-	private final FileProperties properties;
+    private final FileProperties properties;
 
-	@Bean
-	@Primary
-	@ConditionalOnMissingBean(OssTemplate.class)
-	@ConditionalOnProperty(name = "file.oss.enable", havingValue = "true")
-	public FileTemplate ossTemplate() {
-		return new OssTemplate(properties);
-	}
+    @Bean
+    @Primary
+    @ConditionalOnMissingBean(OssTemplate.class)
+    @ConditionalOnProperty(name = "file.oss.enable", havingValue = "true")
+    public FileTemplate ossTemplate() {
+        return new OssTemplate(properties);
+    }
 
-	@Bean
-	@ConditionalOnMissingBean
-	@ConditionalOnProperty(name = "file.oss.info", havingValue = "true")
-	public OssEndpoint ossEndpoint(OssTemplate template) {
-		return new OssEndpoint(template);
-	}
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnProperty(name = "file.oss.info", havingValue = "true")
+    public OssEndpoint ossEndpoint(OssTemplate template) {
+        return new OssEndpoint(template);
+    }
 
 }

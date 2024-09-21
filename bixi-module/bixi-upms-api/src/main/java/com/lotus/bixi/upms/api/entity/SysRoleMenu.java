@@ -29,7 +29,7 @@ import lombok.EqualsAndHashCode;
  * 角色菜单表
  * </p>
  *
- * @author lengleng
+ * @author 唐磊
  * @since 2017-10-29
  */
 @Data
@@ -37,18 +37,18 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class SysRoleMenu extends Model<SysRoleMenu> {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	/**
-	 * 角色ID
-	 */
-	@Schema(description = "角色id")
-	private Long roleId;
+    /**
+     * 角色ID
+     */
+    @Schema(description = "角色id")
+    private Long roleId;
 
-	/**
-	 * 菜单ID
-	 */
-	@Schema(description = "菜单id")
-	private Long menuId;
+    /**
+     * 菜单ID
+     */
+    @Schema(description = "菜单id")
+    private Long menuId;
 
 }

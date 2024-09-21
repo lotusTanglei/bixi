@@ -41,40 +41,40 @@ import java.util.stream.Collectors;
  * 角色菜单表 服务实现类
  * </p>
  *
- * @author lengleng
+ * @author 唐磊
  * @since 2017-10-29
  */
 @Service
 @AllArgsConstructor
 public class SysRoleMenuServiceImpl extends ServiceImpl<SysRoleMenuMapper, SysRoleMenu> implements SysRoleMenuService {
 
-	private final CacheManager cacheManager;
+    private final CacheManager cacheManager;
 
-	/**
-	 * @param roleId 角色
-	 * @param menuIds 菜单ID拼成的字符串，每个id之间根据逗号分隔
-	 * @return
-	 */
-	@Override
-	@Transactional(rollbackFor = Exception.class)
-	@CacheEvict(value = CacheConstants.MENU_DETAILS, key = "#roleId")
-	public Boolean saveRoleMenus(Long roleId, String menuIds) {
-		this.remove(Wrappers.<SysRoleMenu>query().lambda().eq(SysRoleMenu::getRoleId, roleId));
+    /**
+     * @param roleId  角色
+     * @param menuIds 菜单ID拼成的字符串，每个id之间根据逗号分隔
+     * @return
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = CacheConstants.MENU_DETAILS, key = "#roleId")
+    public Boolean saveRoleMenus(Long roleId, String menuIds) {
+        this.remove(Wrappers.<SysRoleMenu>query().lambda().eq(SysRoleMenu::getRoleId, roleId));
 
-		if (StrUtil.isBlank(menuIds)) {
-			return Boolean.TRUE;
-		}
-		List<SysRoleMenu> roleMenuList = Arrays.stream(menuIds.split(StrUtil.COMMA)).map(menuId -> {
-			SysRoleMenu roleMenu = new SysRoleMenu();
-			roleMenu.setRoleId(roleId);
-			roleMenu.setMenuId(Long.valueOf(menuId));
-			return roleMenu;
-		}).collect(Collectors.toList());
+        if (StrUtil.isBlank(menuIds)) {
+            return Boolean.TRUE;
+        }
+        List<SysRoleMenu> roleMenuList = Arrays.stream(menuIds.split(StrUtil.COMMA)).map(menuId -> {
+            SysRoleMenu roleMenu = new SysRoleMenu();
+            roleMenu.setRoleId(roleId);
+            roleMenu.setMenuId(Long.valueOf(menuId));
+            return roleMenu;
+        }).collect(Collectors.toList());
 
-		// 清空userinfo
-		cacheManager.getCache(CacheConstants.USER_DETAILS).clear();
-		this.saveBatch(roleMenuList);
-		return Boolean.TRUE;
-	}
+        // 清空userinfo
+        cacheManager.getCache(CacheConstants.USER_DETAILS).clear();
+        this.saveBatch(roleMenuList);
+        return Boolean.TRUE;
+    }
 
 }

@@ -43,42 +43,42 @@ import java.util.List;
 @RequiredArgsConstructor
 @EnableConfigurationProperties(com.lotus.bixi.common.xss.config.PigXssProperties.class)
 @ConditionalOnProperty(prefix = com.lotus.bixi.common.xss.config.PigXssProperties.PREFIX, name = "enabled",
-		havingValue = "true", matchIfMissing = true)
+        havingValue = "true", matchIfMissing = true)
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 public class PigXssAutoConfiguration implements WebMvcConfigurer {
 
-	private final com.lotus.bixi.common.xss.config.PigXssProperties xssProperties;
+    private final com.lotus.bixi.common.xss.config.PigXssProperties xssProperties;
 
-	@Bean
-	@ConditionalOnMissingBean
-	public XssCleaner xssCleaner(com.lotus.bixi.common.xss.config.PigXssProperties properties) {
-		return new DefaultXssCleaner(properties);
-	}
+    @Bean
+    @ConditionalOnMissingBean
+    public XssCleaner xssCleaner(com.lotus.bixi.common.xss.config.PigXssProperties properties) {
+        return new DefaultXssCleaner(properties);
+    }
 
-	@Bean
-	public FormXssClean formXssClean(com.lotus.bixi.common.xss.config.PigXssProperties properties,
-			XssCleaner xssCleaner) {
-		return new FormXssClean(properties, xssCleaner);
-	}
+    @Bean
+    public FormXssClean formXssClean(com.lotus.bixi.common.xss.config.PigXssProperties properties,
+                                     XssCleaner xssCleaner) {
+        return new FormXssClean(properties, xssCleaner);
+    }
 
-	@Bean
-	public Jackson2ObjectMapperBuilderCustomizer xssJacksonCustomizer(
-			com.lotus.bixi.common.xss.config.PigXssProperties properties, XssCleaner xssCleaner) {
-		return builder -> builder.deserializerByType(String.class, new JacksonXssClean(properties, xssCleaner));
-	}
+    @Bean
+    public Jackson2ObjectMapperBuilderCustomizer xssJacksonCustomizer(
+            com.lotus.bixi.common.xss.config.PigXssProperties properties, XssCleaner xssCleaner) {
+        return builder -> builder.deserializerByType(String.class, new JacksonXssClean(properties, xssCleaner));
+    }
 
-	@Override
-	public void addInterceptors(InterceptorRegistry registry) {
-		List<String> patterns = xssProperties.getPathPatterns();
-		if (patterns.isEmpty()) {
-			patterns.add("/**");
-		}
-		com.lotus.bixi.common.xss.core.XssCleanInterceptor interceptor = new com.lotus.bixi.common.xss.core.XssCleanInterceptor(
-				xssProperties);
-		registry.addInterceptor(interceptor)
-			.addPathPatterns(patterns)
-			.excludePathPatterns(xssProperties.getPathExcludePatterns())
-			.order(Ordered.LOWEST_PRECEDENCE);
-	}
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        List<String> patterns = xssProperties.getPathPatterns();
+        if (patterns.isEmpty()) {
+            patterns.add("/**");
+        }
+        com.lotus.bixi.common.xss.core.XssCleanInterceptor interceptor = new com.lotus.bixi.common.xss.core.XssCleanInterceptor(
+                xssProperties);
+        registry.addInterceptor(interceptor)
+                .addPathPatterns(patterns)
+                .excludePathPatterns(xssProperties.getPathExcludePatterns())
+                .order(Ordered.LOWEST_PRECEDENCE);
+    }
 
 }

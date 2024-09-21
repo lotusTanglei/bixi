@@ -26,11 +26,11 @@ import org.springframework.context.annotation.Import;
 /**
  * aws 自动配置类
  *
- * @author lengleng
+ * @author 唐磊
  * @author 858695266
  */
-@Import({ LocalFileAutoConfiguration.class, OssAutoConfiguration.class })
-@EnableConfigurationProperties({ FileProperties.class })
+@Import({LocalFileAutoConfiguration.class, OssAutoConfiguration.class})
+@EnableConfigurationProperties({FileProperties.class})
 public class FileAutoConfiguration {
 
 }

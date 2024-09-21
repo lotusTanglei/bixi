@@ -23,7 +23,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 /**
  * 本地文件 配置信息
  *
- * @author lengleng
+ * @author 唐磊
  * <p>
  * bucket 设置公共读权限
  */
@@ -31,14 +31,14 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "local")
 public class LocalFileProperties {
 
-	/**
-	 * 是否开启
-	 */
-	private boolean enable;
+    /**
+     * 是否开启
+     */
+    private boolean enable;
 
-	/**
-	 * 默认路径
-	 */
-	private String basePath;
+    /**
+     * 默认路径
+     */
+    private String basePath;
 
 }

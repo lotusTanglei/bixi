@@ -10,18 +10,19 @@ import java.lang.annotation.Target;
 /**
  * 判断是否有权限
  *
- * @author lengleng
+ * @author 唐磊
  * @date 2024/07/15
  */
-@Target({ ElementType.METHOD })
+@Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @PreAuthorize("@pms.hasPermission('{value}'.split(','))")
 public @interface HasPermission {
 
-	/**
-	 * 权限字符串
-	 * @return {@link String[] }
-	 */
-	String[] value();
+    /**
+     * 权限字符串
+     *
+     * @return {@link String[] }
+     */
+    String[] value();
 
 }

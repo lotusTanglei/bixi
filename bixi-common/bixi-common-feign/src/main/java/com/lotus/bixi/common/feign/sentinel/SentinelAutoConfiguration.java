@@ -33,7 +33,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 
 /**
- * @author lengleng
+ * @author 唐磊
  * @date 2020-02-12
  * <p>
  * sentinel 配置
@@ -42,24 +42,24 @@ import org.springframework.context.annotation.Scope;
 @AutoConfigureBefore(SentinelFeignAutoConfiguration.class)
 public class SentinelAutoConfiguration {
 
-	@Bean
-	@Scope("prototype")
-	@ConditionalOnMissingBean
-	@ConditionalOnProperty(name = "spring.cloud.openfeign.sentinel.enabled")
-	public Feign.Builder feignSentinelBuilder() {
-		return PigSentinelFeign.builder();
-	}
+    @Bean
+    @Scope("prototype")
+    @ConditionalOnMissingBean
+    @ConditionalOnProperty(name = "spring.cloud.openfeign.sentinel.enabled")
+    public Feign.Builder feignSentinelBuilder() {
+        return PigSentinelFeign.builder();
+    }
 
-	@Bean
-	@ConditionalOnMissingBean
-	public BlockExceptionHandler blockExceptionHandler(ObjectMapper objectMapper) {
-		return new PigUrlBlockHandler(objectMapper);
-	}
+    @Bean
+    @ConditionalOnMissingBean
+    public BlockExceptionHandler blockExceptionHandler(ObjectMapper objectMapper) {
+        return new PigUrlBlockHandler(objectMapper);
+    }
 
-	@Bean
-	@ConditionalOnMissingBean
-	public RequestOriginParser requestOriginParser() {
-		return new PigHeaderRequestOriginParser();
-	}
+    @Bean
+    @ConditionalOnMissingBean
+    public RequestOriginParser requestOriginParser() {
+        return new PigHeaderRequestOriginParser();
+    }
 
 }

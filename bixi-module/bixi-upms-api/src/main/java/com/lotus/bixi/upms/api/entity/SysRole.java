@@ -33,7 +33,7 @@ import java.time.LocalDateTime;
  * 角色表
  * </p>
  *
- * @author lengleng
+ * @author 唐磊
  * @since 2017-10-29
  */
 @Data
@@ -41,57 +41,57 @@ import java.time.LocalDateTime;
 @EqualsAndHashCode(callSuper = true)
 public class SysRole extends Model<SysRole> {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	@TableId(value = "role_id", type = IdType.ASSIGN_ID)
-	@Schema(description = "角色编号")
-	private Long roleId;
+    @TableId(value = "role_id", type = IdType.ASSIGN_ID)
+    @Schema(description = "角色编号")
+    private Long roleId;
 
-	@NotBlank(message = "角色名称不能为空")
-	@Schema(description = "角色名称")
-	private String roleName;
+    @NotBlank(message = "角色名称不能为空")
+    @Schema(description = "角色名称")
+    private String roleName;
 
-	@NotBlank(message = "角色标识不能为空")
-	@Schema(description = "角色标识")
-	private String roleCode;
+    @NotBlank(message = "角色标识不能为空")
+    @Schema(description = "角色标识")
+    private String roleCode;
 
-	@Schema(description = "角色描述")
-	private String roleDesc;
+    @Schema(description = "角色描述")
+    private String roleDesc;
 
-	/**
-	 * 创建人
-	 */
-	@TableField(fill = FieldFill.INSERT)
-	@Schema(description = "创建人")
-	private String createBy;
+    /**
+     * 创建人
+     */
+    @TableField(fill = FieldFill.INSERT)
+    @Schema(description = "创建人")
+    private String createBy;
 
-	/**
-	 * 修改人
-	 */
-	@TableField(fill = FieldFill.UPDATE)
-	@Schema(description = "修改人")
-	private String updateBy;
+    /**
+     * 修改人
+     */
+    @TableField(fill = FieldFill.UPDATE)
+    @Schema(description = "修改人")
+    private String updateBy;
 
-	/**
-	 * 创建时间
-	 */
-	@Schema(description = "创建时间")
-	@TableField(fill = FieldFill.INSERT)
-	private LocalDateTime createTime;
+    /**
+     * 创建时间
+     */
+    @Schema(description = "创建时间")
+    @TableField(fill = FieldFill.INSERT)
+    private LocalDateTime createTime;
 
-	/**
-	 * 修改时间
-	 */
-	@Schema(description = "修改时间")
-	@TableField(fill = FieldFill.UPDATE)
-	private LocalDateTime updateTime;
+    /**
+     * 修改时间
+     */
+    @Schema(description = "修改时间")
+    @TableField(fill = FieldFill.UPDATE)
+    private LocalDateTime updateTime;
 
-	/**
-	 * 删除标识（0-正常,1-删除）
-	 */
-	@TableLogic
-	@TableField(fill = FieldFill.INSERT)
-	@Schema(description = "删除标记,1:已删除,0:正常")
-	private String delFlag;
+    /**
+     * 删除标识（0-正常,1-删除）
+     */
+    @TableLogic
+    @TableField(fill = FieldFill.INSERT)
+    @Schema(description = "删除标记,1:已删除,0:正常")
+    private String delFlag;
 
 }

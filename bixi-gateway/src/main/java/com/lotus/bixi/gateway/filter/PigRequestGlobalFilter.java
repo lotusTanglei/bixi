@@ -34,7 +34,7 @@ import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.G
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.addOriginalRequestUrl;
 
 /**
- * @author lengleng
+ * @author 唐磊
  * @date 2019/2/1
  * <p>
  * 全局拦截器，作用所有的微服务
@@ -45,40 +45,41 @@ import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.a
  */
 public class PigRequestGlobalFilter implements GlobalFilter, Ordered {
 
-	/**
-	 * Process the Web request and (optionally) delegate to the next {@code WebFilter}
-	 * through the given {@link GatewayFilterChain}.
-	 * @param exchange the current server exchange
-	 * @param chain provides a way to delegate to the next filter
-	 * @return {@code Mono<Void>} to indicate when request processing is complete
-	 */
-	@Override
-	public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+    /**
+     * Process the Web request and (optionally) delegate to the next {@code WebFilter}
+     * through the given {@link GatewayFilterChain}.
+     *
+     * @param exchange the current server exchange
+     * @param chain    provides a way to delegate to the next filter
+     * @return {@code Mono<Void>} to indicate when request processing is complete
+     */
+    @Override
+    public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 
-		// 1. 清洗请求头中from 参数
-		ServerHttpRequest request = exchange.getRequest().mutate().headers(httpHeaders -> {
-			httpHeaders.remove(SecurityConstants.FROM);
-			// 设置请求时间
-			httpHeaders.put(CommonConstants.REQUEST_START_TIME,
-					Collections.singletonList(String.valueOf(System.currentTimeMillis())));
-		}).build();
+        // 1. 清洗请求头中from 参数
+        ServerHttpRequest request = exchange.getRequest().mutate().headers(httpHeaders -> {
+            httpHeaders.remove(SecurityConstants.FROM);
+            // 设置请求时间
+            httpHeaders.put(CommonConstants.REQUEST_START_TIME,
+                    Collections.singletonList(String.valueOf(System.currentTimeMillis())));
+        }).build();
 
-		// 2. 重写StripPrefix
-		addOriginalRequestUrl(exchange, request.getURI());
-		String rawPath = request.getURI().getRawPath();
-		String newPath = "/" + Arrays.stream(StringUtils.tokenizeToStringArray(rawPath, "/"))
-			.skip(1L)
-			.collect(Collectors.joining("/"));
+        // 2. 重写StripPrefix
+        addOriginalRequestUrl(exchange, request.getURI());
+        String rawPath = request.getURI().getRawPath();
+        String newPath = "/" + Arrays.stream(StringUtils.tokenizeToStringArray(rawPath, "/"))
+                .skip(1L)
+                .collect(Collectors.joining("/"));
 
-		ServerHttpRequest newRequest = request.mutate().path(newPath).build();
-		exchange.getAttributes().put(GATEWAY_REQUEST_URL_ATTR, newRequest.getURI());
+        ServerHttpRequest newRequest = request.mutate().path(newPath).build();
+        exchange.getAttributes().put(GATEWAY_REQUEST_URL_ATTR, newRequest.getURI());
 
-		return chain.filter(exchange.mutate().request(newRequest.mutate().build()).build());
-	}
+        return chain.filter(exchange.mutate().request(newRequest.mutate().build()).build());
+    }
 
-	@Override
-	public int getOrder() {
-		return 10;
-	}
+    @Override
+    public int getOrder() {
+        return 10;
+    }
 
 }

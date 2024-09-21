@@ -31,9 +31,9 @@ import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.security.access.AccessDeniedException;
 
 /**
- * @author lengleng
+ * @author 唐磊
  * @date 2022-06-04
- *
+ * <p>
  * 服务间接口不鉴权处理逻辑
  */
 @Slf4j
@@ -41,26 +41,26 @@ import org.springframework.security.access.AccessDeniedException;
 @RequiredArgsConstructor
 public class PigSecurityInnerAspect implements Ordered {
 
-	private final HttpServletRequest request;
+    private final HttpServletRequest request;
 
-	@SneakyThrows
-	@Before("@within(inner) || @annotation(inner)")
-	public void around(JoinPoint point, Inner inner) {
-		// 实际注入的inner实体由表达式后一个注解决定，即是方法上的@Inner注解实体，若方法上无@Inner注解，则获取类上的
-		if (inner == null) {
-			Class<?> clazz = point.getTarget().getClass();
-			inner = AnnotationUtils.findAnnotation(clazz, Inner.class);
-		}
-		String header = request.getHeader(SecurityConstants.FROM);
-		if (inner.value() && !StrUtil.equals(SecurityConstants.FROM_IN, header)) {
-			log.warn("访问接口 {} 没有权限", point.getSignature().getName());
-			throw new AccessDeniedException("Access is denied");
-		}
-	}
+    @SneakyThrows
+    @Before("@within(inner) || @annotation(inner)")
+    public void around(JoinPoint point, Inner inner) {
+        // 实际注入的inner实体由表达式后一个注解决定，即是方法上的@Inner注解实体，若方法上无@Inner注解，则获取类上的
+        if (inner == null) {
+            Class<?> clazz = point.getTarget().getClass();
+            inner = AnnotationUtils.findAnnotation(clazz, Inner.class);
+        }
+        String header = request.getHeader(SecurityConstants.FROM);
+        if (inner.value() && !StrUtil.equals(SecurityConstants.FROM_IN, header)) {
+            log.warn("访问接口 {} 没有权限", point.getSignature().getName());
+            throw new AccessDeniedException("Access is denied");
+        }
+    }
 
-	@Override
-	public int getOrder() {
-		return Ordered.HIGHEST_PRECEDENCE + 1;
-	}
+    @Override
+    public int getOrder() {
+        return Ordered.HIGHEST_PRECEDENCE + 1;
+    }
 
 }

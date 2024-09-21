@@ -29,7 +29,7 @@ import lombok.EqualsAndHashCode;
  * 部门关系表
  * </p>
  *
- * @author lengleng
+ * @author 唐磊
  * @since 2018-01-22
  */
 @Data
@@ -37,18 +37,18 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class SysDeptRelation extends Model<SysDeptRelation> {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	/**
-	 * 祖先节点
-	 */
-	@Schema(description = "祖先节点")
-	private Long ancestor;
+    /**
+     * 祖先节点
+     */
+    @Schema(description = "祖先节点")
+    private Long ancestor;
 
-	/**
-	 * 后代节点
-	 */
-	@Schema(description = "后代节点")
-	private Long descendant;
+    /**
+     * 后代节点
+     */
+    @Schema(description = "后代节点")
+    private Long descendant;
 
 }

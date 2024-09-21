@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * @author lengleng
+ * @author 唐磊
  * @date 2018/11/14
  * <p>
  * 手机验证码
@@ -42,12 +42,12 @@ import org.springframework.web.bind.annotation.RestController;
 @SecurityRequirement(name = HttpHeaders.AUTHORIZATION)
 public class SysMobileController {
 
-	private final SysMobileService mobileService;
+    private final SysMobileService mobileService;
 
-	@Inner(value = false)
-	@GetMapping("/{mobile}")
-	public R sendSmsCode(@PathVariable String mobile) {
-		return mobileService.sendSmsCode(mobile);
-	}
+    @Inner(value = false)
+    @GetMapping("/{mobile}")
+    public R sendSmsCode(@PathVariable String mobile) {
+        return mobileService.sendSmsCode(mobile);
+    }
 
 }

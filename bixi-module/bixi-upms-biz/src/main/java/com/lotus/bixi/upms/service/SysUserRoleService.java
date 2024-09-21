@@ -27,7 +27,7 @@ import com.lotus.bixi.upms.api.entity.SysUserRole;
  * 用户角色表 服务类
  * </p>
  *
- * @author lengleng
+ * @author 唐磊
  * @since 2017-10-29
  */
 public interface SysUserRoleService extends IService<SysUserRole> {

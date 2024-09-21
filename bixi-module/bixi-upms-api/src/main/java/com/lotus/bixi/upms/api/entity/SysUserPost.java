@@ -32,18 +32,18 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class SysUserPost extends Model<SysUserPost> {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	/**
-	 * 用户ID
-	 */
-	@Schema(description = "用户id")
-	private Long userId;
+    /**
+     * 用户ID
+     */
+    @Schema(description = "用户id")
+    private Long userId;
 
-	/**
-	 * 岗位ID
-	 */
-	@Schema(description = "岗位id")
-	private Long postId;
+    /**
+     * 岗位ID
+     */
+    @Schema(description = "岗位id")
+    private Long postId;
 
 }

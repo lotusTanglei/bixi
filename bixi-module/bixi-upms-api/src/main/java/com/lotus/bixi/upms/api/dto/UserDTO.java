@@ -27,7 +27,7 @@ import lombok.EqualsAndHashCode;
 import java.util.List;
 
 /**
- * @author lengleng
+ * @author 唐磊
  * @date 2017/11/5
  */
 @Data
@@ -35,27 +35,27 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 public class UserDTO extends SysUser {
 
-	/**
-	 * 角色ID
-	 */
-	@Schema(description = "角色id集合")
-	private List<Long> role;
+    /**
+     * 角色ID
+     */
+    @Schema(description = "角色id集合")
+    private List<Long> role;
 
-	/**
-	 * 部门id
-	 */
-	@Schema(description = "部门id")
-	private Long deptId;
+    /**
+     * 部门id
+     */
+    @Schema(description = "部门id")
+    private Long deptId;
 
-	/**
-	 * 岗位ID
-	 */
-	private List<Long> post;
+    /**
+     * 岗位ID
+     */
+    private List<Long> post;
 
-	/**
-	 * 新密码
-	 */
-	@Schema(description = "新密码")
-	private String newpassword1;
+    /**
+     * 新密码
+     */
+    @Schema(description = "新密码")
+    private String newpassword1;
 
 }
