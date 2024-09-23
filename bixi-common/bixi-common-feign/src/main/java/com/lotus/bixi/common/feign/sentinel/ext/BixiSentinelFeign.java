@@ -21,6 +21,7 @@ import feign.Contract;
 import feign.Feign;
 import feign.InvocationHandlerFactory;
 import feign.Target;
+import lombok.NoArgsConstructor;
 import org.springframework.beans.BeansException;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -42,12 +43,8 @@ import java.util.Map;
  * @author 唐磊
  * @date 2020/6/9
  */
-public final class PigSentinelFeign {
-
-    private PigSentinelFeign() {
-
-    }
-
+@NoArgsConstructor(access = lombok.AccessLevel.PRIVATE)
+public final class BixiSentinelFeign {
     public static Builder builder() {
         return new Builder();
     }
@@ -91,16 +88,16 @@ public final class PigSentinelFeign {
                     FallbackFactory<?> fallbackFactoryInstance;
                     if (void.class != fallback) {
                         fallbackInstance = getFromContext(beanName, "fallback", fallback, target.type());
-                        return new PigSentinelInvocationHandler(target, dispatch,
+                        return new BixiSentinelInvocationHandler(target, dispatch,
                                 new FallbackFactory.Default(fallbackInstance));
                     }
 
                     if (void.class != fallbackFactory) {
                         fallbackFactoryInstance = (FallbackFactory<?>) getFromContext(beanName, "fallbackFactory",
                                 fallbackFactory, FallbackFactory.class);
-                        return new PigSentinelInvocationHandler(target, dispatch, fallbackFactoryInstance);
+                        return new BixiSentinelInvocationHandler(target, dispatch, fallbackFactoryInstance);
                     }
-                    return new PigSentinelInvocationHandler(target, dispatch);
+                    return new BixiSentinelInvocationHandler(target, dispatch);
                 }
 
                 private Object getFromContext(String name, String type, Class<?> fallbackType, Class<?> targetType) {

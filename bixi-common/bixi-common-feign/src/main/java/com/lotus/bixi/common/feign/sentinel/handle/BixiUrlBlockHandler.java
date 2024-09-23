@@ -36,7 +36,7 @@ import org.springframework.http.MediaType;
  */
 @Slf4j
 @RequiredArgsConstructor
-public class PigUrlBlockHandler implements BlockExceptionHandler {
+public class BixiUrlBlockHandler implements BlockExceptionHandler {
 
     private final ObjectMapper objectMapper;
 

@@ -21,9 +21,9 @@ import com.alibaba.cloud.sentinel.feign.SentinelFeignAutoConfiguration;
 import com.alibaba.csp.sentinel.adapter.spring.webmvc_v6x.callback.BlockExceptionHandler;
 import com.alibaba.csp.sentinel.adapter.spring.webmvc_v6x.callback.RequestOriginParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.lotus.bixi.common.feign.sentinel.ext.PigSentinelFeign;
-import com.lotus.bixi.common.feign.sentinel.handle.PigUrlBlockHandler;
-import com.lotus.bixi.common.feign.sentinel.parser.PigHeaderRequestOriginParser;
+import com.lotus.bixi.common.feign.sentinel.ext.BixiSentinelFeign;
+import com.lotus.bixi.common.feign.sentinel.handle.BixiUrlBlockHandler;
+import com.lotus.bixi.common.feign.sentinel.parser.BixiHeaderRequestOriginParser;
 import feign.Feign;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -47,19 +47,19 @@ public class SentinelAutoConfiguration {
     @ConditionalOnMissingBean
     @ConditionalOnProperty(name = "spring.cloud.openfeign.sentinel.enabled")
     public Feign.Builder feignSentinelBuilder() {
-        return PigSentinelFeign.builder();
+        return BixiSentinelFeign.builder();
     }
 
     @Bean
     @ConditionalOnMissingBean
     public BlockExceptionHandler blockExceptionHandler(ObjectMapper objectMapper) {
-        return new PigUrlBlockHandler(objectMapper);
+        return new BixiUrlBlockHandler(objectMapper);
     }
 
     @Bean
     @ConditionalOnMissingBean
     public RequestOriginParser requestOriginParser() {
-        return new PigHeaderRequestOriginParser();
+        return new BixiHeaderRequestOriginParser();
     }
 
 }

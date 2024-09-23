@@ -23,7 +23,7 @@ import cn.hutool.extra.servlet.JakartaServletUtil;
 import cn.hutool.extra.spring.SpringUtil;
 import cn.hutool.http.HttpUtil;
 import com.lotus.bixi.common.core.util.SpringContextHolder;
-import com.lotus.bixi.common.log.config.PigLogProperties;
+import com.lotus.bixi.common.log.config.BixiLogProperties;
 import com.lotus.bixi.common.log.event.SysLogEventSource;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.experimental.UtilityClass;
@@ -63,7 +63,7 @@ public class SysLogUtils {
         sysLog.setServiceId(SpringUtil.getProperty("spring.application.name"));
 
         // get 参数脱敏
-        PigLogProperties logProperties = SpringContextHolder.getBean(PigLogProperties.class);
+        BixiLogProperties logProperties = SpringContextHolder.getBean(BixiLogProperties.class);
         Map<String, String[]> paramsMap = MapUtil.removeAny(request.getParameterMap(),
                 ArrayUtil.toArray(logProperties.getExcludeFields(), String.class));
         sysLog.setParams(HttpUtil.toParams(paramsMap));

@@ -9,7 +9,7 @@ import org.springframework.http.HttpHeaders;
  * <p>
  * http connection close
  */
-public class PigFeignRequestCloseInterceptor implements RequestInterceptor {
+public class BixiFeignRequestCloseInterceptor implements RequestInterceptor {
 
     /**
      * set connection close

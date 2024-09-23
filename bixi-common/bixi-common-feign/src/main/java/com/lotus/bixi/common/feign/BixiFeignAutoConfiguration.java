@@ -17,14 +17,14 @@
 package com.lotus.bixi.common.feign;
 
 import com.alibaba.cloud.sentinel.feign.SentinelFeignAutoConfiguration;
-import com.lotus.bixi.common.feign.core.PigFeignInnerRequestInterceptor;
-import com.lotus.bixi.common.feign.core.PigFeignRequestCloseInterceptor;
-import com.lotus.bixi.common.feign.sentinel.ext.PigSentinelFeign;
+import com.lotus.bixi.common.feign.core.BixiFeignInnerRequestInterceptor;
+import com.lotus.bixi.common.feign.core.BixiFeignRequestCloseInterceptor;
+import com.lotus.bixi.common.feign.sentinel.ext.BixiSentinelFeign;
 import feign.Feign;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.cloud.openfeign.PigFeignClientsRegistrar;
+import org.springframework.cloud.openfeign.BixiFeignClientsRegistrar;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -37,16 +37,16 @@ import org.springframework.context.annotation.Scope;
  * @date 2020-02-12
  */
 @Configuration(proxyBeanMethods = false)
-@Import(PigFeignClientsRegistrar.class)
+@Import(BixiFeignClientsRegistrar.class)
 @AutoConfigureBefore(SentinelFeignAutoConfiguration.class)
-public class PigFeignAutoConfiguration {
+public class BixiFeignAutoConfiguration {
 
     @Bean
     @Scope("prototype")
     @ConditionalOnMissingBean
     @ConditionalOnProperty(name = "feign.sentinel.enabled")
     public Feign.Builder feignSentinelBuilder() {
-        return PigSentinelFeign.builder();
+        return BixiSentinelFeign.builder();
     }
 
     /**
@@ -55,8 +55,8 @@ public class PigFeignAutoConfiguration {
      * @return
      */
     @Bean
-    public PigFeignRequestCloseInterceptor pigFeignRequestCloseInterceptor() {
-        return new PigFeignRequestCloseInterceptor();
+    public BixiFeignRequestCloseInterceptor pigFeignRequestCloseInterceptor() {
+        return new BixiFeignRequestCloseInterceptor();
     }
 
     /**
@@ -65,8 +65,8 @@ public class PigFeignAutoConfiguration {
      * @return PigFeignInnerRequestInterceptor
      */
     @Bean
-    public PigFeignInnerRequestInterceptor pigFeignInnerRequestInterceptor() {
-        return new PigFeignInnerRequestInterceptor();
+    public BixiFeignInnerRequestInterceptor pigFeignInnerRequestInterceptor() {
+        return new BixiFeignInnerRequestInterceptor();
     }
 
 }

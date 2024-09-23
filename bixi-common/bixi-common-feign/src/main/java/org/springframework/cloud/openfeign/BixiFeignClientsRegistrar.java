@@ -1,6 +1,6 @@
 package org.springframework.cloud.openfeign;
 
-import com.lotus.bixi.common.feign.PigFeignAutoConfiguration;
+import com.lotus.bixi.common.feign.BixiFeignAutoConfiguration;
 import lombok.Getter;
 import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.beans.factory.config.BeanDefinitionHolder;
@@ -30,7 +30,7 @@ import java.util.Map;
  * <p>
  * feign 自动配置功能 from mica
  */
-public class PigFeignClientsRegistrar implements ImportBeanDefinitionRegistrar, BeanClassLoaderAware, EnvironmentAware {
+public class BixiFeignClientsRegistrar implements ImportBeanDefinitionRegistrar, BeanClassLoaderAware, EnvironmentAware {
 
     private final static String BASE_URL = "http://127.0.0.1:${server.port}${server.servlet.context-path}";
 
@@ -140,7 +140,7 @@ public class PigFeignClientsRegistrar implements ImportBeanDefinitionRegistrar, 
      * @return the factory class
      */
     private Class<?> getSpringFactoriesLoaderFactoryClass() {
-        return PigFeignAutoConfiguration.class;
+        return BixiFeignAutoConfiguration.class;
     }
 
     private void validate(Map<String, Object> attributes) {

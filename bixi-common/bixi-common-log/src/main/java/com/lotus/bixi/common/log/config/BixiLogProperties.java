@@ -30,8 +30,8 @@ import java.util.List;
  */
 @Getter
 @Setter
-@ConfigurationProperties(PigLogProperties.PREFIX)
-public class PigLogProperties {
+@ConfigurationProperties(BixiLogProperties.PREFIX)
+public class BixiLogProperties {
 
     public static final String PREFIX = "security.log";
 

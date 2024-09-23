@@ -19,10 +19,12 @@
             <groupId>com.lotus.bixi</groupId>
             <artifactId>bixi-common-core</artifactId>
         </dependency>
+        <!--Hutool 扩展 工具包-->
         <dependency>
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-extra</artifactId>
         </dependency>
+        <!--Hutool http 工具包-->
         <dependency>
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-http</artifactId>

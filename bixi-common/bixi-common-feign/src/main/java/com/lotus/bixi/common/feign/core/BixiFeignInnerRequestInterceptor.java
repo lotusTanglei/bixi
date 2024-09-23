@@ -12,7 +12,7 @@ import java.lang.reflect.Method;
  * @author 唐磊
  * @date 2024/6/1
  */
-public class PigFeignInnerRequestInterceptor implements RequestInterceptor, Ordered {
+public class BixiFeignInnerRequestInterceptor implements RequestInterceptor, Ordered {
 
     /**
      * Called for every request. Add data using methods on the supplied

@@ -25,7 +25,7 @@ import jakarta.servlet.http.HttpServletRequest;
  * @author 唐磊
  * @date 2020-06-11
  */
-public class PigHeaderRequestOriginParser implements RequestOriginParser {
+public class BixiHeaderRequestOriginParser implements RequestOriginParser {
 
     /**
      * 请求头获取allow

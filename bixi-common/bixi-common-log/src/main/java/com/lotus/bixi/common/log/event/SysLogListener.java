@@ -23,7 +23,7 @@ import com.fasterxml.jackson.databind.ser.FilterProvider;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.lotus.bixi.common.core.jackson.BixiJavaTimeModule;
-import com.lotus.bixi.common.log.config.PigLogProperties;
+import com.lotus.bixi.common.log.config.BixiLogProperties;
 import com.lotus.bixi.upms.api.entity.SysLog;
 import com.lotus.bixi.upms.api.feign.RemoteLogService;
 import lombok.RequiredArgsConstructor;
@@ -49,7 +49,7 @@ public class SysLogListener implements InitializingBean {
 
     private final RemoteLogService remoteLogService;
 
-    private final PigLogProperties logProperties;
+    private final BixiLogProperties logProperties;
 
     @SneakyThrows
     @Async
