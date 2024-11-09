@@ -54,7 +54,6 @@ public interface FileTemplate extends InitializingBean {
      * @param bucketName  bucket名称
      * @param objectName  文件名称
      * @param stream      文件流
-     * @param contextType 文件类型
      * @throws Exception
      */
     void putObject(String bucketName, String objectName, InputStream stream) throws Exception;

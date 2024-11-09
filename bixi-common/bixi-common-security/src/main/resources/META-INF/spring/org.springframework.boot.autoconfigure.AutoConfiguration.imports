@@ -1,7 +1,7 @@
-com.lotus.bixi.common.security.service.PigUserDetailsServiceImpl
-com.lotus.bixi.common.security.service.PigAppUserDetailsServiceImpl
-com.lotus.bixi.common.security.service.PigRedisOAuth2AuthorizationService
-com.lotus.bixi.common.security.service.PigRedisOAuth2AuthorizationConsentService
-com.lotus.bixi.common.security.component.PigSecurityInnerAspect
-com.lotus.bixi.common.security.component.PigSecurityMessageSourceConfiguration
-com.lotus.bixi.common.security.service.PigRemoteRegisteredClientRepository
+com.lotus.bixi.common.security.service.BixiUserDetailsServiceImpl
+com.lotus.bixi.common.security.service.BixiAppUserDetailsServiceImpl
+com.lotus.bixi.common.security.service.BixiRedisOAuth2AuthorizationService
+com.lotus.bixi.common.security.service.BixiRedisOAuth2AuthorizationConsentService
+com.lotus.bixi.common.security.component.BixiSecurityInnerAspect
+com.lotus.bixi.common.security.component.BixiSecurityMessageSourceConfiguration
+com.lotus.bixi.common.security.service.BixiRemoteRegisteredClientRepository

@@ -15,5 +15,4 @@ import org.springframework.context.annotation.PropertySource;
 @EnableAutoDataSourceProxy(useJdkProxy = true)
 @Configuration(proxyBeanMethods = false)
 public class SeataAutoConfiguration {
-
 }

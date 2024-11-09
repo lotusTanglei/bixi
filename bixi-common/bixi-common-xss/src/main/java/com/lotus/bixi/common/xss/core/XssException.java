@@ -19,7 +19,7 @@ package com.lotus.bixi.common.xss.core;
 /**
  * xss 异常，校验模式抛出
  *
- * @author L.cm
+ * @author 唐磊
  */
 public interface XssException {
 

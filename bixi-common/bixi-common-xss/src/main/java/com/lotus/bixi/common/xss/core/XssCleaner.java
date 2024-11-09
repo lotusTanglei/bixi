@@ -22,7 +22,7 @@ import org.jsoup.Jsoup;
 /**
  * xss 清理器
  *
- * @author L.cm
+ * @author 唐磊
  */
 public interface XssCleaner {
 

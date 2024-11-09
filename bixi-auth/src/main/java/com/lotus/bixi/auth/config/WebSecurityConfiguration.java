@@ -17,7 +17,7 @@
 package com.lotus.bixi.auth.config;
 
 import com.lotus.bixi.auth.support.core.FormIdentityLoginConfigurer;
-import com.lotus.bixi.auth.support.core.PigDaoAuthenticationProvider;
+import com.lotus.bixi.auth.support.core.BixiDaoAuthenticationProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.Customizer;
@@ -52,7 +52,7 @@ public class WebSecurityConfiguration {
                 .authenticated()).headers(header -> header.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)// 避免iframe同源无法登录许iframe
         ).with(new FormIdentityLoginConfigurer(), Customizer.withDefaults()); // 表单登录个性化
         // 处理 UsernamePasswordAuthenticationToken
-        http.authenticationProvider(new PigDaoAuthenticationProvider());
+        http.authenticationProvider(new BixiDaoAuthenticationProvider());
         return http.build();
     }
 

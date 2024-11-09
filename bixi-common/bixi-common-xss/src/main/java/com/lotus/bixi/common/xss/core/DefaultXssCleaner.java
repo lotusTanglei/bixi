@@ -17,7 +17,7 @@
 package com.lotus.bixi.common.xss.core;
 
 import cn.hutool.core.util.CharsetUtil;
-import com.lotus.bixi.common.xss.config.PigXssProperties;
+import com.lotus.bixi.common.xss.config.BixiXssProperties;
 import com.lotus.bixi.common.xss.utils.XssUtil;
 import org.jsoup.Jsoup;
 import org.jsoup.internal.StringUtil;
@@ -28,17 +28,17 @@ import org.springframework.web.util.HtmlUtils;
 /**
  * 默认的 xss 清理器
  *
- * @author L.cm
+ * @author 唐磊
  */
 public class DefaultXssCleaner implements XssCleaner {
 
-    private final PigXssProperties properties;
+    private final BixiXssProperties properties;
 
-    public DefaultXssCleaner(PigXssProperties properties) {
+    public DefaultXssCleaner(BixiXssProperties properties) {
         this.properties = properties;
     }
 
-    private static Document.OutputSettings getOutputSettings(PigXssProperties properties) {
+    private static Document.OutputSettings getOutputSettings(BixiXssProperties properties) {
         return new Document.OutputSettings()
                 // 2. 转义，没找到关闭的方法，目前这个规则最少
                 .escapeMode(Entities.EscapeMode.xhtml)
@@ -52,11 +52,11 @@ public class DefaultXssCleaner implements XssCleaner {
         if (StringUtil.isBlank(bodyHtml)) {
             return bodyHtml;
         }
-        PigXssProperties.Mode mode = properties.getMode();
-        if (PigXssProperties.Mode.escape == mode) {
+        BixiXssProperties.Mode mode = properties.getMode();
+        if (BixiXssProperties.Mode.escape == mode) {
             // html 转义
             return HtmlUtils.htmlEscape(bodyHtml, CharsetUtil.UTF_8);
-        } else if (PigXssProperties.Mode.validate == mode) {
+        } else if (BixiXssProperties.Mode.validate == mode) {
             // 校验
             if (Jsoup.isValid(bodyHtml, XssUtil.WHITE_LIST)) {
                 return bodyHtml;

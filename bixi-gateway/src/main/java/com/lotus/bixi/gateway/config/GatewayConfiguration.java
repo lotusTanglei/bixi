@@ -1,7 +1,7 @@
 package com.lotus.bixi.gateway.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.lotus.bixi.gateway.filter.PigRequestGlobalFilter;
+import com.lotus.bixi.gateway.filter.BixiRequestGlobalFilter;
 import com.lotus.bixi.gateway.handler.GlobalExceptionHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
 /**
  * 网关配置
  *
- * @author L.cm
+ * @author 唐磊
  */
 @Configuration(proxyBeanMethods = false)
 public class GatewayConfiguration {
@@ -20,8 +20,8 @@ public class GatewayConfiguration {
      * @return PigRequest全局过滤器
      */
     @Bean
-    public PigRequestGlobalFilter pigRequestGlobalFilter() {
-        return new PigRequestGlobalFilter();
+    public BixiRequestGlobalFilter pigRequestGlobalFilter() {
+        return new BixiRequestGlobalFilter();
     }
 
     /**

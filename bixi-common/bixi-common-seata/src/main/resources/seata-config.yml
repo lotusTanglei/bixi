@@ -1,6 +1,6 @@
 seata:
   enabled: true
-  tx-service-group: pig_tx_group # 事务群组（可以每个应用独立取名，也可以使用相同的名字）
+  tx-service-group: bixi_tx_group # 事务群组（可以每个应用独立取名，也可以使用相同的名字）
   client:
     rm-report-success-enable: true
     rm-table-meta-check-enable: false # 自动刷新缓存中的表结构（默认false）
@@ -24,11 +24,11 @@ seata:
         datasource-autoproxy: true
   service:
     vgroup-mapping:
-      pig_tx_group: default # TC 集群（必须与seata-server保持一致）
+      bixi_tx_group: default # TC 集群（必须与seata-server保持一致）
     enable-degrade: false # 降级开关
     disable-global-transaction: false # 禁用全局事务（默认false）
     grouplist:
-      default: pig-seata:8091
+      default: bixi-seata:8091
   transport:
     shutdown:
       wait: 3

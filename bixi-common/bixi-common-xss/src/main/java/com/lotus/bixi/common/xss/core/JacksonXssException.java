@@ -23,7 +23,7 @@ import java.io.IOException;
 /**
  * xss jackson 异常
  *
- * @author L.cm
+ * @author 唐磊
  */
 @Getter
 public class JacksonXssException extends IOException implements XssException {

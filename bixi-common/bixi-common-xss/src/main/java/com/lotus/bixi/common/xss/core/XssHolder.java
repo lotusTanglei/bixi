@@ -19,7 +19,7 @@ package com.lotus.bixi.common.xss.core;
 /**
  * 利用 ThreadLocal 缓存线程间的数据
  *
- * @author L.cm
+ * @author 唐磊
  */
 public class XssHolder {
 

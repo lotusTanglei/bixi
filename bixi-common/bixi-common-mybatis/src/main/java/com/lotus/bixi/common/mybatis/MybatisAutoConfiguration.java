@@ -20,7 +20,7 @@ import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 
 import com.lotus.bixi.common.mybatis.config.MybatisPlusMetaObjectHandler;
-import com.lotus.bixi.common.mybatis.plugins.PigPaginationInnerInterceptor;
+import com.lotus.bixi.common.mybatis.plugins.BixiPaginationInnerInterceptor;
 import com.lotus.bixi.common.mybatis.resolver.SqlFilterArgumentResolver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -54,7 +54,7 @@ public class MybatisAutoConfiguration implements WebMvcConfigurer {
     @Bean
     public MybatisPlusInterceptor mybatisPlusInterceptor() {
         MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
-        interceptor.addInnerInterceptor(new PigPaginationInnerInterceptor());
+        interceptor.addInnerInterceptor(new BixiPaginationInnerInterceptor());
         return interceptor;
     }
 

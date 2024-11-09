@@ -19,6 +19,7 @@ package com.lotus.bixi.common.core.exception;
 import lombok.NoArgsConstructor;
 
 /**
+ * 检查相关异常类
  * @author 唐磊
  * @date 2024/09/21
  */

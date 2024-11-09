@@ -34,7 +34,7 @@ import org.springframework.expression.EvaluationContext;
 /**
  * 操作日志使用spring event异步入库
  *
- * @author L.cm
+ * @author 唐磊
  */
 @Aspect
 @Slf4j

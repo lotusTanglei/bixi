@@ -21,7 +21,7 @@ import lombok.Getter;
 /**
  * xss 表单异常
  *
- * @author L.cm
+ * @author 唐磊
  */
 @Getter
 public class FromXssException extends IllegalStateException implements XssException {

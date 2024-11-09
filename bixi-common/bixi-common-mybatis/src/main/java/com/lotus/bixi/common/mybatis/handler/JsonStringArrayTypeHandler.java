@@ -19,7 +19,7 @@ import java.sql.SQLException;
  * <p>
  * MappedJdbcTypes 数据库中的数据类型 MappedTypes java中的的数据类型
  *
- * @author xuzihui
+ * @author 唐磊
  * @date 2019-11-20
  */
 @MappedTypes(value = {String[].class})

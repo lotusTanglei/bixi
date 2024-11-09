@@ -1,7 +1,7 @@
 package com.lotus.bixi.auth.support.core;
 
 import com.lotus.bixi.common.core.constant.SecurityConstants;
-import com.lotus.bixi.common.security.service.PigUser;
+import com.lotus.bixi.common.security.service.BixiUser;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenClaimsContext;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenClaimsSet;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
@@ -30,10 +30,10 @@ public class CustomeOAuth2TokenCustomizer implements OAuth2TokenCustomizer<OAuth
             return;
         }
 
-        PigUser pigUser = (PigUser) context.getPrincipal().getPrincipal();
-        claims.claim(SecurityConstants.DETAILS_USER, pigUser);
-        claims.claim(SecurityConstants.DETAILS_USER_ID, pigUser.getId());
-        claims.claim(SecurityConstants.USERNAME, pigUser.getUsername());
+        BixiUser bixiUser = (BixiUser) context.getPrincipal().getPrincipal();
+        claims.claim(SecurityConstants.DETAILS_USER, bixiUser);
+        claims.claim(SecurityConstants.DETAILS_USER_ID, bixiUser.getId());
+        claims.claim(SecurityConstants.USERNAME, bixiUser.getUsername());
     }
 
 }

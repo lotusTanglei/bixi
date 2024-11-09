@@ -17,7 +17,7 @@
 package com.lotus.bixi.common.xss.core;
 
 import cn.hutool.core.util.ArrayUtil;
-import com.lotus.bixi.common.xss.config.PigXssProperties;
+import com.lotus.bixi.common.xss.config.BixiXssProperties;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -28,12 +28,12 @@ import org.springframework.web.servlet.AsyncHandlerInterceptor;
 /**
  * xss 处理拦截器
  *
- * @author L.cm
+ * @author 唐磊
  */
 @RequiredArgsConstructor
 public class XssCleanInterceptor implements AsyncHandlerInterceptor {
 
-    private final PigXssProperties xssProperties;
+    private final BixiXssProperties xssProperties;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)

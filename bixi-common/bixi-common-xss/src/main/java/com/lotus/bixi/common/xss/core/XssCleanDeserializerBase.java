@@ -27,7 +27,7 @@ import java.io.IOException;
 /**
  * jackson xss 处理
  *
- * @author L.cm
+ * @author 唐磊
  */
 public abstract class XssCleanDeserializerBase extends JsonDeserializer<String> {
 
@@ -36,7 +36,7 @@ public abstract class XssCleanDeserializerBase extends JsonDeserializer<String> 
         JsonToken jsonToken = p.getCurrentToken();
         if (JsonToken.VALUE_STRING != jsonToken) {
             throw MismatchedInputException.from(p, String.class,
-                    "mica-xss: can't deserialize value of type java.lang.String from " + jsonToken);
+                    "bixi-xss: can't deserialize value of type java.lang.String from " + jsonToken);
         }
         // 解析字符串
         String text = p.getValueAsString();

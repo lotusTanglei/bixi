@@ -17,7 +17,7 @@
 package com.lotus.bixi.common.xss.core;
 
 import cn.hutool.core.util.StrUtil;
-import com.lotus.bixi.common.xss.config.PigXssProperties;
+import com.lotus.bixi.common.xss.config.BixiXssProperties;
 import com.lotus.bixi.common.xss.utils.XssUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,11 +29,11 @@ import org.springframework.web.bind.annotation.InitBinder;
 import java.beans.PropertyEditorSupport;
 
 @ControllerAdvice
-@ConditionalOnProperty(prefix = PigXssProperties.PREFIX, name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = BixiXssProperties.PREFIX, name = "enabled", havingValue = "true", matchIfMissing = true)
 @RequiredArgsConstructor
 public class FormXssClean {
 
-    private final PigXssProperties properties;
+    private final BixiXssProperties properties;
 
     private final XssCleaner xssCleaner;
 
@@ -49,7 +49,7 @@ public class FormXssClean {
 
         private final XssCleaner xssCleaner;
 
-        private final PigXssProperties properties;
+        private final BixiXssProperties properties;
 
         @Override
         public String getAsText() {

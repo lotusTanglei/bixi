@@ -18,7 +18,7 @@ package com.lotus.bixi.common.security.util;
 
 import cn.hutool.core.util.StrUtil;
 import com.lotus.bixi.common.core.constant.SecurityConstants;
-import com.lotus.bixi.common.security.service.PigUser;
+import com.lotus.bixi.common.security.service.BixiUser;
 import lombok.experimental.UtilityClass;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -31,7 +31,7 @@ import java.util.List;
 /**
  * 安全工具类
  *
- * @author L.cm
+ * @author 唐磊
  */
 @UtilityClass
 public class SecurityUtils {
@@ -46,10 +46,10 @@ public class SecurityUtils {
     /**
      * 获取用户
      */
-    public PigUser getUser(Authentication authentication) {
+    public BixiUser getUser(Authentication authentication) {
         Object principal = authentication.getPrincipal();
-        if (principal instanceof PigUser) {
-            return (PigUser) principal;
+        if (principal instanceof BixiUser) {
+            return (BixiUser) principal;
         }
         return null;
     }
@@ -57,7 +57,7 @@ public class SecurityUtils {
     /**
      * 获取用户
      */
-    public PigUser getUser() {
+    public BixiUser getUser() {
         Authentication authentication = getAuthentication();
         if (authentication == null) {
             return null;

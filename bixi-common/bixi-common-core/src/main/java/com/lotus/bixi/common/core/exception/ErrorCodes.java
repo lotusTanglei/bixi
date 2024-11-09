@@ -2,6 +2,7 @@ package com.lotus.bixi.common.core.exception;
 
 /**
  * 错误编码
+ * 配合i18n进行国际化处理
  *
  * @author 唐磊
  * @date 2024/09/21

@@ -30,8 +30,7 @@ public interface SecurityConstants {
     /**
      * 项目的license
      */
-    //TODO
-    String PROJECT_LICENSE = "https://pig4cloud.com";
+    String PROJECT_LICENSE = "https://lotus-bixi.com";
 
     /**
      * 内部

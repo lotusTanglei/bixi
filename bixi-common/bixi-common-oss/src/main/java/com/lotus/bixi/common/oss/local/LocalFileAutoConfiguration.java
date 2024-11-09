@@ -28,7 +28,6 @@ import org.springframework.context.annotation.Bean;
  * aws 自动配置类
  *
  * @author 唐磊
- * @author 858695266
  */
 @AllArgsConstructor
 public class LocalFileAutoConfiguration {

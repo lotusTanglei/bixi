@@ -26,7 +26,7 @@ import java.util.List;
 /**
  * 日志配置类
  *
- * @author L.cm
+ * @author 唐磊
  */
 @Getter
 @Setter

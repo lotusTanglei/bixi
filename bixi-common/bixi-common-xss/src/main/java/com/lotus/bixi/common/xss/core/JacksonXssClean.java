@@ -17,7 +17,7 @@
 package com.lotus.bixi.common.xss.core;
 
 import cn.hutool.core.util.ArrayUtil;
-import com.lotus.bixi.common.xss.config.PigXssProperties;
+import com.lotus.bixi.common.xss.config.BixiXssProperties;
 import com.lotus.bixi.common.xss.utils.XssUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,13 +28,13 @@ import java.util.Objects;
 /**
  * jackson xss 处理
  *
- * @author L.cm
+ * @author 唐磊
  */
 @Slf4j
 @RequiredArgsConstructor
 public class JacksonXssClean extends XssCleanDeserializerBase {
 
-    private final PigXssProperties properties;
+    private final BixiXssProperties properties;
 
     private final XssCleaner xssCleaner;
 

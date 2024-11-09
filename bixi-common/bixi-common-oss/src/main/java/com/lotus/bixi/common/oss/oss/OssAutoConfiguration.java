@@ -31,7 +31,6 @@ import org.springframework.context.annotation.Primary;
  * aws 自动配置类
  *
  * @author 唐磊
- * @author 858695266
  */
 @AllArgsConstructor
 public class OssAutoConfiguration {

@@ -17,7 +17,7 @@
 package com.lotus.bixi.common.xss.core;
 
 import com.lotus.bixi.common.core.util.SpringContextHolder;
-import com.lotus.bixi.common.xss.config.PigXssProperties;
+import com.lotus.bixi.common.xss.config.BixiXssProperties;
 import com.lotus.bixi.common.xss.utils.XssUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,7 +26,7 @@ import java.io.IOException;
 /**
  * jackson xss 处理
  *
- * @author L.cm
+ * @author 唐磊
  */
 @Slf4j
 public class XssCleanDeserializer extends XssCleanDeserializerBase {
@@ -34,7 +34,7 @@ public class XssCleanDeserializer extends XssCleanDeserializerBase {
     @Override
     public String clean(String name, String text) throws IOException {
         // 读取 xss 配置
-        PigXssProperties properties = SpringContextHolder.getBean(PigXssProperties.class);
+        BixiXssProperties properties = SpringContextHolder.getBean(BixiXssProperties.class);
         // 读取 XssCleaner bean
         XssCleaner xssCleaner = SpringContextHolder.getBean(XssCleaner.class);
         if (xssCleaner != null) {
