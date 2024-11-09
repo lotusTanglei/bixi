@@ -6,15 +6,16 @@ spring:
     name: @artifactId@
   cloud:
     nacos:
-      namespace: @nacos.namespace@
       username: @nacos.username@
       password: @nacos.password@
       discovery:
+        namespace: @nacos.namespace@
         server-addr: ${NACOS_HOST:127.0.0.1}:${NACOS_PORT:8848}
         watch:
           enabled: true
         watch-delay: 1000
       config:
+        namespace: @nacos.namespace@
         server-addr: ${spring.cloud.nacos.discovery.server-addr}
   config:
     import:

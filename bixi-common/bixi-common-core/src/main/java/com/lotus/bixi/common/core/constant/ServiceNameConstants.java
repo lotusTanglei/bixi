@@ -24,7 +24,7 @@ package com.lotus.bixi.common.core.constant;
 public interface ServiceNameConstants {
 
     /**
-     * 认证服务的SERVICEID
+     * 认证服务
      */
     String AUTH_SERVICE = "bixi-auth";
 

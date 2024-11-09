@@ -1,1 +1,1 @@
-com.lotus.bixi.common.xss.PigXssAutoConfiguration
+com.lotus.bixi.common.xss.BixiXssAutoConfiguration
