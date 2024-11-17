@@ -4,13 +4,14 @@ import cn.hutool.core.lang.Validator;
 import com.lotus.bixi.common.core.constant.CacheConstants;
 import com.lotus.bixi.common.core.constant.SecurityConstants;
 import io.springboot.captcha.ArithmeticCaptcha;
+import io.springboot.captcha.ChineseCaptcha;
+import io.springboot.captcha.SpecCaptcha;
+import io.springboot.captcha.base.Captcha;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.concurrent.TimeUnit;
 
@@ -36,8 +37,21 @@ public class ImageCodeEndpoint {
      */
     @SneakyThrows
     @GetMapping("/image")
-    public void image(String randomStr, HttpServletResponse response) {
-        ArithmeticCaptcha captcha = new ArithmeticCaptcha(DEFAULT_IMAGE_WIDTH, DEFAULT_IMAGE_HEIGHT);
+    public void image(String randomStr, HttpServletResponse response,@RequestParam(value = "type", defaultValue = "spec") String type) {
+
+        Captcha captcha;
+
+        switch (type) {
+            case "arithmetic":
+                captcha = new ArithmeticCaptcha(DEFAULT_IMAGE_WIDTH, DEFAULT_IMAGE_HEIGHT);
+                break;
+            case "chinese":
+                captcha = new ChineseCaptcha(DEFAULT_IMAGE_WIDTH, DEFAULT_IMAGE_HEIGHT);
+                break;
+            default:
+                captcha = new SpecCaptcha(DEFAULT_IMAGE_WIDTH, DEFAULT_IMAGE_HEIGHT);
+                break;
+        }
 
         if (Validator.isMobile(randomStr)) {
             return;
