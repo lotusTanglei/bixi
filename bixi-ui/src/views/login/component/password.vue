@@ -35,7 +35,7 @@
     </el-form-item>
     <el-form-item class="login-animation2" prop="code" v-if="verifyEnable">
       <el-col :span="15">
-        <el-input text maxlength="4" :placeholder="$t('mobile.placeholder2')" v-model="state.ruleForm.code" clearable
+        <el-input text maxlength="8" :placeholder="$t('mobile.placeholder2')" v-model="state.ruleForm.code" clearable
                   autocomplete="off">
           <template #prefix>
             <el-icon class="el-input__icon">
@@ -75,8 +75,8 @@ const state = reactive({
   isShowPassword: false, // 是否显示密码
   ruleForm: {
     // 表单数据
-    username: 'admin', // 用户名
-    password: '123456', // 密码
+    username: '', // 用户名
+    password: '', // 密码
     code: '', // 验证码
     randomStr: '', // 验证码随机数
   },
@@ -95,7 +95,7 @@ const imgSrc = ref('')
 //获取验证码图片
 const getVerifyCode = () => {
   state.ruleForm.randomStr = generateUUID()
-  imgSrc.value = `${import.meta.env.VITE_API_URL}${import.meta.env.VITE_IS_MICRO == 'false' ? '/admin' : '/auth'}/code/image?randomStr=${state.ruleForm.randomStr}`
+  imgSrc.value = `${import.meta.env.VITE_API_URL}${import.meta.env.VITE_IS_MICRO == 'false' ? '/admin' : '/auth'}/code/image?type=${import.meta.env.VITE_CAPTCHA_TYPE}&randomStr=${state.ruleForm.randomStr}`
 }
 
 // 账号密码登录
