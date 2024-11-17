@@ -67,7 +67,7 @@ public interface CommonConstants {
     /**
      * 前端工程名
      */
-    String FRONT_END_PROJECT = "bixi-front";
+    String FRONT_END_PROJECT = "bixi-ui";
 
     /**
      * 后端工程名
