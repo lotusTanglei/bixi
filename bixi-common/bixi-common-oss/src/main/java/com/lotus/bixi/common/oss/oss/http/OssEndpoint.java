@@ -38,7 +38,6 @@ import java.util.Map;
  * aws 对外提供服务端点
  *
  * @author 唐磊
- * @author 858695266
  * <p>
  * oss.info
  */
