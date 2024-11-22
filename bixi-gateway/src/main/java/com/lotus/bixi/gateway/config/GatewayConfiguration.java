@@ -15,12 +15,12 @@ import org.springframework.context.annotation.Configuration;
 public class GatewayConfiguration {
 
     /**
-     * 创建PigRequest全局过滤器
+     * 创建BixiRequest全局过滤器
      *
-     * @return PigRequest全局过滤器
+     * @return BixiRequest全局过滤器
      */
     @Bean
-    public BixiRequestGlobalFilter pigRequestGlobalFilter() {
+    public BixiRequestGlobalFilter bixiRequestGlobalFilter() {
         return new BixiRequestGlobalFilter();
     }
 
