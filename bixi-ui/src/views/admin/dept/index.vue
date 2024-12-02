@@ -4,7 +4,7 @@
 			<el-row shadow="hover" v-show="showSearch" class="ml10">
 				<el-form :model="state.queryForm" ref="queryRef" :inline="true" @keyup.enter="getDataList">
 					<el-form-item prop="deptName" :label="$t('sysdept.name')">
-						<el-input :placeholder="$t('sysdept.inputdeptNameTip')" style="max-width: 180px" v-model="state.queryForm.deptName"> </el-input>
+						<el-input :placeholder="$t('sysdept.inputnameTip')" style="max-width: 180px" v-model="state.queryForm.deptName"> </el-input>
 					</el-form-item>
 					<el-form-item>
 						<el-button icon="search" type="primary" @click="getDataList">
@@ -45,7 +45,8 @@
 				:header-cell-style="tableStyle?.headerCellStyle"
 			>
 				<el-table-column :label="$t('sysdept.name')" prop="name" width="400" show-overflow-tooltip> </el-table-column>
-				<el-table-column :label="$t('sysdept.weight')" prop="weight" show-overflow-tooltip width="80"></el-table-column>
+        <el-table-column :label="$t('sysdept.code')" prop="code" width="400" show-overflow-tooltip> </el-table-column>
+        <el-table-column :label="$t('sysdept.weight')" prop="weight" show-overflow-tooltip width="80"></el-table-column>
 				<el-table-column prop="createTime" :label="$t('sysdept.createTime')" show-overflow-tooltip></el-table-column>
 				<el-table-column :label="$t('common.action')" show-overflow-tooltip width="250">
 					<template #default="scope">

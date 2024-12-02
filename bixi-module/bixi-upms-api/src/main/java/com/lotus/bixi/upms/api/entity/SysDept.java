@@ -44,7 +44,7 @@ public class SysDept extends Model<SysDept> {
 
     private static final long serialVersionUID = 1L;
 
-    @TableId(value = "dept_id", type = IdType.ASSIGN_ID)
+    @TableId(value = "id", type = IdType.ASSIGN_ID)
     @Schema(description = "部门id")
     private Long deptId;
 
@@ -56,25 +56,31 @@ public class SysDept extends Model<SysDept> {
     private String name;
 
     /**
+     * 部门名称
+     */
+    @NotBlank(message = "部门编码不能为空")
+    @Schema(description = "部门编码")
+    private String code;
+    /**
      * 排序
      */
     @NotNull(message = "排序值不能为空")
     @Schema(description = "排序值")
-    private Integer sortOrder;
+    private Integer sn;
 
     /**
      * 创建人
      */
     @TableField(fill = FieldFill.INSERT)
     @Schema(description = "创建人")
-    private String createBy;
+    private Long createBy;
 
     /**
      * 修改人
      */
     @TableField(fill = FieldFill.UPDATE)
     @Schema(description = "修改人")
-    private String updateBy;
+    private Long updateBy;
 
     /**
      * 创建时间
@@ -104,4 +110,29 @@ public class SysDept extends Model<SysDept> {
     @TableField(fill = FieldFill.INSERT)
     private String delFlag;
 
+    /**
+     * 数据状态标记（业务）,0:正常
+     */
+    @Schema(description = "数据状态标记（业务）,0:正常")
+    @TableField(fill = FieldFill.INSERT)
+    private String status;
+
+    /**
+     * 数据状态标记（数据库）,0:正常
+     */
+    @Schema(description = "数据状态标记（数据库）,0:正常")
+    @TableField(fill = FieldFill.INSERT)
+    private String dataStatus;
+
+    /**
+     * 租户ID
+     */
+    @Schema(description = "租户id")
+    private String tenantId;
+
+    /**
+     * 备注
+     */
+    @Schema(description = "备注")
+    private String remark;
 }

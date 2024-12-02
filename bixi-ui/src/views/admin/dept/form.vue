@@ -17,8 +17,11 @@
         <el-form-item :label="$t('sysdept.name')" prop="name">
           <el-input v-model="dataForm.name" :placeholder="$t('sysdept.inputnameTip')" clearable/>
         </el-form-item>
-        <el-form-item :label="$t('sysdept.sortOrder')" prop="sortOrder">
-          <el-input-number v-model="dataForm.sortOrder" :placeholder="$t('sysdept.inputsortOrderTip')" clearable/>
+        <el-form-item :label="$t('sysdept.code')" prop="code">
+          <el-input v-model="dataForm.code" :placeholder="$t('sysdept.inputcodeTip')" clearable/>
+        </el-form-item>
+        <el-form-item :label="$t('sysdept.sn')" prop="sn">
+          <el-input-number v-model="dataForm.sn" :placeholder="$t('sysdept.inputsortOrderTip')" clearable/>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -47,7 +50,8 @@ const dataForm = reactive({
   parentId: '',
   deptId: '',
   name: '',
-  sortOrder: 9999,
+  code: '',
+  sn: 9999,
 });
 const parentData = ref<any[]>([]);
 const visible = ref(false);
@@ -56,7 +60,8 @@ const loading = ref(false);
 const dataRules = ref({
   parentId: [{required: true, message: '上级部门不能为空', trigger: 'blur'}],
   name: [{validator: rule.overLength, trigger: 'blur'},{required: true, message: '部门名称不能为空', trigger: 'blur'}],
-  sortOrder: [{validator: rule.overLength, trigger: 'blur'},{required: true, message: '排序不能为空', trigger: 'blur'}],
+  code: [{validator: rule.overLength, trigger: 'blur'},{required: true, message: '部门编码不能为空', trigger: 'blur'}],
+  sn: [{validator: rule.overLength, trigger: 'blur'},{required: true, message: '排序不能为空', trigger: 'blur'}],
 });
 
 // 打开弹窗

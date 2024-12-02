@@ -39,6 +39,6 @@ public class DeptExcelVo implements Serializable {
      * 排序
      */
     @ExcelProperty(value = "排序值")
-    private Integer sortOrder;
+    private Integer sn;
 
 }

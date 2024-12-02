@@ -1,14 +1,15 @@
 export default {
 	sysdept: {
 		name: 'dept name',
+		code: 'dept code',
 		parentId: 'parent dept',
 		createTime: 'createTime',
 		weight: 'weight',
-		sortOrder: 'sortOrder',
-		inputdeptNameTip: 'input deptName',
+		sn: 'sn',
 		inputnameTip: 'input deptName',
 		inputparentIdTip: 'select deptName',
-		inputsortOrderTip: 'input sortOrder',
+		inputsnTip: 'input sortOrder',
+		inputcodeTip: 'input deptCode',
 		importTip: 'import dept',
 	},
 };

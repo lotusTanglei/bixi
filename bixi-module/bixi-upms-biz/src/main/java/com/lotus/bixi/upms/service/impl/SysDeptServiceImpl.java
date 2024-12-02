@@ -87,16 +87,17 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
         // 权限内部门
         List<TreeNode<Long>> collect = deptAllList.stream()
                 .filter(dept -> dept.getDeptId().intValue() != dept.getParentId())
-                .sorted(Comparator.comparingInt(SysDept::getSortOrder))
+                .sorted(Comparator.comparingInt(SysDept::getSn))
                 .map(dept -> {
                     TreeNode<Long> treeNode = new TreeNode();
                     treeNode.setId(dept.getDeptId());
                     treeNode.setParentId(dept.getParentId());
                     treeNode.setName(dept.getName());
-                    treeNode.setWeight(dept.getSortOrder());
+                    treeNode.setWeight(dept.getSn());
                     // 有权限不返回标识
                     Map<String, Object> extra = new HashMap<>(8);
                     extra.put("createTime", dept.getCreateTime());
+                    extra.put("code",dept.getCode());
                     treeNode.setExtra(extra);
                     return treeNode;
                 })
@@ -132,7 +133,7 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
                     .map(SysDept::getName)
                     .findFirst();
             deptExcelVo.setParentName(first.orElse("根部门"));
-            deptExcelVo.setSortOrder(item.getSortOrder());
+            deptExcelVo.setSn(item.getSn());
             return deptExcelVo;
         }).collect(Collectors.toList());
         return deptExcelVos;
@@ -161,7 +162,7 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
                 SysDept sysDept = new SysDept();
                 sysDept.setName(item.getName());
                 sysDept.setParentId(one.getDeptId());
-                sysDept.setSortOrder(item.getSortOrder());
+                sysDept.setSn(item.getSn());
                 baseMapper.insert(sysDept);
             } else {
                 // 数据不合法情况

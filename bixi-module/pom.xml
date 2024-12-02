@@ -10,7 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>bixi-module</artifactId>
-    <description>bixi 业务模块</description>
+    <description>bixi 核心业务模块</description>
     <modules>
         <module>bixi-upms-api</module>
         <module>bixi-upms-biz</module>
