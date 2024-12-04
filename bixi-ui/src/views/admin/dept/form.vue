@@ -11,17 +11,17 @@
               clearable
               check-strictly
               :render-after-expand="false"
-              :placeholder="$t('sysdept.inputparentIdTip')"
+              :placeholder="$t('sysdept.inputParentIdTip')"
           />
         </el-form-item>
         <el-form-item :label="$t('sysdept.name')" prop="name">
-          <el-input v-model="dataForm.name" :placeholder="$t('sysdept.inputnameTip')" clearable/>
+          <el-input v-model="dataForm.name" :placeholder="$t('sysdept.inputNameTip')" clearable/>
         </el-form-item>
         <el-form-item :label="$t('sysdept.code')" prop="code">
-          <el-input v-model="dataForm.code" :placeholder="$t('sysdept.inputcodeTip')" clearable/>
+          <el-input v-model="dataForm.code" :placeholder="$t('sysdept.inputCodeTip')" clearable/>
         </el-form-item>
         <el-form-item :label="$t('sysdept.sn')" prop="sn">
-          <el-input-number v-model="dataForm.sn" :placeholder="$t('sysdept.inputsortOrderTip')" clearable/>
+          <el-input-number v-model="dataForm.sn" :placeholder="$t('sysdept.inputSnTip')" clearable/>
         </el-form-item>
       </el-form>
       <template #footer>

@@ -15,11 +15,11 @@
 			:header-cell-style="tableStyle.headerCellStyle"
 		>
 			<el-table-column prop="dictType" :label="$t('dictItem.dictType')" show-overflow-tooltip></el-table-column>
-			<el-table-column prop="value" :label="$t('dictItem.itemValue')" show-overflow-tooltip></el-table-column>
+			<el-table-column prop="value" :label="$t('dictItem.value')" show-overflow-tooltip></el-table-column>
 			<el-table-column prop="label" :label="$t('dictItem.label')" show-overflow-tooltip></el-table-column>
 			<el-table-column prop="description" :label="$t('dictItem.description')" show-overflow-tooltip></el-table-column>
-			<el-table-column prop="sortOrder" :label="$t('dictItem.sortOrder')" show-overflow-tooltip></el-table-column>
-			<el-table-column prop="remarks" :label="$t('dictItem.remarks')" show-overflow-tooltip></el-table-column>
+			<el-table-column prop="sn" :label="$t('dictItem.sn')" show-overflow-tooltip></el-table-column>
+			<el-table-column prop="remark" :label="$t('dictItem.remark')" show-overflow-tooltip></el-table-column>
 			<el-table-column prop="createTime" :label="$t('dictItem.createTime')" show-overflow-tooltip></el-table-column>
 
 			<el-table-column :label="$t('common.action')" width="150">
@@ -73,7 +73,7 @@ const handleDelete = async (row: any) => {
 };
 const open = (row: any) => {
 	state.queryForm.dictId = row.id;
-	state.queryForm.dictType = row.dictType;
+	state.queryForm.dictType = row.type;
 	visible.value = true;
 	getDataList();
 };

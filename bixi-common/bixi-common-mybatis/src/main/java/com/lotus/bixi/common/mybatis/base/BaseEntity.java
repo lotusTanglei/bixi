@@ -2,11 +2,12 @@ package com.lotus.bixi.common.mybatis.base;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableLogic;
+import com.baomidou.mybatisplus.extension.activerecord.Model;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
@@ -17,14 +18,21 @@ import java.time.LocalDateTime;
  */
 @Getter
 @Setter
-public class BaseEntity implements Serializable {
+public abstract class BaseEntity<T extends Model<?>> extends Model<T> {
 
     /**
-     * 创建者
+     * 创建人
      */
-    @Schema(description = "创建人")
     @TableField(fill = FieldFill.INSERT)
-    private String createBy;
+    @Schema(description = "创建人")
+    private Long createBy;
+
+    /**
+     * 修改人
+     */
+    @TableField(fill = FieldFill.UPDATE)
+    @Schema(description = "修改人")
+    private Long updateBy;
 
     /**
      * 创建时间
@@ -34,17 +42,44 @@ public class BaseEntity implements Serializable {
     private LocalDateTime createTime;
 
     /**
-     * 更新者
+     * 修改时间
      */
-    @Schema(description = "更新人")
-    @TableField(fill = FieldFill.INSERT_UPDATE)
-    private String updateBy;
+    @Schema(description = "修改时间")
+    @TableField(fill = FieldFill.UPDATE)
+    private LocalDateTime updateTime;
 
     /**
-     * 更新时间
+     * 是否删除 1：已删除 0：正常
      */
-    @Schema(description = "更新时间")
-    @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updateTime;
+    @TableLogic
+    @Schema(description = "删除标记,1:已删除,0:正常")
+    @TableField(fill = FieldFill.INSERT)
+    private String delFlag;
+
+    /**
+     * 数据状态标记（业务）,0:正常
+     */
+    @Schema(description = "数据状态标记（业务）,0:正常")
+    @TableField(fill = FieldFill.INSERT)
+    private String status;
+
+    /**
+     * 数据状态标记（数据库）,0:正常
+     */
+    @Schema(description = "数据状态标记（数据库）,0:正常")
+    @TableField(fill = FieldFill.INSERT)
+    private String dataStatus;
+
+    /**
+     * 租户ID
+     */
+    @Schema(description = "租户id")
+    private String tenantId;
+
+    /**
+     * 备注
+     */
+    @Schema(description = "备注")
+    private String remark;
 
 }

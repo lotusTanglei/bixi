@@ -19,12 +19,12 @@
 								<query-tree ref="dictTreeRef" :query="state.queryList" @node-click="handleNodeClick" placeholder="请输入字典项或名称">
 									<template #default="{ data }">
 										<span class="custom-tree-node">
-											<span class="label">{{ data.description }}</span>
-											<span class="code">{{ data.dictType }}</span>
+											<span class="label">{{ data.name }}</span>
+											<span class="code">{{ data.type }}</span>
 											<span class="do">
 												<el-button-group>
 													<el-button icon="Edit" size="small" @click.stop="dicDialogRef.openDialog(data.id)"></el-button>
-													<el-tooltip :content="$t('sysdict.deleteDisabledTip')" :disabled="data.systemFlag === '0'" placement="top">
+													<el-tooltip :content="$t('sysDict.deleteDisabledTip')" :disabled="data.systemFlag === '0'" placement="top">
 														<span style="margin-left: 12px">
 															<el-button
 																:disabled="data.systemFlag !== '0'"

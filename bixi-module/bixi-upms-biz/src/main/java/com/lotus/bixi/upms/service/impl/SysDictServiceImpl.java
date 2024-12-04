@@ -66,7 +66,7 @@ public class SysDictServiceImpl extends ServiceImpl<SysDictMapper, SysDict> impl
                 .map(SysDict::getId)
                 .collect(Collectors.toList());
 
-        baseMapper.deleteBatchIds(dictIdList);
+        baseMapper.deleteByIds(dictIdList);
 
         dictItemMapper.delete(Wrappers.<SysDictItem>lambdaQuery().in(SysDictItem::getDictId, dictIdList));
         return R.ok();
@@ -79,7 +79,7 @@ public class SysDictServiceImpl extends ServiceImpl<SysDictMapper, SysDict> impl
      * @return
      */
     @Override
-    @CacheEvict(value = CacheConstants.DICT_DETAILS, key = "#dict.dictType")
+    @CacheEvict(value = CacheConstants.DICT_DETAILS, key = "#dict.type")
     public R updateDict(SysDict dict) {
         SysDict sysDict = this.getById(dict.getId());
         // 系统内置

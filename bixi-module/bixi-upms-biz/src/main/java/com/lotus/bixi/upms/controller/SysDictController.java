@@ -97,7 +97,7 @@ public class SysDictController {
         return R.ok(sysDictService.page(page,
                 Wrappers.<SysDict>lambdaQuery()
                         .eq(StrUtil.isNotBlank(sysDict.getSystemFlag()), SysDict::getSystemFlag, sysDict.getSystemFlag())
-                        .like(StrUtil.isNotBlank(sysDict.getDictType()), SysDict::getDictType, sysDict.getDictType())));
+                        .like(StrUtil.isNotBlank(sysDict.getType()), SysDict::getType, sysDict.getType())));
     }
 
     /**
@@ -150,7 +150,7 @@ public class SysDictController {
     @GetMapping("/list")
     public R getDictList(String name) {
         return R.ok(sysDictService.list(Wrappers.<SysDict>lambdaQuery()
-                .like(StrUtil.isNotBlank(name), SysDict::getDictType, name)
+                .like(StrUtil.isNotBlank(name), SysDict::getType, name)
                 .or()
                 .like(StrUtil.isNotBlank(name), SysDict::getDescription, name)));
     }

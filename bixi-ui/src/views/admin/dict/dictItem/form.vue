@@ -7,21 +7,21 @@
                     :placeholder="$t('dictItem.inputDictTypeTip')"></el-input>
         </el-form-item>
         <el-form-item :label="$t('dictItem.label')" prop="label">
-          <el-input v-model="dataForm.label" :placeholder="$t('dictItem.inputLabelTip')" clearable></el-input>
+          <el-input v-model="dataForm.label" :placeholder="$t('dictItem.inputItemLabelTip')" clearable></el-input>
         </el-form-item>
-        <el-form-item :label="$t('dictItem.itemValue')" prop="value">
+        <el-form-item :label="$t('dictItem.value')" prop="value">
           <el-input v-model="dataForm.value" :placeholder="$t('dictItem.inputItemValueTip')" clearable></el-input>
         </el-form-item>
         <el-form-item :label="$t('dictItem.description')" prop="description">
           <el-input v-model="dataForm.description" :placeholder="$t('dictItem.inputDescriptionTip')"
                     clearable></el-input>
         </el-form-item>
-        <el-form-item :label="$t('dictItem.sortOrder')" prop="sortOrder">
-          <el-input-number v-model="dataForm.sortOrder" :placeholder="$t('dictItem.inputSortOrderTip')"
+        <el-form-item :label="$t('dictItem.sn')" prop="sn">
+          <el-input-number v-model="dataForm.sn" :placeholder="$t('dictItem.inputSnTip')"
                            clearable></el-input-number>
         </el-form-item>
-        <el-form-item :label="$t('dictItem.remarks')" prop="remarks">
-          <el-input v-model="dataForm.remarks" type="textarea" rows="3" :placeholder="$t('dictItem.inputRemarksTip')"
+        <el-form-item :label="$t('dictItem.remark')" prop="remark">
+          <el-input v-model="dataForm.remark" type="textarea" rows="3" :placeholder="$t('dictItem.inputRemarkTip')"
                     maxlength="150"></el-input>
         </el-form-item>
       </el-form>
@@ -59,8 +59,8 @@ const dataForm = reactive({
   value: '',
   label: '',
   description: '',
-  sortOrder: 0,
-  remarks: '',
+  sn: 0,
+  remark: '',
 });
 
 const dataRules = reactive({
@@ -76,7 +76,7 @@ const dataRules = reactive({
     },
   ],
   description: [{validator: rule.overLength, trigger: 'blur'},{required: true, message: '描述不能为空', trigger: 'blur'}],
-  sortOrder: [{validator: rule.overLength, trigger: 'blur'},{required: true, message: '排序不能为空', trigger: 'blur'}],
+  sn: [{validator: rule.overLength, trigger: 'blur'},{required: true, message: '排序不能为空', trigger: 'blur'}],
 });
 
 // 打开弹窗

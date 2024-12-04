@@ -18,3 +18,7 @@ CREATE TABLE sys_dept(
  `remark` VARCHAR(500)   COMMENT '备注' ,
  PRIMARY KEY (id)
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci  COMMENT = '组织机构表';
+
+-- 2、字典表
+
+-- 3、字典项表
