@@ -2,17 +2,17 @@
   <el-dialog :title="form.postId ? $t('common.editBtn') : $t('common.addBtn')" width="600" v-model="visible"
              :close-on-click-modal="false" draggable>
     <el-form ref="dataFormRef" :model="form" :rules="dataRules" label-width="90px" v-loading="loading">
-      <el-form-item :label="t('post.postCode')" prop="postCode">
-        <el-input v-model="form.postCode" :placeholder="t('post.inputpostCodeTip')"/>
+      <el-form-item :label="t('post.code')" prop="code">
+        <el-input v-model="form.code" :placeholder="t('post.inputPostCodeTip')"/>
       </el-form-item>
-      <el-form-item :label="t('post.postName')" prop="postName">
-        <el-input v-model="form.postName" :placeholder="t('post.inputpostNameTip')"/>
+      <el-form-item :label="t('post.name')" prop="name">
+        <el-input v-model="form.name" :placeholder="t('post.inputPostNameTip')"/>
       </el-form-item>
-      <el-form-item :label="t('post.postSort')" prop="postSort">
-        <el-input-number v-model="form.postSort" :placeholder="t('post.inputpostSortTip')"/>
+      <el-form-item :label="t('post.sn')" prop="sn">
+        <el-input-number v-model="form.sn" :placeholder="t('post.inputSnTip')"/>
       </el-form-item>
       <el-form-item :label="t('post.remark')" prop="remark">
-        <el-input type="textarea" maxlength="150" rows="3" v-model="form.remark" :placeholder="t('post.inputremarkTip')"/>
+        <el-input type="textarea" maxlength="150" rows="3" v-model="form.remark" :placeholder="t('post.inputRemarkTip')"/>
       </el-form-item>
     </el-form>
     <template #footer>
@@ -41,48 +41,43 @@ const loading = ref(false);
 
 // 提交表单数据
 const form = reactive({
-  postId: '',
-  postCode: '',
-  postName: '',
-  postSort: 0,
+  id: '',
+  code: '',
+  name: '',
+  sn: 0,
   remark: '',
-  delFlag: '',
-  createTime: '',
-  createBy: '',
-  updateTime: '',
-  updateBy: '',
 });
 
 // 定义校验规则
 const dataRules = ref({
-  postCode: [
+  code: [
     {validator: rule.overLength, trigger: 'blur'},
     {required: true, message: '岗位编码不能为空', trigger: 'blur'},
     {
       validator: (rule: any, value: any, callback: any) => {
-        validatePostCode(rule, value, callback, form.postId !== '');
+        validatePostCode(rule, value, callback, form.id !== '');
       },
       trigger: 'blur',
     },
   ],
-  postName: [
+  name: [
     {validator: rule.overLength, trigger: 'blur'},
     {required: true, message: '岗位名称不能为空', trigger: 'blur'},
     {
       validator: (rule: any, value: any, callback: any) => {
-        validatePostName(rule, value, callback, form.postId !== '');
+        validatePostName(rule, value, callback, form.id !== '');
       },
       trigger: 'blur',
     },
   ],
-  postSort: [{validator: rule.overLength, trigger: 'blur'},{required: true, message: '岗位排序不能为空', trigger: 'blur'}],
+  sn: [{validator: rule.overLength, trigger: 'blur'},{required: true, message: '岗位排序不能为空', trigger: 'blur'}],
   remark: [{validator: rule.overLength, trigger: 'blur'},{required: true, message: '岗位描述不能为空', trigger: 'blur'}],
 });
 
 // 打开弹窗
 const openDialog = (id: string) => {
   visible.value = true;
-  form.postId = '';
+  form.id = '';
 
   // 重置表单数据
   nextTick(() => {
@@ -91,7 +86,7 @@ const openDialog = (id: string) => {
 
   // 获取Post信息
   if (id) {
-    form.postId = id;
+    form.id = id;
     getPostData(id);
   }
 };
@@ -104,8 +99,8 @@ const onSubmit = async () => {
 
   try {
     loading.value = true;
-    form.postId ? await putObj(form) : await addObj(form);
-    useMessage().success(t(form.postId ? 'common.editSuccessText' : 'common.addSuccessText'));
+    form.id ? await putObj(form) : await addObj(form);
+    useMessage().success(t(form.id ? 'common.editSuccessText' : 'common.addSuccessText'));
     visible.value = false;
     emit('refresh');
   } catch (err: any) {

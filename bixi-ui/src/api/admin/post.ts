@@ -60,7 +60,7 @@ export function validatePostName(rule: any, value: any, callback: any, isEdit: b
 		return callback();
 	}
 
-	getObjDetails({ postName: value }).then((response) => {
+	getObjDetails({ name: value }).then((response) => {
 		const result = response.data;
 		if (result !== null) {
 			callback(new Error('岗位名称已经存在'));
@@ -75,7 +75,7 @@ export function validatePostCode(rule: any, value: any, callback: any, isEdit: b
 		return callback();
 	}
 
-	getObjDetails({ postCode: value }).then((response) => {
+	getObjDetails({ code: value }).then((response) => {
 		const result = response.data;
 		if (result !== null) {
 			callback(new Error('岗位编码已经存在'));

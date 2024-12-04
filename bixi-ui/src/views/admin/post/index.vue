@@ -3,8 +3,8 @@
 		<div class="layout-padding-auto layout-padding-view">
 			<el-row class="ml10" v-show="showSearch">
 				<el-form :inline="true" :model="state.queryForm" @keyup.enter="getDataList" ref="queryRef">
-					<el-form-item :label="$t('post.postName')" prop="postName">
-						<el-input :placeholder="$t('post.inputpostNameTip')" style="max-width: 180px" v-model="state.queryForm.postName" />
+					<el-form-item :label="$t('post.name')" prop="name">
+						<el-input :placeholder="$t('post.inputPostNameTip')" style="max-width: 180px" v-model="state.queryForm.postName" />
 					</el-form-item>
 					<el-form-item>
 						<el-button @click="getDataList" icon="search" type="primary">
@@ -46,9 +46,9 @@
 			>
 				<el-table-column align="center" type="selection" width="40" />
 				<el-table-column :label="t('post.index')" type="index" width="60" />
-				<el-table-column :label="t('post.postCode')" prop="postCode" show-overflow-tooltip />
-				<el-table-column :label="t('post.postName')" prop="postName" show-overflow-tooltip />
-				<el-table-column :label="t('post.postSort')" prop="postSort" show-overflow-tooltip />
+				<el-table-column :label="t('post.code')" prop="code" show-overflow-tooltip />
+				<el-table-column :label="t('post.name')" prop="name" show-overflow-tooltip />
+				<el-table-column :label="t('post.sn')" prop="sn" show-overflow-tooltip />
 				<el-table-column :label="t('post.remark')" prop="remark" show-overflow-tooltip />
 				<el-table-column :label="$t('common.action')" width="200">
 					<template #default="scope">
@@ -56,7 +56,7 @@
 							>{{ $t('common.editBtn') }}
 						</el-button>
 
-						<el-button icon="delete" @click="handleDelete([scope.row.postId])" text type="primary" v-auth="'sys_post_del'"
+						<el-button icon="delete" @click="handleDelete([scope.row.id])" text type="primary" v-auth="'sys_post_del'"
 							>{{ $t('common.delBtn') }}
 						</el-button>
 					</template>
@@ -118,8 +118,8 @@ const exportExcel = () => {
 };
 
 // 多选事件
-const handleSelectionChange = (objs: { postId: string }[]) => {
-	selectObjs.value = objs.map(({ postId }) => postId);
+const handleSelectionChange = (objs: { id: string }[]) => {
+	selectObjs.value = objs.map(({ id }) => id);
 	multiple.value = !objs.length;
 };
 

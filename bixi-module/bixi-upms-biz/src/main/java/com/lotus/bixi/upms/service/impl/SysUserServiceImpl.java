@@ -279,7 +279,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
             excelVO.setRoleNameList(roleNameList);
             String postNameList = userVO.getPostList()
                     .stream()
-                    .map(SysPost::getPostName)
+                    .map(SysPost::getName)
                     .collect(Collectors.joining(StrUtil.COMMA));
             excelVO.setPostNameList(postNameList);
             return excelVO;
@@ -336,7 +336,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
             // 判断输入的部门名称列表是否合法
             List<String> postNameList = StrUtil.split(excel.getPostNameList(), StrUtil.COMMA);
             List<SysPost> postCollList = postList.stream()
-                    .filter(post -> postNameList.stream().anyMatch(name -> post.getPostName().equals(name)))
+                    .filter(post -> postNameList.stream().anyMatch(name -> post.getName().equals(name)))
                     .collect(Collectors.toList());
 
             if (postCollList.size() != postNameList.size()) {
@@ -375,7 +375,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         // 根据部门名称查询部门ID
         userDTO.setDeptId(deptOptional.get().getDeptId());
         // 插入岗位名称
-        List<Long> postIdList = postCollList.stream().map(SysPost::getPostId).collect(Collectors.toList());
+        List<Long> postIdList = postCollList.stream().map(SysPost::getId).collect(Collectors.toList());
         userDTO.setPost(postIdList);
         // 根据角色名称查询角色ID
         List<Long> roleIdList = roleCollList.stream().map(SysRole::getRoleId).collect(Collectors.toList());
