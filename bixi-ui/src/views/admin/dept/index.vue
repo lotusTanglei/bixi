@@ -98,7 +98,7 @@ const state: BasicTableProps = reactive<BasicTableProps>({
 		deptName: '',
 	},
 	isPage: false,
-	descs: ['create_time'],
+  ascs: ['sn'],
 });
 
 const { getDataList, tableStyle } = useTable(state);

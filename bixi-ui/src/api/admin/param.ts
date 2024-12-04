@@ -59,7 +59,7 @@ export function validateParamsCode(rule: any, value: any, callback: any, isEdit:
 		return callback();
 	}
 
-	getObjDetails({ publicKey: value }).then((response) => {
+	getObjDetails({ key: value }).then((response) => {
 		const result = response.data;
 		if (result !== null) {
 			callback(new Error('参数编码已经存在'));
@@ -74,7 +74,7 @@ export function validateParamsName(rule: any, value: any, callback: any, isEdit:
 		return callback();
 	}
 
-	getObjDetails({ publicName: value }).then((response) => {
+	getObjDetails({ name: value }).then((response) => {
 		const result = response.data;
 		if (result !== null) {
 			callback(new Error('参数名称已经存在'));

@@ -3,14 +3,14 @@
 		<div class="layout-padding-auto layout-padding-view">
 			<el-row class="ml10" v-show="showSearch">
 				<el-form :inline="true" :model="state.queryForm" ref="queryRef">
-					<el-form-item :label="$t('param.publicName')" prop="publicName">
-						<el-input :placeholder="$t('param.inputpublicNameTip')" style="max-width: 180px" v-model="state.queryForm.publicName" />
+					<el-form-item :label="$t('param.name')" prop="name">
+						<el-input :placeholder="$t('param.inputPublicParamNameTip')" style="max-width: 180px" v-model="state.queryForm.name" />
 					</el-form-item>
-					<el-form-item :label="$t('param.publicKey')" prop="publicKey">
-						<el-input :placeholder="$t('param.inputpublicKeyTip')" style="max-width: 180px" v-model="state.queryForm.publicKey" />
+					<el-form-item :label="$t('param.key')" prop="key">
+						<el-input :placeholder="$t('param.inputPublicParamKeyTip')" style="max-width: 180px" v-model="state.queryForm.key" />
 					</el-form-item>
 					<el-form-item :label="t('param.systemFlag')" class="ml2" prop="systemFlag">
-						<el-select :placeholder="t('param.inputsystemFlagTip')" v-model="state.queryForm.systemFlag">
+						<el-select :placeholder="t('param.inputSystemFlagTip')" v-model="state.queryForm.systemFlag">
 							<el-option :key="index" :label="item.label" :value="item.value" v-for="(item, index) in dict_type"></el-option>
 						</el-select>
 					</el-form-item>
@@ -65,10 +65,11 @@
 			>
 				<el-table-column :selectable="handleSelectable" align="center" type="selection" width="40" />
 				<el-table-column :label="t('param.index')" type="index" width="60" />
-				<el-table-column :label="t('param.publicName')" prop="publicName" show-overflow-tooltip />
-				<el-table-column :label="t('param.publicKey')" prop="publicKey" show-overflow-tooltip />
-				<el-table-column :label="t('param.publicValue')" prop="publicValue" show-overflow-tooltip />
-				<el-table-column :label="t('param.status')" prop="status" show-overflow-tooltip>
+				<el-table-column :label="t('param.name')" prop="name" show-overflow-tooltip />
+				<el-table-column :label="t('param.key')" prop="key" show-overflow-tooltip />
+				<el-table-column :label="t('param.value')" prop="value" show-overflow-tooltip />
+        <el-table-column :label="t('param.sn')" prop="sn" show-overflow-tooltip />
+        <el-table-column :label="t('param.status')" prop="status" show-overflow-tooltip>
 					<template #default="scope">
 						<dict-tag :options="status_type" :value="scope.row.status"></dict-tag>
 					</template>
@@ -81,17 +82,17 @@
 				</el-table-column>
 				<el-table-column :label="$t('common.action')" width="150">
 					<template #default="scope">
-						<el-button icon="edit-pen" @click="formDialogRef.openDialog(scope.row.publicId)" text type="primary"
+						<el-button icon="edit-pen" @click="formDialogRef.openDialog(scope.row.id)" text type="primary"
 							>{{ $t('common.editBtn') }}
 						</el-button>
 
-						<el-tooltip :content="$t('sysdict.deleteDisabledTip')" :disabled="scope.row.systemFlag === '0'" placement="top">
+						<el-tooltip :content="$t('param.deleteDisabledTip')" :disabled="scope.row.systemFlag === '0'" placement="top">
 							<span style="margin-left: 12px">
 								<el-button
 									icon="delete"
 									v-auth="'sys_syspublicparam_del'"
 									:disabled="scope.row.systemFlag !== '0'"
-									@click="handleDelete([scope.row.publicId])"
+									@click="handleDelete([scope.row.id])"
 									text
 									type="primary"
 								>
@@ -137,7 +138,7 @@ const state: BasicTableProps = reactive<BasicTableProps>({
 		systemFlag: '',
 	},
 	pageList: fetchList,
-	descs: ['create_time'],
+	ascs: ['sn'],
 });
 
 //  table hook
@@ -167,8 +168,8 @@ const handleRefreshCache = () => {
 };
 
 // 多选事件
-const handleSelectionChange = (objs: { publicId: string }[]) => {
-	selectObjs.value = objs.map(({ publicId }) => publicId);
+const handleSelectionChange = (objs: { id: string }[]) => {
+	selectObjs.value = objs.map(({ id }) => id);
 	multiple.value = !objs.length;
 };
 

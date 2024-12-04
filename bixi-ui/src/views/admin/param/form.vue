@@ -1,5 +1,5 @@
 <template>
-  <el-dialog :close-on-click-modal="false" :title="form.publicId ? $t('common.editBtn') : $t('common.addBtn')"
+  <el-dialog :close-on-click-modal="false" :title="form.id ? $t('common.editBtn') : $t('common.addBtn')"
              width="600" draggable v-model="visible">
     <el-form :model="form" :rules="dataRules" formDialogRef label-width="90px" ref="dataFormRef" v-loading="loading">
       <el-form-item :label="t('param.systemFlag')" prop="systemFlag">
@@ -10,23 +10,26 @@
           </el-radio>
         </el-radio-group>
       </el-form-item>
-      <el-form-item :label="t('param.publicType')" prop="publicType">
-        <el-select :placeholder="t('param.inputpublicTypeTip')" v-model="form.publicType">
+      <el-form-item :label="t('param.type')" prop="type">
+        <el-select :placeholder="t('param.inputPublicParamTypeTip')" v-model="form.type">
           <el-option :key="index" :label="item.label" :value="item.value"
                      v-for="(item, index) in param_type"></el-option>
         </el-select>
       </el-form-item>
       <el-form-item :label="t('param.validateCode')" prop="validateCode">
-        <el-input :placeholder="t('param.inputvalidateCodeTip')" v-model="form.validateCode"/>
+        <el-input :placeholder="t('param.inputValidateCodeTip')" v-model="form.validateCode"/>
       </el-form-item>
-      <el-form-item :label="t('param.publicName')" prop="publicName">
-        <el-input :placeholder="t('param.inputpublicNameTip')" v-model="form.publicName"/>
+      <el-form-item :label="t('param.name')" prop="name">
+        <el-input :placeholder="t('param.inputPublicParamNameTip')" v-model="form.name"/>
       </el-form-item>
-      <el-form-item :label="t('param.publicKey')" prop="publicKey">
-        <el-input :placeholder="t('param.inputpublicKeyTip')" v-model="form.publicKey"/>
+      <el-form-item :label="t('param.key')" prop="key">
+        <el-input :placeholder="t('param.inputPublicParamKeyTip')" v-model="form.key"/>
       </el-form-item>
-      <el-form-item :label="t('param.publicValue')" prop="publicValue">
-        <el-input :placeholder="t('param.inputpublicValueTip')" v-model="form.publicValue"/>
+      <el-form-item :label="t('param.value')" prop="value">
+        <el-input :placeholder="t('param.inputPublicParamValueTip')" v-model="form.value"/>
+      </el-form-item>
+      <el-form-item :label="$t('param.sn')" prop="sn">
+        <el-input-number v-model="form.sn" :placeholder="$t('param.inputSnTip')" clearable/>
       </el-form-item>
       <el-form-item :label="t('param.status')" prop="status">
         <el-radio-group v-model="form.status">
@@ -68,50 +71,52 @@ const {dict_type, status_type, param_type} = useDict('dict_type', 'status_type',
 
 // 提交表单数据
 const form = reactive({
-  publicId: '',
-  publicName: '',
-  publicKey: '',
-  publicValue: '',
+  id: '',
+  name: '',
+  key: '',
+  value: '',
   status: '0',
   validateCode: '',
-  publicType: '0',
+  type: '0',
   systemFlag: '0',
+  sn: 0,
 });
 
 // 定义校验规则
 const dataRules = reactive({
-  publicName: [
+  name: [
     {validator: rule.overLength, trigger: 'blur'},
     {required: true, message: '名称不能为空', trigger: 'blur'},
     {
       validator: (rule: any, value: any, callback: any) => {
-        validateParamsName(rule, value, callback, form.publicId !== '');
+        validateParamsName(rule, value, callback, form.id !== '');
       },
       trigger: 'blur',
     },
   ],
-  publicKey: [
+  key: [
     {validator: rule.overLength, trigger: 'blur'},
     {required: true, message: '参数键不能为空', trigger: 'blur'},
     {validator: rule.validatorCapital, trigger: 'blur'},
     {
       validator: (rule: any, value: any, callback: any) => {
-        validateParamsCode(rule, value, callback, form.publicId !== '');
+        validateParamsCode(rule, value, callback, form.id !== '');
       },
       trigger: 'blur',
     },
   ],
-  publicValue: [{validator: rule.overLength, trigger: 'blur'},{required: true, message: '参数值不能为空', trigger: 'blur'}],
+  value: [{validator: rule.overLength, trigger: 'blur'},{required: true, message: '参数值不能为空', trigger: 'blur'}],
   status: [{required: true, message: '状态不能为空', trigger: 'blur'}],
-  publicType: [{required: true, message: '类型不能为空', trigger: 'blur'}],
+  type: [{required: true, message: '类型不能为空', trigger: 'blur'}],
   systemFlag: [{required: true, message: '类型不能为空', trigger: 'blur'}],
   validateCode: [{validator: rule.overLength, trigger: 'blur'}],
+  sn: [{validator: rule.overLength, trigger: 'blur'},{required: true, message: '排序不能为空', trigger: 'blur'}],
 });
 
 // 打开弹窗
 const openDialog = (id: string) => {
   visible.value = true;
-  form.publicId = '';
+  form.id = '';
 
   // 重置表单数据
   nextTick(() => {
@@ -120,7 +125,7 @@ const openDialog = (id: string) => {
 
   // 获取sysPublicParam信息
   if (id) {
-    form.publicId = id;
+    form.id = id;
     getsysPublicParamData(id);
   }
 };
@@ -133,8 +138,8 @@ const onSubmit = async () => {
 
   try {
     loading.value = true;
-    form.publicId ? await putObj(form) : await addObj(form);
-    useMessage().success(t(form.publicId ? 'common.editSuccessText' : 'common.addSuccessText'));
+    form.id ? await putObj(form) : await addObj(form);
+    useMessage().success(t(form.id ? 'common.editSuccessText' : 'common.addSuccessText'));
     visible.value = false;
     emit('refresh');
   } catch (err: any) {

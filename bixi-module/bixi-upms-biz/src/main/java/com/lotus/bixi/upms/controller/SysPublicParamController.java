@@ -77,10 +77,10 @@ public class SysPublicParamController {
     @GetMapping("/page")
     public R getSysPublicParamPage(@ParameterObject Page page, @ParameterObject SysPublicParam sysPublicParam) {
         LambdaUpdateWrapper<SysPublicParam> wrapper = Wrappers.<SysPublicParam>lambdaUpdate()
-                .like(StrUtil.isNotBlank(sysPublicParam.getPublicName()), SysPublicParam::getPublicName,
-                        sysPublicParam.getPublicName())
-                .like(StrUtil.isNotBlank(sysPublicParam.getPublicKey()), SysPublicParam::getPublicKey,
-                        sysPublicParam.getPublicKey())
+                .like(StrUtil.isNotBlank(sysPublicParam.getName()), SysPublicParam::getName,
+                        sysPublicParam.getName())
+                .like(StrUtil.isNotBlank(sysPublicParam.getKey()), SysPublicParam::getKey,
+                        sysPublicParam.getKey())
                 .eq(StrUtil.isNotBlank(sysPublicParam.getSystemFlag()), SysPublicParam::getSystemFlag,
                         sysPublicParam.getSystemFlag());
 
