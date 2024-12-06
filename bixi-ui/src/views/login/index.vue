@@ -32,7 +32,7 @@
 <script setup lang="ts" name="loginIndex">
 import { useThemeConfig } from '/@/stores/themeConfig';
 import { NextLoading } from '/@/utils/loading';
-import illustration from '/@/assets/login/login_bg.svg';
+import illustration from '/@/assets/login/login_bg.png';
 import bg from '/@/assets/login/bg.png';
 import miniQr from '/@/assets/login/mini_qr.png';
 import { useI18n } from 'vue-i18n';

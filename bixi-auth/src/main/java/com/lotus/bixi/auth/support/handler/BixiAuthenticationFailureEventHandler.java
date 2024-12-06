@@ -65,7 +65,7 @@ public class BixiAuthenticationFailureEventHandler implements AuthenticationFail
         log.info("用户：{} 登录失败，异常：{}", username, exception.getLocalizedMessage());
         SysLog logVo = SysLogUtils.getSysLog();
         logVo.setTitle("登录失败");
-        logVo.setLogType(LogTypeEnum.ERROR.getType());
+        logVo.setType(LogTypeEnum.ERROR.getType());
         logVo.setException(exception.getLocalizedMessage());
         // 发送异步日志事件
         String startTimeStr = request.getHeader(CommonConstants.REQUEST_START_TIME);
@@ -74,7 +74,6 @@ public class BixiAuthenticationFailureEventHandler implements AuthenticationFail
             Long endTime = System.currentTimeMillis();
             logVo.setTime(endTime - startTime);
         }
-        logVo.setCreateBy(username);
         SpringContextHolder.publishEvent(new SysLogEvent(logVo));
         // 写出错误信息
         sendErrorResponse(request, response, exception);

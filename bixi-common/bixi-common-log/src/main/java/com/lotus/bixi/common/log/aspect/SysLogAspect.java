@@ -76,7 +76,7 @@ public class SysLogAspect {
         try {
             obj = point.proceed();
         } catch (Exception e) {
-            logVo.setLogType(LogTypeEnum.ERROR.getType());
+            logVo.setType(LogTypeEnum.ERROR.getType());
             logVo.setException(e.getMessage());
             throw e;
         } finally {

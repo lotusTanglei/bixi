@@ -1,7 +1,7 @@
 export default {
     syslog: {
         index: '#',
-        logType: '类型',
+        type: '类型',
         title: '标题',
         remoteAddr: 'IP地址',
         method: '请求方式',

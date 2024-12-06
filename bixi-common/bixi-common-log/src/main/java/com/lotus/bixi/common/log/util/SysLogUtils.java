@@ -54,12 +54,11 @@ public class SysLogUtils {
         HttpServletRequest request = ((ServletRequestAttributes) Objects
                 .requireNonNull(RequestContextHolder.getRequestAttributes())).getRequest();
         SysLogEventSource sysLog = new SysLogEventSource();
-        sysLog.setLogType(LogTypeEnum.NORMAL.getType());
+        sysLog.setType(LogTypeEnum.NORMAL.getType());
         sysLog.setRequestUri(URLUtil.getPath(request.getRequestURI()));
         sysLog.setMethod(request.getMethod());
         sysLog.setRemoteAddr(JakartaServletUtil.getClientIP(request));
         sysLog.setUserAgent(request.getHeader(HttpHeaders.USER_AGENT));
-        sysLog.setCreateBy(getUsername());
         sysLog.setServiceId(SpringUtil.getProperty("spring.application.name"));
 
         // get 参数脱敏
@@ -70,18 +69,6 @@ public class SysLogUtils {
         return sysLog;
     }
 
-    /**
-     * 获取用户名称
-     *
-     * @return username
-     */
-    private String getUsername() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null) {
-            return null;
-        }
-        return authentication.getName();
-    }
 
     /**
      * 获取spel 定义的参数值

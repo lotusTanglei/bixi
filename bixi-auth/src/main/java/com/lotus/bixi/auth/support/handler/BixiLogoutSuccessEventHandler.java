@@ -70,7 +70,6 @@ public class BixiLogoutSuccessEventHandler implements ApplicationListener<Logout
         if (authentication instanceof PreAuthenticatedAuthenticationToken) {
             logVo.setServiceId(authentication.getCredentials().toString());
         }
-        logVo.setCreateBy(authentication.getName());
         SpringContextHolder.publishEvent(new SysLogEvent(logVo));
     }
 

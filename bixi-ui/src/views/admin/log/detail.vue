@@ -9,7 +9,7 @@
       <el-descriptions-item :label="$t('syslog.method')">{{ data.method }}</el-descriptions-item>
       <el-descriptions-item :label="$t('syslog.ua')">{{ data.userAgent }}</el-descriptions-item>
       <el-descriptions-item :label="$t('syslog.serviceId')">{{ data.serviceId }}</el-descriptions-item>
-      <el-descriptions-item :label="$t('syslog.time')">{{ data.time }}/ms</el-descriptions-item>
+      <el-descriptions-item :label="$t('syslog.time')">{{ data.time }}ms</el-descriptions-item>
       <el-descriptions-item :label="$t('syslog.params')" v-if="data.params">
         <code-editor v-model="data.params" theme="darcula" height="100" mode="go"></code-editor>
       </el-descriptions-item>

@@ -81,7 +81,6 @@ public class BixiAuthenticationSuccessEventHandler implements AuthenticationSucc
                 Long endTime = System.currentTimeMillis();
                 logVo.setTime(endTime - startTime);
             }
-            logVo.setCreateBy(userInfo.getName());
             SpringContextHolder.publishEvent(new SysLogEvent(logVo));
         }
 

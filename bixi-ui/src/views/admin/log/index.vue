@@ -3,8 +3,8 @@
 		<div class="layout-padding-auto layout-padding-view">
 			<el-row class="ml10" v-show="showSearch">
 				<el-form :inline="true" :model="state.queryForm" @keyup.enter="getDataList" ref="queryRef">
-					<el-form-item :label="$t('syslog.logType')" prop="logType">
-						<el-select :placeholder="$t('syslog.inputLogTypeTip')" class="w100" clearable v-model="state.queryForm.logType">
+					<el-form-item :label="$t('syslog.type')" prop="type">
+						<el-select :placeholder="$t('syslog.inputLogTypeTip')" class="w100" clearable v-model="state.queryForm.type">
 							<el-option :key="item.value" :label="item.label" :value="item.value" v-for="item in log_type" />
 						</el-select>
 					</el-form-item>
@@ -50,9 +50,9 @@
 			>
 				<el-table-column align="center" type="selection" width="40" />
 				<el-table-column :label="$t('syslog.index')" type="index" width="60" />
-				<el-table-column :label="$t('syslog.logType')" show-overflow-tooltip>
+				<el-table-column :label="$t('syslog.type')" show-overflow-tooltip>
 					<template #default="scope">
-						<dict-tag :options="log_type" :value="scope.row.logType"></dict-tag>
+						<dict-tag :options="log_type" :value="scope.row.type"></dict-tag>
 					</template>
 				</el-table-column>
 				<el-table-column :label="$t('syslog.title')" prop="title" show-overflow-tooltip></el-table-column>
@@ -60,7 +60,7 @@
 				<el-table-column :label="$t('syslog.method')" prop="method" show-overflow-tooltip></el-table-column>
 				<el-table-column :label="$t('syslog.time')" prop="time" show-overflow-tooltip>
 					<template #default="scope">
-						<span v-if="scope.row.time">{{scope.row.time}}/ms</span>
+						<span v-if="scope.row.time">{{scope.row.time}}ms</span>
 					</template>
 				</el-table-column>
 				<el-table-column :label="$t('syslog.createTime')" prop="createTime" show-overflow-tooltip sortable="custom" width="200"></el-table-column>
@@ -108,7 +108,7 @@ const multiple = ref(true);
 
 const state: BasicTableProps = reactive<BasicTableProps>({
 	queryForm: {
-		logType: '',
+		type: '',
 		createTime: '',
 	},
 	selectObjs: [],
