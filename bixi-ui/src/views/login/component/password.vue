@@ -54,7 +54,7 @@
         <span>{{ $t('password.accountBtnText') }}</span>
       </el-button>
     </el-form-item>
-    <div class="font12 mt30 login-animation4 login-msg">{{ $t('browserMsgText') }}</div>
+    <div class="font15 mt30 login-animation4 login-msg">{{ $t('browserMsgText') }}</div>
   </el-form>
 </template>
 

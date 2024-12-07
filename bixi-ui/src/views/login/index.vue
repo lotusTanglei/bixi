@@ -4,7 +4,7 @@
 		<div class="flex-c absolute right-5 top-3"></div>
 		<div class="login-container">
 			<div class="img">
-				<img :src="illustration" />
+<!--				<img :src="illustration" />-->
 			</div>
 			<div class="login-box">
 				<div class="login-form">
