@@ -65,7 +65,7 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
     @Transactional(rollbackFor = Exception.class)
     public Boolean removeDeptById(Long id) {
         // 级联删除部门
-        List<Long> idList = this.listDescendant(id).stream().map(SysDept::getDeptId).collect(Collectors.toList());
+        List<Long> idList = this.listDescendant(id).stream().map(SysDept::getId).collect(Collectors.toList());
 
         Optional.ofNullable(idList).filter(CollUtil::isNotEmpty).ifPresent(this::removeByIds);
 
@@ -86,11 +86,11 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
 
         // 权限内部门
         List<TreeNode<Long>> collect = deptAllList.stream()
-                .filter(dept -> dept.getDeptId().intValue() != dept.getParentId())
+                .filter(dept -> dept.getId().intValue() != dept.getParentId())
                 .sorted(Comparator.comparingInt(SysDept::getSn))
                 .map(dept -> {
                     TreeNode<Long> treeNode = new TreeNode();
-                    treeNode.setId(dept.getDeptId());
+                    treeNode.setId(dept.getId());
                     treeNode.setParentId(dept.getParentId());
                     treeNode.setName(dept.getName());
                     treeNode.setWeight(dept.getSn());
@@ -129,7 +129,7 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
             deptExcelVo.setName(item.getName());
             Optional<String> first = this.list()
                     .stream()
-                    .filter(it -> item.getParentId().equals(it.getDeptId()))
+                    .filter(it -> item.getParentId().equals(it.getId()))
                     .map(SysDept::getName)
                     .findFirst();
             deptExcelVo.setParentName(first.orElse("根部门"));
@@ -153,7 +153,7 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
             SysDept one = this.getOne(Wrappers.<SysDept>lambdaQuery().eq(SysDept::getName, item.getParentName()));
             if (item.getParentName().equals("根部门")) {
                 one = new SysDept();
-                one.setDeptId(0L);
+                one.setId(0L);
             }
             if (one == null) {
                 errorMsg.add("上级部门不存在");
@@ -161,7 +161,7 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
             if (CollUtil.isEmpty(errorMsg)) {
                 SysDept sysDept = new SysDept();
                 sysDept.setName(item.getName());
-                sysDept.setParentId(one.getDeptId());
+                sysDept.setParentId(one.getId());
                 sysDept.setSn(item.getSn());
                 baseMapper.insert(sysDept);
             } else {
@@ -192,7 +192,7 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
 
         // 添加当前节点
         resDeptList.addAll(allDeptList.stream()
-                .filter(sysDept -> deptId.equals(sysDept.getDeptId()))
+                .filter(sysDept -> deptId.equals(sysDept.getId()))
                 .collect(Collectors.toList()));
         return resDeptList;
     }
@@ -208,7 +208,7 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
         // 使用 Stream API 进行筛选和遍历
         allDeptList.stream().filter(sysDept -> sysDept.getParentId().equals(parentId)).forEach(sysDept -> {
             resDeptList.add(sysDept);
-            recursiveDept(allDeptList, sysDept.getDeptId(), resDeptList);
+            recursiveDept(allDeptList, sysDept.getId(), resDeptList);
         });
     }
 

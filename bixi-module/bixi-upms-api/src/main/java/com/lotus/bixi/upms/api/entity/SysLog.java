@@ -38,16 +38,6 @@ import lombok.Data;
 @Schema(description = "日志")
 public class SysLog extends BaseEntity<SysLog> {
 
-    private static final long serialVersionUID = 1L;
-
-    /**
-     * 编号
-     */
-    @TableId(type = IdType.ASSIGN_ID)
-    @ExcelProperty("日志编号")
-    @Schema(description = "日志编号")
-    private Long id;
-
     /**
      * 日志类型
      */

@@ -1,7 +1,7 @@
 export default {
 	client: {
 		index: '#',
-		importsysOauthClientDetailsTip: '导入终端信息表',
+		importSysOauthClientDetailsTip: '导入终端信息表',
 		id: 'ID',
 		clientId: '客户端ID',
 		resourceIds: '',

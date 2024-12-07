@@ -46,9 +46,9 @@ export function refreshCache() {
 	});
 }
 
-export function getDetails(obj: Object) {
+export function getByClientId(obj: Object) {
 	return request({
-		url: '/admin/client/getClientDetailsById/' + obj,
+		url: '/admin/client/' + obj,
 		method: 'get',
 	});
 }
@@ -57,7 +57,7 @@ export function validateclientId(rule: any, value: any, callback: any, isEdit: b
 	if (isEdit) {
 		return callback();
 	}
-	getDetails(value).then((res) => {
+	getByClientId(value).then((res) => {
 		const result = res.data;
 		if (result !== null) {
 			callback(new Error('编号已经存在'));

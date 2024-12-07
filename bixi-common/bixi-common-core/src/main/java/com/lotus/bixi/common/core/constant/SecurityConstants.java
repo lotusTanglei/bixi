@@ -84,7 +84,7 @@ public interface SecurityConstants {
     /**
      * 验证码长度
      */
-    String CODE_SIZE = "6";
+    String CODE_SIZE = "8";
 
     /**
      * 客户端模式

@@ -18,8 +18,7 @@
  */
 
 package com.lotus.bixi.upms.api.entity;
-
-import com.baomidou.mybatisplus.extension.activerecord.Model;
+import com.lotus.bixi.common.mybatis.base.BaseRelationEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -35,10 +34,9 @@ import lombok.EqualsAndHashCode;
 @Data
 @Schema(description = "部门关系")
 @EqualsAndHashCode(callSuper = true)
-public class SysDeptRelation extends Model<SysDeptRelation> {
+public class SysDeptRelation extends BaseRelationEntity<SysDeptRelation> {
 
     private static final long serialVersionUID = 1L;
-
     /**
      * 祖先节点
      */

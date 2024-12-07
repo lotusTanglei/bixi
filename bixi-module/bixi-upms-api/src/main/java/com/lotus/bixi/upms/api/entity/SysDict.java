@@ -21,14 +21,6 @@ import java.time.LocalDateTime;
 public class SysDict extends BaseEntity<SysDept> {
 
     private static final long serialVersionUID = 1L;
-
-    /**
-     * 编号
-     */
-    @TableId(type = IdType.ASSIGN_ID)
-    @Schema(description = "字典编号")
-    private Long id;
-
     /**
      * 类型
      */

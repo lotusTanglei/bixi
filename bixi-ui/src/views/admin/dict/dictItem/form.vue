@@ -39,7 +39,7 @@
 
 <script setup lang="ts" name="dict-item-form">
 import {useI18n} from 'vue-i18n';
-import {getItemObj, addItemObj, putItemObj, validateDictItemLabel} from '/@/api/admin/dict';
+import {getItemObj, addItemObj, putItemObj, validateDictItemLabel, validateDictItemValue} from '/@/api/admin/dict';
 import {useMessage} from '/@/hooks/message';
 import {rule} from '/@/utils/validate';
 // 定义子组件向父组件传值/事件
@@ -64,7 +64,15 @@ const dataForm = reactive({
 });
 
 const dataRules = reactive({
-  value: [{validator: rule.overLength, trigger: 'blur'},{required: true, message: '数据值不能为空', trigger: 'blur'}],
+  value: [{validator: rule.overLength, trigger: 'blur'},
+    {required: true, message: '数据值不能为空', trigger: 'blur'},
+    {
+      validator: (rule: any, value: any, callback: any) => {
+        validateDictItemValue(rule, value, callback, dataForm.dictType, dataForm.id !== '');
+      },
+      trigger: 'blur',
+    },
+  ],
   label: [
     {validator: rule.overLength, trigger: 'blur'},
     {required: true, message: '标签不能为空', trigger: 'blur'},

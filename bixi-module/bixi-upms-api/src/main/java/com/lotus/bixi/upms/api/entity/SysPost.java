@@ -40,15 +40,6 @@ import java.time.LocalDateTime;
 @Schema(description = "岗位信息表")
 public class SysPost extends BaseEntity<SysPost> {
 
-    private static final long serialVersionUID = 1L;
-
-    /**
-     * 岗位ID
-     */
-    @TableId(value = "id", type = IdType.ASSIGN_ID)
-    @Schema(description = "岗位ID")
-    private Long Id;
-
     /**
      * 岗位编码
      */

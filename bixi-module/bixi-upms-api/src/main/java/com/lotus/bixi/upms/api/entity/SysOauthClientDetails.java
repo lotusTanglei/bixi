@@ -19,14 +19,11 @@
 
 package com.lotus.bixi.upms.api.entity;
 
-import com.baomidou.mybatisplus.annotation.*;
-import com.baomidou.mybatisplus.extension.activerecord.Model;
+import com.lotus.bixi.common.mybatis.base.BaseEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.time.LocalDateTime;
 
 /**
  * <p>
@@ -39,13 +36,7 @@ import java.time.LocalDateTime;
 @Data
 @Schema(description = "客户端信息")
 @EqualsAndHashCode(callSuper = true)
-public class SysOauthClientDetails extends Model<SysOauthClientDetails> {
-
-    private static final long serialVersionUID = 1L;
-
-    @TableId(value = "id", type = IdType.ASSIGN_ID)
-    @Schema(description = "id")
-    private Long id;
+public class SysOauthClientDetails extends BaseEntity<SysOauthClientDetails> {
 
     /**
      * 客户端ID
@@ -115,41 +106,5 @@ public class SysOauthClientDetails extends Model<SysOauthClientDetails> {
      */
     @Schema(description = "是否自动放行")
     private String autoapprove;
-
-    /**
-     * 删除标记
-     */
-    @TableLogic
-    @TableField(fill = FieldFill.INSERT)
-    @Schema(description = "删除标记,1:已删除,0:正常")
-    private String delFlag;
-
-    /**
-     * 创建人
-     */
-    @TableField(fill = FieldFill.INSERT)
-    @Schema(description = "创建人")
-    private String createBy;
-
-    /**
-     * 修改人
-     */
-    @TableField(fill = FieldFill.UPDATE)
-    @Schema(description = "修改人")
-    private String updateBy;
-
-    /**
-     * 创建时间
-     */
-    @TableField(fill = FieldFill.INSERT)
-    @Schema(description = "创建时间")
-    private LocalDateTime createTime;
-
-    /**
-     * 更新时间
-     */
-    @TableField(fill = FieldFill.UPDATE)
-    @Schema(description = "更新时间")
-    private LocalDateTime updateTime;
 
 }

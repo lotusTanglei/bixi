@@ -40,13 +40,6 @@ public class SysDictItem extends BaseEntity<SysDictItem> {
     private static final long serialVersionUID = 1L;
 
     /**
-     * 编号
-     */
-    @TableId(type = IdType.ASSIGN_ID)
-    @Schema(description = "字典项id")
-    private Long id;
-
-    /**
      * 所属字典类id
      */
     @Schema(description = "所属字典类id")

@@ -45,10 +45,6 @@ public class SysDept extends BaseEntity<SysDept> {
 
     private static final long serialVersionUID = 1L;
 
-    @TableId(value = "id", type = IdType.ASSIGN_ID)
-    @Schema(description = "部门id")
-    private Long deptId;
-
     /**
      * 部门名称
      */

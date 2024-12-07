@@ -373,7 +373,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         // 批量导入初始密码为手机号
         userDTO.setPassword(userDTO.getPhone());
         // 根据部门名称查询部门ID
-        userDTO.setDeptId(deptOptional.get().getDeptId());
+        userDTO.setDeptId(deptOptional.get().getId());
         // 插入岗位名称
         List<Long> postIdList = postCollList.stream().map(SysPost::getId).collect(Collectors.toList());
         userDTO.setPost(postIdList);

@@ -38,15 +38,6 @@ import java.time.LocalDateTime;
 @EqualsAndHashCode(callSuper = true)
 public class SysPublicParam extends BaseEntity<SysPublicParam> {
 
-    private static final long serialVersionUID = 1L;
-
-    /**
-     * 编号
-     */
-    @TableId(type = IdType.ASSIGN_ID)
-    @Schema(description = "公共参数编号")
-    private Long id;
-
     /**
      * 公共参数名称
      */

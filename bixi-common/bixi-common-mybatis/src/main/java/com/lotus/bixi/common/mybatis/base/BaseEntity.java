@@ -1,8 +1,6 @@
 package com.lotus.bixi.common.mybatis.base;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableLogic;
+import com.baomidou.mybatisplus.annotation.*;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
@@ -20,6 +18,11 @@ import java.time.LocalDateTime;
 @Setter
 public abstract class BaseEntity<T extends Model<?>> extends Model<T> {
 
+    private static final long serialVersionUID = 1L;
+
+    @TableId(value = "id", type = IdType.ASSIGN_ID)
+    @Schema(description = "id")
+    private Long id;
     /**
      * 创建人
      */

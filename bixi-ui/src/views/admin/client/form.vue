@@ -76,7 +76,6 @@ const {grant_types, common_status} = useDict(
 
 // 提交表单数据
 const form = reactive({
-  id: '',
   clientId: '',
   clientSecret: '',
   scope: 'server',
@@ -84,14 +83,8 @@ const form = reactive({
   webServerRedirectUri: '',
   authorities: '',
   accessTokenValidity: 43200,
-  refreshTokenValidity: 2592001,
+  refreshTokenValidity: 2592000,
   autoapprove: 'true',
-  delFlag: '',
-  createBy: '',
-  updateBy: '',
-  createTime: '',
-  updateTime: '',
-  tenantId: '',
   onlineQuantity: '1',
   captchaFlag: '1',
   encFlag: '1',

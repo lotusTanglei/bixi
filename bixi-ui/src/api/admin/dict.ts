@@ -122,12 +122,29 @@ export function validateDictType(rule: any, value: any, callback: any, isEdit: b
 	});
 }
 
+export function validateDictItemValue(rule: any, value: any, callback: any, type: string, isEdit: boolean) {
+	if (isEdit) {
+		return callback();
+	}
+
+	getItemDetails({ dictType: type, value: value }).then((response) => {
+		debugger;
+		const result = response.data;
+		if (result !== null) {
+			callback(new Error('数据值已经存在'));
+		} else {
+			callback();
+		}
+	});
+}
+
 export function validateDictItemLabel(rule: any, value: any, callback: any, type: string, isEdit: boolean) {
 	if (isEdit) {
 		return callback();
 	}
 
 	getItemDetails({ dictType: type, label: value }).then((response) => {
+		debugger;
 		const result = response.data;
 		if (result !== null) {
 			callback(new Error('标签已经存在'));
