@@ -101,24 +101,24 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
      * 构建树查询 1. 不是懒加载情况，查询全部 2. 是懒加载，根据parentId 查询 2.1 父节点为空，则查询ID -1
      *
      * @param parentId 父节点ID
-     * @param menuName 菜单名称
+     * @param name 菜单名称
      * @return
      */
     @Override
-    public List<Tree<Long>> treeMenu(Long parentId, String menuName, String type) {
+    public List<Tree<Long>> treeMenu(Long parentId, String name, String type) {
         Long parent = parentId == null ? CommonConstants.MENU_TREE_ROOT_ID : parentId;
 
         List<TreeNode<Long>> collect = baseMapper
                 .selectList(Wrappers.<SysMenu>lambdaQuery()
-                        .like(StrUtil.isNotBlank(menuName), SysMenu::getName, menuName)
-                        .eq(StrUtil.isNotBlank(type), SysMenu::getMenuType, type)
-                        .orderByAsc(SysMenu::getSortOrder))
+                        .like(StrUtil.isNotBlank(name), SysMenu::getName, name)
+                        .eq(StrUtil.isNotBlank(type), SysMenu::getType, type)
+                        .orderByAsc(SysMenu::getSn))
                 .stream()
                 .map(getNodeFunction())
                 .collect(Collectors.toList());
 
         // 模糊查询 不组装树结构 直接返回 表格方便编辑
-        if (StrUtil.isNotBlank(menuName)) {
+        if (StrUtil.isNotBlank(name)) {
             return collect.stream().map(node -> {
                 Tree<Long> tree = new Tree<>();
                 tree.putAll(node.getExtra());
@@ -153,16 +153,16 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
     private Function<SysMenu, TreeNode<Long>> getNodeFunction() {
         return menu -> {
             TreeNode<Long> node = new TreeNode<>();
-            node.setId(menu.getMenuId());
+            node.setId(menu.getId());
             node.setName(menu.getName());
             node.setParentId(menu.getParentId());
-            node.setWeight(menu.getSortOrder());
+            node.setWeight(menu.getSn());
             // 扩展属性
             Map<String, Object> extra = new HashMap<>();
             extra.put("path", menu.getPath());
-            extra.put("menuType", menu.getMenuType());
+            extra.put("type", menu.getType());
             extra.put("permission", menu.getPermission());
-            extra.put("sortOrder", menu.getSortOrder());
+            extra.put("sn", menu.getSn());
 
             // 适配 vue3
             Map<String, Object> meta = new HashMap<>();
@@ -191,10 +191,10 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
     private Predicate<SysMenu> menuTypePredicate(String type) {
         return vo -> {
             if (MenuTypeEnum.TOP_MENU.getDescription().equals(type)) {
-                return MenuTypeEnum.TOP_MENU.getType().equals(vo.getMenuType());
+                return MenuTypeEnum.TOP_MENU.getType().equals(vo.getType());
             }
             // 其他查询 左侧 + 顶部
-            return !MenuTypeEnum.BUTTON.getType().equals(vo.getMenuType());
+            return !MenuTypeEnum.BUTTON.getType().equals(vo.getType());
         };
     }
 

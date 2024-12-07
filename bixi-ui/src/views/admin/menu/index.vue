@@ -3,8 +3,8 @@
 		<div class="layout-padding-auto layout-padding-view">
 			<el-row shadow="hover" v-show="showSearch" class="ml10">
 				<el-form :inline="true" :model="state.queryForm" @keyup.enter="getDataList" ref="queryRef">
-					<el-form-item :label="$t('sysmenu.name')" prop="menuName">
-						<el-input :placeholder="$t('sysmenu.inputNameTip')" clearable style="max-width: 180px" v-model="state.queryForm.menuName" />
+					<el-form-item :label="$t('sysmenu.name')" prop="name">
+						<el-input :placeholder="$t('sysmenu.inputNameTip')" clearable style="max-width: 180px" v-model="state.queryForm.name" />
 					</el-form-item>
           <el-form-item>
             <el-button @click="query" class="ml10" icon="search" type="primary">
@@ -40,18 +40,18 @@
 				:header-cell-style="tableStyle?.headerCellStyle"
 			>
 				<el-table-column :label="$t('sysmenu.name')" fixed prop="name" show-overflow-tooltip></el-table-column>
-				<el-table-column :label="$t('sysmenu.sortOrder')" prop="sortOrder" show-overflow-tooltip></el-table-column>
+				<el-table-column :label="$t('sysmenu.sn')" prop="sn" show-overflow-tooltip></el-table-column>
 				<el-table-column :label="$t('sysmenu.icon')" prop="icon" show-overflow-tooltip>
 					<template #default="scope">
 						<SvgIcon :name="scope.row.meta.icon" />
 					</template>
 				</el-table-column>
 				<el-table-column :label="$t('sysmenu.path')" prop="path" show-overflow-tooltip></el-table-column>
-				<el-table-column :label="$t('sysmenu.menuType')" show-overflow-tooltip>
+				<el-table-column :label="$t('sysmenu.type')" show-overflow-tooltip>
 					<template #default="scope">
-						<el-tag v-if="scope.row.menuType === '0'">左菜单</el-tag>
-						<el-tag v-if="scope.row.menuType === '2'">顶菜单</el-tag>
-						<el-tag type="success" v-if="scope.row.menuType === '1'">按钮</el-tag>
+						<el-tag v-if="scope.row.type === '0'">左菜单</el-tag>
+						<el-tag v-if="scope.row.type === '2'">顶菜单</el-tag>
+						<el-tag type="success" v-if="scope.row.type === '1'">按钮</el-tag>
 					</template>
 				</el-table-column>
 				<el-table-column :label="$t('sysmenu.keepAlive')" show-overflow-tooltip>
@@ -109,7 +109,7 @@ const isExpand = ref(false);
 const state: BasicTableProps = reactive<BasicTableProps>({
 	pageList: pageList, // H
 	queryForm: {
-		menuName: '',
+		name: '',
 	},
 	isPage: false,
 });

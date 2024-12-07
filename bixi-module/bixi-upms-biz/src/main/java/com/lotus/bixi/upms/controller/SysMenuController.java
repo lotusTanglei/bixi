@@ -68,12 +68,12 @@ public class SysMenuController {
      * 返回树形菜单集合
      *
      * @param parentId 父节点ID
-     * @param menuName 菜单名称
+     * @param name 菜单名称
      * @return 树形菜单
      */
     @GetMapping(value = "/tree")
-    public R getTree(Long parentId, String menuName, String type) {
-        return R.ok(sysMenuService.treeMenu(parentId, menuName, type));
+    public R getTree(Long parentId, String name, String type) {
+        return R.ok(sysMenuService.treeMenu(parentId, name, type));
     }
 
     /**
@@ -85,7 +85,7 @@ public class SysMenuController {
     @GetMapping("/tree/{roleId}")
     public R getRoleTree(@PathVariable Long roleId) {
         return R
-                .ok(sysMenuService.findMenuByRoleId(roleId).stream().map(SysMenu::getMenuId).collect(Collectors.toList()));
+                .ok(sysMenuService.findMenuByRoleId(roleId).stream().map(SysMenu::getId).collect(Collectors.toList()));
     }
 
     /**

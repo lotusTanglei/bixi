@@ -1,11 +1,11 @@
 <template>
 	<div class="system-user-dialog-container">
-		<el-dialog :close-on-click-modal="false" :title="dataForm.userId ? $t('common.editBtn') : $t('common.addBtn')" draggable v-model="visible">
+		<el-dialog :close-on-click-modal="false" :title="dataForm.id ? $t('common.editBtn') : $t('common.addBtn')" draggable v-model="visible">
 			<el-form :model="dataForm" :rules="dataRules" label-width="90px" ref="dataFormRef" v-loading="loading">
 				<el-row :gutter="20">
 					<el-col :span="12" class="mb20">
 						<el-form-item :label="$t('sysuser.username')" prop="username">
-							<el-input :disabled="dataForm.userId !== ''" placeholder="请输入用户名" v-model="dataForm.username"></el-input>
+							<el-input :disabled="dataForm.id !== ''" placeholder="请输入用户名" v-model="dataForm.username"></el-input>
 						</el-form-item>
 					</el-col>
 					<el-col :span="12" class="mb20">
@@ -26,14 +26,14 @@
 					<el-col :span="12" class="mb20">
 						<el-form-item :label="$t('sysuser.role')" prop="role">
 							<el-select class="w100" clearable multiple placeholder="请选择角色" v-model="dataForm.role">
-								<el-option :key="item.roleId" :label="item.roleName" :value="item.roleId" v-for="item in roleData" />
+								<el-option :key="item.id" :label="item.name" :value="item.id" v-for="item in roleData" />
 							</el-select>
 						</el-form-item>
 					</el-col>
 					<el-col :span="12" class="mb20">
 						<el-form-item :label="$t('sysuser.post')" prop="post">
 							<el-select class="w100" clearable multiple placeholder="请选择岗位" v-model="dataForm.post">
-								<el-option :key="item.postId" :label="item.postName" :value="item.postId" v-for="item in postData" />
+								<el-option :key="item.id" :label="item.name" :value="item.id" v-for="item in postData" />
 							</el-select>
 						</el-form-item>
 					</el-col>
@@ -107,7 +107,7 @@ const postData = ref<any[]>([]);
 const loading = ref(false);
 
 const dataForm = reactive({
-	userId: '',
+	id: '',
 	username: '',
 	password: '' as String | undefined,
 	salt: '',
@@ -133,7 +133,7 @@ const dataRules = ref({
 		{ min: 5, max: 20, message: '用户名称长度必须介于 5 和 20 之间', trigger: 'blur' },
 		{
 			validator: (rule: any, value: any, callback: any) => {
-				validateUsername(rule, value, callback, dataForm.userId !== '');
+				validateUsername(rule, value, callback, dataForm.id !== '');
 			},
 			trigger: 'blur',
 		},
@@ -164,7 +164,7 @@ const dataRules = ref({
 		{ validator: rule.validatePhone, trigger: 'blur' },
 		{
 			validator: (rule: any, value: any, callback: any) => {
-				validatePhone(rule, value, callback, dataForm.userId !== '');
+				validatePhone(rule, value, callback, dataForm.id !== '');
 			},
 			trigger: 'blur',
 		},
@@ -177,7 +177,7 @@ const dataRules = ref({
 // 打开弹窗
 const openDialog = async (id: string) => {
 	visible.value = true;
-	dataForm.userId = '';
+	dataForm.id = '';
 
 	// 重置表单数据
 	nextTick(() => {
@@ -191,7 +191,7 @@ const openDialog = async (id: string) => {
 
     // 修改获取用户信息
 	if (id) {
-		dataForm.userId = id;
+		dataForm.id = id;
 		await getUserData(id);
 		dataForm.password = '******';
 	}
@@ -203,9 +203,9 @@ const onSubmit = async () => {
 	if (!valid) return false;
 
 	try {
-		const { userId, phone, password } = dataForm;
+		const { id, phone, password } = dataForm;
 
-		if (userId) {
+		if (id) {
 			// 清除占位符，避免提交错误的数据
 			if (phone?.includes('*')) dataForm.phone = undefined;
 			if (password?.includes('******')) dataForm.password = undefined;
@@ -242,10 +242,10 @@ const getUserData = async (id: string) => {
 		const { data } = await getObj(id);
 		Object.assign(dataForm, data);
 		if (data.roleList) {
-			dataForm.role = data.roleList.map((item) => item.roleId);
+			dataForm.role = data.roleList.map((item) => item.id);
 		}
 		if (data.postList) {
-			dataForm.post = data.postList.map((item) => item.postId);
+			dataForm.post = data.postList.map((item) => item.id);
 		}
 	} catch (err: any) {
 		useMessage().error(err.msg);
@@ -269,7 +269,7 @@ const getPostData = () => {
 	postList().then((res) => {
 		postData.value = res.data;
 		// 默认选择第一个
-		dataForm.post = [res.data[0].postId];
+		dataForm.post = [res.data[0].id];
 	});
 };
 // 角色数据
@@ -277,7 +277,7 @@ const getRoleData = () => {
 	roleList().then((res) => {
 		roleData.value = res.data;
 		// 默认选择第一个
-		dataForm.role = [res.data[0].roleId];
+		dataForm.role = [res.data[0].id];
 	});
 };
 

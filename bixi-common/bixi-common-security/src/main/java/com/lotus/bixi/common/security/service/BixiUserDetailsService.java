@@ -70,7 +70,7 @@ public interface BixiUserDetailsService extends UserDetailsService, Ordered {
         SysUser user = info.getSysUser();
 
         // 构造security用户
-        return new BixiUser(user.getUserId(), user.getDeptId(), user.getUsername(),
+        return new BixiUser(user.getId(), user.getDeptId(), user.getUsername(),
                 SecurityConstants.BCRYPT + user.getPassword(), user.getPhone(), true, true, true,
                 StrUtil.equals(user.getLockFlag(), CommonConstants.STATUS_NORMAL), authorities);
     }

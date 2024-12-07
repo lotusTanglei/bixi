@@ -65,10 +65,10 @@ public interface SysMenuService extends IService<SysMenu> {
      * 构建树
      *
      * @param parentId 父节点ID
-     * @param menuName 菜单名称
+     * @param name 菜单名称
      * @return
      */
-    List<Tree<Long>> treeMenu(Long parentId, String menuName, String type);
+    List<Tree<Long>> treeMenu(Long parentId, String name, String type);
 
     /**
      * 查询菜单

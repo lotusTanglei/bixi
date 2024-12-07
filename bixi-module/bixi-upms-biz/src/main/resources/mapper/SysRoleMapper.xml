@@ -22,10 +22,10 @@
 <mapper namespace="com.lotus.bixi.upms.mapper.SysRoleMapper">
     <!-- 通用查询映射结果 -->
     <resultMap id="BaseResultMap" type="com.lotus.bixi.upms.api.entity.SysRole">
-        <id column="role_id" property="roleId"/>
-        <result column="role_name" property="roleName"/>
-        <result column="role_code" property="roleCode"/>
-        <result column="role_desc" property="roleDesc"/>
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="code" property="code"/>
+        <result column="description" property="description"/>
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
         <result column="del_flag" property="delFlag"/>
@@ -33,16 +33,16 @@
 
     <!-- 通过用户ID，查询角色信息-->
     <select id="listRolesByUserId" resultMap="BaseResultMap">
-        SELECT sys_role.role_id,
-               sys_role.role_name,
-               sys_role.role_code,
-               sys_role.role_desc,
+        SELECT sys_role.id,
+               sys_role.name,
+               sys_role.code,
+               sys_role.description,
                sys_role.create_time,
                sys_role.update_time,
                sys_role.del_flag
         FROM sys_role,
              sys_user_role
-        WHERE sys_role.role_id = sys_user_role.role_id
+        WHERE sys_role.id = sys_user_role.role_id
           AND sys_role.del_flag = '0'
           and sys_user_role.user_id = #{userId}
     </select>

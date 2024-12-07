@@ -108,7 +108,7 @@ const visible = ref(false);
 
 // 定义变量内容
 const formData = ref({
-  userId: '',
+  id: '',
   username: '',
   name: '',
   email: '',
@@ -224,14 +224,14 @@ const handleSaveUser = () => {
 const open = () => {
   visible.value = true;
   const data = useUserInfo().userInfos;
-  initUserInfo(data.user.userId);
+  initUserInfo(data.user.id);
   // Object.assign(formData, data.user);
 };
 
 const loading = ref(false);
-const initUserInfo = (userId: any) => {
+const initUserInfo = (id: any) => {
   loading.value = true;
-  getObj(userId)
+  getObj(id)
       .then((res) => {
         formData.value = res.data;
       })

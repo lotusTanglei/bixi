@@ -71,7 +71,6 @@ public interface SysUserMapper extends BaseMapper<SysUser> {
      * 查询用户列表
      *
      * @param userDTO   查询条件
-     * @param dataScope 数据权限声明
      * @return
      */
     List<UserVO> selectVoList(@Param("query") UserDTO userDTO);

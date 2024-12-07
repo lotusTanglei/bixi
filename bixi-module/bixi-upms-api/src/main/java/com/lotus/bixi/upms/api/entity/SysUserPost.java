@@ -19,6 +19,7 @@ package com.lotus.bixi.upms.api.entity;
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
+import com.lotus.bixi.common.mybatis.base.BaseRelationEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -34,9 +35,7 @@ import java.time.LocalDateTime;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class SysUserPost extends Model<SysUserPost> {
-
-    private static final long serialVersionUID = 1L;
+public class SysUserPost extends BaseRelationEntity<SysUserPost> {
 
     /**
      * 用户ID
@@ -49,10 +48,5 @@ public class SysUserPost extends Model<SysUserPost> {
      */
     @Schema(description = "岗位id")
     private Long postId;
-
-    @Schema(description = "创建时间")
-    @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createTime;
-
 
 }

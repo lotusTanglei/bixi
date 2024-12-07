@@ -1,19 +1,20 @@
 export default {
 	sysrole: {
 		index: '#',
-		roleName: '角色名称',
+		name: '角色名称',
 		inputRoleNameTip: '请输入角色名称',
 		permissionTip: '授权',
 		deleteDisabledTip: '角色不允许删除',
-
-		roleCode: '角色标识',
-		roleDesc: '角色描述',
+		sn :'排序',
+		code: '角色标识',
+		description: '角色描述',
 		data_authority: '数据权限',
 		createTime: '创建时间',
+		inputSnTip: '请输入排序号',
 		please_enter_a_role_name: '请输入角色名称',
 		please_enter_the_role_Code: '请输入角色标识',
 		please_enter_the_role_description: '请输入角色描述',
 		menu_authority: '数据权限',
-		please_select: 'please select',
+		please_select: '请选择',
 	},
 };

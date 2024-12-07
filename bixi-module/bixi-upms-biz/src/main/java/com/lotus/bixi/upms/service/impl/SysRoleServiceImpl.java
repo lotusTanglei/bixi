@@ -106,7 +106,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
      */
     @Override
     public Boolean updateRoleMenus(RoleVO roleVo) {
-        return roleMenuService.saveRoleMenus(roleVo.getRoleId(), roleVo.getMenuIds());
+        return roleMenuService.saveRoleMenus(roleVo.getId(), roleVo.getMenuIds());
     }
 
     /**
@@ -129,8 +129,8 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
             Set<String> errorMsg = new HashSet<>();
             // 检验角色名称或者角色编码是否存在
             boolean existRole = roleList.stream()
-                    .anyMatch(sysRole -> excel.getRoleName().equals(sysRole.getRoleName())
-                            || excel.getRoleCode().equals(sysRole.getRoleCode()));
+                    .anyMatch(sysRole -> excel.getRoleName().equals(sysRole.getName())
+                            || excel.getRoleCode().equals(sysRole.getCode()));
 
             if (existRole) {
                 errorMsg.add(MsgUtils.getMessage(ErrorCodes.SYS_ROLE_NAMEORCODE_EXISTING, excel.getRoleName(),
@@ -172,9 +172,9 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
      */
     private void insertExcelRole(RoleExcelVO excel) {
         SysRole sysRole = new SysRole();
-        sysRole.setRoleName(excel.getRoleName());
-        sysRole.setRoleDesc(excel.getRoleDesc());
-        sysRole.setRoleCode(excel.getRoleCode());
+        sysRole.setName(excel.getRoleName());
+        sysRole.setDescription(excel.getRoleDesc());
+        sysRole.setCode(excel.getRoleCode());
         this.save(sysRole);
     }
 

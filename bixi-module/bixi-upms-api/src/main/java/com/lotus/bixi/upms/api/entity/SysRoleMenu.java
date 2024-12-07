@@ -20,6 +20,7 @@
 package com.lotus.bixi.upms.api.entity;
 
 import com.baomidou.mybatisplus.extension.activerecord.Model;
+import com.lotus.bixi.common.mybatis.base.BaseRelationEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -35,10 +36,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @Schema(description = "角色菜单")
 @EqualsAndHashCode(callSuper = true)
-public class SysRoleMenu extends Model<SysRoleMenu> {
-
-    private static final long serialVersionUID = 1L;
-
+public class SysRoleMenu extends BaseRelationEntity<SysRoleMenu> {
     /**
      * 角色ID
      */

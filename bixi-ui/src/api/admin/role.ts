@@ -62,12 +62,12 @@ export const delObj = (ids: Object) => {
 	});
 };
 
-export const permissionUpd = (roleId: string, menuIds: string) => {
+export const permissionUpd = (id: string, menuIds: string) => {
 	return request({
 		url: '/admin/role/menu',
 		method: 'put',
 		data: {
-			roleId: roleId,
+			id: id,
 			menuIds: menuIds,
 		},
 	});
@@ -85,7 +85,7 @@ export function validateRoleCode(rule: any, value: any, callback: any, isEdit: b
 		return callback();
 	}
 
-	getObjDetails({ roleCode: value }).then((response) => {
+	getObjDetails({ code: value }).then((response) => {
 		const result = response.data;
 		if (result !== null) {
 			callback(new Error('角色标识已经存在'));
@@ -100,7 +100,7 @@ export function validateRoleName(rule: any, value: any, callback: any, isEdit: b
 		return callback();
 	}
 
-	getObjDetails({ roleName: value }).then((response) => {
+	getObjDetails({ name: value }).then((response) => {
 		const result = response.data;
 		if (result !== null) {
 			callback(new Error('角色名称已经存在'));

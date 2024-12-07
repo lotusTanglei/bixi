@@ -35,8 +35,6 @@ import lombok.EqualsAndHashCode;
 @Schema(description = "部门关系")
 @EqualsAndHashCode(callSuper = true)
 public class SysDeptRelation extends BaseRelationEntity<SysDeptRelation> {
-
-    private static final long serialVersionUID = 1L;
     /**
      * 祖先节点
      */

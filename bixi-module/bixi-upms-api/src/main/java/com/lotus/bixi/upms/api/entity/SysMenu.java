@@ -18,16 +18,12 @@
  */
 
 package com.lotus.bixi.upms.api.entity;
-
-import com.baomidou.mybatisplus.annotation.*;
-import com.baomidou.mybatisplus.extension.activerecord.Model;
+import com.lotus.bixi.common.mybatis.base.BaseEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.time.LocalDateTime;
 
 /**
  * <p>
@@ -40,16 +36,7 @@ import java.time.LocalDateTime;
 @Data
 @Schema(description = "菜单")
 @EqualsAndHashCode(callSuper = true)
-public class SysMenu extends Model<SysMenu> {
-
-    private static final long serialVersionUID = 1L;
-
-    /**
-     * 菜单ID
-     */
-    @TableId(value = "menu_id", type = IdType.ASSIGN_ID)
-    @Schema(description = "菜单id")
-    private Long menuId;
+public class SysMenu extends BaseEntity<SysMenu> {
 
     /**
      * 菜单名称
@@ -99,14 +86,14 @@ public class SysMenu extends Model<SysMenu> {
      * 排序值
      */
     @Schema(description = "排序值")
-    private Integer sortOrder;
+    private Integer sn;
 
     /**
      * 菜单类型 （0菜单 1按钮）
      */
     @NotNull(message = "菜单类型不能为空")
     @Schema(description = "菜单类型,0:菜单 1:按钮")
-    private String menuType;
+    private String type;
 
     /**
      * 路由缓冲
@@ -116,41 +103,5 @@ public class SysMenu extends Model<SysMenu> {
 
     @Schema(description = "菜单是否内嵌")
     private String embedded;
-
-    /**
-     * 创建人
-     */
-    @TableField(fill = FieldFill.INSERT)
-    @Schema(description = "创建人")
-    private String createBy;
-
-    /**
-     * 修改人
-     */
-    @TableField(fill = FieldFill.UPDATE)
-    @Schema(description = "修改人")
-    private String updateBy;
-
-    /**
-     * 创建时间
-     */
-    @TableField(fill = FieldFill.INSERT)
-    @Schema(description = "创建时间")
-    private LocalDateTime createTime;
-
-    /**
-     * 更新时间
-     */
-    @TableField(fill = FieldFill.UPDATE)
-    @Schema(description = "更新时间")
-    private LocalDateTime updateTime;
-
-    /**
-     * 0--正常 1--删除
-     */
-    @TableLogic
-    @TableField(fill = FieldFill.INSERT)
-    @Schema(description = "删除标记,1:已删除,0:正常")
-    private String delFlag;
 
 }

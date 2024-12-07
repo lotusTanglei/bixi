@@ -50,12 +50,13 @@ public class UserDTO extends SysUser {
     /**
      * 岗位ID
      */
+    @Schema(description = "岗位id集合")
     private List<Long> post;
 
     /**
      * 新密码
      */
     @Schema(description = "新密码")
-    private String newpassword1;
+    private String newpassword;
 
 }

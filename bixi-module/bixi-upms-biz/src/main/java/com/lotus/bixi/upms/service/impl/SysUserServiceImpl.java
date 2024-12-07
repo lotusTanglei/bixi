@@ -96,14 +96,13 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         SysUser sysUser = new SysUser();
         BeanUtils.copyProperties(userDto, sysUser);
         sysUser.setDelFlag(CommonConstants.STATUS_NORMAL);
-        sysUser.setCreateBy(userDto.getUsername());
         sysUser.setPassword(ENCODER.encode(userDto.getPassword()));
         baseMapper.insert(sysUser);
         // 保存用户岗位信息
         Optional.ofNullable(userDto.getPost()).ifPresent(posts -> {
             posts.stream().map(postId -> {
                 SysUserPost userPost = new SysUserPost();
-                userPost.setUserId(sysUser.getUserId());
+                userPost.setUserId(sysUser.getId());
                 userPost.setPostId(postId);
                 return userPost;
             }).forEach(sysUserPostMapper::insert);
@@ -115,14 +114,14 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
             String defaultRole = ParamResolver.getStr("USER_DEFAULT_ROLE");
             // 默认角色
             SysRole sysRole = sysRoleService
-                    .getOne(Wrappers.<SysRole>lambdaQuery().eq(SysRole::getRoleCode, defaultRole));
-            userDto.setRole(Collections.singletonList(sysRole.getRoleId()));
+                    .getOne(Wrappers.<SysRole>lambdaQuery().eq(SysRole::getCode, defaultRole));
+            userDto.setRole(Collections.singletonList(sysRole.getId()));
         }
 
         // 插入用户角色关系表
         userDto.getRole().stream().map(roleId -> {
             SysUserRole userRole = new SysUserRole();
-            userRole.setUserId(sysUser.getUserId());
+            userRole.setUserId(sysUser.getId());
             userRole.setRoleId(roleId);
             return userRole;
         }).forEach(sysUserRoleMapper::insert);
@@ -140,9 +139,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         UserInfo userInfo = new UserInfo();
         userInfo.setSysUser(sysUser);
         // 设置角色列表 （ID）
-        List<Long> roleIds = sysRoleService.findRolesByUserId(sysUser.getUserId())
+        List<Long> roleIds = sysRoleService.findRolesByUserId(sysUser.getId())
                 .stream()
-                .map(SysRole::getRoleId)
+                .map(SysRole::getId)
                 .collect(Collectors.toList());
         userInfo.setRoles(ArrayUtil.toArray(roleIds, Long.class));
 
@@ -210,7 +209,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     public R<Boolean> updateUserInfo(UserDTO userDto) {
         SysUser sysUser = new SysUser();
         sysUser.setPhone(userDto.getPhone());
-        sysUser.setUserId(SecurityUtils.getUser().getId());
+        sysUser.setId(SecurityUtils.getUser().getId());
         sysUser.setAvatar(userDto.getAvatar());
         sysUser.setNickname(userDto.getNickname());
         sysUser.setName(userDto.getName());
@@ -235,10 +234,10 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         if (Objects.nonNull(userDto.getRole())) {
             // 删除用户角色关系
             sysUserRoleMapper
-                    .delete(Wrappers.<SysUserRole>lambdaQuery().eq(SysUserRole::getUserId, userDto.getUserId()));
+                    .delete(Wrappers.<SysUserRole>lambdaQuery().eq(SysUserRole::getUserId, userDto.getId()));
             userDto.getRole().stream().map(roleId -> {
                 SysUserRole userRole = new SysUserRole();
-                userRole.setUserId(sysUser.getUserId());
+                userRole.setUserId(sysUser.getId());
                 userRole.setRoleId(roleId);
                 return userRole;
             }).forEach(SysUserRole::insert);
@@ -247,10 +246,10 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         if (Objects.nonNull(userDto.getPost())) {
             // 删除用户岗位关系
             sysUserPostMapper
-                    .delete(Wrappers.<SysUserPost>lambdaQuery().eq(SysUserPost::getUserId, userDto.getUserId()));
+                    .delete(Wrappers.<SysUserPost>lambdaQuery().eq(SysUserPost::getUserId, userDto.getId()));
             userDto.getPost().stream().map(postId -> {
                 SysUserPost userPost = new SysUserPost();
-                userPost.setUserId(sysUser.getUserId());
+                userPost.setUserId(sysUser.getId());
                 userPost.setPostId(postId);
                 return userPost;
             }).forEach(SysUserPost::insert);
@@ -274,7 +273,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
             BeanUtils.copyProperties(userVO, excelVO);
             String roleNameList = userVO.getRoleList()
                     .stream()
-                    .map(SysRole::getRoleName)
+                    .map(SysRole::getName)
                     .collect(Collectors.joining(StrUtil.COMMA));
             excelVO.setRoleNameList(roleNameList);
             String postNameList = userVO.getPostList()
@@ -326,7 +325,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
             // 判断输入的角色名称列表是否合法
             List<String> roleNameList = StrUtil.split(excel.getRoleNameList(), StrUtil.COMMA);
             List<SysRole> roleCollList = roleList.stream()
-                    .filter(role -> roleNameList.stream().anyMatch(name -> role.getRoleName().equals(name)))
+                    .filter(role -> roleNameList.stream().anyMatch(name -> role.getName().equals(name)))
                     .collect(Collectors.toList());
 
             if (roleCollList.size() != roleNameList.size()) {
@@ -378,7 +377,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         List<Long> postIdList = postCollList.stream().map(SysPost::getId).collect(Collectors.toList());
         userDTO.setPost(postIdList);
         // 根据角色名称查询角色ID
-        List<Long> roleIdList = roleCollList.stream().map(SysRole::getRoleId).collect(Collectors.toList());
+        List<Long> roleIdList = roleCollList.stream().map(SysRole::getId).collect(Collectors.toList());
         userDTO.setRole(roleIdList);
         // 插入用户
         this.saveUser(userDTO);
@@ -437,14 +436,14 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
             return R.failed(MsgUtils.getMessage(ErrorCodes.SYS_USER_UPDATE_PASSWORDERROR));
         }
 
-        if (StrUtil.isEmpty(userDto.getNewpassword1())) {
+        if (StrUtil.isEmpty(userDto.getNewpassword())) {
             return R.failed("新密码不能为空");
         }
-        String password = ENCODER.encode(userDto.getNewpassword1());
+        String password = ENCODER.encode(userDto.getNewpassword());
 
         this.update(Wrappers.<SysUser>lambdaUpdate()
                 .set(SysUser::getPassword, password)
-                .eq(SysUser::getUserId, sysUser.getUserId()));
+                .eq(SysUser::getId, sysUser.getId()));
         return R.ok();
     }
 

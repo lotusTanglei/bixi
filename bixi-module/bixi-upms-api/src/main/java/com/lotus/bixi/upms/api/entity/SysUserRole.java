@@ -22,6 +22,7 @@ package com.lotus.bixi.upms.api.entity;
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
+import com.lotus.bixi.common.mybatis.base.BaseRelationEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -39,10 +40,7 @@ import java.time.LocalDateTime;
 @Data
 @Schema(description = "用户角色")
 @EqualsAndHashCode(callSuper = true)
-public class SysUserRole extends Model<SysUserRole> {
-
-    private static final long serialVersionUID = 1L;
-
+public class SysUserRole extends BaseRelationEntity<SysUserRole> {
     /**
      * 用户ID
      */
@@ -54,8 +52,4 @@ public class SysUserRole extends Model<SysUserRole> {
      */
     @Schema(description = "角色id")
     private Long roleId;
-
-    @Schema(description = "创建时间")
-    @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createTime;
 }

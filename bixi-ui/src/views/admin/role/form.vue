@@ -1,25 +1,28 @@
 <template>
-  <el-dialog :close-on-click-modal="false" :title="form.roleId ? $t('common.editBtn') : $t('common.addBtn')" width="600"
+  <el-dialog :close-on-click-modal="false" :title="form.id ? $t('common.editBtn') : $t('common.addBtn')" width="600"
              draggable v-model="visible">
     <el-form :model="form" :rules="dataRules" label-width="90px" ref="dataFormRef" v-loading="loading">
-      <el-form-item :label="$t('sysrole.roleName')" prop="roleName">
-        <el-input :placeholder="$t('sysrole.please_enter_a_role_name')" clearable v-model="form.roleName"></el-input>
+      <el-form-item :label="$t('sysrole.name')" prop="name">
+        <el-input :placeholder="$t('sysrole.please_enter_a_role_name')" clearable v-model="form.name"></el-input>
       </el-form-item>
-      <el-form-item :label="$t('sysrole.roleCode')" prop="roleCode">
+      <el-form-item :label="$t('sysrole.code')" prop="code">
         <el-input
             :placeholder="$t('sysrole.please_enter_the_role_Code')"
-            :disabled="form.roleId !== ''"
+            :disabled="form.id !== ''"
             clearable
-            v-model="form.roleCode"
+            v-model="form.code"
         ></el-input>
       </el-form-item>
-      <el-form-item :label="$t('sysrole.roleDesc')" prop="roleDesc">
+      <el-form-item :label="$t('sysrole.sn')" prop="sn">
+        <el-input-number v-model="form.sn" :placeholder="$t('sysrole.inputSnTip')" clearable/>
+      </el-form-item>
+      <el-form-item :label="$t('sysrole.description')" prop="description">
         <el-input
             :placeholder="$t('sysrole.please_enter_the_role_description')"
             maxlength="150"
             rows="3"
             type="textarea"
-            v-model="form.roleDesc"
+            v-model="form.description"
         ></el-input>
       </el-form-item>
     </el-form>
@@ -52,10 +55,11 @@ const loading = ref(false);
 
 // 提交表单数据
 const form = reactive({
-  roleId: '',
-  roleName: '',
-  roleCode: '',
-  roleDesc: '',
+  id: '',
+  name: '',
+  code: '',
+  description: '',
+  sn: 0,
   dsScope: '',
 });
 
@@ -72,34 +76,34 @@ const dataForm = reactive({
 
 // 定义校验规则
 const dataRules = ref({
-  roleName: [
+  name: [
     {required: true, message: '角色名称不能为空', trigger: 'blur'},
     {min: 3, max: 20, message: '长度在 3 到 20 个字符', trigger: 'blur'},
     {
       validator: (rule: any, value: any, callback: any) => {
-        validateRoleName(rule, value, callback, form.roleId !== '');
+        validateRoleName(rule, value, callback, form.id !== '');
       },
       trigger: 'blur',
     },
   ],
-  roleCode: [
+  code: [
     {required: true, message: '角色标识不能为空', trigger: 'blur'},
     {min: 3, max: 20, message: '长度在 3 到 20 个字符', trigger: 'blur'},
     {validator: rule.validatorCapital, trigger: 'blur'},
     {
       validator: (rule: any, value: any, callback: any) => {
-        validateRoleCode(rule, value, callback, form.roleId !== '');
+        validateRoleCode(rule, value, callback, form.id !== '');
       },
       trigger: 'blur',
     },
   ],
-  roleDesc: [{max: 128, message: '长度在 128 个字符内', trigger: 'blur'}]
+  description: [{max: 128, message: '长度在 128 个字符内', trigger: 'blur'}]
 });
 
 // 打开弹窗
 const openDialog = (id: string) => {
   visible.value = true;
-  form.roleId = '';
+  form.id = '';
 
   nextTick(() => {
     dataFormRef.value.resetFields();
@@ -107,7 +111,7 @@ const openDialog = (id: string) => {
 
   // 获取角色信息
   if (id) {
-    form.roleId = id;
+    form.id = id;
     getRoleData(id);
   }
 
@@ -122,8 +126,8 @@ const onSubmit = async () => {
 
   try {
     loading.value = true;
-    form.roleId ? await putObj(form) : await addObj(form);
-    useMessage().success(t(form.roleId ? 'common.editSuccessText' : 'common.addSuccessText'));
+    form.id ? await putObj(form) : await addObj(form);
+    useMessage().success(t(form.id ? 'common.editSuccessText' : 'common.addSuccessText'));
     visible.value = false;
     emit('refresh');
   } catch (err: any) {

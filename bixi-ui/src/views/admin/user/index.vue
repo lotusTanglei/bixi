@@ -81,12 +81,12 @@
 						<el-table-column :label="$t('sysuser.phone')" prop="phone" show-overflow-tooltip></el-table-column>
 						<el-table-column :label="$t('sysuser.post')" show-overflow-tooltip>
 							<template #default="scope">
-								<el-tag v-for="(item, index) in scope.row.postList" :key="index">{{ item.postName }}</el-tag>
+								<el-tag v-for="(item, index) in scope.row.postList" :key="index">{{ item.name }}</el-tag>
 							</template>
 						</el-table-column>
 						<el-table-column :label="$t('sysuser.role')" show-overflow-tooltip>
 							<template #default="scope">
-								<el-tag v-for="(item, index) in scope.row.roleList" :key="index">{{ item.roleName }}</el-tag>
+								<el-tag v-for="(item, index) in scope.row.roleList" :key="index">{{ item.name }}</el-tag>
 							</template>
 						</el-table-column>
 						<el-table-column :label="$t('sysuser.lockFlag')" show-overflow-tooltip>
@@ -97,10 +97,10 @@
 						<el-table-column :label="$t('sysuser.createTime')" prop="createTime" show-overflow-tooltip width="180"></el-table-column>
 						<el-table-column :label="$t('common.action')" width="160" fixed="right">
 							<template #default="scope">
-								<el-button v-auth="'sys_user_edit'" icon="edit-pen" text type="primary" @click="userDialogRef.openDialog(scope.row.userId)">
+								<el-button v-auth="'sys_user_edit'" icon="edit-pen" text type="primary" @click="userDialogRef.openDialog(scope.row.id)">
 									{{ $t('common.editBtn') }}
 								</el-button>
-								<el-tooltip :content="$t('sysuser.deleteDisabledTip')" :disabled="scope.row.userId !== '1'" placement="top">
+								<el-tooltip :content="$t('sysuser.deleteDisabledTip')" :disabled="scope.row.id !== '1'" placement="top">
 									<span style="margin-left: 12px">
 										<el-button
 											icon="delete"
@@ -108,7 +108,7 @@
 											:disabled="scope.row.username === 'admin'"
 											text
 											type="primary"
-											@click="handleDelete([scope.row.userId])"
+											@click="handleDelete([scope.row.id])"
 											>{{ $t('common.delBtn') }}
 										</el-button>
 									</span>
@@ -201,8 +201,8 @@ const handleSelectable = (row: any) => {
 };
 
 // 多选事件
-const handleSelectionChange = (objs: { userId: string }[]) => {
-	selectObjs.value = objs.map(({ userId }) => userId);
+const handleSelectionChange = (objs: { id: string }[]) => {
+	selectObjs.value = objs.map(({ id }) => id);
 	multiple.value = !objs.length;
 };
 

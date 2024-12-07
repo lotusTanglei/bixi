@@ -43,7 +43,7 @@ public class UserVO implements Serializable {
      * 主键ID
      */
     @Schema(description = "主键")
-    private Long userId;
+    private Long id;
 
     /**
      * 用户名

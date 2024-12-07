@@ -4,7 +4,7 @@
 <mapper namespace="com.lotus.bixi.upms.mapper.SysUserMapper">
     <!-- 通用查询映射结果 -->
     <resultMap id="baseResultMap" type="com.lotus.bixi.upms.api.vo.UserVO">
-        <id column="user_id" property="userId"/>
+        <id column="id" property="id"/>
         <result column="username" property="username"/>
         <result column="password" property="password"/>
         <result column="salt" property="salt"/>
@@ -24,18 +24,15 @@
         <result column="name" property="name"/>
         <result column="email" property="email"/>
         <collection property="roleList" ofType="com.lotus.bixi.upms.api.entity.SysRole"
-                    select="com.lotus.bixi.upms.mapper.SysRoleMapper.listRolesByUserId" column="user_id">
+                    select="com.lotus.bixi.upms.mapper.SysRoleMapper.listRolesByUserId" column="id">
         </collection>
         <collection property="postList" ofType="com.lotus.bixi.upms.api.entity.SysPost"
-                    select="com.lotus.bixi.upms.mapper.SysPostMapper.listPostsByUserId" column="user_id">
+                    select="com.lotus.bixi.upms.mapper.SysPostMapper.listPostsByUserId" column="id">
         </collection>
     </resultMap>
 
     <sql id="userRoleSql">
-        u
-        .
-        user_id
-        ,
+        u.id,
         u.username,
         u.password,
         u.salt,
@@ -58,10 +55,7 @@
     </sql>
 
     <sql id="userRoleDeptSql">
-        u
-        .
-        user_id
-        ,
+        u.id,
         u.username,
         u.password,
         u.salt,
@@ -88,8 +82,8 @@
         <include refid="userRoleSql"/>
         FROM
         sys_user u
-        LEFT JOIN sys_user_role urole ON urole.user_id = u.user_id
-        LEFT JOIN sys_role r ON r.role_id = urole.role_id and r.del_flag = '0'
+        LEFT JOIN sys_user_role urole ON urole.user_id = u.id
+        LEFT JOIN sys_role r ON r.id = urole.role_id and r.del_flag = '0'
         WHERE u.username = #{username} and u.del_flag = '0'
     </select>
 
@@ -100,12 +94,12 @@
         sys_user u
         LEFT JOIN sys_dept d ON d.id = u.dept_id and d.del_flag = '0'
         WHERE
-        u.user_id = #{id} and u.del_flag = '0'
+        u.id = #{id} and u.del_flag = '0'
     </select>
 
     <select id="getUserVosPage" resultMap="baseResultMap">
         SELECT
-        u.user_id,
+        u.id,
         u.username,
         u.password,
         u.salt,
@@ -148,7 +142,7 @@
 
     <select id="selectVoList" resultMap="baseResultMap">
         SELECT
-        u.user_id,
+        u.id,
         u.username,
         u.password,
         u.salt,

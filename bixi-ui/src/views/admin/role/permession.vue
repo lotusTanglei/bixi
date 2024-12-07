@@ -56,7 +56,7 @@ const state = reactive({
     label: 'name',
     value: 'id',
   },
-  roleId: '',
+  id: '',
   dialog: {
     isShowDialog: false,
     title: '分配权限',
@@ -71,9 +71,9 @@ const openDialog = (row: any) => {
   state.checkedKeys = [];
   state.treeData = [];
   checkedKeys.value = [];
-  state.roleId = row.roleId;
+  state.id = row.id;
   loading.value = true;
-  fetchRoleTree(row.roleId)
+  fetchRoleTree(row.id)
       .then((res) => {
         checkedKeys.value = res.data;
         return pageList();
@@ -108,7 +108,7 @@ const handleSelectAll = (check: CheckboxValueType) => {
 const onSubmit = () => {
   const menuIds = menuTree.value.getCheckedKeys().join(',').concat(',').concat(menuTree.value.getHalfCheckedKeys().join(','));
   loading.value = true;
-  permissionUpd(state.roleId, menuIds)
+  permissionUpd(state.id, menuIds)
       .then(() => {
         state.dialog.isShowDialog = false;
         useMessage().success(t('common.editSuccessText'));

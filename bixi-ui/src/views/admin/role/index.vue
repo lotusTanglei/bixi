@@ -3,8 +3,8 @@
 		<div class="layout-padding-auto layout-padding-view">
 			<el-row shadow="hover" v-show="showSearch" class="ml10">
 				<el-form :model="state.queryForm" ref="queryRef" :inline="true" @keyup.enter="getDataList">
-					<el-form-item :label="$t('sysrole.roleName')" prop="roleName">
-						<el-input :placeholder="$t('sysrole.inputRoleNameTip')" v-model="state.queryForm.roleName" />
+					<el-form-item :label="$t('sysrole.name')" prop="name">
+						<el-input :placeholder="$t('sysrole.inputRoleNameTip')" v-model="state.queryForm.name" />
 					</el-form-item>
 					<el-form-item>
 						<el-button icon="search" type="primary" @click="getDataList">
@@ -46,13 +46,14 @@
 			>
 				<el-table-column type="selection" :selectable="handleSelectable" width="50" align="center" />
 				<el-table-column type="index" :label="$t('sysrole.index')" width="80" />
-				<el-table-column prop="roleName" :label="$t('sysrole.roleName')" show-overflow-tooltip></el-table-column>
-				<el-table-column prop="roleCode" :label="$t('sysrole.roleCode')" show-overflow-tooltip></el-table-column>
-				<el-table-column prop="roleDesc" :label="$t('sysrole.roleDesc')" show-overflow-tooltip></el-table-column>
+				<el-table-column prop="name" :label="$t('sysrole.name')" show-overflow-tooltip></el-table-column>
+				<el-table-column prop="code" :label="$t('sysrole.code')" show-overflow-tooltip></el-table-column>
+        <el-table-column prop="sn" :label="$t('sysrole.sn')" show-overflow-tooltip></el-table-column>
+        <el-table-column prop="description" :label="$t('sysrole.description')" show-overflow-tooltip></el-table-column>
 				<el-table-column prop="createTime" :label="$t('sysrole.createTime')" show-overflow-tooltip></el-table-column>
 				<el-table-column :label="$t('common.action')" width="250">
 					<template #default="scope">
-						<el-button text type="primary" icon="edit-pen" v-auth="'sys_role_edit'" @click="roleDialogRef.openDialog(scope.row.roleId)">{{
+						<el-button text type="primary" icon="edit-pen" v-auth="'sys_role_edit'" @click="roleDialogRef.openDialog(scope.row.id)">{{
 							$t('common.editBtn')
 						}}</el-button>
 
@@ -60,15 +61,15 @@
 							$t('sysrole.permissionTip')
 						}}</el-button>
 
-						<el-tooltip :content="$t('sysrole.deleteDisabledTip')" :disabled="scope.row.roleId !== '1'" placement="top">
+						<el-tooltip :content="$t('sysrole.deleteDisabledTip')" :disabled="scope.row.id !== '1'" placement="top">
 							<span style="margin-left: 12px">
 								<el-button
 									text
 									type="primary"
 									icon="delete"
-									:disabled="scope.row.roleId === '1'"
+									:disabled="scope.row.id === '1'"
 									v-auth="'sys_role_del'"
-									@click="handleDelete([scope.row.roleId])"
+									@click="handleDelete([scope.row.id])"
 									>{{ $t('common.delBtn') }}
 								</el-button>
 							</span>
@@ -118,10 +119,10 @@ const multiple = ref(true);
 
 const state: BasicTableProps = reactive<BasicTableProps>({
 	queryForm: {
-		roleName: '',
+		name: '',
 	},
 	pageList: pageList, // H
-	descs: ['create_time'],
+	ascs: ['sn'],
 });
 
 //  table hook
@@ -140,12 +141,12 @@ const exportExcel = () => {
 
 // 是否可以多选
 const handleSelectable = (row: any) => {
-	return row.roleId !== '1';
+	return row.id !== '1';
 };
 
 // 多选事件
-const handleSelectionChange = (objs: { roleId: string }[]) => {
-	selectObjs.value = objs.map(({ roleId }) => roleId);
+const handleSelectionChange = (objs: { id: string }[]) => {
+	selectObjs.value = objs.map(({ id }) => id);
 	multiple.value = !objs.length;
 };
 

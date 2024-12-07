@@ -1,9 +1,9 @@
 <template>
-  <el-dialog :title="state.ruleForm.menuId ? $t('common.editBtn') : $t('common.addBtn')" width="600" v-model="visible"
+  <el-dialog :title="state.ruleForm.id ? $t('common.editBtn') : $t('common.addBtn')" width="600" v-model="visible"
              :close-on-click-modal="false" :destroy-on-close="true" draggable>
     <el-form ref="menuDialogFormRef" :model="state.ruleForm" :rules="dataRules" label-width="90px" v-loading="loading">
-      <el-form-item :label="$t('sysmenu.menuType')" prop="menuType">
-        <el-radio-group v-model="state.ruleForm.menuType">
+      <el-form-item :label="$t('sysmenu.type')" prop="type">
+        <el-radio-group v-model="state.ruleForm.type">
           <el-radio border label="0">菜单</el-radio>
           <el-radio border label="1">按钮</el-radio>
         </el-radio-group>
@@ -27,32 +27,32 @@
       <el-form-item :label="$t('sysmenu.enName')" prop="enName">
         <el-input v-model="state.ruleForm.enName" clearable :placeholder="$t('sysmenu.inputEnNameTip')"></el-input>
       </el-form-item>
-      <el-form-item :label="$t('sysmenu.path')" prop="path" v-if="state.ruleForm.menuType === '0'">
+      <el-form-item :label="$t('sysmenu.path')" prop="path" v-if="state.ruleForm.type === '0'">
         <el-input v-model="state.ruleForm.path" :placeholder="$t('sysmenu.inputPathTip')"/>
       </el-form-item>
-      <el-form-item :label="$t('sysmenu.permission')" prop="permission" v-if="state.ruleForm.menuType === '1'">
+      <el-form-item :label="$t('sysmenu.permission')" prop="permission" v-if="state.ruleForm.type === '1'">
         <el-input v-model="state.ruleForm.permission" maxlength="50" :placeholder="$t('sysmenu.inputPermissionTip')"/>
       </el-form-item>
-      <el-form-item :label="$t('sysmenu.sortOrder')" prop="sortOrder">
-        <el-input-number v-model="state.ruleForm.sortOrder" :min="0" controls-position="right"/>
+      <el-form-item :label="$t('sysmenu.sn')" prop="sn">
+        <el-input-number v-model="state.ruleForm.sn" :min="0" controls-position="right"/>
       </el-form-item>
-      <el-form-item :label="$t('sysmenu.icon')" prop="icon" v-if="state.ruleForm.menuType === '0'">
+      <el-form-item :label="$t('sysmenu.icon')" prop="icon" v-if="state.ruleForm.type === '0'">
         <IconSelector :placeholder="$t('sysmenu.inputIconTip')" v-model="state.ruleForm.icon"/>
       </el-form-item>
       <el-form-item :label="$t('sysmenu.embedded')" prop="embedded"
-                    v-if="state.ruleForm.menuType === '0' && state.ruleForm.path?.startsWith('http')">
+                    v-if="state.ruleForm.type === '0' && state.ruleForm.path?.startsWith('http')">
         <el-radio-group v-model="state.ruleForm.embedded">
           <el-radio border label="0">否</el-radio>
           <el-radio border label="1">是</el-radio>
         </el-radio-group>
       </el-form-item>
-      <el-form-item :label="$t('sysmenu.keepAlive')" prop="keepAlive" v-if="state.ruleForm.menuType === '0'">
+      <el-form-item :label="$t('sysmenu.keepAlive')" prop="keepAlive" v-if="state.ruleForm.type === '0'">
         <el-radio-group v-model="state.ruleForm.keepAlive">
           <el-radio border label="0">否</el-radio>
           <el-radio border label="1">是</el-radio>
         </el-radio-group>
       </el-form-item>
-      <el-form-item :label="$t('sysmenu.visible')" prop="visible" v-if="state.ruleForm.menuType === '0'">
+      <el-form-item :label="$t('sysmenu.visible')" prop="visible" v-if="state.ruleForm.type === '0'">
         <el-radio-group v-model="state.ruleForm.visible">
           <el-radio border label="0">否</el-radio>
           <el-radio border label="1">是</el-radio>
@@ -86,15 +86,15 @@ const menuDialogFormRef = ref();
 // 定义需要的数据
 const state = reactive({
   ruleForm: {
-    menuId: '',
+    id: '',
     name: '',
     enName: '',
     permission: '',
     parentId: '',
     icon: '',
     path: '',
-    sortOrder: 0,
-    menuType: '1',
+    sn: 0,
+    type: '1',
     keepAlive: '0',
     visible: '1',
     embedded: '0',
@@ -104,19 +104,19 @@ const state = reactive({
 
 // 表单校验规则
 const dataRules = reactive({
-  menuType: [{required: true, message: '菜单类型不能为空', trigger: 'blur'}],
+  type: [{required: true, message: '菜单类型不能为空', trigger: 'blur'}],
   parentId: [{required: true, message: '上级菜单不能为空', trigger: 'blur'}],
   name: [{validator: rule.overLength, trigger: 'blur'},{required: true, message: '菜单不能为空', trigger: 'blur'}],
   path: [{validator: rule.overLength, trigger: 'blur'},{required: true, message: '路径不能为空', trigger: 'blur'}],
   icon: [{required: true, message: '图标不能为空', trigger: 'blur'}],
   permission: [{validator: rule.overLength, trigger: 'blur'},{required: true, message: '权限代码不能为空', trigger: 'blur'}],
-  sortOrder: [{validator: rule.overLength, trigger: 'blur'},{required: true, message: '排序不能为空', trigger: 'blur'}],
+  sn: [{validator: rule.overLength, trigger: 'blur'},{required: true, message: '排序不能为空', trigger: 'blur'}],
   enName: [{validator: rule.overLength, trigger: 'blur'}],
 });
 
 // 打开弹窗
 const openDialog = (type: string, row?: any) => {
-  state.ruleForm.menuId = '';
+  state.ruleForm.id = '';
   visible.value = true;
 
   nextTick(() => {
@@ -125,7 +125,7 @@ const openDialog = (type: string, row?: any) => {
   });
 
   if (row?.id && type === 'edit') {
-    state.ruleForm.menuId = row.id;
+    state.ruleForm.id = row.id;
     // 获取当前节点菜单信息
     getMenuDetail(row.id);
   }
@@ -164,8 +164,8 @@ const onSubmit = async () => {
 
   try {
     loading.value = true;
-    state.ruleForm.menuId ? await putObj(state.ruleForm) : await addObj(state.ruleForm);
-    useMessage().success(t(state.ruleForm.menuId ? 'common.editSuccessText' : 'common.addSuccessText'));
+    state.ruleForm.id ? await putObj(state.ruleForm) : await addObj(state.ruleForm);
+    useMessage().success(t(state.ruleForm.id ? 'common.editSuccessText' : 'common.addSuccessText'));
     visible.value = false;
     emit('refresh');
   } catch (err: any) {

@@ -21,8 +21,10 @@ package com.lotus.bixi.upms.api.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
+import com.lotus.bixi.common.mybatis.base.BaseEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -39,59 +41,25 @@ import java.time.LocalDateTime;
 @Data
 @Schema(description = "角色")
 @EqualsAndHashCode(callSuper = true)
-public class SysRole extends Model<SysRole> {
-
-    private static final long serialVersionUID = 1L;
-
-    @TableId(value = "role_id", type = IdType.ASSIGN_ID)
-    @Schema(description = "角色编号")
-    private Long roleId;
+public class SysRole extends BaseEntity<SysRole> {
 
     @NotBlank(message = "角色名称不能为空")
     @Schema(description = "角色名称")
-    private String roleName;
+    private String name;
 
     @NotBlank(message = "角色标识不能为空")
     @Schema(description = "角色标识")
-    private String roleCode;
+    private String code;
 
     @Schema(description = "角色描述")
-    private String roleDesc;
-
+    private String description;
     /**
-     * 创建人
+     * 排序
      */
-    @TableField(fill = FieldFill.INSERT)
-    @Schema(description = "创建人")
-    private String createBy;
+    @NotNull(message = "排序值不能为空")
+    @Schema(description = "排序值")
+    private Integer sn;
 
-    /**
-     * 修改人
-     */
-    @TableField(fill = FieldFill.UPDATE)
-    @Schema(description = "修改人")
-    private String updateBy;
 
-    /**
-     * 创建时间
-     */
-    @Schema(description = "创建时间")
-    @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createTime;
-
-    /**
-     * 修改时间
-     */
-    @Schema(description = "修改时间")
-    @TableField(fill = FieldFill.UPDATE)
-    private LocalDateTime updateTime;
-
-    /**
-     * 删除标识（0-正常,1-删除）
-     */
-    @TableLogic
-    @TableField(fill = FieldFill.INSERT)
-    @Schema(description = "删除标记,1:已删除,0:正常")
-    private String delFlag;
 
 }
