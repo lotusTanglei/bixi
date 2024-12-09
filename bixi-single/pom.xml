@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>bixi</artifactId>
+        <groupId>com.lotus.bixi</groupId>
+        <version>${revision}</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>bixi-single</artifactId>
+    <packaging>jar</packaging>
+
+    <description>bixi 单体版本</description>
+    <dependencies>
+        <!--必备：认证中心模块-->
+        <dependency>
+            <groupId>com.lotus.bixi</groupId>
+            <artifactId>bixi-auth</artifactId>
+            <version>${revision}</version>
+        </dependency>
+        <!--必备：用户管理模块-->
+        <dependency>
+            <groupId>com.lotus.bixi</groupId>
+            <artifactId>bixi-upms-biz</artifactId>
+            <version>${revision}</version>
+        </dependency>
+        <!--可选：代码生成模块-->
+<!--        <dependency>-->
+<!--            <groupId>com.lotus.bixi</groupId>-->
+<!--            <artifactId>bixi-codegen</artifactId>-->
+<!--            <version>${revision}</version>-->
+<!--        </dependency>-->
+        <!--可选：定时任务模块-->
+<!--        <dependency>-->
+<!--            <groupId>com.lotus.bixi</groupId>-->
+<!--            <artifactId>bixi-quartz</artifactId>-->
+<!--            <version>${revision}</version>-->
+<!--        </dependency>-->
+        <!--安全模块-->
+        <dependency>
+            <groupId>com.lotus.bixi</groupId>
+            <artifactId>bixi-common-security</artifactId>
+        </dependency>
+        <!-- 接口文档UI  -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.springboot</groupId>
+            <artifactId>knife4j-boot-openapi3-ui</artifactId>
+            <version>${knife4j.version}</version>
+        </dependency>
+        <!--接口文档-->
+        <dependency>
+            <groupId>com.lotus.bixi</groupId>
+            <artifactId>bixi-common-swagger</artifactId>
+        </dependency>
+        <!--undertow容器-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-undertow</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>io.fabric8</groupId>
+                <artifactId>docker-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>
