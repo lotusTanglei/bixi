@@ -48,8 +48,8 @@ import org.springframework.web.multipart.MultipartFile;
  */
 @RestController
 @AllArgsConstructor
-@RequestMapping("/sys-file")
-@Tag(description = "sys-file", name = "文件管理")
+@RequestMapping("/file")
+@Tag(description = "file", name = "文件管理")
 @SecurityRequirement(name = HttpHeaders.AUTHORIZATION)
 public class SysFileController {
 

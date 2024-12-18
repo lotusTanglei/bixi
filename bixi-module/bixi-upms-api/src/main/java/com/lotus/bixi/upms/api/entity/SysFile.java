@@ -17,39 +17,26 @@
 
 package com.lotus.bixi.upms.api.entity;
 
-import com.baomidou.mybatisplus.annotation.*;
-import com.baomidou.mybatisplus.extension.activerecord.Model;
+import com.lotus.bixi.common.mybatis.base.BaseEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.time.LocalDateTime;
-
 /**
  * 文件管理
  *
- * @author Luckly
+ * @author 唐磊
  * @date 2019-06-18 17:18:42
  */
 @Data
 @Schema(description = "文件")
 @EqualsAndHashCode(callSuper = true)
-public class SysFile extends Model<SysFile> {
-
-    private static final long serialVersionUID = 1L;
-
-    /**
-     * 编号
-     */
-    @TableId(type = IdType.ASSIGN_ID)
-    @Schema(description = "文件编号")
-    private Long id;
-
+public class SysFile extends BaseEntity<SysFile> {
     /**
      * 文件名
      */
     @Schema(description = "文件名")
-    private String fileName;
+    private String name;
 
     /**
      * 原文件名
@@ -61,7 +48,7 @@ public class SysFile extends Model<SysFile> {
      * 容器名称
      */
     @Schema(description = "存储桶名称")
-    private String bucketName;
+    private String bucket;
 
     /**
      * 文件类型
@@ -73,42 +60,25 @@ public class SysFile extends Model<SysFile> {
      * 文件大小
      */
     @Schema(description = "文件大小")
-    private Long fileSize;
+    private Long size;
 
     /**
-     * 上传人
+     * 来源、标明是哪个表或者哪个模块、业务的文件
      */
-    @TableField(fill = FieldFill.INSERT)
-    @Schema(description = "创建者")
-    private String createBy;
+    @Schema(description = "来源")
+    private String source;
 
     /**
-     * 上传时间
+     * 业务、标明是来源的哪个业务
      */
-    @TableField(fill = FieldFill.INSERT)
-    @Schema(description = "创建时间")
-    private LocalDateTime createTime;
+    @Schema(description = "业务")
+    private String business;
+
 
     /**
-     * 更新人
+     * 来源唯一标识，通常是哪张表的附件填哪张表的主键id
      */
-    @TableField(fill = FieldFill.INSERT)
-    @Schema(description = "更新者")
-    private String updateBy;
-
-    /**
-     * 更新时间
-     */
-    @TableField(fill = FieldFill.UPDATE)
-    @Schema(description = "更新时间")
-    private LocalDateTime updateTime;
-
-    /**
-     * 删除标识：1-删除，0-正常
-     */
-    @TableLogic
-    @TableField(fill = FieldFill.INSERT)
-    @Schema(description = "删除标记,1:已删除,0:正常")
-    private String delFlag;
+    @Schema(description = "来源ID")
+    private Long sourceId;
 
 }

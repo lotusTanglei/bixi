@@ -66,12 +66,12 @@ public class SysFileServiceImpl extends ServiceImpl<SysFileMapper, SysFile> impl
     public R uploadFile(MultipartFile file) {
         String fileName = IdUtil.simpleUUID() + StrUtil.DOT + FileUtil.extName(file.getOriginalFilename());
         Map<String, String> resultMap = new HashMap<>(4);
-        resultMap.put("bucketName", properties.getBucketName());
+        resultMap.put("bucketName", properties.getBucket());
         resultMap.put("fileName", fileName);
-        resultMap.put("url", String.format("/admin/sys-file/%s/%s", properties.getBucketName(), fileName));
+        resultMap.put("url", String.format("/admin/file/%s/%s", properties.getBucket(), fileName));
 
         try (InputStream inputStream = file.getInputStream()) {
-            fileTemplate.putObject(properties.getBucketName(), fileName, inputStream, file.getContentType());
+            fileTemplate.putObject(properties.getBucket(), fileName, inputStream, file.getContentType());
             // 文件管理数据记录,收集管理追踪文件
             fileLog(file, fileName);
         } catch (Exception e) {
@@ -112,7 +112,7 @@ public class SysFileServiceImpl extends ServiceImpl<SysFileMapper, SysFile> impl
         if (Objects.isNull(file)) {
             return Boolean.FALSE;
         }
-        fileTemplate.removeObject(properties.getBucketName(), file.getFileName());
+        fileTemplate.removeObject(properties.getBucket(), file.getName());
         return this.removeById(id);
     }
 
@@ -124,11 +124,11 @@ public class SysFileServiceImpl extends ServiceImpl<SysFileMapper, SysFile> impl
      */
     private void fileLog(MultipartFile file, String fileName) {
         SysFile sysFile = new SysFile();
-        sysFile.setFileName(fileName);
+        sysFile.setName(fileName);
         sysFile.setOriginal(file.getOriginalFilename());
-        sysFile.setFileSize(file.getSize());
+        sysFile.setSize(file.getSize());
         sysFile.setType(FileUtil.extName(file.getOriginalFilename()));
-        sysFile.setBucketName(properties.getBucketName());
+        sysFile.setBucket(properties.getBucket());
         this.save(sysFile);
     }
 

@@ -126,7 +126,7 @@
 		<upload-excel
 			ref="excelUploadRef"
 			:title="$t('sysuser.importUserTip')"
-			temp-url="/admin/sys-file/local/file/user.xlsx"
+			temp-url="/admin/file/local/file/user.xlsx"
 			url="/admin/user/import"
 			@refreshDataList="getDataList"
 		/>

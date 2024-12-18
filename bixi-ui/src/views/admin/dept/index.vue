@@ -68,7 +68,7 @@
 			ref="excelUploadRef"
 			:title="$t('sysdept.importTip')"
 			url="/admin/dept/import"
-			temp-url="/admin/sys-file/local/file/dept.xlsx"
+			temp-url="/admin/file/local/file/dept.xlsx"
 			@refreshDataList="getDataList"
 		/>
 	</div>

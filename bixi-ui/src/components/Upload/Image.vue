@@ -78,7 +78,7 @@ interface UploadFileProps {
 // 接受父组件参数
 const props = withDefaults(defineProps<UploadFileProps>(), {
 	imageUrl: '',
-	uploadFileUrl: '/admin/sys-file/upload',
+	uploadFileUrl: '/admin/file/upload',
 	drag: true,
 	disabled: false,
 	fileSize: 5,

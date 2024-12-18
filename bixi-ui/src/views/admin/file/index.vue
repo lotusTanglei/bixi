@@ -3,9 +3,15 @@
 		<div class="layout-padding-auto layout-padding-view">
 			<el-row v-show="showSearch">
 				<el-form :model="state.queryForm" ref="queryRef" :inline="true" @keyup.enter="getDataList">
-					<el-form-item :label="$t('file.fileName')" prop="original">
-						<el-input v-model="state.queryForm.original" :placeholder="$t('file.inputoriginalTip')" clearable @keyup.enter="getDataList" />
+					<el-form-item :label="$t('file.name')" prop="original">
+						<el-input v-model="state.queryForm.original" :placeholder="$t('file.inputOriginalTip')" clearable @keyup.enter="getDataList" />
 					</el-form-item>
+          <el-form-item :label="$t('file.source')" prop="original">
+            <el-input v-model="state.queryForm.source" :placeholder="$t('file.inputSourceTip')" clearable @keyup.enter="getDataList" />
+          </el-form-item>
+          <el-form-item :label="$t('file.name')" prop="original">
+            <el-input v-model="state.queryForm.business" :placeholder="$t('file.inputBusinessTip')" clearable @keyup.enter="getDataList" />
+          </el-form-item>
 					<el-form-item>
 						<el-button type="primary" icon="Search" @click="getDataList">{{ $t('common.queryBtn') }}</el-button>
 						<el-button icon="Refresh" @click="resetQuery">{{ $t('common.resetBtn') }}</el-button>
@@ -39,13 +45,15 @@
 			>
 				<el-table-column type="selection" width="40" align="center" />
 				<el-table-column type="index" :label="t('file.index')" width="80" />
-				<el-table-column prop="fileName" :label="t('file.fileName')" show-overflow-tooltip />
-				<el-table-column prop="bucketName" :label="t('file.bucketName')" show-overflow-tooltip />
+				<el-table-column prop="name" :label="t('file.name')" show-overflow-tooltip />
+				<el-table-column prop="bucket" :label="t('file.bucket')" show-overflow-tooltip />
 				<el-table-column prop="original" :label="t('file.original')" show-overflow-tooltip />
 				<el-table-column prop="type" :label="t('file.type')" show-overflow-tooltip />
-				<el-table-column prop="fileSize" :label="t('file.fileSize')" show-overflow-tooltip />
-				<el-table-column prop="createTime" :label="t('file.createTime')" show-overflow-tooltip />
-				<el-table-column :label="$t('common.action')" width="200">
+				<el-table-column prop="size" :label="t('file.size')" show-overflow-tooltip />
+				<el-table-column prop="source" :label="t('file.source')" show-overflow-tooltip />
+        <el-table-column prop="business" :label="t('file.business')" show-overflow-tooltip />
+        <el-table-column prop="createTime" :label="t('file.createTime')" show-overflow-tooltip />
+        <el-table-column :label="$t('common.action')" width="200">
 					<template #default="scope">
 						<el-button icon="delete" text type="primary" v-auth="'sys_file_del'" @click="handleDelete([scope.row.id])">{{
 							$t('common.delBtn')
@@ -98,7 +106,7 @@ const resetQuery = () => {
 
 // 文件下载
 const download = (row: any) => {
-	downBlobFile('/admin/sys-file/' + row.bucketName + '/' + row.fileName, null, row.fileName);
+	downBlobFile('/admin/file/' + row.bucketName + '/' + row.fileName, null, row.fileName);
 };
 
 // 多选事件

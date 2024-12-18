@@ -56,7 +56,7 @@ const props = defineProps({
 	getText: String,
 	uploadFileUrl: {
 		type: String,
-		default: `/admin/sys-file/upload`,
+		default: `/admin/file/upload`,
 	},
 });
 

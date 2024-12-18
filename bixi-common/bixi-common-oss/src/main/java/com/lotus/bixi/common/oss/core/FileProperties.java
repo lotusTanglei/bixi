@@ -36,7 +36,7 @@ public class FileProperties {
     /**
      * 默认的存储桶名称
      */
-    private String bucketName = "local";
+    private String bucket = "local";
 
     /**
      * 本地文件配置信息

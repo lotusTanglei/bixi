@@ -72,7 +72,7 @@
 			:title="$t('post.importPostTip')"
 			@refreshDataList="getDataList"
 			ref="excelUploadRef"
-			temp-url="/admin/sys-file/local/file/post.xlsx"
+			temp-url="/admin/file/local/file/post.xlsx"
 			url="/admin/post/import"
 		/>
 	</div>

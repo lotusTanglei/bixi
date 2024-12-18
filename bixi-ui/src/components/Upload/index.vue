@@ -87,7 +87,7 @@ const props = defineProps({
 	},
 	uploadFileUrl: {
 		type: String,
-		default: '/admin/sys-file/upload',
+		default: '/admin/file/upload',
 	},
 	type: {
 		type: String,

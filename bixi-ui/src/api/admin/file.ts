@@ -2,7 +2,7 @@ import request from '/@/utils/request';
 
 export function fetchList(query?: Object) {
 	return request({
-		url: '/admin/sys-file/page',
+		url: '/admin/file/page',
 		method: 'get',
 		params: query,
 	});
@@ -10,7 +10,7 @@ export function fetchList(query?: Object) {
 
 export function addObj(obj?: Object) {
 	return request({
-		url: '/admin/sys-file',
+		url: '/admin/file',
 		method: 'post',
 		data: obj,
 	});
@@ -18,14 +18,14 @@ export function addObj(obj?: Object) {
 
 export function getObj(id?: string) {
 	return request({
-		url: '/admin/sys-file/' + id,
+		url: '/admin/file/' + id,
 		method: 'get',
 	});
 }
 
 export function delObj(ids?: Object) {
 	return request({
-		url: '/admin/sys-file',
+		url: '/admin/file',
 		method: 'delete',
 		data: ids,
 	});
@@ -33,7 +33,7 @@ export function delObj(ids?: Object) {
 
 export function putObj(obj?: Object) {
 	return request({
-		url: '/admin/sys-file',
+		url: '/admin/file',
 		method: 'put',
 		data: obj,
 	});

@@ -87,7 +87,7 @@
 			ref="excelUploadRef"
 			:title="$t('sysuser.importUserTip')"
 			url="/admin/role/import"
-			temp-url="/admin/sys-file/local/file/role.xlsx"
+			temp-url="/admin/file/local/file/role.xlsx"
 			@refreshDataList="getDataList"
 		/>
 		<!-- 授权 -->
