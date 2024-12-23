@@ -30,7 +30,7 @@ import java.util.*;
 import java.util.function.Supplier;
 
 /**
- * @author jumuning
+ * @author tanglei
  * @description 处理自定义授权
  */
 public abstract class OAuth2ResourceOwnerBaseAuthenticationProvider<T extends OAuth2ResourceOwnerBaseAuthenticationToken>

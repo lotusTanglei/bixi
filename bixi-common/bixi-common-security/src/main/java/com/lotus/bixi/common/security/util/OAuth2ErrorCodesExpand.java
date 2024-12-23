@@ -1,7 +1,7 @@
 package com.lotus.bixi.common.security.util;
 
 /**
- * @author jumuning
+ * @author tanglei
  * @description OAuth2 异常信息
  */
 public interface OAuth2ErrorCodesExpand {

@@ -17,7 +17,7 @@ import org.springframework.security.oauth2.server.authorization.token.OAuth2Toke
 import java.util.Map;
 
 /**
- * @author jumuning
+ * @author tanglei
  * @description 处理用户名密码授权
  */
 public class OAuth2ResourceOwnerPasswordAuthenticationProvider

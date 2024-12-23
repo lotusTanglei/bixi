@@ -34,7 +34,7 @@ import reactor.core.publisher.Mono;
 /**
  * 网关异常通用处理器，只作用在webflux 环境下 , 优先级低于 {@link ResponseStatusExceptionHandler} 执行
  *
- * @author 冷酱
+ * @author 唐磊
  * @date 2020/5/26
  */
 @Slf4j

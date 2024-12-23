@@ -1,12 +1,3 @@
-<!--
- * @Descripttion: cron规则生成器
- * @version: 1.0
- * @Author: sakuya
- * @Date: 2023年05月23日13:04:12
- * @LastEditors:
- * @LastEditTime:
--->
-
 <template>
 	<el-input v-model="defaultValue" v-bind="$attrs">
 		<template #append>

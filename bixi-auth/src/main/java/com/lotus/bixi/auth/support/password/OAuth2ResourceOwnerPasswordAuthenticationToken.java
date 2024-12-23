@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * @author jumuning
+ * @author tanglei
  * @description 密码授权token信息
  */
 public class OAuth2ResourceOwnerPasswordAuthenticationToken extends OAuth2ResourceOwnerBaseAuthenticationToken {

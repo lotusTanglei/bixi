@@ -16,7 +16,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Map;
 
 /**
- * @author jumuning
+ * @author tanglei
  * @description OAuth2 端点工具
  */
 @UtilityClass

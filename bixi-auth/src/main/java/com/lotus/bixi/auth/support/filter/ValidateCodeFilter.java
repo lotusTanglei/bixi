@@ -27,13 +27,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Optional;
-
-/**
- * @author lbw
- * @date 2024-01-06
- * <p>
- * 登录前置处理器： 前端密码传输密文解密，验证码处理
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor

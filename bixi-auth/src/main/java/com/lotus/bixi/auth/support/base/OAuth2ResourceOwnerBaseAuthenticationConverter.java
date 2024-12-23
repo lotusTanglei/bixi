@@ -17,7 +17,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * @author jumuning
+ * @author tanglei
  * @date 2022-06-02
  * <p>
  * 自定义模式认证转换器

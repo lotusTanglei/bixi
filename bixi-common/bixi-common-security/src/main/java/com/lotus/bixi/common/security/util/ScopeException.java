@@ -4,7 +4,7 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
 
 /**
- * @author jumuning
+ * @author tanglei
  * @description ScopeException 异常信息
  */
 public class ScopeException extends OAuth2AuthenticationException {
