@@ -1,22 +1,3 @@
-/*
- *
- *      Copyright (c) 2018-2025, lengleng All rights reserved.
- *
- *  Redistribution and use in source and binary forms, with or without
- *  modification, are permitted provided that the following conditions are met:
- *
- * Redistributions of source code must retain the above copyright notice,
- *  this list of conditions and the following disclaimer.
- *  Redistributions in binary form must reproduce the above copyright
- *  notice, this list of conditions and the following disclaimer in the
- *  documentation and/or other materials provided with the distribution.
- *  Neither the name of the pig4cloud.com developer nor the names of its
- *  contributors may be used to endorse or promote products derived from
- *  this software without specific prior written permission.
- *  Author: lengleng (wangiegie@gmail.com)
- *
- */
-
 package com.lotus.bixi.config;
 
 import com.lotus.bixi.auth.support.core.BixiDaoAuthenticationProvider;
@@ -66,7 +47,7 @@ public class BixiSingleSecurityServerConfiguration {
 
 	private final OAuth2AuthorizationService authorizationService;
 
-	private final BixiBearerTokenExtractor pigBearerTokenExtractor;
+	private final BixiBearerTokenExtractor bixiBearerTokenExtractor;
 
 	private final PasswordDecoderFilter passwordDecoderFilter;
 
@@ -113,7 +94,7 @@ public class BixiSingleSecurityServerConfiguration {
 			.oauth2ResourceServer(
 					oauth2 -> oauth2.opaqueToken(token -> token.introspector(customOpaqueTokenIntrospector))
 						.authenticationEntryPoint(resourceAuthExceptionEntryPoint)
-						.bearerTokenResolver(pigBearerTokenExtractor))
+						.bearerTokenResolver(bixiBearerTokenExtractor))
 			.exceptionHandling(configurer -> configurer.authenticationEntryPoint(resourceAuthExceptionEntryPoint))
 			.headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
 			.csrf(AbstractHttpConfigurer::disable);

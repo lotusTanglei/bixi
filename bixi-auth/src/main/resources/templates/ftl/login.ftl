@@ -26,7 +26,7 @@
                 <h3 class="font-semibold text-2xl text-gray-800 text-center">统一身份平台</h3>
             </div>
             <form class="form-signin" action="/token/form" method="post">
-                <input type="hidden" name="client_id" class="form-control" value="pig" placeholder="所属客户端">
+                <input type="hidden" name="client_id" class="form-control" value="bixi" placeholder="所属客户端">
                 <input type="hidden" name="grant_type" class="form-control" value="password" placeholder="所属客户端">
                 <div class="space-y-6">
                     <div class="">
@@ -58,7 +58,7 @@
 					<span>
                 Copyright © 2021-2023
                 <a href="#" rel="" target="_blank" title="Codepen aji"
-                   class="text-purple-500 hover:text-purple-600 ">PIGCLOUD</a></span>
+                   class="text-purple-500 hover:text-purple-600 ">LOTUS-BIXI</a></span>
             </div>
         </div>
     </div>

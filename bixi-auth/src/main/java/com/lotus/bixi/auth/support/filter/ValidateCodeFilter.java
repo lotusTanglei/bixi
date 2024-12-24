@@ -82,7 +82,6 @@ public class ValidateCodeFilter extends OncePerRequestFilter {
 
         String randomStr = request.get().getParameter("randomStr");
 
-        // https://gitee.com/log4j/pig/issues/IWA0D
         String mobile = request.get().getParameter("mobile");
         if (StrUtil.isNotBlank(mobile)) {
             randomStr = mobile;

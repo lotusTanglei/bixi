@@ -73,11 +73,11 @@ public class BixiCustomOpaqueTokenIntrospector implements OpaqueTokenIntrospecto
         }
 
         // 注入客户端信息，方便上下文中获取
-        BixiUser pigxUser = (BixiUser) userDetails;
-        Objects.requireNonNull(pigxUser)
+        BixiUser bixixUser = (BixiUser) userDetails;
+        Objects.requireNonNull(bixixUser)
                 .getAttributes()
                 .put(SecurityConstants.CLIENT_ID, oldAuthorization.getRegisteredClientId());
-        return pigxUser;
+        return bixixUser;
     }
 
 }

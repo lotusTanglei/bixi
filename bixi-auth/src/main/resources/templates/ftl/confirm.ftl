@@ -5,7 +5,7 @@
     <meta charset="UTF-8"/>
     <meta name="viewport"
           content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no"/>
-    <title>Pig 第三方授权</title>
+    <title>Bixi 第三方授权</title>
     <link rel="stylesheet" type="text/css" href="/static/css/bootstrap.min.css"/>
     <link rel="stylesheet" type="text/css" href="/static/css/signin.css"/>
 </head>
@@ -18,13 +18,13 @@
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-5">
             <p class="navbar-text navbar-right">
-                <a target="_blank" href="https://pig4cloud.com">技术支持</a>
+                <a target="_blank" href="http://lotus-studio.top">技术支持</a>
             </p>
             <p class="navbar-text navbar-right">
                 <#if principalName=="anonymousUser">
                     未登录
                 <#else>
-                    <a target="_blank" href="https://pig4cloud.com">${principalName}</a>
+                    <a target="_blank" href="http://lotus-studio.top">${principalName}</a>
                 </#if>
             </p>
         </div>
