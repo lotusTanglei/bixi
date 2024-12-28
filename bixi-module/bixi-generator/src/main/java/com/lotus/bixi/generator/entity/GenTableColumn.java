@@ -36,7 +36,7 @@ public class GenTableColumn extends BaseEntity<GenDatasourceConfig> {
 	/**
 	 * 排序
 	 */
-	private Integer sort;
+	private Integer sn;
 
 	/**
 	 * 字段类型

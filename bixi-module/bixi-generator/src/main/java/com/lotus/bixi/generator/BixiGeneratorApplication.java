@@ -2,7 +2,7 @@
 
 package com.lotus.bixi.generator;
 
-import com.lotus.bixi.common.datasource.annotation.EnableDynamicDataSource;
+//import com.lotus.bixi.common.datasource.annotation.EnableDynamicDataSource;
 import com.lotus.bixi.common.feign.annotation.EnableBixiFeignClients;
 import com.lotus.bixi.common.security.annotation.EnableBixiResourceServer;
 import com.lotus.bixi.common.swagger.annotation.EnableBixiDoc;
@@ -14,7 +14,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
  * @author 唐磊
  * @date 2018/07/29 代码生成模块
  */
-@EnableDynamicDataSource
+//@EnableDynamicDataSource
 @EnableBixiFeignClients
 @EnableBixiDoc("gen")
 @EnableDiscoveryClient

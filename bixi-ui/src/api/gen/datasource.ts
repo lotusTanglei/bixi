@@ -2,7 +2,7 @@ import request from '/@/utils/request';
 
 export function fetchList(query?: Object) {
 	return request({
-		url: '/gen/dsconf/page',
+		url: '/gen/dsconfig/page',
 		method: 'get',
 		params: query,
 	});
@@ -10,7 +10,7 @@ export function fetchList(query?: Object) {
 
 export function list(query?: Object) {
 	return request({
-		url: '/gen/dsconf/list',
+		url: '/gen/dsconfig/list',
 		method: 'get',
 		params: query,
 	});
@@ -18,7 +18,7 @@ export function list(query?: Object) {
 
 export function listTable(query?: Object) {
 	return request({
-		url: '/gen/dsconf/table/list',
+		url: '/gen/dsconfig/table/list',
 		method: 'get',
 		params: query,
 	});
@@ -26,7 +26,7 @@ export function listTable(query?: Object) {
 
 export function addObj(obj?: Object) {
 	return request({
-		url: '/gen/dsconf',
+		url: '/gen/dsconfig',
 		method: 'post',
 		data: obj,
 	});
@@ -34,14 +34,14 @@ export function addObj(obj?: Object) {
 
 export function getObj(id?: string) {
 	return request({
-		url: '/gen/dsconf/' + id,
+		url: '/gen/dsconfig/' + id,
 		method: 'get',
 	});
 }
 
 export function delObj(ids?: Object) {
 	return request({
-		url: '/gen/dsconf',
+		url: '/gen/dsconfig',
 		method: 'delete',
 		data: ids,
 	});
@@ -49,7 +49,7 @@ export function delObj(ids?: Object) {
 
 export function putObj(obj?: Object) {
 	return request({
-		url: '/gen/dsconf',
+		url: '/gen/dsconfig',
 		method: 'put',
 		data: obj,
 	});

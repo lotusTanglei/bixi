@@ -12,7 +12,7 @@ import lombok.EqualsAndHashCode;
  * @date 2019-03-31 16:00:20
  */
 @Data
-@TableName("gen_datasource_conf")
+@TableName("gen_datasource_config")
 @EqualsAndHashCode(callSuper = true)
 public class GenDatasourceConfig extends BaseEntity<GenDatasourceConfig> {
 
@@ -29,7 +29,7 @@ public class GenDatasourceConfig extends BaseEntity<GenDatasourceConfig> {
 	/**
 	 * 配置类型 （0 主机形式 | 1 url形式）
 	 */
-	private Integer confType;
+	private Integer configType;
 
 	/**
 	 * 主机地址

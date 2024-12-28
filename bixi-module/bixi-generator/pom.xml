@@ -41,6 +41,12 @@
             <groupId>com.lotus.bixi</groupId>
             <artifactId>bixi-common-datasource</artifactId>
         </dependency>
+        <!-- orm 模块-->
+        <!-- Druid -->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>druid-spring-boot-3-starter</artifactId>
+        </dependency>
         <!--mybatis-->
         <dependency>
             <groupId>com.baomidou</groupId>

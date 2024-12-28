@@ -162,7 +162,7 @@ public class GeneratorServiceImpl implements GeneratorService {
 		List<GenTableColumn> fieldList = columnService.lambdaQuery()
 			.eq(GenTableColumn::getDsName, table.getDsName())
 			.eq(GenTableColumn::getTableName, table.getTableName())
-			.orderByAsc(GenTableColumn::getSort)
+			.orderByAsc(GenTableColumn::getSn)
 			.list();
 
 		table.setFieldList(fieldList);

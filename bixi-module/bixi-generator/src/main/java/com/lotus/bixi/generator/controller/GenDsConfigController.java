@@ -31,8 +31,8 @@ import javax.sql.DataSource;
  */
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/dsconf")
-public class GenDsConfController {
+@RequestMapping("/dsconfig")
+public class GenDsConfigController {
 
 	private final GenDatasourceConfigService datasourceConfigService;
 

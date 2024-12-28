@@ -67,7 +67,7 @@ public class GenTableColumnServiceImpl extends ServiceImpl<GenTableColumnMapper,
 			field.setFormType("text");
 
 			// 保证审计字段最后显示
-			field.setSort(Objects.isNull(field.getSort()) ? index.getAndIncrement() : field.getSort());
+			field.setSn(Objects.isNull(field.getSn()) ? index.getAndIncrement() : field.getSn());
 		});
 	}
 
@@ -82,7 +82,7 @@ public class GenTableColumnServiceImpl extends ServiceImpl<GenTableColumnMapper,
 	public void updateTableField(String dsName, String tableName, List<GenTableColumn> tableFieldList) {
 		AtomicInteger sort = new AtomicInteger();
 		this.updateBatchById(tableFieldList.stream()
-			.peek(field -> field.setSort(sort.getAndIncrement()))
+			.peek(field -> field.setSn(sort.getAndIncrement()))
 			.collect(Collectors.toList()));
 	}
 

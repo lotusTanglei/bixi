@@ -125,7 +125,7 @@ public class GenDatasourceConfigServiceImpl extends ServiceImpl<GenDatasourceCon
 	public Boolean checkDataSource(GenDatasourceConfig conf) {
 		String url;
 		// JDBC 配置形式
-		if (DsConfTypeEnum.JDBC.getType().equals(conf.getConfType())) {
+		if (DsConfTypeEnum.JDBC.getType().equals(conf.getConfigType())) {
 			url = conf.getUrl();
 		}
 		else if (DsJdbcUrlEnum.MSSQL.getDbName().equals(conf.getDsType())) {

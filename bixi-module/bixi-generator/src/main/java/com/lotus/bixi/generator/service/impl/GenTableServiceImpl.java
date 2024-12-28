@@ -138,7 +138,7 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
 		List<GenTableColumn> fieldList = columnService.list(Wrappers.<GenTableColumn>lambdaQuery()
 			.eq(GenTableColumn::getDsName, dsName)
 			.eq(GenTableColumn::getTableName, tableName)
-			.orderByAsc(GenTableColumn::getSort));
+			.orderByAsc(GenTableColumn::getSn));
 		genTable.setFieldList(fieldList);
 
 		// 查询模板分组信息
@@ -225,7 +225,7 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
 				genTableColumn.setFormItem(commonColumnFiledEnum.getFormItem());
 				genTableColumn.setGridItem(commonColumnFiledEnum.getGridItem());
 				genTableColumn.setAutoFill(commonColumnFiledEnum.getAutoFill());
-				genTableColumn.setSort(commonColumnFiledEnum.getSort());
+				genTableColumn.setSn(commonColumnFiledEnum.getSort());
 			}
 			tableFieldList.add(genTableColumn);
 		});
