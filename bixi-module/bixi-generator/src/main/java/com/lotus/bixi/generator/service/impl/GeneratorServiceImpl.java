@@ -1,4 +1,19 @@
-
+/*
+ *    Copyright (c) 2018-2025, lengleng All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ * Redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution.
+ * Neither the name of the pig4cloud.com developer nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ * Author: lengleng (wangiegie@gmail.com)
+ */
 
 package com.lotus.bixi.generator.service.impl;
 
@@ -9,14 +24,13 @@ import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.text.NamingCase;
 import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.StrUtil;
-import com.lotus.bixi.generator.entity.GenTable;
-import com.lotus.bixi.generator.entity.GenTableColumn;
-import com.lotus.bixi.generator.entity.GenTemplate;
-import com.lotus.bixi.generator.service.*;
-import com.lotus.bixi.generator.config.BixiGeneratorDefaultProperties;
-import com.lotus.bixi.generator.service.*;
-import com.lotus.bixi.generator.util.VelocityKit;
-import com.lotus.bixi.generator.util.vo.GroupVO;
+import com.pig4cloud.pig.codegen.config.PigCodeGenDefaultProperties;
+import com.pig4cloud.pig.codegen.entity.GenTable;
+import com.pig4cloud.pig.codegen.entity.GenTableColumnEntity;
+import com.pig4cloud.pig.codegen.entity.GenTemplateEntity;
+import com.pig4cloud.pig.codegen.service.*;
+import com.pig4cloud.pig.codegen.util.VelocityKit;
+import com.pig4cloud.pig.codegen.util.vo.GroupVO;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +46,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 /**
- * @author tanglei
+ * @author lengleng
  * @date 2018-07-30
  * <p>
  * 代码生成器
@@ -42,7 +56,7 @@ import java.util.zip.ZipOutputStream;
 @RequiredArgsConstructor
 public class GeneratorServiceImpl implements GeneratorService {
 
-	private final BixiGeneratorDefaultProperties configurationProperties;
+	private final PigCodeGenDefaultProperties configurationProperties;
 
 	private final GenTableColumnService columnService;
 
@@ -66,12 +80,12 @@ public class GeneratorServiceImpl implements GeneratorService {
 		Long style = (Long) dataModel.get("style");
 
 		GroupVO groupVo = genGroupService.getGroupVoById(style);
-		List<GenTemplate> templateList = groupVo.getTemplateList();
+		List<GenTemplateEntity> templateList = groupVo.getTemplateList();
 
 		String frontendPath = configurationProperties.getFrontendPath();
 		String backendPath = configurationProperties.getBackendPath();
 
-		for (GenTemplate template : templateList) {
+		for (GenTemplateEntity template : templateList) {
 			String templateCode = template.getTemplateCode();
 			String generatorPath = template.getGeneratorPath();
 
@@ -103,7 +117,7 @@ public class GeneratorServiceImpl implements GeneratorService {
 		Long style = (Long) dataModel.get("style");
 
 		// 获取模板列表，Lambda 表达式简化代码
-		List<GenTemplate> templateList = genGroupService.getGroupVoById(style).getTemplateList();
+		List<GenTemplateEntity> templateList = genGroupService.getGroupVoById(style).getTemplateList();
 
 		String frontendPath = configurationProperties.getFrontendPath();
 		String backendPath = configurationProperties.getBackendPath();
@@ -139,7 +153,7 @@ public class GeneratorServiceImpl implements GeneratorService {
 		Long style = (Long) dataModel.get("style");
 
 		// 获取模板列表，Lambda 表达式简化代码
-		List<GenTemplate> templateList = genGroupService.getGroupVoById(style).getTemplateList();
+		List<GenTemplateEntity> templateList = genGroupService.getGroupVoById(style).getTemplateList();
 
 		templateList.forEach(template -> {
 			String templateCode = template.getTemplateCode();
@@ -159,10 +173,10 @@ public class GeneratorServiceImpl implements GeneratorService {
 		// 获取表格信息
 		GenTable table = tableService.getById(tableId);
 		// 获取字段列表
-		List<GenTableColumn> fieldList = columnService.lambdaQuery()
-			.eq(GenTableColumn::getDsName, table.getDsName())
-			.eq(GenTableColumn::getTableName, table.getTableName())
-			.orderByAsc(GenTableColumn::getSn)
+		List<GenTableColumnEntity> fieldList = columnService.lambdaQuery()
+			.eq(GenTableColumnEntity::getDsName, table.getDsName())
+			.eq(GenTableColumnEntity::getTableName, table.getTableName())
+			.orderByAsc(GenTableColumnEntity::getSort)
 			.list();
 
 		table.setFieldList(fieldList);
@@ -203,9 +217,9 @@ public class GeneratorServiceImpl implements GeneratorService {
 		// 设置子表
 		String childTableName = table.getChildTableName();
 		if (StrUtil.isNotBlank(childTableName)) {
-			List<GenTableColumn> childFieldList = columnService.lambdaQuery()
-				.eq(GenTableColumn::getDsName, table.getDsName())
-				.eq(GenTableColumn::getTableName, table.getChildTableName())
+			List<GenTableColumnEntity> childFieldList = columnService.lambdaQuery()
+				.eq(GenTableColumnEntity::getDsName, table.getDsName())
+				.eq(GenTableColumnEntity::getTableName, table.getChildTableName())
 				.list();
 			dataModel.put("childFieldList", childFieldList);
 			dataModel.put("childTableName", childTableName);
@@ -215,17 +229,17 @@ public class GeneratorServiceImpl implements GeneratorService {
 			dataModel.put("childClassName", StrUtil.lowerFirst(NamingCase.toPascalCase(childTableName)));
 			// 设置是否是多租户模式 (判断字段列表中是否包含 tenant_id 字段)
 			childFieldList.stream()
-				.filter(genTableColumn -> genTableColumn.getFieldName().equals("tenant_id"))
+				.filter(genTableColumnEntity -> genTableColumnEntity.getFieldName().equals("tenant_id"))
 				.findFirst()
-				.ifPresent(column -> dataModel.put("isChildTenant", true));
+				.ifPresent(columnEntity -> dataModel.put("isChildTenant", true));
 		}
 
 		// 设置是否是多租户模式 (判断字段列表中是否包含 tenant_id 字段)
 		table.getFieldList()
 			.stream()
-			.filter(genTableColumn -> genTableColumn.getFieldName().equals("tenant_id"))
+			.filter(genTableColumnEntity -> genTableColumnEntity.getFieldName().equals("tenant_id"))
 			.findFirst()
-			.ifPresent(column -> dataModel.put("isTenant", true));
+			.ifPresent(columnEntity -> dataModel.put("isTenant", true));
 
 		return dataModel;
 	}
@@ -245,23 +259,23 @@ public class GeneratorServiceImpl implements GeneratorService {
 	 */
 	private void setFieldTypeList(Map<String, Object> dataModel, GenTable table) {
 		// 按字段类型分组，使用 Map 存储不同类型的字段列表
-		Map<Boolean, List<GenTableColumn>> typeMap = table.getFieldList()
+		Map<Boolean, List<GenTableColumnEntity>> typeMap = table.getFieldList()
 			.stream()
-			.collect(Collectors.partitioningBy(column -> BooleanUtil.toBoolean(column.getPrimaryPk())));
+			.collect(Collectors.partitioningBy(columnEntity -> BooleanUtil.toBoolean(columnEntity.getPrimaryPk())));
 
 		// 从分组后的 Map 中获取不同类型的字段列表
-		List<GenTableColumn> primaryList = typeMap.get(true);
-		List<GenTableColumn> formList = typeMap.get(false)
+		List<GenTableColumnEntity> primaryList = typeMap.get(true);
+		List<GenTableColumnEntity> formList = typeMap.get(false)
 			.stream()
-			.filter(column -> BooleanUtil.toBoolean(column.getFormItem()))
+			.filter(columnEntity -> BooleanUtil.toBoolean(columnEntity.getFormItem()))
 			.collect(Collectors.toList());
-		List<GenTableColumn> gridList = typeMap.get(false)
+		List<GenTableColumnEntity> gridList = typeMap.get(false)
 			.stream()
-			.filter(column -> BooleanUtil.toBoolean(column.getGridItem()))
+			.filter(columnEntity -> BooleanUtil.toBoolean(columnEntity.getGridItem()))
 			.collect(Collectors.toList());
-		List<GenTableColumn> queryList = typeMap.get(false)
+		List<GenTableColumnEntity> queryList = typeMap.get(false)
 			.stream()
-			.filter(column -> BooleanUtil.toBoolean(column.getQueryItem()))
+			.filter(columnEntity -> BooleanUtil.toBoolean(columnEntity.getQueryItem()))
 			.collect(Collectors.toList());
 
 		if (CollUtil.isNotEmpty(primaryList)) {

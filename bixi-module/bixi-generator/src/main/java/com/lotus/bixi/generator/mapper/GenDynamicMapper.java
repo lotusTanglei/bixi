@@ -17,28 +17,23 @@
 
 package com.lotus.bixi.generator.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.pig4cloud.pig.codegen.entity.GenFieldType;
+import com.baomidou.mybatisplus.annotation.InterceptorIgnore;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import java.util.Set;
+import java.util.LinkedHashMap;
+import java.util.List;
 
 /**
- * 列属性
+ * 动态查询
  *
- * @author pigx code generator
- * @date 2023-02-06 20:16:01
+ * @author lengleng
+ * @date 2022-07-09
  */
 @Mapper
-public interface GenFieldTypeMapper extends BaseMapper<GenFieldType> {
+public interface GenDynamicMapper {
 
-	/**
-	 * 根据tableId，获取包列表
-	 * @param dsName 数据源名称
-	 * @param tableName 表名称
-	 * @return 返回包列表
-	 */
-	Set<String> getPackageByTableId(@Param("dsName") String dsName, @Param("tableName") String tableName);
+	@InterceptorIgnore(tenantLine = "true")
+	List<LinkedHashMap<String, Object>> dynamicQuerySql(@Param("value") String sq);
 
 }

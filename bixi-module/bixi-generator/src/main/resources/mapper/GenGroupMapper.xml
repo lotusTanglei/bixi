@@ -7,8 +7,8 @@
         <id property="id" column="group_id"/>
         <result property="groupName" column="group_name"/>
         <result property="groupDesc" column="group_desc"/>
-	    <collection property="templateList" ofType="com.lotus.bixi.generator.entity.GenTemplate"
-                    select="com.lotus.bixi.generator.mapper.GenTemplateMapper.listTemplateById" column="group_id">
+	    <collection property="templateList" ofType="com.lotus.bixi.generator.entity.GenTemplateEntity"
+				  select="com.lotus.bixi.generator.mapper.GenTemplateMapper.listTemplateById" column="group_id">
 	    </collection>
   </resultMap>
 

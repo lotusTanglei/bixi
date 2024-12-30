@@ -1,8 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.lotus.bixi.generator.mapper.GenFieldTypeMapper">
-    <select id="getPackageByTableId" resultType="java.lang.String">
+
+    <resultMap id="fieldTypeMap" type="com.lotus.bixi.generator.entity.GenFieldType">
+        <id property="id" column="id"/>
+        <result property="columnType" column="column_type"/>
+        <result property="attrType" column="attr_type"/>
+        <result property="packageName" column="package_name"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <select id="getPackageByTableId" resultType="string">
         select t1.package_name
         from gen_field_type t1,
         gen_table_column t2

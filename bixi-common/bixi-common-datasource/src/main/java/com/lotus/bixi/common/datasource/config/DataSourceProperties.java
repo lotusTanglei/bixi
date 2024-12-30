@@ -37,6 +37,6 @@ public class DataSourceProperties {
     /**
      * 查询数据源的SQL
      */
-    private String queryDsSql = "select * from gen_datasource_conf where del_flag = 0";
+    private String queryDsSql = "select * from gen_datasource_config where del_flag = 0";
 
 }

@@ -1,4 +1,19 @@
-
+/*
+ *    Copyright (c) 2018-2025, lengleng All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ * Redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution.
+ * Neither the name of the pig4cloud.com developer nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ * Author: lengleng (wangiegie@gmail.com)
+ */
 package com.lotus.bixi.generator.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
@@ -9,7 +24,7 @@ import com.baomidou.dynamic.datasource.creator.DataSourceProperty;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lotus.bixi.generator.entity.GenDatasourceConfig;
 import com.lotus.bixi.generator.mapper.GenDatasourceConfigMapper;
-import com.lotus.bixi.generator.service.GenDatasourceConfigService;
+import com.lotus.bixi.generator.service.GenDatasourceConfService;
 import com.lotus.bixi.common.core.util.SpringContextHolder;
 import com.lotus.bixi.common.datasource.enums.DsConfTypeEnum;
 import com.lotus.bixi.common.datasource.enums.DsJdbcUrlEnum;
@@ -26,7 +41,7 @@ import java.sql.SQLException;
 /**
  * 数据源表
  *
- * @author tanglei
+ * @author lengleng
  * @date 2019-03-31 16:00:20
  */
 @Slf4j
@@ -45,7 +60,7 @@ public class GenDatasourceConfigServiceImpl extends ServiceImpl<GenDatasourceCon
 	 * @return
 	 */
 	@Override
-	public Boolean saveDsByEnc(GenDatasourceConfig conf) {
+	public Boolean saveDsByEnc(GenDatasourceConf conf) {
 		// 校验配置合法性
 		if (!checkDataSource(conf)) {
 			return Boolean.FALSE;
@@ -66,7 +81,7 @@ public class GenDatasourceConfigServiceImpl extends ServiceImpl<GenDatasourceCon
 	 * @return
 	 */
 	@Override
-	public Boolean updateDsByEnc(GenDatasourceConfig conf) {
+	public Boolean updateDsByEnc(GenDatasourceConf conf) {
 		if (!checkDataSource(conf)) {
 			return Boolean.FALSE;
 		}
@@ -104,7 +119,7 @@ public class GenDatasourceConfigServiceImpl extends ServiceImpl<GenDatasourceCon
 	 * @param conf 数据源信息
 	 */
 	@Override
-	public void addDynamicDataSource(GenDatasourceConfig conf) {
+	public void addDynamicDataSource(GenDatasourceConf conf) {
 		DataSourceProperty dataSourceProperty = new DataSourceProperty();
 		dataSourceProperty.setPoolName(conf.getName());
 		dataSourceProperty.setUrl(conf.getUrl());
@@ -122,10 +137,10 @@ public class GenDatasourceConfigServiceImpl extends ServiceImpl<GenDatasourceCon
 	 * @return 有效/无效
 	 */
 	@Override
-	public Boolean checkDataSource(GenDatasourceConfig conf) {
+	public Boolean checkDataSource(GenDatasourceConf conf) {
 		String url;
 		// JDBC 配置形式
-		if (DsConfTypeEnum.JDBC.getType().equals(conf.getConfigType())) {
+		if (DsConfTypeEnum.JDBC.getType().equals(conf.getConfType())) {
 			url = conf.getUrl();
 		}
 		else if (DsJdbcUrlEnum.MSSQL.getDbName().equals(conf.getDsType())) {

@@ -1,4 +1,19 @@
-
+/*
+ *    Copyright (c) 2018-2025, lengleng All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ * Redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution.
+ * Neither the name of the pig4cloud.com developer nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ * Author: lengleng (wangiegie@gmail.com)
+ */
 package com.lotus.bixi.generator.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -7,10 +22,10 @@ import com.lotus.bixi.generator.entity.GenDatasourceConfig;
 /**
  * 数据源表
  *
- * @author tanglei
+ * @author lengleng
  * @date 2019-03-31 16:00:20
  */
-public interface GenDatasourceConfigService extends IService<GenDatasourceConfig> {
+public interface GenDatasourceConfigigService extends IService<GenDatasourceConfig> {
 
 	/**
 	 * 保存数据源并且加密

@@ -1,4 +1,19 @@
-
+/*
+ *    Copyright (c) 2018-2025, lengleng All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ * Redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution.
+ * Neither the name of the pig4cloud.com developer nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ * Author: lengleng (wangiegie@gmail.com)
+ */
 package com.lotus.bixi.generator.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
@@ -10,22 +25,23 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.lotus.bixi.generator.entity.GenGroup;
-import com.lotus.bixi.generator.entity.GenTable;
-import com.lotus.bixi.generator.entity.GenTableColumn;
-import com.lotus.bixi.generator.mapper.GenTableMapper;
-import com.lotus.bixi.generator.service.GenGroupService;
-import com.lotus.bixi.generator.service.GenTableService;
-import com.lotus.bixi.generator.config.BixiGeneratorDefaultProperties;
-import com.lotus.bixi.generator.service.GenTableColumnService;
-import com.lotus.bixi.generator.util.AutoFillEnum;
-import com.lotus.bixi.generator.util.BoolFillEnum;
-import com.lotus.bixi.generator.util.CommonColumnFiledEnum;
-import com.lotus.bixi.generator.util.GenKit;
+import com.pig4cloud.pig.codegen.config.PigCodeGenDefaultProperties;
+import com.pig4cloud.pig.codegen.entity.GenGroupEntity;
+import com.pig4cloud.pig.codegen.entity.GenTable;
+import com.pig4cloud.pig.codegen.entity.GenTableColumnEntity;
+import com.pig4cloud.pig.codegen.mapper.GenTableMapper;
+import com.pig4cloud.pig.codegen.service.GenGroupService;
+import com.pig4cloud.pig.codegen.service.GenTableColumnService;
+import com.pig4cloud.pig.codegen.service.GenTableService;
+import com.pig4cloud.pig.codegen.util.AutoFillEnum;
+import com.pig4cloud.pig.codegen.util.BoolFillEnum;
+import com.pig4cloud.pig.codegen.util.CommonColumnFiledEnum;
+import com.pig4cloud.pig.codegen.util.GenKit;
 import lombok.RequiredArgsConstructor;
 import org.anyline.metadata.Column;
 import org.anyline.metadata.Database;
 import org.anyline.metadata.Table;
+import org.anyline.proxy.CacheProxy;
 import org.anyline.proxy.ServiceProxy;
 import org.anyline.service.AnylineService;
 import org.jetbrains.annotations.NotNull;
@@ -41,14 +57,14 @@ import java.util.Objects;
 /**
  * 列属性
  *
- * @author tanglei
+ * @author pigx code generator
  * @date 2023-02-06 20:34:55
  */
 @Service
 @RequiredArgsConstructor
 public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> implements GenTableService {
 
-	private final BixiGeneratorDefaultProperties configurationProperties;
+	private final PigCodeGenDefaultProperties configurationProperties;
 
 	private final GenTableColumnService columnService;
 
@@ -81,6 +97,7 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
 	public List<String> queryTableColumn(String dsName, String tableName) {
 		// 手动切换数据源
 		DynamicDataSourceContextHolder.push(dsName);
+		CacheProxy.clear();
 		return ServiceProxy.metadata().columns(tableName).values().stream().map(Column::getName).toList();
 	}
 
@@ -94,6 +111,7 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
 	public IPage queryTablePage(Page<Table> page, GenTable table) {
 		// 手动切换数据源
 		DynamicDataSourceContextHolder.push(table.getDsName());
+		CacheProxy.clear();
 		List<Table> tableList = ServiceProxy.metadata().tables().values().stream().filter(t -> {
 			if (StrUtil.isBlank(table.getTableName())) {
 				return true;
@@ -117,6 +135,7 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
 	public List<String> queryTableList(String dsName) {
 		// 手动切换数据源
 		DynamicDataSourceContextHolder.push(dsName);
+		CacheProxy.clear();
 		return ServiceProxy.metadata().tables().values().stream().map(Table::getName).toList();
 	}
 
@@ -135,14 +154,14 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
 			genTable = this.tableImport(dsName, tableName);
 		}
 
-		List<GenTableColumn> fieldList = columnService.list(Wrappers.<GenTableColumn>lambdaQuery()
-			.eq(GenTableColumn::getDsName, dsName)
-			.eq(GenTableColumn::getTableName, tableName)
-			.orderByAsc(GenTableColumn::getSn));
+		List<GenTableColumnEntity> fieldList = columnService.list(Wrappers.<GenTableColumnEntity>lambdaQuery()
+			.eq(GenTableColumnEntity::getDsName, dsName)
+			.eq(GenTableColumnEntity::getTableName, tableName)
+			.orderByAsc(GenTableColumnEntity::getSort));
 		genTable.setFieldList(fieldList);
 
 		// 查询模板分组信息
-		List<GenGroup> groupEntities = genGroupService.list();
+		List<GenGroupEntity> groupEntities = genGroupService.list();
 		genTable.setGroupList(groupEntities);
 		return genTable;
 	}
@@ -155,6 +174,7 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
 		// 查询表是否存在
 		GenTable table = new GenTable();
 		// 从数据库获取表信息
+		CacheProxy.clear();
 		AnylineService service = ServiceProxy.service();
 		Table tableMetadata = service.metadata().table(tableName);
 		Database database = service.metadata().database();
@@ -184,7 +204,7 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
 		this.save(table);
 
 		// 获取原生字段数据
-		List<GenTableColumn> tableFieldList = getGenTableColumnEntities(dsName, tableName, tableMetadata);
+		List<GenTableColumnEntity> tableFieldList = getGenTableColumnEntities(dsName, tableName, tableMetadata);
 
 		// 初始化字段数据
 		columnService.initFieldList(tableFieldList);
@@ -202,32 +222,32 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
 	 * @param tableMetadata 表的元数据
 	 * @return list
 	 */
-	private static @NotNull List<GenTableColumn> getGenTableColumnEntities(String dsName, String tableName,
+	private static @NotNull List<GenTableColumnEntity> getGenTableColumnEntities(String dsName, String tableName,
 			Table tableMetadata) {
-		List<GenTableColumn> tableFieldList = new ArrayList<>();
+		List<GenTableColumnEntity> tableFieldList = new ArrayList<>();
 		LinkedHashMap<String, Column> columns = tableMetadata.getColumns();
 		columns.forEach((columnName, column) -> {
-			GenTableColumn genTableColumn = new GenTableColumn();
-			genTableColumn.setTableName(tableName);
-			genTableColumn.setDsName(dsName);
-			genTableColumn.setFieldName(column.getName());
-			genTableColumn.setFieldComment(column.getComment());
-			genTableColumn.setFieldType(column.getTypeName());
-			genTableColumn.setPrimaryPk(
+			GenTableColumnEntity genTableColumnEntity = new GenTableColumnEntity();
+			genTableColumnEntity.setTableName(tableName);
+			genTableColumnEntity.setDsName(dsName);
+			genTableColumnEntity.setFieldName(column.getName());
+			genTableColumnEntity.setFieldComment(column.getComment());
+			genTableColumnEntity.setFieldType(column.getTypeName());
+			genTableColumnEntity.setPrimaryPk(
 					column.isPrimaryKey() == 1 ? BoolFillEnum.TRUE.getValue() : BoolFillEnum.FALSE.getValue());
-			genTableColumn.setAutoFill(AutoFillEnum.DEFAULT.name());
-			genTableColumn.setFormItem(BoolFillEnum.TRUE.getValue());
-			genTableColumn.setGridItem(BoolFillEnum.TRUE.getValue());
+			genTableColumnEntity.setAutoFill(AutoFillEnum.DEFAULT.name());
+			genTableColumnEntity.setFormItem(BoolFillEnum.TRUE.getValue());
+			genTableColumnEntity.setGridItem(BoolFillEnum.TRUE.getValue());
 
 			// 审计字段处理
 			if (EnumUtil.contains(CommonColumnFiledEnum.class, column.getName())) {
 				CommonColumnFiledEnum commonColumnFiledEnum = CommonColumnFiledEnum.valueOf(column.getName());
-				genTableColumn.setFormItem(commonColumnFiledEnum.getFormItem());
-				genTableColumn.setGridItem(commonColumnFiledEnum.getGridItem());
-				genTableColumn.setAutoFill(commonColumnFiledEnum.getAutoFill());
-				genTableColumn.setSn(commonColumnFiledEnum.getSort());
+				genTableColumnEntity.setFormItem(commonColumnFiledEnum.getFormItem());
+				genTableColumnEntity.setGridItem(commonColumnFiledEnum.getGridItem());
+				genTableColumnEntity.setAutoFill(commonColumnFiledEnum.getAutoFill());
+				genTableColumnEntity.setSort(commonColumnFiledEnum.getSort());
 			}
-			tableFieldList.add(genTableColumn);
+			tableFieldList.add(genTableColumnEntity);
 		});
 		return tableFieldList;
 	}

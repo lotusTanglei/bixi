@@ -6,6 +6,5 @@
   <resultMap id="genTemplateGroupMap" type="com.lotus.bixi.generator.entity.GenTemplateGroup">
         <id property="groupId" column="group_id"/>
         <id property="templateId" column="template_id"/>
-        <result property="createTime" column="create_time"/>
   </resultMap>
 </mapper>

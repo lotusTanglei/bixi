@@ -3,7 +3,7 @@ package com.lotus.bixi.generator.util;
 /**
  * vform 的通用变量
  *
- * @author tanglei
+ * @author lengleng
  * @date 2023/6/5
  */
 public interface VFormConfigConsts {

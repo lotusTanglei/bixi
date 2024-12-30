@@ -1,4 +1,19 @@
-
+/*
+ *    Copyright (c) 2018-2025, lengleng All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ * Redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution.
+ * Neither the name of the pig4cloud.com developer nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ * Author: lengleng (wangiegie@gmail.com)
+ */
 
 package com.lotus.bixi.generator.controller;
 
@@ -7,12 +22,12 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.lotus.bixi.generator.entity.GenTemplate;
-import com.lotus.bixi.generator.service.GenTemplateService;
-import com.lotus.bixi.common.core.util.R;
-import com.lotus.bixi.common.log.annotation.SysLog;
-import com.lotus.bixi.common.security.annotation.HasPermission;
-import com.lotus.bixi.common.xss.core.XssCleanIgnore;
+import com.pig4cloud.pig.codegen.entity.GenTemplateEntity;
+import com.pig4cloud.pig.codegen.service.GenTemplateService;
+import com.pig4cloud.pig.common.core.util.R;
+import com.pig4cloud.pig.common.log.annotation.SysLog;
+import com.pig4cloud.pig.common.security.annotation.HasPermission;
+import com.pig4cloud.pig.common.xss.core.XssCleanIgnore;
 import com.pig4cloud.plugin.excel.annotation.ResponseExcel;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -26,7 +41,7 @@ import java.util.List;
 /**
  * 模板
  *
- * @author 唐磊
+ * @author PIG
  * @date 2023-02-21 17:15:44
  */
 @RestController
@@ -47,10 +62,10 @@ public class GenTemplateController {
 	@Operation(summary = "分页查询", description = "分页查询")
 	@GetMapping("/page")
 	@HasPermission("codegen_template_view")
-	public R getGenTemplatePage(Page page, GenTemplate genTemplate) {
-		LambdaQueryWrapper<GenTemplate> wrapper = Wrappers.<GenTemplate>lambdaQuery()
-			.like(genTemplate.getId() != null, GenTemplate::getId, genTemplate.getId())
-			.like(StrUtil.isNotEmpty(genTemplate.getTemplateName()), GenTemplate::getTemplateName,
+	public R getGenTemplatePage(Page page, GenTemplateEntity genTemplate) {
+		LambdaQueryWrapper<GenTemplateEntity> wrapper = Wrappers.<GenTemplateEntity>lambdaQuery()
+			.like(genTemplate.getId() != null, GenTemplateEntity::getId, genTemplate.getId())
+			.like(StrUtil.isNotEmpty(genTemplate.getTemplateName()), GenTemplateEntity::getTemplateName,
 					genTemplate.getTemplateName());
 		return R.ok(genTemplateService.page(page, wrapper));
 	}
@@ -64,7 +79,7 @@ public class GenTemplateController {
 	@HasPermission("codegen_template_view")
 	public R list() {
 		return R.ok(genTemplateService
-			.list(Wrappers.<GenTemplate>lambdaQuery().orderByDesc(GenTemplate::getCreateTime)));
+			.list(Wrappers.<GenTemplateEntity>lambdaQuery().orderByDesc(GenTemplateEntity::getCreateTime)));
 	}
 
 	/**
@@ -89,7 +104,7 @@ public class GenTemplateController {
 	@SysLog("新增模板")
 	@PostMapping
 	@HasPermission("codegen_template_add")
-	public R save(@RequestBody GenTemplate genTemplate) {
+	public R save(@RequestBody GenTemplateEntity genTemplate) {
 		return R.ok(genTemplateService.save(genTemplate));
 	}
 
@@ -103,7 +118,7 @@ public class GenTemplateController {
 	@SysLog("修改模板")
 	@PutMapping
 	@HasPermission("codegen_template_edit")
-	public R updateById(@RequestBody GenTemplate genTemplate) {
+	public R updateById(@RequestBody GenTemplateEntity genTemplate) {
 		return R.ok(genTemplateService.updateById(genTemplate));
 	}
 
@@ -128,7 +143,7 @@ public class GenTemplateController {
 	@ResponseExcel
 	@GetMapping("/export")
 	@HasPermission("codegen_template_export")
-	public List<GenTemplate> export(GenTemplate genTemplate) {
+	public List<GenTemplateEntity> export(GenTemplateEntity genTemplate) {
 		return genTemplateService.list(Wrappers.query(genTemplate));
 	}
 

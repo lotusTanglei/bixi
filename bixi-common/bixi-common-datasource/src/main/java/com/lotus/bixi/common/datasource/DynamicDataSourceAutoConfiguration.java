@@ -4,6 +4,7 @@ package com.lotus.bixi.common.datasource;
 
 import com.baomidou.dynamic.datasource.creator.DataSourceCreator;
 import com.baomidou.dynamic.datasource.creator.DefaultDataSourceCreator;
+import com.baomidou.dynamic.datasource.creator.druid.DruidDataSourceCreator;
 import com.baomidou.dynamic.datasource.creator.hikaricp.HikariDataSourceCreator;
 import com.baomidou.dynamic.datasource.processor.DsJakartaHeaderProcessor;
 import com.baomidou.dynamic.datasource.processor.DsJakartaSessionProcessor;
@@ -72,14 +73,14 @@ public class DynamicDataSourceAutoConfiguration {
     /**
      * 默认数据源创建器
      *
-     * @param hikariDataSourceCreator Hikari数据源创建器
+     * @param daruidDataSourceCreator Druid数据源创建器
      * @return 默认数据源创建器
      */
     @Bean
-    public DefaultDataSourceCreator defaultDataSourceCreator(HikariDataSourceCreator hikariDataSourceCreator) {
+    public DefaultDataSourceCreator defaultDataSourceCreator(DruidDataSourceCreator daruidDataSourceCreator) {
         DefaultDataSourceCreator defaultDataSourceCreator = new DefaultDataSourceCreator();
         List<DataSourceCreator> creators = new ArrayList<>();
-        creators.add(hikariDataSourceCreator);
+        creators.add(daruidDataSourceCreator);
         defaultDataSourceCreator.setCreators(creators);
         return defaultDataSourceCreator;
     }

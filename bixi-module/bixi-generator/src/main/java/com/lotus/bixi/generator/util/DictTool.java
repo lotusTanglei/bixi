@@ -7,7 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 
 /**
- * @author tanglei
+ * @author lengleng
  * @date 2023/2/7
  */
 public class DictTool {

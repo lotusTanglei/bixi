@@ -1,4 +1,19 @@
-
+/*
+ *    Copyright (c) 2018-2025, lengleng All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ * Redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution.
+ * Neither the name of the pig4cloud.com developer nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ * Author: lengleng (wangiegie@gmail.com)
+ */
 
 package com.lotus.bixi.generator.controller;
 
@@ -6,11 +21,11 @@ import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.lotus.bixi.generator.entity.GenTemplateGroup;
-import com.lotus.bixi.generator.service.GenTemplateGroupService;
-import com.lotus.bixi.common.core.util.R;
-import com.lotus.bixi.common.log.annotation.SysLog;
-import com.lotus.bixi.common.security.annotation.HasPermission;
+import com.pig4cloud.pig.codegen.entity.GenTemplateGroupEntity;
+import com.pig4cloud.pig.codegen.service.GenTemplateGroupService;
+import com.pig4cloud.pig.common.core.util.R;
+import com.pig4cloud.pig.common.log.annotation.SysLog;
+import com.pig4cloud.pig.common.security.annotation.HasPermission;
 import com.pig4cloud.plugin.excel.annotation.ResponseExcel;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -24,7 +39,7 @@ import java.util.List;
 /**
  * 模板分组关联表
  *
- * @author tanglei
+ * @author PIG
  * @date 2023-02-22 09:25:15
  */
 @RestController
@@ -45,8 +60,8 @@ public class GenTemplateGroupController {
 	@Operation(summary = "分页查询", description = "分页查询")
 	@GetMapping("/page")
 	@HasPermission("codegen_templateGroup_view")
-	public R getgenTemplateGroupPage(Page page, GenTemplateGroup genTemplateGroup) {
-		LambdaQueryWrapper<GenTemplateGroup> wrapper = Wrappers.lambdaQuery();
+	public R getgenTemplateGroupPage(Page page, GenTemplateGroupEntity genTemplateGroup) {
+		LambdaQueryWrapper<GenTemplateGroupEntity> wrapper = Wrappers.lambdaQuery();
 		return R.ok(genTemplateGroupService.page(page, wrapper));
 	}
 
@@ -71,7 +86,7 @@ public class GenTemplateGroupController {
 	@SysLog("新增模板分组关联表")
 	@PostMapping
 	@HasPermission("codegen_templateGroup_add")
-	public R save(@RequestBody GenTemplateGroup genTemplateGroup) {
+	public R save(@RequestBody GenTemplateGroupEntity genTemplateGroup) {
 		return R.ok(genTemplateGroupService.save(genTemplateGroup));
 	}
 
@@ -84,7 +99,7 @@ public class GenTemplateGroupController {
 	@SysLog("修改模板分组关联表")
 	@PutMapping
 	@HasPermission("codegen_templateGroup_edit")
-	public R updateById(@RequestBody GenTemplateGroup genTemplateGroup) {
+	public R updateById(@RequestBody GenTemplateGroupEntity genTemplateGroup) {
 		return R.ok(genTemplateGroupService.updateById(genTemplateGroup));
 	}
 
@@ -109,7 +124,7 @@ public class GenTemplateGroupController {
 	@ResponseExcel
 	@GetMapping("/export")
 	@HasPermission("codegen_templateGroup_export")
-	public List<GenTemplateGroup> export(GenTemplateGroup genTemplateGroup) {
+	public List<GenTemplateGroupEntity> export(GenTemplateGroupEntity genTemplateGroup) {
 		return genTemplateGroupService.list(Wrappers.query(genTemplateGroup));
 	}
 

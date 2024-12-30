@@ -1,4 +1,19 @@
-
+/*
+ *    Copyright (c) 2018-2025, lengleng All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ * Redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution.
+ * Neither the name of the pig4cloud.com developer nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ * Author: lengleng (wangiegie@gmail.com)
+ */
 package com.lotus.bixi.generator.controller;
 
 import cn.hutool.core.io.IoUtil;
@@ -9,12 +24,13 @@ import com.baomidou.dynamic.datasource.DynamicRoutingDataSource;
 import com.baomidou.dynamic.datasource.toolkit.DynamicDataSourceContextHolder;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.lotus.bixi.generator.entity.GenDatasourceConfig;
-import com.lotus.bixi.generator.service.GenDatasourceConfigService;
-import com.lotus.bixi.common.core.util.R;
-import com.lotus.bixi.common.core.util.SpringContextHolder;
-import com.lotus.bixi.common.security.annotation.Inner;
-import com.lotus.bixi.common.xss.core.XssCleanIgnore;
+import com.lotus.bixi.generator.service.GenDatasourceConfService;
+import com.pig4cloud.pig.codegen.entity.GenDatasourceConf;
+import com.pig4cloud.pig.codegen.service.GenDatasourceConfService;
+import com.pig4cloud.pig.common.core.util.R;
+import com.pig4cloud.pig.common.core.util.SpringContextHolder;
+import com.pig4cloud.pig.common.security.annotation.Inner;
+import com.pig4cloud.pig.common.xss.core.XssCleanIgnore;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -26,15 +42,15 @@ import javax.sql.DataSource;
 /**
  * 数据源管理
  *
- * @author tanglei
+ * @author lengleng
  * @date 2019-03-31 16:00:20
  */
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/dsconfig")
-public class GenDsConfigController {
+@RequestMapping("/dsconf")
+public class GenDatasourceConfigController {
 
-	private final GenDatasourceConfigService datasourceConfigService;
+	private final GenDatasourceConfService datasourceConfService;
 
 	private final Screw screw;
 
@@ -45,10 +61,10 @@ public class GenDsConfigController {
 	 * @return
 	 */
 	@GetMapping("/page")
-	public R getSysDatasourceConfPage(Page page, GenDatasourceConfig datasourceConf) {
-		return R.ok(datasourceConfigService.page(page,
-				Wrappers.<GenDatasourceConfig>lambdaQuery()
-					.like(StrUtil.isNotBlank(datasourceConf.getDsName()), GenDatasourceConfig::getDsName,
+	public R getSysDatasourceConfPage(Page page, GenDatasourceConf datasourceConf) {
+		return R.ok(datasourceConfService.page(page,
+				Wrappers.<GenDatasourceConf>lambdaQuery()
+					.like(StrUtil.isNotBlank(datasourceConf.getDsName()), GenDatasourceConf::getDsName,
 							datasourceConf.getDsName())));
 	}
 
@@ -59,7 +75,7 @@ public class GenDsConfigController {
 	@GetMapping("/list")
 	@Inner(value = false)
 	public R list() {
-		return R.ok(datasourceConfigService.list());
+		return R.ok(datasourceConfService.list());
 	}
 
 	/**
@@ -69,7 +85,7 @@ public class GenDsConfigController {
 	 */
 	@GetMapping("/{id}")
 	public R getById(@PathVariable("id") Long id) {
-		return R.ok(datasourceConfigService.getById(id));
+		return R.ok(datasourceConfService.getById(id));
 	}
 
 	/**
@@ -79,8 +95,8 @@ public class GenDsConfigController {
 	 */
 	@PostMapping
 	@XssCleanIgnore
-	public R save(@RequestBody GenDatasourceConfig datasourceConf) {
-		return R.ok(datasourceConfigService.saveDsByEnc(datasourceConf));
+	public R save(@RequestBody GenDatasourceConf datasourceConf) {
+		return R.ok(datasourceConfService.saveDsByEnc(datasourceConf));
 	}
 
 	/**
@@ -90,8 +106,8 @@ public class GenDsConfigController {
 	 */
 	@PutMapping
 	@XssCleanIgnore
-	public R updateById(@RequestBody GenDatasourceConfig conf) {
-		return R.ok(datasourceConfigService.updateDsByEnc(conf));
+	public R updateById(@RequestBody GenDatasourceConf conf) {
+		return R.ok(datasourceConfService.updateDsByEnc(conf));
 	}
 
 	/**
@@ -101,7 +117,7 @@ public class GenDsConfigController {
 	 */
 	@DeleteMapping
 	public R removeById(@RequestBody Long[] ids) {
-		return R.ok(datasourceConfigService.removeByDsId(ids));
+		return R.ok(datasourceConfService.removeByDsId(ids));
 	}
 
 	/**

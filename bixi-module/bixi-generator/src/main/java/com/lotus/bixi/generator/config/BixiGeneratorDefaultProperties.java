@@ -2,6 +2,8 @@ package com.lotus.bixi.generator.config;
 
 import cn.smallbun.screw.core.constant.DefaultConstants;
 import lombok.Data;
+import org.anyline.util.ConfigTable;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
@@ -14,7 +16,7 @@ import org.springframework.context.annotation.Configuration;
 @Data
 @Configuration(proxyBeanMethods = false)
 @ConfigurationProperties(prefix = BixiGeneratorDefaultProperties.PREFIX)
-public class BixiGeneratorDefaultProperties {
+public class BixiGeneratorDefaultProperties implements InitializingBean {
 
 	public static final String PREFIX = "generator";
 
@@ -72,5 +74,10 @@ public class BixiGeneratorDefaultProperties {
 	 * 下载方式 （0 文件下载、1写入目录）
 	 */
 	private String generatorType = "0";
+
+	@Override
+	public void afterPropertiesSet() throws Exception {
+		ConfigTable.KEEP_ADAPTER = 0;
+	}
 
 }

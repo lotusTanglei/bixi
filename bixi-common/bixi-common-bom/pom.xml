@@ -13,17 +13,17 @@
 
     <properties>
         <!-- 项目版本号 -->
-        <revision>0.0.2</revision>
+        <revision>0.0.3</revision>
         <author>tanglei</author>
-        <spring-boot.version>3.3.3</spring-boot.version>
+        <spring-boot.version>3.4.1</spring-boot.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <git.commit.plugin>9.0.1</git.commit.plugin>
         <fastjson.version>1.2.83_noneautotype</fastjson.version>
-        <springdoc.version>2.6.0</springdoc.version>
-        <swagger.core.version>2.2.22</swagger.core.version>
-        <mybatis-plus.version>3.5.7</mybatis-plus.version>
+        <springdoc.version>2.7.0</springdoc.version>
+        <swagger.core.version>2.2.27</swagger.core.version>
+        <mybatis-plus.version>3.5.9</mybatis-plus.version>
         <druid.version>1.2.23</druid.version>
         <mysql.version>9.0.0</mysql.version>
         <dynamic-ds.version>4.3.1</dynamic-ds.version>
@@ -35,6 +35,7 @@
         <shardingsphere.version>5.4.1</shardingsphere.version>
         <hutool.version>5.8.31</hutool.version>
         <sentinel.version>1.8.4</sentinel.version>
+        <common.io.version>2.18.0</common.io.version>
         <spring.checkstyle.plugin>0.0.43</spring.checkstyle.plugin>
         <flatten-maven-plugin.version>1.6.0</flatten-maven-plugin.version>
 
@@ -158,18 +159,10 @@
             <!--orm 相关-->
             <dependency>
                 <groupId>com.baomidou</groupId>
-                <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
+                <artifactId>mybatis-plus-bom</artifactId>
                 <version>${mybatis-plus.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.baomidou</groupId>
-                <artifactId>mybatis-plus-extension</artifactId>
-                <version>${mybatis-plus.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.baomidou</groupId>
-                <artifactId>mybatis-plus-annotation</artifactId>
-                <version>${mybatis-plus.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
             <dependency>
                 <groupId>com.alibaba</groupId>
@@ -183,6 +176,13 @@
                 <version>${hutool.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+
+            <!-- commons.io 覆盖easyexcel-->
+            <dependency>
+                <artifactId>commons-io</artifactId>
+                <groupId>commons-io</groupId>
+                <version>${common.io.version}</version>
             </dependency>
 
             <!-- excel 导入导出 -->

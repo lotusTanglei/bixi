@@ -1,4 +1,19 @@
-
+/*
+ *    Copyright (c) 2018-2025, lengleng All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ * Redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution.
+ * Neither the name of the pig4cloud.com developer nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ * Author: lengleng (wangiegie@gmail.com)
+ */
 package com.lotus.bixi.generator.service.impl;
 
 import cn.hutool.core.util.StrUtil;
@@ -10,17 +25,17 @@ import cn.hutool.json.JSONUtil;
 import cn.smallbun.screw.core.constant.DefaultConstants;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.lotus.bixi.generator.entity.GenGroup;
-import com.lotus.bixi.generator.entity.GenTemplate;
-import com.lotus.bixi.generator.entity.GenTemplateGroup;
-import com.lotus.bixi.generator.mapper.GenGroupMapper;
-import com.lotus.bixi.generator.mapper.GenTemplateMapper;
-import com.lotus.bixi.generator.config.BixiGeneratorDefaultProperties;
-import com.lotus.bixi.generator.mapper.GenTemplateGroupMapper;
-import com.lotus.bixi.generator.service.GenTemplateService;
-import com.lotus.bixi.generator.util.vo.GenTemplateFileVO;
-import com.lotus.bixi.common.core.exception.CheckedException;
-import com.lotus.bixi.common.core.util.R;
+import com.pig4cloud.pig.codegen.config.PigCodeGenDefaultProperties;
+import com.pig4cloud.pig.codegen.entity.GenGroupEntity;
+import com.pig4cloud.pig.codegen.entity.GenTemplateEntity;
+import com.pig4cloud.pig.codegen.entity.GenTemplateGroupEntity;
+import com.pig4cloud.pig.codegen.mapper.GenGroupMapper;
+import com.pig4cloud.pig.codegen.mapper.GenTemplateGroupMapper;
+import com.pig4cloud.pig.codegen.mapper.GenTemplateMapper;
+import com.pig4cloud.pig.codegen.service.GenTemplateService;
+import com.pig4cloud.pig.codegen.util.vo.GenTemplateFileVO;
+import com.pig4cloud.pig.common.core.exception.CheckedException;
+import com.pig4cloud.pig.common.core.util.R;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -34,20 +49,20 @@ import java.util.Set;
 /**
  * 模板
  *
- * @author tanglei
+ * @author PIG
  * @date 2023-02-21 11:08:43
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class GenTemplateServiceImpl extends ServiceImpl<GenTemplateMapper, GenTemplate>
+public class GenTemplateServiceImpl extends ServiceImpl<GenTemplateMapper, GenTemplateEntity>
 		implements GenTemplateService {
 
 	private final GenTemplateGroupMapper genTemplateGroupMapper;
 
 	private final GenGroupMapper genGroupMapper;
 
-	private final BixiGeneratorDefaultProperties defaultProperties;
+	private final PigCodeGenDefaultProperties defaultProperties;
 
 	/**
 	 * 在线更新
@@ -66,8 +81,8 @@ public class GenTemplateServiceImpl extends ServiceImpl<GenTemplateMapper, GenTe
 
 		String cgtmConfigGroupName = cgtmConfigGroupNames.iterator().next();
 		// 根据模板组名称+version 查询是否存在，不存在则新增，存在跳过
-		boolean exists = genGroupMapper.exists(Wrappers.<GenGroup>lambdaQuery()
-			.eq(GenGroup::getGroupName, cgtmConfigGroupName + versionFile));
+		boolean exists = genGroupMapper.exists(Wrappers.<GenGroupEntity>lambdaQuery()
+			.eq(GenGroupEntity::getGroupName, cgtmConfigGroupName + versionFile));
 
 		if (exists) {
 			return R.failed("已是最新版本，无需更新！");
@@ -98,8 +113,8 @@ public class GenTemplateServiceImpl extends ServiceImpl<GenTemplateMapper, GenTe
 
 		String cgtmConfigGroupName = cgtmConfigGroupNames.iterator().next();
 		// 根据模板组名称+version 查询是否存在，不存在则新增，存在跳过
-		boolean exists = genGroupMapper.exists(Wrappers.<GenGroup>lambdaQuery()
-			.eq(GenGroup::getGroupName, cgtmConfigGroupName + versionFile));
+		boolean exists = genGroupMapper.exists(Wrappers.<GenGroupEntity>lambdaQuery()
+			.eq(GenGroupEntity::getGroupName, cgtmConfigGroupName + versionFile));
 
 		return R.ok(exists);
 	}
@@ -132,9 +147,9 @@ public class GenTemplateServiceImpl extends ServiceImpl<GenTemplateMapper, GenTe
 	 */
 	private void insertTemplateFiles(String version, JSONObject configJsonObj, String groupName) {
 		// 创建新的 group
-		GenGroup GenGroup = new GenGroup();
-		GenGroup.setGroupName(groupName + version);
-		genGroupMapper.insert(GenGroup);
+		GenGroupEntity genGroupEntity = new GenGroupEntity();
+		genGroupEntity.setGroupName(groupName + version);
+		genGroupMapper.insert(genGroupEntity);
 
 		// 解析json配置文件
 		List<GenTemplateFileVO> templateFileVOList = configJsonObj.getBeanList(groupName, GenTemplateFileVO.class);
@@ -143,18 +158,18 @@ public class GenTemplateServiceImpl extends ServiceImpl<GenTemplateMapper, GenTe
 			String templateFile = getCGTMFile(genTemplateFileVO.getTemplateFile());
 
 			// 2. 插入模板文件
-			GenTemplate GenTemplate = new GenTemplate();
-			GenTemplate.setTemplateName(genTemplateFileVO.getTemplateName() + version);
-			GenTemplate.setTemplateDesc(genTemplateFileVO.getTemplateName() + version);
-			GenTemplate.setTemplateCode(templateFile);
-			GenTemplate.setGeneratorPath(genTemplateFileVO.getGeneratorPath());
-			baseMapper.insert(GenTemplate);
+			GenTemplateEntity genTemplateEntity = new GenTemplateEntity();
+			genTemplateEntity.setTemplateName(genTemplateFileVO.getTemplateName() + version);
+			genTemplateEntity.setTemplateDesc(genTemplateFileVO.getTemplateName() + version);
+			genTemplateEntity.setTemplateCode(templateFile);
+			genTemplateEntity.setGeneratorPath(genTemplateFileVO.getGeneratorPath());
+			baseMapper.insert(genTemplateEntity);
 
 			// 3. 插入模板组关联
-			GenTemplateGroup genTemplateGroup = new GenTemplateGroup();
-			genTemplateGroup.setTemplateId(GenTemplate.getId());
-			genTemplateGroup.setGroupId(GenGroup.getId());
-			genTemplateGroupMapper.insert(genTemplateGroup);
+			GenTemplateGroupEntity genTemplateGroupEntity = new GenTemplateGroupEntity();
+			genTemplateGroupEntity.setTemplateId(genTemplateEntity.getId());
+			genTemplateGroupEntity.setGroupId(genGroupEntity.getId());
+			genTemplateGroupMapper.insert(genTemplateGroupEntity);
 		}
 	}
 

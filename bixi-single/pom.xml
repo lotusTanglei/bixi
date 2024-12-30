@@ -30,7 +30,7 @@
         <dependency>
             <groupId>com.lotus.bixi</groupId>
             <artifactId>bixi-generator</artifactId>
-            <version>0.0.2</version>
+            <version>${revision}</version>
         </dependency>
         <!--可选：定时任务模块-->
 <!--        <dependency>-->

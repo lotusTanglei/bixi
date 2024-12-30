@@ -51,7 +51,7 @@ public class BixiPaginationInnerInterceptor extends PaginationInnerInterceptor {
 
     @Override
     public void beforeQuery(Executor executor, MappedStatement ms, Object parameter, RowBounds rowBounds,
-                            ResultHandler resultHandler, BoundSql boundSql) throws SQLException {
+                            ResultHandler resultHandler, BoundSql boundSql) {
         IPage<?> page = ParameterUtils.findPage(parameter).orElse(null);
         // size 小于 0 直接设置为 0 , 即不查询任何数据
         if (null != page && page.getSize() < 0) {
@@ -59,5 +59,4 @@ public class BixiPaginationInnerInterceptor extends PaginationInnerInterceptor {
         }
         super.beforeQuery(executor, ms, page, rowBounds, resultHandler, boundSql);
     }
-
 }

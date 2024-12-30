@@ -1,6 +1,6 @@
 package com.lotus.bixi.generator.util.vo;
 
-import com.lotus.bixi.generator.entity.GenGroup;
+import com.pig4cloud.pig.codegen.entity.GenGroupEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -10,7 +10,7 @@ import java.util.List;
 @Data
 @Schema(description = "模板传输对象")
 @EqualsAndHashCode(callSuper = true)
-public class TemplateGroupDTO extends GenGroup {
+public class TemplateGroupDTO extends GenGroupEntity {
 
 	/**
 	 * 模板id集合

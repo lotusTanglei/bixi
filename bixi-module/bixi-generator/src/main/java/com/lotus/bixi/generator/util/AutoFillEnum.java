@@ -3,6 +3,7 @@ package com.lotus.bixi.generator.util;
 /**
  * 字段自动填充 枚举
  *
+ * @author 阿沐 babamu@126.com
  */
 public enum AutoFillEnum {
 

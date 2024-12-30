@@ -1,9 +1,26 @@
+/*
+ *    Copyright (c) 2018-2025, lengleng All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ * Redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution.
+ * Neither the name of the pig4cloud.com developer nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ * Author: lengleng (wangiegie@gmail.com)
+ */
+
 package com.lotus.bixi.generator.controller;
 
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.util.StrUtil;
-import com.lotus.bixi.generator.service.GeneratorService;
-import com.lotus.bixi.common.core.util.R;
+import com.pig4cloud.pig.codegen.service.GeneratorService;
+import com.pig4cloud.pig.common.core.util.R;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -21,7 +38,7 @@ import java.util.zip.ZipOutputStream;
 /**
  * 代码生成器
  *
- * @author tanglei
+ * @author lengleng
  * @date 2018-07-30
  */
 @RestController

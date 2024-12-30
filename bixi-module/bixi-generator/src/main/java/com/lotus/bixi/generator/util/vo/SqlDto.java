@@ -3,7 +3,7 @@ package com.lotus.bixi.generator.util.vo;
 import lombok.Data;
 
 /**
- * @author tanglei
+ * @author lengleng
  * @date 2022/5/2
  */
 @Data
