@@ -2,6 +2,7 @@
 
 package com.lotus.bixi.upms;
 
+import com.lotus.bixi.common.datasource.annotation.EnableDynamicDataSource;
 import com.lotus.bixi.common.feign.annotation.EnableBixiFeignClients;
 import com.lotus.bixi.common.security.annotation.EnableBixiResourceServer;
 import com.lotus.bixi.common.swagger.annotation.EnableBixiDoc;
@@ -15,6 +16,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
  * <p>
  * 用户统一管理系统
  */
+@EnableDynamicDataSource
 @EnableBixiDoc(value = "admin")
 @EnableBixiFeignClients
 @EnableBixiResourceServer

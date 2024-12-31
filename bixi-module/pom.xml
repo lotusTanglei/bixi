@@ -16,6 +16,7 @@
         <module>bixi-upms-biz</module>
         <module>bixi-generator</module>
         <module>bixi-monitor</module>
+        <module>bixi-quartz</module>
     </modules>
     <packaging>pom</packaging>
 

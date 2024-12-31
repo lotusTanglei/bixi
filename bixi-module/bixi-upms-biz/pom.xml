@@ -46,6 +46,10 @@
             <artifactId>bixi-common-swagger</artifactId>
         </dependency>
         <!-- orm 模块-->
+        <dependency>
+            <groupId>com.lotus.bixi</groupId>
+            <artifactId>bixi-common-datasource</artifactId>
+        </dependency>
         <!-- Druid -->
         <dependency>
             <groupId>com.alibaba</groupId>
@@ -105,6 +109,9 @@
                     </plugin>
                 </plugins>
             </build>
+        </profile>
+        <profile>
+            <id>single</id>
         </profile>
     </profiles>
 

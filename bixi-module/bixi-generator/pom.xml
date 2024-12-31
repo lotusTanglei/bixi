@@ -159,5 +159,8 @@
                 </plugins>
             </build>
         </profile>
+        <profile>
+            <id>single</id>
+        </profile>
     </profiles>
 </project>
