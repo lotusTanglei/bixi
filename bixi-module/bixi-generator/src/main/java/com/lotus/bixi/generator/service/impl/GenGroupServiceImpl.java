@@ -1,32 +1,16 @@
-/*
- *    Copyright (c) 2018-2025, lengleng All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * Redistributions of source code must retain the above copyright notice,
- * this list of conditions and the following disclaimer.
- * Redistributions in binary form must reproduce the above copyright
- * notice, this list of conditions and the following disclaimer in the
- * documentation and/or other materials provided with the distribution.
- * Neither the name of the pig4cloud.com developer nor the names of its
- * contributors may be used to endorse or promote products derived from
- * this software without specific prior written permission.
- * Author: lengleng (wangiegie@gmail.com)
- */
 package com.lotus.bixi.generator.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.pig4cloud.pig.codegen.entity.GenGroupEntity;
-import com.pig4cloud.pig.codegen.entity.GenTemplateGroupEntity;
-import com.pig4cloud.pig.codegen.mapper.GenGroupMapper;
-import com.pig4cloud.pig.codegen.service.GenGroupService;
-import com.pig4cloud.pig.codegen.service.GenTemplateGroupService;
-import com.pig4cloud.pig.codegen.util.vo.GroupVO;
-import com.pig4cloud.pig.codegen.util.vo.TemplateGroupDTO;
+import com.lotus.bixi.generator.entity.GenGroup;
+import com.lotus.bixi.generator.entity.GenTemplateGroup;
+import com.lotus.bixi.generator.mapper.GenGroupMapper;
+import com.lotus.bixi.generator.service.GenGroupService;
+import com.lotus.bixi.generator.service.GenTemplateGroupService;
+import com.lotus.bixi.generator.util.vo.GroupVO;
+import com.lotus.bixi.generator.util.vo.TemplateGroupDTO;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -37,13 +21,13 @@ import java.util.List;
 /**
  * 模板分组
  *
- * @author PIG
+ * @author 唐磊
  * @date 2023-02-21 20:01:53
  */
 @Slf4j
 @Service
 @AllArgsConstructor
-public class GenGroupServiceImpl extends ServiceImpl<GenGroupMapper, GenGroupEntity> implements GenGroupService {
+public class GenGroupServiceImpl extends ServiceImpl<GenGroupMapper, GenGroup> implements GenGroupService {
 
 	private final GenTemplateGroupService genTemplateGroupService;
 
@@ -54,14 +38,14 @@ public class GenGroupServiceImpl extends ServiceImpl<GenGroupMapper, GenGroupEnt
 	@Override
 	public void saveGenGroup(TemplateGroupDTO genTemplateGroup) {
 		// 1.保存group
-		GenGroupEntity groupEntity = new GenGroupEntity();
-		BeanUtil.copyProperties(genTemplateGroup, groupEntity);
-		baseMapper.insert(groupEntity);
+		GenGroup group = new GenGroup();
+		BeanUtil.copyProperties(genTemplateGroup, group);
+		baseMapper.insert(group);
 		// 2.保存关系
-		List<GenTemplateGroupEntity> goals = new LinkedList<>();
+		List<GenTemplateGroup> goals = new LinkedList<>();
 		for (Long TemplateId : genTemplateGroup.getTemplateId()) {
-			GenTemplateGroupEntity templateGroup = new GenTemplateGroupEntity();
-			templateGroup.setTemplateId(TemplateId).setGroupId(groupEntity.getId());
+			GenTemplateGroup templateGroup = new GenTemplateGroup();
+			templateGroup.setTemplateId(TemplateId).setGroupId(group.getId());
 			goals.add(templateGroup);
 		}
 		genTemplateGroupService.saveBatch(goals);
@@ -78,7 +62,7 @@ public class GenGroupServiceImpl extends ServiceImpl<GenGroupMapper, GenGroupEnt
 		this.removeBatchByIds(CollUtil.toList(ids));
 		// 删除关系
 		genTemplateGroupService
-			.remove(Wrappers.<GenTemplateGroupEntity>lambdaQuery().in(GenTemplateGroupEntity::getGroupId, ids));
+			.remove(Wrappers.<GenTemplateGroup>lambdaQuery().in(GenTemplateGroup::getGroupId, ids));
 	}
 
 	/**
@@ -98,17 +82,17 @@ public class GenGroupServiceImpl extends ServiceImpl<GenGroupMapper, GenGroupEnt
 	@Override
 	public void updateGroupAndTemplateById(GroupVO groupVo) {
 		// 1.更新自身
-		GenGroupEntity groupEntity = new GenGroupEntity();
-		BeanUtil.copyProperties(groupVo, groupEntity);
-		this.updateById(groupEntity);
+		GenGroup group = new GenGroup();
+		BeanUtil.copyProperties(groupVo, group);
+		this.updateById(group);
 		// 2.更新模板
 		// 2.1根据id删除之前的模板
 		genTemplateGroupService.remove(
-				Wrappers.<GenTemplateGroupEntity>lambdaQuery().eq(GenTemplateGroupEntity::getGroupId, groupVo.getId()));
+				Wrappers.<GenTemplateGroup>lambdaQuery().eq(GenTemplateGroup::getGroupId, groupVo.getId()));
 		// 2.2根据ids创建新的模板分组赋值
-		List<GenTemplateGroupEntity> goals = new LinkedList<>();
+		List<GenTemplateGroup> goals = new LinkedList<>();
 		for (Long templateId : groupVo.getTemplateId()) {
-			goals.add(new GenTemplateGroupEntity().setGroupId(groupVo.getId()).setTemplateId(templateId));
+			goals.add(new GenTemplateGroup().setGroupId(groupVo.getId()).setTemplateId(templateId));
 		}
 		genTemplateGroupService.saveBatch(goals);
 	}

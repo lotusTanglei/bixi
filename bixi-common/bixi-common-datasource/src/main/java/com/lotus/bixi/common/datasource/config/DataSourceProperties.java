@@ -11,7 +11,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * <p>
  */
 @Data
-@ConfigurationProperties("spring.datasource")
+@ConfigurationProperties("spring.datasource.dynamic.datasource.master")
 public class DataSourceProperties {
 
     /**

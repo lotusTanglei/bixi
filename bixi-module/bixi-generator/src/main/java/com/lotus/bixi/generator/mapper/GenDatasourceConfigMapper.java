@@ -1,4 +1,3 @@
-
 package com.lotus.bixi.generator.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;

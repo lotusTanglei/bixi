@@ -3,11 +3,11 @@ package com.lotus.bixi.generator.service.impl;
 import cn.hutool.core.text.NamingCase;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.pig4cloud.pig.codegen.entity.GenFieldType;
-import com.pig4cloud.pig.codegen.entity.GenTableColumnEntity;
-import com.pig4cloud.pig.codegen.mapper.GenFieldTypeMapper;
-import com.pig4cloud.pig.codegen.mapper.GenTableColumnMapper;
-import com.pig4cloud.pig.codegen.service.GenTableColumnService;
+import com.lotus.bixi.generator.entity.GenFieldType;
+import com.lotus.bixi.generator.entity.GenTableColumn;
+import com.lotus.bixi.generator.mapper.GenFieldTypeMapper;
+import com.lotus.bixi.generator.mapper.GenTableColumnMapper;
+import com.lotus.bixi.generator.service.GenTableColumnService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -21,12 +21,12 @@ import java.util.stream.Collectors;
 /**
  * 表字段信息管理
  *
- * @author lengleng
+ * @author 唐磊
  * @date 2020/5/18
  */
 @Service
 @RequiredArgsConstructor
-public class GenTableColumnServiceImpl extends ServiceImpl<GenTableColumnMapper, GenTableColumnEntity>
+public class GenTableColumnServiceImpl extends ServiceImpl<GenTableColumnMapper, GenTableColumn>
 		implements GenTableColumnService {
 
 	private final GenFieldTypeMapper fieldTypeMapper;
@@ -35,7 +35,8 @@ public class GenTableColumnServiceImpl extends ServiceImpl<GenTableColumnMapper,
 	 * 初始化表单字段列表，主要是将数据库表中的字段转化为表单需要的字段数据格式，并为审计字段排序
 	 * @param tableFieldList 表单字段列表
 	 */
-	public void initFieldList(List<GenTableColumnEntity> tableFieldList) {
+	@Override
+	public void initFieldList(List<GenTableColumn> tableFieldList) {
 		// 字段类型、属性类型映射
 		List<GenFieldType> list = fieldTypeMapper.selectList(Wrappers.emptyWrapper());
 		Map<String, GenFieldType> fieldTypeMap = new LinkedHashMap<>(list.size());
@@ -67,7 +68,7 @@ public class GenTableColumnServiceImpl extends ServiceImpl<GenTableColumnMapper,
 			field.setFormType("text");
 
 			// 保证审计字段最后显示
-			field.setSort(Objects.isNull(field.getSort()) ? index.getAndIncrement() : field.getSort());
+			field.setSn(Objects.isNull(field.getSn()) ? index.getAndIncrement() : field.getSn());
 		});
 	}
 
@@ -79,10 +80,10 @@ public class GenTableColumnServiceImpl extends ServiceImpl<GenTableColumnMapper,
 	 */
 	@Override
 
-	public void updateTableField(String dsName, String tableName, List<GenTableColumnEntity> tableFieldList) {
+	public void updateTableField(String dsName, String tableName, List<GenTableColumn> tableFieldList) {
 		AtomicInteger sort = new AtomicInteger();
 		this.updateBatchById(tableFieldList.stream()
-			.peek(field -> field.setSort(sort.getAndIncrement()))
+			.peek(field -> field.setSn(sort.getAndIncrement()))
 			.collect(Collectors.toList()));
 	}
 

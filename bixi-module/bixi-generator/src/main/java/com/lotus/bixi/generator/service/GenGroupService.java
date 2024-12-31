@@ -1,34 +1,17 @@
-/*
- *    Copyright (c) 2018-2025, lengleng All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * Redistributions of source code must retain the above copyright notice,
- * this list of conditions and the following disclaimer.
- * Redistributions in binary form must reproduce the above copyright
- * notice, this list of conditions and the following disclaimer in the
- * documentation and/or other materials provided with the distribution.
- * Neither the name of the pig4cloud.com developer nor the names of its
- * contributors may be used to endorse or promote products derived from
- * this software without specific prior written permission.
- * Author: lengleng (wangiegie@gmail.com)
- */
-
 package com.lotus.bixi.generator.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.pig4cloud.pig.codegen.entity.GenGroupEntity;
-import com.pig4cloud.pig.codegen.util.vo.GroupVO;
-import com.pig4cloud.pig.codegen.util.vo.TemplateGroupDTO;
+import com.lotus.bixi.generator.entity.GenGroup;
+import com.lotus.bixi.generator.util.vo.GroupVO;
+import com.lotus.bixi.generator.util.vo.TemplateGroupDTO;
 
 /**
  * 模板分组
  *
- * @author PIG
+ * @author 唐磊
  * @date 2023-02-21 20:01:53
  */
-public interface GenGroupService extends IService<GenGroupEntity> {
+public interface GenGroupService extends IService<GenGroup> {
 
 	void saveGenGroup(TemplateGroupDTO genTemplateGroup);
 

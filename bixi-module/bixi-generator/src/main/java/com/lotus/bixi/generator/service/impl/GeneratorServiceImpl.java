@@ -24,13 +24,13 @@ import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.text.NamingCase;
 import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.StrUtil;
-import com.pig4cloud.pig.codegen.config.PigCodeGenDefaultProperties;
-import com.pig4cloud.pig.codegen.entity.GenTable;
-import com.pig4cloud.pig.codegen.entity.GenTableColumnEntity;
-import com.pig4cloud.pig.codegen.entity.GenTemplateEntity;
-import com.pig4cloud.pig.codegen.service.*;
-import com.pig4cloud.pig.codegen.util.VelocityKit;
-import com.pig4cloud.pig.codegen.util.vo.GroupVO;
+import com.lotus.bixi.generator.config.BixiGeneratorDefaultProperties;
+import com.lotus.bixi.generator.entity.GenTable;
+import com.lotus.bixi.generator.entity.GenTableColumn;
+import com.lotus.bixi.generator.entity.GenTemplate;
+import com.lotus.bixi.generator.service.*;
+import com.lotus.bixi.generator.util.VelocityKit;
+import com.lotus.bixi.generator.util.vo.GroupVO;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -46,7 +46,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 /**
- * @author lengleng
+ * @author 唐磊
  * @date 2018-07-30
  * <p>
  * 代码生成器
@@ -56,7 +56,7 @@ import java.util.zip.ZipOutputStream;
 @RequiredArgsConstructor
 public class GeneratorServiceImpl implements GeneratorService {
 
-	private final PigCodeGenDefaultProperties configurationProperties;
+	private final BixiGeneratorDefaultProperties configurationProperties;
 
 	private final GenTableColumnService columnService;
 
@@ -80,12 +80,12 @@ public class GeneratorServiceImpl implements GeneratorService {
 		Long style = (Long) dataModel.get("style");
 
 		GroupVO groupVo = genGroupService.getGroupVoById(style);
-		List<GenTemplateEntity> templateList = groupVo.getTemplateList();
+		List<GenTemplate> templateList = groupVo.getTemplateList();
 
 		String frontendPath = configurationProperties.getFrontendPath();
 		String backendPath = configurationProperties.getBackendPath();
 
-		for (GenTemplateEntity template : templateList) {
+		for (GenTemplate template : templateList) {
 			String templateCode = template.getTemplateCode();
 			String generatorPath = template.getGeneratorPath();
 
@@ -117,7 +117,7 @@ public class GeneratorServiceImpl implements GeneratorService {
 		Long style = (Long) dataModel.get("style");
 
 		// 获取模板列表，Lambda 表达式简化代码
-		List<GenTemplateEntity> templateList = genGroupService.getGroupVoById(style).getTemplateList();
+		List<GenTemplate> templateList = genGroupService.getGroupVoById(style).getTemplateList();
 
 		String frontendPath = configurationProperties.getFrontendPath();
 		String backendPath = configurationProperties.getBackendPath();
@@ -153,7 +153,7 @@ public class GeneratorServiceImpl implements GeneratorService {
 		Long style = (Long) dataModel.get("style");
 
 		// 获取模板列表，Lambda 表达式简化代码
-		List<GenTemplateEntity> templateList = genGroupService.getGroupVoById(style).getTemplateList();
+		List<GenTemplate> templateList = genGroupService.getGroupVoById(style).getTemplateList();
 
 		templateList.forEach(template -> {
 			String templateCode = template.getTemplateCode();
@@ -173,10 +173,10 @@ public class GeneratorServiceImpl implements GeneratorService {
 		// 获取表格信息
 		GenTable table = tableService.getById(tableId);
 		// 获取字段列表
-		List<GenTableColumnEntity> fieldList = columnService.lambdaQuery()
-			.eq(GenTableColumnEntity::getDsName, table.getDsName())
-			.eq(GenTableColumnEntity::getTableName, table.getTableName())
-			.orderByAsc(GenTableColumnEntity::getSort)
+		List<GenTableColumn> fieldList = columnService.lambdaQuery()
+			.eq(GenTableColumn::getDsName, table.getDsName())
+			.eq(GenTableColumn::getTableName, table.getTableName())
+			.orderByAsc(GenTableColumn::getSn)
 			.list();
 
 		table.setFieldList(fieldList);
@@ -217,9 +217,9 @@ public class GeneratorServiceImpl implements GeneratorService {
 		// 设置子表
 		String childTableName = table.getChildTableName();
 		if (StrUtil.isNotBlank(childTableName)) {
-			List<GenTableColumnEntity> childFieldList = columnService.lambdaQuery()
-				.eq(GenTableColumnEntity::getDsName, table.getDsName())
-				.eq(GenTableColumnEntity::getTableName, table.getChildTableName())
+			List<GenTableColumn> childFieldList = columnService.lambdaQuery()
+				.eq(GenTableColumn::getDsName, table.getDsName())
+				.eq(GenTableColumn::getTableName, table.getChildTableName())
 				.list();
 			dataModel.put("childFieldList", childFieldList);
 			dataModel.put("childTableName", childTableName);
@@ -229,17 +229,17 @@ public class GeneratorServiceImpl implements GeneratorService {
 			dataModel.put("childClassName", StrUtil.lowerFirst(NamingCase.toPascalCase(childTableName)));
 			// 设置是否是多租户模式 (判断字段列表中是否包含 tenant_id 字段)
 			childFieldList.stream()
-				.filter(genTableColumnEntity -> genTableColumnEntity.getFieldName().equals("tenant_id"))
+				.filter(genTableColumn -> genTableColumn.getFieldName().equals("tenant_id"))
 				.findFirst()
-				.ifPresent(columnEntity -> dataModel.put("isChildTenant", true));
+				.ifPresent(column -> dataModel.put("isChildTenant", true));
 		}
 
 		// 设置是否是多租户模式 (判断字段列表中是否包含 tenant_id 字段)
 		table.getFieldList()
 			.stream()
-			.filter(genTableColumnEntity -> genTableColumnEntity.getFieldName().equals("tenant_id"))
+			.filter(genTableColumn -> genTableColumn.getFieldName().equals("tenant_id"))
 			.findFirst()
-			.ifPresent(columnEntity -> dataModel.put("isTenant", true));
+			.ifPresent(column -> dataModel.put("isTenant", true));
 
 		return dataModel;
 	}
@@ -259,23 +259,23 @@ public class GeneratorServiceImpl implements GeneratorService {
 	 */
 	private void setFieldTypeList(Map<String, Object> dataModel, GenTable table) {
 		// 按字段类型分组，使用 Map 存储不同类型的字段列表
-		Map<Boolean, List<GenTableColumnEntity>> typeMap = table.getFieldList()
+		Map<Boolean, List<GenTableColumn>> typeMap = table.getFieldList()
 			.stream()
-			.collect(Collectors.partitioningBy(columnEntity -> BooleanUtil.toBoolean(columnEntity.getPrimaryPk())));
+			.collect(Collectors.partitioningBy(column -> BooleanUtil.toBoolean(column.getPrimaryPk())));
 
 		// 从分组后的 Map 中获取不同类型的字段列表
-		List<GenTableColumnEntity> primaryList = typeMap.get(true);
-		List<GenTableColumnEntity> formList = typeMap.get(false)
+		List<GenTableColumn> primaryList = typeMap.get(true);
+		List<GenTableColumn> formList = typeMap.get(false)
 			.stream()
-			.filter(columnEntity -> BooleanUtil.toBoolean(columnEntity.getFormItem()))
+			.filter(column -> BooleanUtil.toBoolean(column.getFormItem()))
 			.collect(Collectors.toList());
-		List<GenTableColumnEntity> gridList = typeMap.get(false)
+		List<GenTableColumn> gridList = typeMap.get(false)
 			.stream()
-			.filter(columnEntity -> BooleanUtil.toBoolean(columnEntity.getGridItem()))
+			.filter(column -> BooleanUtil.toBoolean(column.getGridItem()))
 			.collect(Collectors.toList());
-		List<GenTableColumnEntity> queryList = typeMap.get(false)
+		List<GenTableColumn> queryList = typeMap.get(false)
 			.stream()
-			.filter(columnEntity -> BooleanUtil.toBoolean(columnEntity.getQueryItem()))
+			.filter(column -> BooleanUtil.toBoolean(column.getQueryItem()))
 			.collect(Collectors.toList());
 
 		if (CollUtil.isNotEmpty(primaryList)) {

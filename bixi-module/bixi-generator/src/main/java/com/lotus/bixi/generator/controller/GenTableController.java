@@ -1,30 +1,13 @@
-/*
- *    Copyright (c) 2018-2025, lengleng All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * Redistributions of source code must retain the above copyright notice,
- * this list of conditions and the following disclaimer.
- * Redistributions in binary form must reproduce the above copyright
- * notice, this list of conditions and the following disclaimer in the
- * documentation and/or other materials provided with the distribution.
- * Neither the name of the pig4cloud.com developer nor the names of its
- * contributors may be used to endorse or promote products derived from
- * this software without specific prior written permission.
- * Author: lengleng (wangiegie@gmail.com)
- */
-
 package com.lotus.bixi.generator.controller;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.pig4cloud.pig.codegen.entity.GenTable;
-import com.pig4cloud.pig.codegen.entity.GenTableColumnEntity;
-import com.pig4cloud.pig.codegen.service.GenTableColumnService;
-import com.pig4cloud.pig.codegen.service.GenTableService;
-import com.pig4cloud.pig.common.core.util.R;
-import com.pig4cloud.pig.common.log.annotation.SysLog;
+import com.lotus.bixi.common.core.util.R;
+import com.lotus.bixi.common.log.annotation.SysLog;
+import com.lotus.bixi.generator.entity.GenTable;
+import com.lotus.bixi.generator.entity.GenTableColumn;
+import com.lotus.bixi.generator.service.GenTableColumnService;
+import com.lotus.bixi.generator.service.GenTableService;
 import com.pig4cloud.plugin.excel.annotation.ResponseExcel;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -38,7 +21,7 @@ import java.util.List;
 /**
  * 列属性
  *
- * @author pigx code generator
+ * @author 唐磊x code generator
  * @date 2023-02-06 20:34:55
  */
 @RestController
@@ -125,9 +108,9 @@ public class GenTableController {
 		tableService.remove(
 				Wrappers.<GenTable>lambdaQuery().eq(GenTable::getDsName, dsName).eq(GenTable::getTableName, tableName));
 		// 字段配置删除
-		tableColumnService.remove(Wrappers.<GenTableColumnEntity>lambdaQuery()
-			.eq(GenTableColumnEntity::getDsName, dsName)
-			.eq(GenTableColumnEntity::getTableName, tableName));
+		tableColumnService.remove(Wrappers.<GenTableColumn>lambdaQuery()
+			.eq(GenTableColumn::getDsName, dsName)
+			.eq(GenTableColumn::getTableName, tableName));
 		return R.ok(tableService.queryOrBuildTable(dsName, tableName));
 	}
 
@@ -151,7 +134,7 @@ public class GenTableController {
 	 */
 	@PutMapping("/field/{dsName}/{tableName}")
 	public R<String> updateTableField(@PathVariable("dsName") String dsName, @PathVariable String tableName,
-			@RequestBody List<GenTableColumnEntity> tableFieldList) {
+			@RequestBody List<GenTableColumn> tableFieldList) {
 		tableColumnService.updateTableField(dsName, tableName, tableFieldList);
 		return R.ok();
 	}

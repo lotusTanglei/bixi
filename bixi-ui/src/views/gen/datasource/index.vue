@@ -94,7 +94,7 @@ const state: BasicTableProps = reactive<BasicTableProps>({
 const { getDataList, currentChangeHandle, sizeChangeHandle, tableStyle } = useTable(state);
 
 const downloadDoc = (dsName: string) => {
-	downBlobFile('/gen/dsconf/doc', { dsName }, `${dsName}.html`);
+	downBlobFile('/gen/dsconfig/doc', { dsName }, `${dsName}.html`);
 };
 
 // 清空搜索条件

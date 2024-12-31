@@ -3,7 +3,7 @@ package com.lotus.bixi.generator.util.vo;
 import lombok.Data;
 
 /**
- * @author lengleng
+ * @author 唐磊
  * @date 2024/7/13
  * <p>
  * CGTM 文件路径

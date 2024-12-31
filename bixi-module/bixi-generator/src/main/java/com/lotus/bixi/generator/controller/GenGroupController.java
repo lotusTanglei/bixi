@@ -1,33 +1,16 @@
-/*
- *    Copyright (c) 2018-2025, lengleng All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * Redistributions of source code must retain the above copyright notice,
- * this list of conditions and the following disclaimer.
- * Redistributions in binary form must reproduce the above copyright
- * notice, this list of conditions and the following disclaimer in the
- * documentation and/or other materials provided with the distribution.
- * Neither the name of the pig4cloud.com developer nor the names of its
- * contributors may be used to endorse or promote products derived from
- * this software without specific prior written permission.
- * Author: lengleng (wangiegie@gmail.com)
- */
-
 package com.lotus.bixi.generator.controller;
 
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.pig4cloud.pig.codegen.entity.GenGroupEntity;
-import com.pig4cloud.pig.codegen.service.GenGroupService;
-import com.pig4cloud.pig.codegen.util.vo.GroupVO;
-import com.pig4cloud.pig.codegen.util.vo.TemplateGroupDTO;
-import com.pig4cloud.pig.common.core.util.R;
-import com.pig4cloud.pig.common.log.annotation.SysLog;
-import com.pig4cloud.pig.common.security.annotation.HasPermission;
+import com.lotus.bixi.common.core.util.R;
+import com.lotus.bixi.common.log.annotation.SysLog;
+import com.lotus.bixi.common.security.annotation.HasPermission;
+import com.lotus.bixi.generator.entity.GenGroup;
+import com.lotus.bixi.generator.service.GenGroupService;
+import com.lotus.bixi.generator.util.vo.GroupVO;
+import com.lotus.bixi.generator.util.vo.TemplateGroupDTO;
 import com.pig4cloud.plugin.excel.annotation.ResponseExcel;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -41,7 +24,7 @@ import java.util.List;
 /**
  * 模板分组
  *
- * @author PIG
+ * @author 唐磊
  * @date 2023-02-21 20:01:53
  */
 @RestController
@@ -62,10 +45,10 @@ public class GenGroupController {
 	@Operation(summary = "分页查询", description = "分页查询")
 	@GetMapping("/page")
 	@HasPermission("codegen_group_view")
-	public R getgenGroupPage(Page page, GenGroupEntity genGroup) {
-		LambdaQueryWrapper<GenGroupEntity> wrapper = Wrappers.<GenGroupEntity>lambdaQuery()
-			.like(genGroup.getId() != null, GenGroupEntity::getId, genGroup.getId())
-			.like(StrUtil.isNotEmpty(genGroup.getGroupName()), GenGroupEntity::getGroupName, genGroup.getGroupName());
+	public R getgenGroupPage(Page page, GenGroup genGroup) {
+		LambdaQueryWrapper<GenGroup> wrapper = Wrappers.<GenGroup>lambdaQuery()
+			.like(genGroup.getId() != null, GenGroup::getId, genGroup.getId())
+			.like(StrUtil.isNotEmpty(genGroup.getGroupName()), GenGroup::getGroupName, genGroup.getGroupName());
 		return R.ok(genGroupService.page(page, wrapper));
 	}
 
@@ -131,7 +114,7 @@ public class GenGroupController {
 	@ResponseExcel
 	@GetMapping("/export")
 	@HasPermission("codegen_group_export")
-	public List<GenGroupEntity> export(GenGroupEntity genGroup) {
+	public List<GenGroup> export(GenGroup genGroup) {
 		return genGroupService.list(Wrappers.query(genGroup));
 	}
 
@@ -141,8 +124,8 @@ public class GenGroupController {
 	@GetMapping("/list")
 	@Operation(summary = "查询列表", description = "查询列表")
 	public R list() {
-		List<GenGroupEntity> list = genGroupService
-			.list(Wrappers.<GenGroupEntity>lambdaQuery().orderByDesc(GenGroupEntity::getCreateTime));
+		List<GenGroup> list = genGroupService
+			.list(Wrappers.<GenGroup>lambdaQuery().orderByDesc(GenGroup::getCreateTime));
 		return R.ok(list);
 	}
 

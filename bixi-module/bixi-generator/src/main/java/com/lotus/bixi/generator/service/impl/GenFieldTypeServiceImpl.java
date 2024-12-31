@@ -18,9 +18,9 @@ package com.lotus.bixi.generator.service.impl;
 
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.pig4cloud.pig.codegen.entity.GenFieldType;
-import com.pig4cloud.pig.codegen.mapper.GenFieldTypeMapper;
-import com.pig4cloud.pig.codegen.service.GenFieldTypeService;
+import com.lotus.bixi.generator.entity.GenFieldType;
+import com.lotus.bixi.generator.mapper.GenFieldTypeMapper;
+import com.lotus.bixi.generator.service.GenFieldTypeService;
 import org.springframework.stereotype.Service;
 
 import java.util.Set;
@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 /**
  * 列属性
  *
- * @author pigx code generator
+ * @author 唐磊x code generator
  * @date 2023-02-06 20:16:01
  */
 @Service

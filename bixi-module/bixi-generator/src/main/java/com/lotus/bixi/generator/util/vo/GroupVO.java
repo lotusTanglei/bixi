@@ -2,7 +2,7 @@ package com.lotus.bixi.generator.util.vo;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
-import com.pig4cloud.pig.codegen.entity.GenTemplateEntity;
+import com.lotus.bixi.generator.entity.GenTemplate;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -40,6 +40,6 @@ public class GroupVO {
 	 * 模板列表
 	 */
 	@Schema(description = "拥有的模板列表")
-	private List<GenTemplateEntity> templateList;
+	private List<GenTemplate> templateList;
 
 }

@@ -20,7 +20,7 @@ package com.lotus.bixi.generator.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.pig4cloud.pig.codegen.entity.GenTable;
+import com.lotus.bixi.generator.entity.GenTable;
 import org.anyline.metadata.Table;
 
 import java.util.List;
@@ -28,7 +28,7 @@ import java.util.List;
 /**
  * 列属性
  *
- * @author pigx code generator
+ * @author 唐磊x code generator
  * @date 2023-02-06 20:34:55
  */
 public interface GenTableService extends IService<GenTable> {

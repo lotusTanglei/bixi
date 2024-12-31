@@ -5,7 +5,7 @@ import cn.hutool.core.text.NamingCase;
 /**
  * 命名规则处理，针对驼峰，下划线等处理
  *
- * @author lengleng
+ * @author 唐磊
  * @date 2023/1/31
  */
 public class NamingCaseTool {
