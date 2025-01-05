@@ -1,5 +1,6 @@
 package com.lotus.bixi.quartz.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.lotus.bixi.common.mybatis.base.BaseEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -28,11 +29,13 @@ public class SysJob extends BaseEntity<SysJob> {
 	/**
 	 * 任务组名
 	 */
+	@TableField(value = "`group`")
 	private String group;
 
 	/**
 	 * 组内执行顺利，值越大执行优先级越高，最大值9，最小值1
 	 */
+	@TableField(value = "`order`")
 	private String order;
 
 	/**

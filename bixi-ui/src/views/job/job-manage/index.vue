@@ -3,16 +3,16 @@
 		<div class="layout-padding-auto layout-padding-view">
 			<el-row class="ml10" v-show="showSearch">
 				<el-form :inline="true" :model="state.queryForm" ref="queryRef">
-					<el-form-item :label="$t('job.jobName')" prop="jobName">
-						<el-input :placeholder="$t('job.inputjobNameTip')" @keyup.enter="getDataList" clearable v-model="state.queryForm.jobName" />
+					<el-form-item :label="$t('job.jobName')" prop="name">
+						<el-input :placeholder="$t('job.inputjobNameTip')" @keyup.enter="getDataList" clearable v-model="state.queryForm.name" />
 					</el-form-item>
-					<el-form-item :label="t('job.jobStatus')" prop="jobStatus">
-						<el-select :placeholder="t('job.inputjobStatusTip')" v-model="state.queryForm.jobStatus">
+					<el-form-item :label="t('job.jobStatus')" prop="status">
+						<el-select :placeholder="t('job.inputjobStatusTip')" v-model="state.queryForm.status">
 							<el-option :key="index" :label="item.label" :value="item.value" v-for="(item, index) in job_status"></el-option>
 						</el-select>
 					</el-form-item>
-					<el-form-item :label="t('job.jobExecuteStatus')" prop="jobExecuteStatus">
-						<el-select :placeholder="t('job.inputjobExecuteStatusTip')" v-model="state.queryForm.jobExecuteStatus">
+					<el-form-item :label="t('job.jobExecuteStatus')" prop="executeStatus">
+						<el-select :placeholder="t('job.inputjobExecuteStatusTip')" v-model="state.queryForm.executeStatus">
 							<el-option :key="index" :label="item.label" :value="item.value" v-for="(item, index) in job_execute_status"></el-option>
 						</el-select>
 					</el-form-item>
@@ -52,16 +52,16 @@
 			>
 				<el-table-column align="center" type="selection" width="40" />
 				<el-table-column :label="t('job.index')" fixed="left" type="index" width="60" />
-				<el-table-column :label="t('job.jobName')" fixed="left" prop="jobName" show-overflow-tooltip width="120" />
-				<el-table-column :label="t('job.jobGroup')" prop="jobGroup" show-overflow-tooltip width="120" />
-				<el-table-column :label="t('job.jobStatus')" prop="jobStatus" show-overflow-tooltip width="120">
+				<el-table-column :label="t('job.jobName')" fixed="left" prop="name" show-overflow-tooltip width="120" />
+				<el-table-column :label="t('job.jobGroup')" prop="group" show-overflow-tooltip width="120" />
+				<el-table-column :label="t('job.jobStatus')" prop="status" show-overflow-tooltip width="120">
 					<template #default="scope">
-						<dict-tag :options="job_status" :value="scope.row.jobStatus"></dict-tag>
+						<dict-tag :options="job_status" :value="scope.row.status"></dict-tag>
 					</template>
 				</el-table-column>
-				<el-table-column :label="t('job.jobExecuteStatus')" prop="jobExecuteStatus" show-overflow-tooltip width="120">
+				<el-table-column :label="t('job.jobExecuteStatus')" prop="executeStatus" show-overflow-tooltip width="120">
 					<template #default="scope">
-						<dict-tag :options="job_execute_status" :value="scope.row.jobExecuteStatus"></dict-tag>
+						<dict-tag :options="job_execute_status" :value="scope.row.executeStatus"></dict-tag>
 					</template>
 				</el-table-column>
 
@@ -69,9 +69,9 @@
 
 				<el-table-column :label="t('job.previousTime')" prop="previousTime" show-overflow-tooltip width="120" />
 				<el-table-column :label="t('job.nextTime')" prop="nextTime" show-overflow-tooltip width="120" />
-				<el-table-column :label="t('job.jobType')" prop="jobType" show-overflow-tooltip width="120">
+				<el-table-column :label="t('job.jobType')" prop="type" show-overflow-tooltip width="120">
 					<template #default="scope">
-						<dict-tag :options="job_type" :value="scope.row.jobType"></dict-tag>
+						<dict-tag :options="job_type" :value="scope.row.type"></dict-tag>
 					</template>
 				</el-table-column>
 				<el-table-column :label="t('job.executePath')" prop="executePath" show-overflow-tooltip width="120" />
@@ -98,7 +98,7 @@
 							@click="handleShutDownJob(scope.row)"
 							text
 							type="primary"
-							v-if="scope.row.jobStatus === '2'"
+							v-if="scope.row.status === '2'"
 							>暂停
 						</el-button>
 
@@ -121,14 +121,14 @@
 
 <script lang="ts" name="systemSysJob" setup>
 import { BasicTableProps, useTable } from '/@/hooks/table';
-import { delObj, fetchList, runJobRa, shutDownJobRa, startJobRa } from '/@/api/daemon/job';
+import { delObj, fetchList, runJobRa, shutDownJobRa, startJobRa } from '/@/api/job/job';
 import { useMessage, useMessageBox } from '/@/hooks/message';
 import { useDict } from '/@/hooks/dict';
 import { useI18n } from 'vue-i18n';
 
 // 引入组件
 const FormDialog = defineAsyncComponent(() => import('./form.vue'));
-const JobLog = defineAsyncComponent(() => import('./job-log.vue'));
+const JobLog = defineAsyncComponent(() => import('./job-record.vue'));
 
 // 获取国际化方法
 const { t } = useI18n();
@@ -140,10 +140,10 @@ const jobLogRef = ref();
 
 /** 搜索表单信息 */
 const queryForm = reactive({
-	jobName: '',
-	jobGroup: '',
-	jobStatus: '',
-	jobExecuteStatus: '',
+	name: '',
+	group: '',
+	status: '',
+	executeStatus: '',
 });
 /** 是否展示搜索表单 */
 const showSearch = ref(true);
@@ -200,16 +200,16 @@ const handleEditJob = (row) => {
 
 /** 启动作业 */
 const handleStartJob = async (row) => {
-	const jobStatus = row.jobStatus;
-	if (jobStatus === '1' || jobStatus === '3') {
+	const status = row.status;
+	if (status === '1' || status === '3') {
 		try {
-			await useMessageBox().confirm(`即将发布或启动(任务名称: ${row.jobName}), 是否继续?`);
+			await useMessageBox().confirm(`即将发布或启动(任务名称: ${row.name}), 是否继续?`);
 		} catch {
 			return;
 		}
 
 		try {
-			await startJobRa(row.jobId);
+			await startJobRa(row.id);
 			getDataList();
 			useMessage().success(t('common.optSuccessText'));
 		} catch (err: any) {
@@ -222,16 +222,16 @@ const handleStartJob = async (row) => {
 
 /** 暂停作业 */
 const handleShutDownJob = async (row) => {
-	const jobStatus = row.jobStatus;
-	if (jobStatus === '2') {
+	const status = row.status;
+	if (status === '2') {
 		try {
-			await useMessageBox().confirm(`即将暂停(任务名称: ${row.jobName}), 是否继续?`);
+			await useMessageBox().confirm(`即将暂停(任务名称: ${row.name}), 是否继续?`);
 		} catch {
 			return;
 		}
 
 		try {
-			await shutDownJobRa(row.jobId);
+			await shutDownJobRa(row.id);
 			getDataList();
 			useMessage().success(t('common.optSuccessText'));
 		} catch (err: any) {
@@ -245,13 +245,13 @@ const handleShutDownJob = async (row) => {
 /** 运行作业 */
 const handleRunJob = async (row) => {
 	try {
-		await useMessageBox().confirm(`立刻执行一次任务(任务名称: ${row.jobName}), 是否继续?`);
+		await useMessageBox().confirm(`立刻执行一次任务(任务名称: ${row.name}), 是否继续?`);
 	} catch {
 		return;
 	}
 
 	try {
-		await runJobRa(row.jobId);
+		await runJobRa(row.id);
 		getDataList();
 		useMessage().success(t('common.optSuccessText'));
 	} catch (err: any) {
@@ -266,15 +266,15 @@ const handleDelete = async (row) => {
 		return;
 	}
 
-	const { jobId, jobName } = row;
+	const { id, name } = row;
 	try {
-		await useMessageBox().confirm(`${t('common.delConfirmText')}(任务名称:${jobName})`);
+		await useMessageBox().confirm(`${t('common.delConfirmText')}(任务名称:${name})`);
 	} catch {
 		return;
 	}
 
 	try {
-		await delObj(jobId);
+		await delObj(id);
 		getDataList();
 		useMessage().success(t('common.delSuccessText'));
 	} catch (error: any) {

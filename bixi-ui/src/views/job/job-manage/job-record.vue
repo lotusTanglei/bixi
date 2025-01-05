@@ -33,11 +33,10 @@
 			>
 				<el-table-column type="selection" width="40" align="center" />
 				<el-table-column type="index" :label="t('log.index')" width="80" />
-				<el-table-column prop="jobName" :label="t('log.jobName')" show-overflow-tooltip />
-				<el-table-column prop="jobMessage" :label="t('log.jobMessage')" show-overflow-tooltip />
-				<el-table-column prop="jobLogStatus" :label="t('log.jobLogStatus')" show-overflow-tooltip>
+				<el-table-column prop="message" :label="t('log.jobMessage')" show-overflow-tooltip />
+				<el-table-column prop="status" :label="t('log.jobRecordStatus')" show-overflow-tooltip>
 					<template #default="scope">
-						<dict-tag :options="job_execute_status" :value="scope.row.jobLogStatus"></dict-tag>
+						<dict-tag :options="job_execute_status" :value="scope.row.status"></dict-tag>
 					</template>
 				</el-table-column>
 				<el-table-column prop="executeTime" :label="t('log.executeTime')" show-overflow-tooltip />
@@ -45,10 +44,10 @@
 				<el-table-column prop="createTime" :label="t('log.createTime')" show-overflow-tooltip />
 				<el-table-column :label="$t('common.action')" width="150">
 					<template #default="scope">
-						<el-button text type="primary" v-auth="'pix_log_edit'" @click="formDialogRef.openDialog(scope.row.jobLogId)"
+						<el-button text type="primary" v-auth="'pix_log_edit'" @click="formDialogRef.openDialog(scope.row.id)"
 							>{{ $t('common.editBtn') }}
 						</el-button>
-						<el-button text type="primary" v-auth="'sys_log_del'" @click="handleDelete([scope.row.jobLogId])">{{ $t('common.delBtn') }} </el-button>
+						<el-button text type="primary" v-auth="'sys_log_del'" @click="handleDelete([scope.row.id])">{{ $t('common.delBtn') }} </el-button>
 					</template>
 				</el-table-column>
 			</el-table>
@@ -59,7 +58,7 @@
 
 <script setup lang="ts" name="job-log">
 import { BasicTableProps, useTable } from '/@/hooks/table';
-import { fetchList, delObjs } from '/@/api/daemon/job-log';
+import { fetchList, delObjs } from '/@/api/job/job-record';
 import { useI18n } from 'vue-i18n';
 import { useDict } from '/@/hooks/dict';
 import { useMessage, useMessageBox } from '/@/hooks/message';
@@ -94,8 +93,8 @@ const openDialog = (id: string) => {
 };
 
 // 多选事件
-const handleSelectionChange = (objs: { jobLogId: string }[]) => {
-	selectObjs.value = objs.map(({ jobLogId }) => jobLogId);
+const handleSelectionChange = (objs: { id: string }[]) => {
+	selectObjs.value = objs.map(({ id }) => id);
 	multiple.value = !objs.length;
 };
 

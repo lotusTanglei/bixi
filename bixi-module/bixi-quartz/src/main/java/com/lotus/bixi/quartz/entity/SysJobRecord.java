@@ -31,11 +31,6 @@ public class SysJobRecord extends BaseEntity<SysJobRecord> {
 	private String message;
 
 	/**
-	 * 执行状态（0正常 1失败）
-	 */
-	private String status;
-
-	/**
 	 * 执行时间
 	 */
 	private String executeTime;

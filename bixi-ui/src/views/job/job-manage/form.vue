@@ -3,38 +3,38 @@
 		<el-form ref="dataFormRef" :model="form" :rules="dataRules" formDialogRef label-width="120px" v-loading="loading">
       <el-row :gutter="20">
         <el-col :span="12" class="mb20">
-          <el-form-item :label="t('job.jobName')" prop="jobName">
-            <el-input v-model="form.jobName" :placeholder="t('job.inputjobNameTip')"/>
+          <el-form-item :label="t('job.jobName')" prop="name">
+            <el-input v-model="form.name" :placeholder="t('job.inputjobNameTip')"/>
           </el-form-item>
         </el-col>
         <el-col :span="12" class="mb20">
-          <el-form-item :label="t('job.jobGroup')" prop="jobGroup">
-            <el-input v-model="form.jobGroup" :placeholder="t('job.inputjobGroupTip')"/>
+          <el-form-item :label="t('job.jobGroup')" prop="group">
+            <el-input v-model="form.group" :placeholder="t('job.inputjobGroupTip')"/>
           </el-form-item>
         </el-col>
 
         <el-col :span="12" class="mb20">
-          <el-form-item :label="t('job.jobType')" prop="jobType">
-            <el-select v-model="form.jobType" :placeholder="t('job.jobType')">
+          <el-form-item :label="t('job.jobType')" prop="type">
+            <el-select v-model="form.type" :placeholder="t('job.jobType')">
               <el-option v-for="(item, index) in job_type" :key="index" :label="item.label"
                          :value="item.value"></el-option>
             </el-select>
           </el-form-item>
         </el-col>
 
-        <el-col :span="12" class="mb20" v-if="['3', '4'].includes(form.jobType)">
+        <el-col :span="12" class="mb20" v-if="['3', '4'].includes(form.type)">
           <el-form-item :label="t('job.executePath')" prop="executePath">
             <el-input v-model="form.executePath" :placeholder="t('job.inputexecutePathTip')"/>
           </el-form-item>
         </el-col>
 
-        <el-col :span="12" class="mb20" v-if="['1', '2'].includes(form.jobType)">
+        <el-col :span="12" class="mb20" v-if="['1', '2'].includes(form.type)">
           <el-form-item :label="t('job.className')" prop="className">
             <el-input v-model="form.className" :placeholder="t('job.inputclassNameTip')"/>
           </el-form-item>
         </el-col>
 
-        <el-col :span="12" class="mb20" v-if="['1', '2'].includes(form.jobType)">
+        <el-col :span="12" class="mb20" v-if="['1', '2'].includes(form.type)">
           <el-form-item :label="t('job.methodName')" prop="methodName">
             <el-input v-model="form.methodName" :placeholder="t('job.inputmethodNameTip')"/>
           </el-form-item>
@@ -82,7 +82,7 @@
 // 定义子组件向父组件传值/事件
 import {useDict} from '/@/hooks/dict';
 import {useMessage} from '/@/hooks/message';
-import {addObj, getObj, putObj} from '/@/api/daemon/job';
+import {addObj, getObj, putObj} from '/@/api/job/job';
 import {useI18n} from 'vue-i18n';
 import {rule} from '/@/utils/validate';
 const emit = defineEmits(['refresh']);
@@ -100,10 +100,10 @@ const {misfire_policy, job_type} = useDict('job_status', 'job_execute_status', '
 
 // 提交表单数据
 const form = reactive({
-  jobId: '',
-  jobName: '',
-  jobGroup: '',
-  jobType: '',
+  id: '',
+  name: '',
+  group: '',
+  type: '',
   executePath: '',
   className: '',
   methodName: '',
@@ -122,9 +122,9 @@ const popoverVis = (bol: boolean) => {
 const popoverVisible = ref(false);
 // 定义校验规则
 const dataRules = reactive({
-  jobName: [{validator: rule.overLength, trigger: 'blur'},{required: true, message: '任务名称不能为空', trigger: 'blur'}],
-  jobGroup: [{validator: rule.overLength, trigger: 'blur'},{required: true, message: '任务组名不能为空', trigger: 'blur'}],
-  jobType: [{required: true, message: '任务类型不能为空', trigger: 'blur'}],
+  name: [{validator: rule.overLength, trigger: 'blur'},{required: true, message: '任务名称不能为空', trigger: 'blur'}],
+  group: [{validator: rule.overLength, trigger: 'blur'},{required: true, message: '任务组名不能为空', trigger: 'blur'}],
+  type: [{required: true, message: '任务类型不能为空', trigger: 'blur'}],
   cronExpression: [{validator: rule.overLength, trigger: 'blur'},{required: true, message: 'cron不能为空', trigger: 'blur'}],
   misfirePolicy: [{required: true, message: '策略不能为空', trigger: 'blur'}],
   executePath: [{validator: rule.overLength, trigger: 'blur'},{required: true, message: '执行路径不能为空', trigger: 'blur'}],
@@ -136,7 +136,7 @@ const dataRules = reactive({
 // 打开弹窗
 const openDialog = (id: string) => {
   visible.value = true;
-  form.jobId = '';
+  form.id = '';
 
   // 重置表单数据
   nextTick(() => {
@@ -145,7 +145,7 @@ const openDialog = (id: string) => {
 
   // 获取sysJob信息
   if (id) {
-    form.jobId = id;
+    form.id = id;
     getsysJobData(id);
   }
 };
@@ -158,8 +158,8 @@ const onSubmit = async () => {
 
   try {
     loading.value = true;
-    form.jobId ? await putObj(form) : await addObj(form);
-    useMessage().success(t(form.jobId ? 'common.editSuccessText' : 'common.addSuccessText'));
+    form.id ? await putObj(form) : await addObj(form);
+    useMessage().success(t(form.id ? 'common.editSuccessText' : 'common.addSuccessText'));
     visible.value = false;
     emit('refresh');
   } catch (err: any) {

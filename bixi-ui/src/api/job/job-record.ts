@@ -2,7 +2,7 @@ import request from '/@/utils/request';
 
 export function fetchList(query: any) {
 	return request({
-		url: '/job/sys-job-log/page',
+		url: '/job/sys-job-record/page',
 		method: 'get',
 		params: query,
 	});
@@ -10,7 +10,7 @@ export function fetchList(query: any) {
 
 export function delObjs(ids: object) {
 	return request({
-		url: '/job/sys-job-log',
+		url: '/job/sys-job-record',
 		method: 'delete',
 		data: ids,
 	});
