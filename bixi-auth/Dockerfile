@@ -6,9 +6,7 @@ ARG JAR_FILE=target/bixi-auth.jar
 
 COPY ${JAR_FILE} app.jar
 
-COPY ${JAR_FILE} app-1.jar
-
-RUN rm -rf  app-1.jar
+RUN cp ${JAR_FILE} app-1.jar && rm -rf  app-1.jar
 
 EXPOSE 3000
 
