@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>bixi-module</artifactId>
-        <groupId>com.lotus.bixi</groupId>
+        <groupId>com.lotus</groupId>
         <version>${revision}</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -15,17 +15,17 @@
     <dependencies>
         <!--core 工具类-->
         <dependency>
-            <groupId>com.lotus.bixi</groupId>
+            <groupId>com.lotus</groupId>
             <artifactId>bixi-common-core</artifactId>
         </dependency>
         <!--feign 注解依赖-->
         <dependency>
-            <groupId>com.lotus.bixi</groupId>
+            <groupId>com.lotus</groupId>
             <artifactId>bixi-common-feign</artifactId>
         </dependency>
         <!--mybatis 依赖-->
         <dependency>
-            <groupId>com.lotus.bixi</groupId>
+            <groupId>com.lotus</groupId>
             <artifactId>bixi-common-mybatis</artifactId>
         </dependency>
         <!-- excel 导入导出 https://github.com/pig-mesh/excel-spring-boot-starter -->

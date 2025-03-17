@@ -4,8 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>bixi-module</artifactId>
-        <groupId>com.lotus.bixi</groupId>
-        <version>0.0.3</version>
+        <groupId>com.lotus</groupId>
+        <version>${revision}</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -27,12 +27,12 @@
         </dependency>
         <!--日志处理-->
         <dependency>
-            <groupId>com.lotus.bixi</groupId>
+            <groupId>com.lotus</groupId>
             <artifactId>bixi-common-log</artifactId>
         </dependency>
         <!--feign 处理-->
         <dependency>
-            <groupId>com.lotus.bixi</groupId>
+            <groupId>com.lotus</groupId>
             <artifactId>bixi-common-feign</artifactId>
         </dependency>
         <!-- Druid -->
@@ -42,7 +42,7 @@
         </dependency>
         <!--mybatis-->
         <dependency>
-            <groupId>com.lotus.bixi</groupId>
+            <groupId>com.lotus</groupId>
             <artifactId>bixi-common-mybatis</artifactId>
         </dependency>
         <dependency>
@@ -51,7 +51,7 @@
         </dependency>
         <!-- orm 模块-->
         <dependency>
-            <groupId>com.lotus.bixi</groupId>
+            <groupId>com.lotus</groupId>
             <artifactId>bixi-common-datasource</artifactId>
         </dependency>
         <!--数据库-->
@@ -61,12 +61,12 @@
         </dependency>
         <!--swagger-->
         <dependency>
-            <groupId>com.lotus.bixi</groupId>
+            <groupId>com.lotus</groupId>
             <artifactId>bixi-common-swagger</artifactId>
         </dependency>
         <!--spring security 、oauth、jwt依赖-->
         <dependency>
-            <groupId>com.lotus.bixi</groupId>
+            <groupId>com.lotus</groupId>
             <artifactId>bixi-common-security</artifactId>
         </dependency>
         <!-- quartz 模块 -->

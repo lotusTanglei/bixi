@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.lotus</groupId>
+    <artifactId>bixi</artifactId>
+    <version>0.0.3</version>
+  </parent>
+  <artifactId>bixi-common</artifactId>
+  <version>0.0.3</version>
+  <packaging>pom</packaging>
+  <description>bixi 公共聚合模块</description>
+  <modules>
+    <module>bixi-common-bom</module>
+    <module>bixi-common-core</module>
+    <module>bixi-common-datasource</module>
+    <module>bixi-common-feign</module>
+    <module>bixi-common-log</module>
+    <module>bixi-common-mybatis</module>
+    <module>bixi-common-oss</module>
+    <module>bixi-common-seata</module>
+    <module>bixi-common-security</module>
+    <module>bixi-common-swagger</module>
+    <module>bixi-common-xss</module>
+  </modules>
+</project>

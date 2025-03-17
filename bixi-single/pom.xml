@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>bixi</artifactId>
-        <groupId>com.lotus.bixi</groupId>
+        <groupId>com.lotus</groupId>
         <version>${revision}</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -16,31 +16,31 @@
     <dependencies>
         <!--必备：认证中心模块-->
         <dependency>
-            <groupId>com.lotus.bixi</groupId>
+            <groupId>com.lotus</groupId>
             <artifactId>bixi-auth</artifactId>
             <version>${revision}</version>
         </dependency>
         <!--必备：用户管理模块-->
         <dependency>
-            <groupId>com.lotus.bixi</groupId>
+            <groupId>com.lotus</groupId>
             <artifactId>bixi-upms-biz</artifactId>
             <version>${revision}</version>
         </dependency>
         <!--可选：代码生成模块-->
         <dependency>
-            <groupId>com.lotus.bixi</groupId>
+            <groupId>com.lotus</groupId>
             <artifactId>bixi-generator</artifactId>
             <version>${revision}</version>
         </dependency>
         <!--可选：定时任务模块-->
 <!--        <dependency>-->
-<!--            <groupId>com.lotus.bixi</groupId>-->
+<!--            <groupId>com.lotus</groupId>-->
 <!--            <artifactId>bixi-quartz</artifactId>-->
 <!--            <version>${revision}</version>-->
 <!--        </dependency>-->
         <!--安全模块-->
         <dependency>
-            <groupId>com.lotus.bixi</groupId>
+            <groupId>com.lotus</groupId>
             <artifactId>bixi-common-security</artifactId>
         </dependency>
         <!-- 接口文档UI  -->
@@ -59,7 +59,7 @@
         </dependency>
         <!--接口文档-->
         <dependency>
-            <groupId>com.lotus.bixi</groupId>
+            <groupId>com.lotus</groupId>
             <artifactId>bixi-common-swagger</artifactId>
         </dependency>
         <!--undertow容器-->

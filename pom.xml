@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.lotus.bixi</groupId>
+    <groupId>com.lotus</groupId>
     <artifactId>bixi</artifactId>
     <name>${project.artifactId}</name>
     <version>${revision}</version>
@@ -34,6 +34,12 @@
         <knife4j.version>3.0.5</knife4j.version>
         <swagger.fox.version>3.0.0</swagger.fox.version>
         <xxl-job.version>2.4.0</xxl-job.version>
+        <docker.plugin.version>0.45.1</docker.plugin.version>
+        <docker.host>http://192.168.0.100:2375</docker.host>
+        <docker.registry>registry.cn-shanghai.aliyuncs.com</docker.registry>
+        <docker.namespace>pig4cloud</docker.namespace>
+        <docker.username>username</docker.username>
+        <docker.password>password</docker.password>
         <git.commit.plugin>9.0.1</git.commit.plugin>
         <spring.checkstyle.plugin>0.0.43</spring.checkstyle.plugin>
         <flatten-maven-plugin.version>1.6.0</flatten-maven-plugin.version>
@@ -96,7 +102,7 @@
         <dependencies>
             <!--bixi 公共版本定义-->
             <dependency>
-                <groupId>com.lotus.bixi</groupId>
+                <groupId>com.lotus</groupId>
                 <artifactId>bixi-common-bom</artifactId>
                 <version>${project.version}</version>
                 <type>pom</type>
@@ -156,6 +162,33 @@
                             </goals>
                         </execution>
                     </executions>
+                </plugin>
+                <plugin>
+                    <groupId>io.fabric8</groupId>
+                    <artifactId>docker-maven-plugin</artifactId>
+                    <version>${docker.plugin.version}</version>
+                    <configuration>
+                        <!-- Docker Remote Api-->
+                        <dockerHost>${docker.host}</dockerHost>
+                        <!-- Docker 镜像私服-->
+                        <registry>${docker.registry}</registry>
+                        <!-- 认证信息-->
+                        <authConfig>
+                            <push>
+                                <username>${docker.username}</username>
+                                <password>${docker.password}</password>
+                            </push>
+                        </authConfig>
+                        <images>
+                            <image>
+                                <!-- 镜像名称： 172.17.0.111/library/pig-gateway:2.6.3-->
+                                <name>${docker.registry}/${docker.namespace}/${project.name}:${project.version}</name>
+                                <build>
+                                    <dockerFile>${project.basedir}/Dockerfile</dockerFile>
+                                </build>
+                            </image>
+                        </images>
+                    </configuration>
                 </plugin>
             </plugins>
         </pluginManagement>

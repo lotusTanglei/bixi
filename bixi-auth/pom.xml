@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>bixi</artifactId>
-        <groupId>com.lotus.bixi</groupId>
+        <groupId>com.lotus</groupId>
         <version>${revision}</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -27,16 +27,16 @@
         </dependency>
         <!--断路器依赖-->
         <dependency>
-            <groupId>com.lotus.bixi</groupId>
+            <groupId>com.lotus</groupId>
             <artifactId>bixi-common-feign</artifactId>
         </dependency>
         <!--upms api model 模块-->
         <dependency>
-            <groupId>com.lotus.bixi</groupId>
+            <groupId>com.lotus</groupId>
             <artifactId>bixi-upms-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.lotus.bixi</groupId>
+            <groupId>com.lotus</groupId>
             <artifactId>bixi-common-security</artifactId>
         </dependency>
         <dependency>
@@ -55,7 +55,7 @@
         </dependency>
         <!-- log -->
         <dependency>
-            <groupId>com.lotus.bixi</groupId>
+            <groupId>com.lotus</groupId>
             <artifactId>bixi-common-log</artifactId>
         </dependency>
         <!-- 调用验证码核心模块 -->

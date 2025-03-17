@@ -4,13 +4,15 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>bixi</artifactId>
-        <groupId>com.lotus.bixi</groupId>
+        <groupId>com.lotus</groupId>
         <version>${revision}</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>bixi-module</artifactId>
     <description>bixi 核心业务模块</description>
+    <packaging>pom</packaging>
+
     <modules>
         <module>bixi-upms-api</module>
         <module>bixi-upms-biz</module>
@@ -18,6 +20,5 @@
         <module>bixi-monitor</module>
         <module>bixi-quartz</module>
     </modules>
-    <packaging>pom</packaging>
 
 </project>

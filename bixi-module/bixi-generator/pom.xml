@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>bixi-module</artifactId>
-        <groupId>com.lotus.bixi</groupId>
+        <groupId>com.lotus</groupId>
         <version>${revision}</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -32,12 +32,12 @@
         </dependency>
         <!--数据操作-->
         <dependency>
-            <groupId>com.lotus.bixi</groupId>
+            <groupId>com.lotus</groupId>
             <artifactId>bixi-common-mybatis</artifactId>
         </dependency>
         <!--动态数据源 数据操作-->
         <dependency>
-            <groupId>com.lotus.bixi</groupId>
+            <groupId>com.lotus</groupId>
             <artifactId>bixi-common-datasource</artifactId>
         </dependency>
         <!-- orm 模块-->
@@ -68,7 +68,7 @@
         </dependency>
         <!--common-->
         <dependency>
-            <groupId>com.lotus.bixi</groupId>
+            <groupId>com.lotus</groupId>
             <artifactId>bixi-common-core</artifactId>
         </dependency>
         <dependency>
@@ -82,20 +82,20 @@
         </dependency>
         <!--swagger-->
         <dependency>
-            <groupId>com.lotus.bixi</groupId>
+            <groupId>com.lotus</groupId>
             <artifactId>bixi-common-swagger</artifactId>
         </dependency>
         <!--安全模块-->
         <dependency>
-            <groupId>com.lotus.bixi</groupId>
+            <groupId>com.lotus</groupId>
             <artifactId>bixi-common-xss</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.lotus.bixi</groupId>
+            <groupId>com.lotus</groupId>
             <artifactId>bixi-common-security</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.lotus.bixi</groupId>
+            <groupId>com.lotus</groupId>
             <artifactId>bixi-common-log</artifactId>
         </dependency>
         <!--代码生成模板引擎-->

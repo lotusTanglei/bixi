@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.lotus.bixi</groupId>
+    <groupId>com.lotus</groupId>
     <artifactId>bixi-common-bom</artifactId>
     <version>${revision}</version>
     <packaging>pom</packaging>
@@ -46,60 +46,60 @@
         <dependencies>
 
             <dependency>
-                <groupId>com.lotus.bixi</groupId>
+                <groupId>com.lotus</groupId>
                 <artifactId>bixi-common-core</artifactId>
                 <version>${revision}</version>
             </dependency>
 
             <dependency>
-                <groupId>com.lotus.bixi</groupId>
+                <groupId>com.lotus</groupId>
                 <artifactId>bixi-common-datasource</artifactId>
                 <version>${revision}</version>
             </dependency>
 
             <dependency>
-                <groupId>com.lotus.bixi</groupId>
+                <groupId>com.lotus</groupId>
                 <artifactId>bixi-common-log</artifactId>
                 <version>${revision}</version>
             </dependency>
             <dependency>
-                <groupId>com.lotus.bixi</groupId>
+                <groupId>com.lotus</groupId>
                 <artifactId>bixi-common-mybatis</artifactId>
                 <version>${revision}</version>
             </dependency>
 
             <dependency>
-                <groupId>com.lotus.bixi</groupId>
+                <groupId>com.lotus</groupId>
                 <artifactId>bixi-common-oss</artifactId>
                 <version>${revision}</version>
             </dependency>
 
             <dependency>
-                <groupId>com.lotus.bixi</groupId>
+                <groupId>com.lotus</groupId>
                 <artifactId>bixi-common-security</artifactId>
                 <version>${revision}</version>
             </dependency>
 
             <dependency>
-                <groupId>com.lotus.bixi</groupId>
+                <groupId>com.lotus</groupId>
                 <artifactId>bixi-common-feign</artifactId>
                 <version>${revision}</version>
             </dependency>
 
             <dependency>
-                <groupId>com.lotus.bixi</groupId>
+                <groupId>com.lotus</groupId>
                 <artifactId>bixi-common-swagger</artifactId>
                 <version>${revision}</version>
             </dependency>
 
             <dependency>
-                <groupId>com.lotus.bixi</groupId>
+                <groupId>com.lotus</groupId>
                 <artifactId>bixi-common-xss</artifactId>
                 <version>${revision}</version>
             </dependency>
 
             <dependency>
-                <groupId>com.lotus.bixi</groupId>
+                <groupId>com.lotus</groupId>
                 <artifactId>bixi-upms-api</artifactId>
                 <version>${revision}</version>
             </dependency>

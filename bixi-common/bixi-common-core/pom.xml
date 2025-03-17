@@ -6,7 +6,7 @@
 
     <parent>
         <artifactId>bixi-common</artifactId>
-        <groupId>com.lotus.bixi</groupId>
+        <groupId>com.lotus</groupId>
         <version>${revision}</version>
     </parent>
 

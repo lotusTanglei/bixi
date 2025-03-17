@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.lotus</groupId>
+    <artifactId>bixi-common</artifactId>
+    <version>0.0.3</version>
+  </parent>
+  <artifactId>bixi-common-seata</artifactId>
+  <version>0.0.3</version>
+  <description>bixi 分布式事务处理模块</description>
+  <dependencies>
+    <dependency>
+      <groupId>com.lotus</groupId>
+      <artifactId>bixi-common-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.alibaba.cloud</groupId>
+      <artifactId>spring-cloud-starter-alibaba-seata</artifactId>
+    </dependency>
+  </dependencies>
+</project>
