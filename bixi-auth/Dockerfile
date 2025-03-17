@@ -1,4 +1,4 @@
-FROM docker.1ms.run/library/eclipse-temurin:17-jre-ubi9-minimal
+FROM alpine/java:17.0.12-jre
 
 WORKDIR /bixi-auth
 
