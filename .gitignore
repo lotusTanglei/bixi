@@ -79,3 +79,4 @@ pnpm-debug.log*
 
 # lock files
 yarn.lock
+.flattened-pom.xml
