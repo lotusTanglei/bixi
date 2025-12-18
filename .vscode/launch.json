@@ -1,0 +1,73 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "JasyptUtils",
+            "request": "launch",
+            "mainClass": "com.lotus.bixi.common.core.util.JasyptUtils",
+            "projectName": "bixi-common-core"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-BixiAuthApplication<bixi-auth>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.lotus.bixi.auth.BixiAuthApplication",
+            "projectName": "bixi-auth",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-BixiGatewayApplication<bixi-gateway>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.lotus.bixi.gateway.BixiGatewayApplication",
+            "projectName": "bixi-gateway",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-BixiGeneratorApplication<bixi-generator>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.lotus.bixi.generator.BixiGeneratorApplication",
+            "projectName": "bixi-generator",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env",
+            "vmArgs": " -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=51940 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dspring.jmx.enabled=true -Djava.rmi.server.hostname=localhost -Dspring.application.admin.enabled=true -Dspring.boot.project.name=bixi-generator"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-BixiMonitorApplication<bixi-monitor>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.lotus.bixi.monitor.BixiMonitorApplication",
+            "projectName": "bixi-monitor",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-BixiQuartzApplication<bixi-quartz>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.lotus.bixi.quartz.BixiQuartzApplication",
+            "projectName": "bixi-quartz",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env",
+            "vmArgs": " -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=52286 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dspring.jmx.enabled=true -Djava.rmi.server.hostname=localhost -Dspring.application.admin.enabled=true -Dspring.boot.project.name=bixi-quartz"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-BixiUPMSApplication<bixi-upms-biz>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.lotus.bixi.upms.BixiUPMSApplication",
+            "projectName": "bixi-upms-biz",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}

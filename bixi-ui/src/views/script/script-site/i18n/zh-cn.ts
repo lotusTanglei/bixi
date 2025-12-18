@@ -1,0 +1,20 @@
+export default {
+	scriptSite: {
+		index: '#',
+		name: '现场名称',
+		code: '现场编码',
+		env: '环境类型',
+		region: '区域/节点',
+		ownerId: '负责人ID',
+		status: '状态',
+		remark: '备注',
+		createTime: '创建时间',
+		inputNameTip: '请输入现场名称',
+		inputCodeTip: '请输入现场编码',
+		inputRegionTip: '请输入区域/节点',
+		inputOwnerIdTip: '请输入负责人ID',
+		selectEnvTip: '请选择环境类型',
+		selectStatusTip: '请选择状态',
+		inputRemarkTip: '请输入备注',
+	},
+};

@@ -1,0 +1,21 @@
+export default {
+	notice: {
+		index: '#',
+		title: 'Title',
+		type: 'Type',
+		priority: 'Priority',
+		status: 'Status',
+		content: 'Content',
+		senderId: 'Sender ID',
+		tenantId: 'Tenant ID',
+		remark: 'Remark',
+		createTime: 'Create Time',
+		updateTime: 'Update Time',
+		inputIdTip: 'Please input ID',
+		inputTitleTip: 'Please input title',
+		inputTypeTip: 'Please select type',
+		inputPriorityTip: 'Please select priority',
+		inputStatusTip: 'Please select status',
+		inputContentTip: 'Please input content',
+	},
+};

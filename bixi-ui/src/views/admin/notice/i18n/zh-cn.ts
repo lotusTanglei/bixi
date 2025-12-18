@@ -1,0 +1,21 @@
+export default {
+	notice: {
+		index: '#',
+		title: '标题',
+		type: '类型',
+		priority: '优先级',
+		status: '状态',
+		content: '内容',
+		senderId: '发送人ID',
+		tenantId: '租户ID',
+		remark: '备注',
+		createTime: '创建时间',
+		updateTime: '修改时间',
+		inputIdTip: '请输入ID',
+		inputTitleTip: '请输入标题',
+		inputTypeTip: '请选择类型',
+		inputPriorityTip: '请选择优先级',
+		inputStatusTip: '请选择状态',
+		inputContentTip: '请输入内容',
+	},
+};

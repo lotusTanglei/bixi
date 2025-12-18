@@ -17,5 +17,7 @@
     <module>bixi-generator</module>
     <module>bixi-monitor</module>
     <module>bixi-quartz</module>
+    <module>bixi-script-api</module>
+    <module>bixi-script-biz</module>
   </modules>
 </project>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>bixi-module</artifactId>
+        <groupId>com.lotus</groupId>
+        <version>${revision}</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>bixi-script-api</artifactId>
+    <description>bixi 数据库脚本管理 API 模块</description>
+
+    <dependencies>
+        <!--core 工具类-->
+        <dependency>
+            <groupId>com.lotus</groupId>
+            <artifactId>bixi-common-core</artifactId>
+        </dependency>
+        <!--mybatis 依赖-->
+        <dependency>
+            <groupId>com.lotus</groupId>
+            <artifactId>bixi-common-mybatis</artifactId>
+        </dependency>
+        <!--feign 注解依赖-->
+        <dependency>
+            <groupId>com.lotus</groupId>
+            <artifactId>bixi-common-feign</artifactId>
+        </dependency>
+    </dependencies>
+
+</project>

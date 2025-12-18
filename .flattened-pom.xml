@@ -201,6 +201,12 @@
           <source>${maven.compiler.source}</source>
           <encoding>UTF-8</encoding>
           <parameters>true</parameters>
+          <annotationProcessorPaths>
+            <path>
+              <groupId>org.projectlombok</groupId>
+              <artifactId>lombok</artifactId>
+            </path>
+          </annotationProcessorPaths>
         </configuration>
       </plugin>
       <plugin>
