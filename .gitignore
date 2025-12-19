@@ -8,8 +8,7 @@
 
 logs
 
-
-
+*.sh
 
 # Log file
 *.log
