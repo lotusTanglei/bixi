@@ -12,4 +12,3 @@
                                 Author                 :    ${author}
                                 Release version        :    ${revision}
                                 Spring Boot Version    :    ${spring-boot.version}
-

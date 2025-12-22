@@ -26,5 +26,6 @@
         <module>bixi-common-security</module>
         <module>bixi-common-swagger</module>
         <module>bixi-common-xss</module>
+        <module>bixi-common-mq</module>
     </modules>
 </project>

@@ -100,6 +100,12 @@
 
             <dependency>
                 <groupId>com.lotus</groupId>
+                <artifactId>bixi-common-mq</artifactId>
+                <version>${revision}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.lotus</groupId>
                 <artifactId>bixi-upms-api</artifactId>
                 <version>${revision}</version>
             </dependency>

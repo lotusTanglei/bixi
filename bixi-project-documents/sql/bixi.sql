@@ -326,9 +326,6 @@ CREATE TABLE `sys_user_role` (
   PRIMARY KEY (`user_id`,`role_id`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='用户角色表';
 
-SET FOREIGN_KEY_CHECKS = 1;
-
-
 -- 消息通知表
 CREATE TABLE sys_notice (
   id BIGINT NOT NULL COMMENT '主键ID',

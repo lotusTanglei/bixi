@@ -1,5 +1,5 @@
 server:
-  port: 4000
+  port: 6001
 
 spring:
   application:
@@ -20,5 +20,3 @@ spring:
       - nacos:${spring.application.name}-@profiles.active@.yml
       # 公共oss配置文件
       - nacos:bixi-common-oss-@profiles.active@.yml
-      # 公共mq配置文件
-      - nacos:bixi-common-mq-@profiles.active@.yml
