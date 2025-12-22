@@ -11,7 +11,6 @@
 
     <artifactId>bixi-upms-biz</artifactId>
     <packaging>jar</packaging>
-
     <description>bixi 通用用户权限管理系统业务处理模块</description>
 
     <dependencies>
