@@ -6,17 +6,10 @@
     "dev": "vite --force",
     "build": "cross-env NODE_OPTIONS=--max-old-space-size=4096 vite build",
     "build:docker": "cross-env NODE_OPTIONS=--max-old-space-size=4096 vite build --outDir ./docker/dist/",
-    "lint:eslint": "eslint --fix --ext .js,.cjs,.mjs,.ts,.vue ./src",
+    "lint:eslint": "eslint ./src --fix",
     "prettier": "prettier --write ."
   },
   "type": "module",
-  "scripts": {
-    "dev": "vite --force",
-    "build": "cross-env NODE_OPTIONS=--max-old-space-size=4096 vite build",
-    "build:docker": "cross-env NODE_OPTIONS=--max-old-space-size=4096 vite build --outDir ./docker/dist/",
-    "lint:eslint": "eslint --fix --ext .js,.cjs,.mjs,.ts,.vue ./src",
-    "prettier": "prettier --write ."
-  },
   "dependencies": {
     "@element-plus/icons-vue": "2.3.1",
     "@wangeditor/editor": "5.1.23",

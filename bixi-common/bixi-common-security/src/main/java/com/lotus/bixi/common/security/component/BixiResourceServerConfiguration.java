@@ -2,6 +2,7 @@
 
 package com.lotus.bixi.common.security.component;
 
+import jakarta.servlet.DispatcherType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -45,7 +46,9 @@ public class BixiResourceServerConfiguration {
                 .toList()
                 .toArray(new AntPathRequestMatcher[]{});
 
-        http.authorizeHttpRequests(authorizeRequests -> authorizeRequests.requestMatchers(requestMatchers)
+        http.authorizeHttpRequests(authorizeRequests -> authorizeRequests.dispatcherTypeMatchers(DispatcherType.ASYNC)
+                        .permitAll()
+                        .requestMatchers(requestMatchers)
                         .permitAll()
                         .anyRequest()
                         .authenticated())

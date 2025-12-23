@@ -6,6 +6,7 @@ import com.lotus.bixi.upms.api.entity.SysNotice;
 import com.lotus.bixi.upms.api.entity.SysUserNotice;
 import com.lotus.bixi.upms.service.SysNoticeService;
 import com.lotus.bixi.upms.service.SysUserNoticeService;
+import com.lotus.bixi.upms.sse.UserNoticeSseService;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -30,6 +31,7 @@ public class NoticeConsumer {
 
     private final SysNoticeService noticeService;
     private final SysUserNoticeService userNoticeService;
+    private final UserNoticeSseService userNoticeSseService;
 
     @RabbitListener(queuesToDeclare = @Queue(value = MQConstants.SYS_NOTICE_QUEUE, durable = "true"))
     public void handleNoticeMessage(NoticeMessageDTO noticeDTO) {
@@ -65,6 +67,9 @@ public class NoticeConsumer {
 
         if (!userNotices.isEmpty()) {
             userNoticeService.saveBatch(userNotices);
+            for (SysUserNotice userNotice : userNotices) {
+                userNoticeSseService.publishRefresh(userNotice.getUserId(), userNotice.getNoticeId(), userNotice.getId());
+            }
         }
 
         log.info("通知已下发，noticeId={}, receivers={}", noticeId, userNotices.size());

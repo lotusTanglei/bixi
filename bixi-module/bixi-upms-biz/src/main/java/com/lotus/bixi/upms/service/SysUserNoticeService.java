@@ -11,4 +11,11 @@ import com.lotus.bixi.upms.api.entity.SysUserNotice;
  */
 public interface SysUserNoticeService extends IService<SysUserNotice> {
 
+    boolean markRead(Long userNoticeId, Long userId);
+
+    int markAllRead(Long userId);
+
+    int deleteAll(Long userId);
+
+    boolean deleteOne(Long userNoticeId, Long userId);
 }

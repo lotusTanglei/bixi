@@ -63,6 +63,7 @@
 		</el-dropdown>
 		<Search ref="searchRef" />
 		<global-websocket uri="/admin/ws/info" v-if="websocketEnable" @rollback="rollback" />
+		<global-sse uri="/admin/user-notice/stream" v-if="sseEnable" @message="onSseMessage" />
 		<personal-drawer ref="personalDrawerRef"></personal-drawer>
 	</div>
 </template>
@@ -79,15 +80,18 @@ import mittBus from '/@/utils/mitt';
 import { Session, Local } from '/@/utils/storage';
 import { formatAxis } from '/@/utils/formatTime';
 import { useMsg } from '/@/stores/msg';
+import { useNoticeCenter } from '/@/stores/noticeCenter';
 
 // 引入组件
 const GlobalWebsocket = defineAsyncComponent(() => import('/@/components/Websocket/index.vue'));
+const GlobalSse = defineAsyncComponent(() => import('/@/components/Sse/index.vue'));
 const UserNews = defineAsyncComponent(() => import('/@/layout/navBars/breadcrumb/userNews.vue'));
 const Search = defineAsyncComponent(() => import('/@/layout/navBars/breadcrumb/search.vue'));
 const PersonalDrawer = defineAsyncComponent(() => import('/@/views/admin/user/personal.vue'));
 
 // 定义变量内容
 const { locale, t } = useI18n();
+const $t = t;
 const router = useRouter();
 const stores = useUserInfo();
 const storesThemeConfig = useThemeConfig();
@@ -112,6 +116,7 @@ const state = reactive<State>({
 
 // 是否开启websocket
 const websocketEnable = ref(import.meta.env.VITE_WEBSOCKET_ENABLE === 'true');
+const sseEnable = ref(import.meta.env.VITE_SSE_ENABLE === 'true');
 
 // 设置分割样式
 const layoutUserFlexNum = computed(() => {
@@ -214,8 +219,16 @@ const rollback = (msg: string) => {
 };
 
 const isDot = computed(() => {
-	return useMsg().getAllMsg().length > 0;
+	return useMsg().getAllMsg().length > 0 || useNoticeCenter().unreadCount > 0;
 });
+
+const onSseMessage = async (data: string) => {
+	try {
+		const noticeCenter = useNoticeCenter();
+		await noticeCenter.refresh();
+	} catch {
+	}
+};
 
 // 页面加载时
 onMounted(() => {

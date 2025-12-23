@@ -4,12 +4,17 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lotus.bixi.common.core.util.R;
 import com.lotus.bixi.common.log.annotation.SysLog;
+import com.lotus.bixi.common.security.util.SecurityUtils;
 import com.lotus.bixi.upms.api.entity.SysUserNotice;
 import com.lotus.bixi.upms.service.SysUserNoticeService;
+import com.lotus.bixi.upms.sse.UserNoticeSseService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 /**
  * 用户消息关联管理
@@ -24,6 +29,7 @@ import org.springframework.web.bind.annotation.*;
 public class SysUserNoticeController {
 
     private final SysUserNoticeService sysUserNoticeService;
+    private final UserNoticeSseService userNoticeSseService;
 
     /**
      * 分页查询
@@ -34,7 +40,10 @@ public class SysUserNoticeController {
     @Operation(summary = "分页查询", description = "分页查询")
     @GetMapping("/page")
     public R getSysUserNoticePage(Page page, SysUserNotice sysUserNotice) {
-        return R.ok(sysUserNoticeService.page(page, Wrappers.query(sysUserNotice)));
+        Long userId = SecurityUtils.getUser().getId();
+        sysUserNotice.setUserId(userId);
+        return R.ok(sysUserNoticeService.page(page, Wrappers.<SysUserNotice>query(sysUserNotice)
+                .orderByDesc("create_time")));
     }
 
 
@@ -46,7 +55,12 @@ public class SysUserNoticeController {
     @Operation(summary = "通过id查询", description = "通过id查询")
     @GetMapping("/{id}")
     public R getById(@PathVariable("id") Long id) {
-        return R.ok(sysUserNoticeService.getById(id));
+        Long userId = SecurityUtils.getUser().getId();
+        SysUserNotice entity = sysUserNoticeService.getById(id);
+        if (entity == null || !Objects.equals(entity.getUserId(), userId)) {
+            return R.failed("记录不存在");
+        }
+        return R.ok(entity);
     }
 
     /**
@@ -58,6 +72,8 @@ public class SysUserNoticeController {
     @SysLog("新增用户消息关联")
     @PostMapping
     public R save(@RequestBody SysUserNotice sysUserNotice) {
+        Long userId = SecurityUtils.getUser().getId();
+        sysUserNotice.setUserId(userId);
         return R.ok(sysUserNoticeService.save(sysUserNotice));
     }
 
@@ -70,7 +86,14 @@ public class SysUserNoticeController {
     @SysLog("修改用户消息关联")
     @PutMapping
     public R updateById(@RequestBody SysUserNotice sysUserNotice) {
-        return R.ok(sysUserNoticeService.updateById(sysUserNotice));
+        Long userId = SecurityUtils.getUser().getId();
+        if (sysUserNotice.getId() == null) {
+            return R.failed("id不能为空");
+        }
+        if ("1".equals(sysUserNotice.getIsRead())) {
+            return R.ok(sysUserNoticeService.markRead(sysUserNotice.getId(), userId));
+        }
+        return R.ok(Boolean.FALSE);
     }
 
     /**
@@ -82,7 +105,30 @@ public class SysUserNoticeController {
     @SysLog("通过id删除用户消息关联")
     @DeleteMapping("/{id}")
     public R removeById(@PathVariable Long id) {
-        return R.ok(sysUserNoticeService.removeById(id));
+        Long userId = SecurityUtils.getUser().getId();
+        return R.ok(sysUserNoticeService.deleteOne(id, userId));
     }
 
+    @Operation(summary = "全部已读", description = "全部已读")
+    @SysLog("全部已读")
+    @PutMapping("/read/all")
+    public R readAll() {
+        Long userId = SecurityUtils.getUser().getId();
+        return R.ok(sysUserNoticeService.markAllRead(userId));
+    }
+
+    @Operation(summary = "全部删除", description = "全部删除")
+    @SysLog("全部删除")
+    @DeleteMapping("/delete/all")
+    public R deleteAll() {
+        Long userId = SecurityUtils.getUser().getId();
+        return R.ok(sysUserNoticeService.deleteAll(userId));
+    }
+
+    @Operation(summary = "消息SSE订阅", description = "消息SSE订阅")
+    @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter stream() {
+        Long userId = SecurityUtils.getUser().getId();
+        return userNoticeSseService.subscribe(userId);
+    }
 }

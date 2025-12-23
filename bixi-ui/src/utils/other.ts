@@ -416,7 +416,7 @@ export function getQueryString(url: string, paraName: string) {
         let arr;
         for (let i = 0; i < arrPara.length; i++) {
             arr = arrPara[i].split('=');
-            // eslint-disable-next-line eqeqeq
+             
             if (arr != null && arr[0] == paraName) {
                 return arr[1];
             }
