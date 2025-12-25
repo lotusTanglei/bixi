@@ -326,40 +326,51 @@ CREATE TABLE `sys_user_role` (
   PRIMARY KEY (`user_id`,`role_id`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='用户角色表';
 
--- 消息通知表
-CREATE TABLE sys_notice (
-  id BIGINT NOT NULL COMMENT '主键ID',
-  title VARCHAR(200) NOT NULL COMMENT '标题',
-  content TEXT NOT NULL COMMENT '内容',
-  type CHAR(1) DEFAULT '0' COMMENT '消息类型（0通知 1公告 2私信）',
-  sender_id BIGINT COMMENT '发送人ID',
-  priority CHAR(1) DEFAULT '0' COMMENT '优先级（0普通 1重要 2紧急）',
-  status CHAR(1) DEFAULT '0' COMMENT '状态（0草稿 1已发布 2已撤回）',
-  tenant_id BIGINT COMMENT '租户id',
-  create_by BIGINT COMMENT '创建人',
-  update_by BIGINT COMMENT '修改人',
-  create_time DATETIME NULL DEFAULT NULL COMMENT '创建时间',
-  update_time DATETIME NULL DEFAULT NULL COMMENT '修改时间',
-  del_flag CHAR(1) DEFAULT '0' COMMENT '删除标志',
-  remark VARCHAR(500) COMMENT '备注',
-  PRIMARY KEY (id)
-) ENGINE=InnoDB CHARACTER SET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='消息通知表';
+-- ----------------------------
+-- Table structure for sys_notice
+-- ----------------------------
+DROP TABLE IF EXISTS `sys_notice`;
+CREATE TABLE `sys_notice` (
+  `id` bigint NOT NULL COMMENT '主键ID',
+  `title` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '标题',
+  `content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '内容',
+  `type` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '0' COMMENT '消息类型（0通知 1公告 2私信）',
+  `sender_id` bigint DEFAULT NULL COMMENT '发送人ID',
+  `priority` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '0' COMMENT '优先级（0普通 1重要 2紧急）',
+  `status` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '0' COMMENT '状态（0草稿 1已发布 2已撤回）',
+  `create_by` bigint DEFAULT NULL COMMENT '创建人',
+  `update_by` bigint DEFAULT NULL COMMENT '修改人',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime DEFAULT NULL COMMENT '修改时间',
+  `del_flag` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '0' COMMENT '删除标志',
+  `data_status` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '0' COMMENT '数据状态（用来标识数据状态，可用于割接，特殊数据处理）',
+  `tenant_id` bigint DEFAULT NULL COMMENT '租户id',
+  `remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '备注',
+  PRIMARY KEY (`id`) USING BTREE,
+  KEY `sys_notice_del_flag` (`del_flag`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='消息通知表';
 
--- 用户消息关联表（记录已读状态）
-CREATE TABLE sys_user_notice (
-  id BIGINT NOT NULL COMMENT '主键ID',
-  notice_id BIGINT NOT NULL COMMENT '通知ID',
-  user_id BIGINT NOT NULL COMMENT '用户ID',
-  is_read CHAR(1) DEFAULT '0' COMMENT '是否已读（0否 1是）',
-  read_time DATETIME COMMENT '阅读时间',
-  tenant_id BIGINT COMMENT '租户id',
-  create_by BIGINT COMMENT '创建人',
-  update_by BIGINT COMMENT '修改人',
-  create_time DATETIME NULL DEFAULT NULL COMMENT '创建时间',
-  update_time DATETIME NULL DEFAULT NULL COMMENT '修改时间',
-  del_flag CHAR(1) DEFAULT '0' COMMENT '删除标志',
-  remark VARCHAR(500) COMMENT '备注',
-  PRIMARY KEY (id),
-  UNIQUE KEY uk_sys_user_notice (notice_id, user_id),
-  KEY idx_sys_user_notice_user (user_id)
-) ENGINE=InnoDB CHARACTER SET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='用户消息关联表';
+-- ----------------------------
+-- Table structure for sys_user_notice
+-- ----------------------------
+DROP TABLE IF EXISTS `sys_user_notice`;
+CREATE TABLE `sys_user_notice` (
+  `id` bigint NOT NULL COMMENT '主键ID',
+  `notice_id` bigint NOT NULL COMMENT '通知ID',
+  `user_id` bigint NOT NULL COMMENT '用户ID',
+  `is_read` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '0' COMMENT '是否已读（0否 1是）',
+  `read_time` datetime DEFAULT NULL COMMENT '阅读时间',
+  `create_by` bigint DEFAULT NULL COMMENT '创建人',
+  `update_by` bigint DEFAULT NULL COMMENT '修改人',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime DEFAULT NULL COMMENT '修改时间',
+  `del_flag` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '0' COMMENT '删除标志',
+  `status` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '0' COMMENT '状态（0正常 1停用）',
+  `data_status` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '0' COMMENT '数据状态（用来标识数据状态，可用于割接，特殊数据处理）',
+  `tenant_id` bigint DEFAULT NULL COMMENT '租户id',
+  `remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '备注',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE KEY `uk_sys_user_notice` (`notice_id`, `user_id`) USING BTREE,
+  KEY `idx_sys_user_notice_user` (`user_id`) USING BTREE,
+  KEY `sys_user_notice_del_flag` (`del_flag`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='用户消息关联表';

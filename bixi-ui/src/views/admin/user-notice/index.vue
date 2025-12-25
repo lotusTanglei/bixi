@@ -3,26 +3,23 @@
 		<div class="layout-padding-auto layout-padding-view">
 			<el-row v-show="showSearch">
 				<el-form ref="queryRef" :inline="true" :model="state.queryForm" @keyup.enter="getDataList">
-					<el-form-item :label="$t('userNotice.noticeId')" prop="noticeId">
-						<el-input v-model="state.queryForm.noticeId" :placeholder="$t('userNotice.inputNoticeIdTip')" clearable />
+					<el-form-item :label="t('userNotice.noticeId')" prop="noticeId">
+						<el-input v-model="state.queryForm.noticeId" :placeholder="t('userNotice.inputNoticeIdTip')" clearable />
 					</el-form-item>
-					<el-form-item :label="$t('userNotice.isRead')" prop="isRead">
-						<el-select v-model="state.queryForm.isRead" :placeholder="$t('userNotice.inputIsReadTip')" clearable>
+					<el-form-item :label="t('userNotice.isRead')" prop="isRead">
+						<el-select v-model="state.queryForm.isRead" :placeholder="t('userNotice.inputIsReadTip')" clearable>
 							<el-option label="未读" value="0" />
 							<el-option label="已读" value="1" />
 						</el-select>
 					</el-form-item>
 					<el-form-item>
-						<el-button icon="Search" type="primary" @click="getDataList">{{ $t('common.queryBtn') }}</el-button>
-						<el-button icon="Refresh" @click="resetQuery">{{ $t('common.resetBtn') }}</el-button>
+						<el-button icon="Search" type="primary" @click="getDataList">{{ t('common.queryBtn') }}</el-button>
+						<el-button icon="Refresh" @click="resetQuery">{{ t('common.resetBtn') }}</el-button>
 					</el-form-item>
 				</el-form>
 			</el-row>
 			<el-row>
 				<div class="mb8" style="width: 100%">
-					<el-button icon="folder-add" type="primary" @click="formRef.openDialog()">
-						{{ $t('common.addBtn') }}
-					</el-button>
 					<el-button
 						plain
 						:disabled="multiple"
@@ -31,7 +28,7 @@
 						type="primary"
 						@click="handleDelete(selectObjs)"
 					>
-						{{ $t('common.delBtn') }}
+						{{ t('common.delBtn') }}
 					</el-button>
 					<right-toolbar
 						v-model:showSearch="showSearch"
@@ -50,23 +47,37 @@
 				:header-cell-style="tableStyle.headerCellStyle"
 			>
 				<el-table-column type="selection" width="40" />
-				<el-table-column :label="$t('userNotice.index')" type="index" width="60" />
-				<el-table-column :label="$t('userNotice.noticeId')" prop="noticeId" show-overflow-tooltip />
-				<el-table-column :label="$t('userNotice.userId')" prop="userId" show-overflow-tooltip />
-				<el-table-column :label="$t('userNotice.isRead')" prop="isRead" show-overflow-tooltip>
+				<el-table-column :label="t('userNotice.index')" type="index" width="60" />
+				<el-table-column label="标题" prop="title" show-overflow-tooltip />
+				<el-table-column label="类型" prop="type" show-overflow-tooltip>
+					<template #default="scope">
+						<el-tag v-if="scope.row.type === '0'">通知</el-tag>
+						<el-tag v-else-if="scope.row.type === '1'" type="warning">公告</el-tag>
+						<el-tag v-else type="info">私信</el-tag>
+					</template>
+				</el-table-column>
+				<el-table-column label="优先级" prop="priority" show-overflow-tooltip>
+					<template #default="scope">
+						<el-tag v-if="scope.row.priority === '0'" type="info">普通</el-tag>
+						<el-tag v-else-if="scope.row.priority === '1'" type="warning">重要</el-tag>
+						<el-tag v-else type="danger">紧急</el-tag>
+					</template>
+				</el-table-column>
+				<el-table-column label="发送人" prop="senderName" show-overflow-tooltip />
+				<el-table-column :label="t('userNotice.isRead')" prop="isRead" show-overflow-tooltip>
 					<template #default="scope">
 						<el-tag v-if="scope.row.isRead === '0'" type="danger">未读</el-tag>
 						<el-tag v-else type="success">已读</el-tag>
 					</template>
 				</el-table-column>
-				<el-table-column :label="$t('userNotice.readTime')" prop="readTime" show-overflow-tooltip width="180" />
-				<el-table-column :label="$t('common.action')" width="150" fixed="right">
+				<el-table-column :label="t('userNotice.readTime')" prop="readTime" show-overflow-tooltip width="180" />
+				<el-table-column :label="t('common.action')" width="150" fixed="right">
 					<template #default="scope">
-						<el-button icon="edit-pen" text type="primary" @click="formRef.openDialog(scope.row.id)">
-							{{ $t('common.editBtn') }}
+						<el-button icon="view" text type="primary" @click="formRef.openDialog(scope.row.id)">
+							查看
 						</el-button>
 						<el-button icon="delete" text type="primary" @click="handleDelete([scope.row.id])">
-							{{ $t('common.delBtn') }}
+							{{ t('common.delBtn') }}
 						</el-button>
 					</template>
 				</el-table-column>

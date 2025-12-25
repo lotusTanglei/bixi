@@ -86,7 +86,7 @@ const getBreadcrumbList = (arr: RouteItems) => {
 const initRouteSplit = (toRoute: RouteLocation) => {
 	let path = toRoute.path;
 	if (!themeConfig.value.isBreadcrumb) return false;
-	state.breadcrumbList = [routesList.value[0]];
+	state.breadcrumbList = [routesList.value.find((item) => item.path === '/home') || { path: '/home', name: 'router.home', meta: { title: '首页', icon: 'iconfont icon-shouye' } }];
 	state.routeSplit = path.split('/');
 	state.routeSplit.shift();
 	state.routeSplitFirst = `/${state.routeSplit[0]}`;

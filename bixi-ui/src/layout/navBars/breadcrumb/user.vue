@@ -236,6 +236,7 @@ onMounted(() => {
 		initI18nOrSize('globalComponentSize', 'disabledSize');
 		initI18nOrSize('globalI18n', 'disabledI18n');
 	}
+	useNoticeCenter().refresh();
 });
 </script>
 

@@ -15,7 +15,23 @@
 							<div class="notice-list">
 								<div class="content-box-item" v-for="item in noticeCenter.unreadItems" :key="item.userNoticeId" @click="openNotice(item)">
 									<div class="content-box-title">
-										<span class="content-box-title-text">{{ item.title }}</span>
+										<div class="content-box-title-header">
+											<el-avatar :size="30" :src="item.senderAvatar" v-if="item.senderAvatar" class="mr10" />
+											<el-avatar :size="30" class="mr10" v-else>{{ item.senderName?.charAt(0) }}</el-avatar>
+											<div class="header-info">
+												<div class="title-row">
+													<span class="content-box-title-text">{{ item.title }}</span>
+													<el-tag size="small" v-if="item.type === '0'" class="ml5">通知</el-tag>
+													<el-tag size="small" type="warning" v-else-if="item.type === '1'" class="ml5">公告</el-tag>
+													<el-tag size="small" type="info" v-else class="ml5">私信</el-tag>
+
+													<el-tag size="small" type="info" v-if="item.priority === '0'" class="ml5">普通</el-tag>
+													<el-tag size="small" type="warning" v-else-if="item.priority === '1'" class="ml5">重要</el-tag>
+													<el-tag size="small" type="danger" v-else class="ml5">紧急</el-tag>
+												</div>
+												<div class="sender-name">{{ item.senderName }}</div>
+											</div>
+										</div>
 										<el-button icon="Delete" link type="primary" @click.stop="onDeleteItem(item.userNoticeId)" />
 									</div>
 									<div class="content-box-msg">{{ item.content }}</div>
@@ -27,7 +43,23 @@
 							<div class="notice-list">
 								<div class="content-box-item" v-for="item in noticeCenter.readItems" :key="item.userNoticeId" @click="openNotice(item)">
 									<div class="content-box-title">
-										<span class="content-box-title-text">{{ item.title }}</span>
+										<div class="content-box-title-header">
+											<el-avatar :size="30" :src="item.senderAvatar" v-if="item.senderAvatar" class="mr10" />
+											<el-avatar :size="30" class="mr10" v-else>{{ item.senderName?.charAt(0) }}</el-avatar>
+											<div class="header-info">
+												<div class="title-row">
+													<span class="content-box-title-text">{{ item.title }}</span>
+													<el-tag size="small" v-if="item.type === '0'" class="ml5">通知</el-tag>
+													<el-tag size="small" type="warning" v-else-if="item.type === '1'" class="ml5">公告</el-tag>
+													<el-tag size="small" type="info" v-else class="ml5">私信</el-tag>
+
+													<el-tag size="small" type="info" v-if="item.priority === '0'" class="ml5">普通</el-tag>
+													<el-tag size="small" type="warning" v-else-if="item.priority === '1'" class="ml5">重要</el-tag>
+													<el-tag size="small" type="danger" v-else class="ml5">紧急</el-tag>
+												</div>
+												<div class="sender-name">{{ item.senderName }}</div>
+											</div>
+										</div>
 										<el-button icon="Delete" link type="primary" @click.stop="onDeleteItem(item.userNoticeId)" />
 									</div>
 									<div class="content-box-msg">{{ item.content }}</div>
@@ -154,15 +186,33 @@ onMounted(async () => {
 				display: flex;
 				align-items: center;
 				justify-content: space-between;
-				gap: 8px;
 
-				.content-box-title-text {
-					font-weight: 500;
+				.content-box-title-header {
+					display: flex;
+					align-items: center;
 					flex: 1;
-					min-width: 0;
-					overflow: hidden;
-					text-overflow: ellipsis;
-					white-space: nowrap;
+
+					.header-info {
+						display: flex;
+						flex-direction: column;
+						justify-content: center;
+
+						.title-row {
+							display: flex;
+							align-items: center;
+
+							.content-box-title-text {
+								margin-right: 5px;
+								font-weight: bold;
+							}
+						}
+
+						.sender-name {
+							font-size: 12px;
+							color: var(--el-text-color-secondary);
+							margin-top: 2px;
+						}
+					}
 				}
 			}
 
@@ -170,15 +220,12 @@ onMounted(async () => {
 				color: var(--el-text-color-secondary);
 				margin-top: 5px;
 				margin-bottom: 5px;
-				overflow: hidden;
-				text-overflow: ellipsis;
-				display: -webkit-box;
-				-webkit-line-clamp: 2;
-				-webkit-box-orient: vertical;
+				margin-left: 40px;
 			}
 
 			.content-box-time {
 				color: var(--el-text-color-secondary);
+				margin-left: 40px;
 			}
 		}
 	}

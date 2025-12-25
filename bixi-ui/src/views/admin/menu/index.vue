@@ -20,6 +20,9 @@
 						{{ $t('common.addBtn') }}
 					</el-button>
 					<el-button @click="handleExpand"> {{ $t('common.expandBtn') }} </el-button>
+					<el-button @click="handleClearMenuCache" class="ml10" icon="refresh-left" type="primary" v-auth="'sys_menu_del'">
+						{{ $t('common.refreshCacheBtn') }}
+					</el-button>
 					<right-toolbar
 						v-model:showSearch="showSearch"
 						class="ml10"
@@ -88,15 +91,16 @@
 				</el-table-column>
 			</el-table>
 		</div>
-		<MenuDialog @refresh="getDataList()" ref="menuDialogRef" />
+		<MenuDialog @refresh="handleDialogRefresh" ref="menuDialogRef" />
 	</div>
 </template>
 
 <script lang="ts" name="systemMenu" setup>
-import { delObj, pageList } from '/@/api/admin/menu';
+import { delObj, pageList, clearMenuCache } from '/@/api/admin/menu';
 import { BasicTableProps, useTable } from '/@/hooks/table';
 import { useMessage, useMessageBox } from '/@/hooks/message';
 import { useI18n } from 'vue-i18n';
+import { refreshBackEndControlRoutes } from '/@/router/backEnd';
 // 引入组件
 const MenuDialog = defineAsyncComponent(() => import('./form.vue'));
 const { t } = useI18n();
@@ -157,6 +161,21 @@ const resetQuery = () => {
   queryRef.value.resetFields();
   state.dataList = [];
   getDataList();
+};
+
+const handleClearMenuCache = async (showTip = true) => {
+	try {
+		await clearMenuCache();
+		await refreshBackEndControlRoutes();
+		if (showTip) useMessage().success('同步成功');
+	} catch (err: any) {
+		useMessage().error(err.msg);
+	}
+};
+
+const handleDialogRefresh = async () => {
+	getDataList();
+	await handleClearMenuCache(false);
 };
 
 // 删除操作

@@ -1,7 +1,10 @@
 package com.lotus.bixi.upms.service;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.lotus.bixi.upms.api.entity.SysUserNotice;
+import com.lotus.bixi.upms.api.vo.UserNoticeVO;
 
 /**
  * 用户消息关联表 服务类
@@ -10,6 +13,10 @@ import com.lotus.bixi.upms.api.entity.SysUserNotice;
  * @date 2024-05-20
  */
 public interface SysUserNoticeService extends IService<SysUserNotice> {
+
+    IPage<UserNoticeVO> getUserNoticePage(Page page, UserNoticeVO userNoticeVO);
+
+    UserNoticeVO getUserNoticeById(Long id);
 
     boolean markRead(Long userNoticeId, Long userId);
 

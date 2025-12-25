@@ -1,6 +1,6 @@
 package com.lotus.bixi.upms.api.entity;
 
-import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.lotus.bixi.common.mybatis.base.BaseEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -20,13 +20,6 @@ import lombok.EqualsAndHashCode;
 public class SysNotice extends BaseEntity<SysNotice> {
 
     private static final long serialVersionUID = 1L;
-
-    /**
-     * 主键ID
-     */
-    @TableId
-    @Schema(description = "主键ID")
-    private Long id;
 
     /**
      * 标题
@@ -57,23 +50,4 @@ public class SysNotice extends BaseEntity<SysNotice> {
      */
     @Schema(description = "优先级（0普通 1重要 2紧急）")
     private String priority;
-
-    /**
-     * 状态（0草稿 1已发布 2已撤回）
-     */
-    @Schema(description = "状态（0草稿 1已发布 2已撤回）")
-    private String status;
-
-    /**
-     * 租户id
-     */
-    @Schema(description = "租户id")
-    private String tenantId;
-
-    /**
-     * 备注
-     */
-    @Schema(description = "备注")
-    private String remark;
-
 }

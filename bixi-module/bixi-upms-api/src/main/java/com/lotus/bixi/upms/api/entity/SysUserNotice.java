@@ -1,6 +1,5 @@
 package com.lotus.bixi.upms.api.entity;
 
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.lotus.bixi.common.mybatis.base.BaseEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -22,13 +21,6 @@ import java.time.LocalDateTime;
 public class SysUserNotice extends BaseEntity<SysUserNotice> {
 
     private static final long serialVersionUID = 1L;
-
-    /**
-     * 主键ID
-     */
-    @TableId
-    @Schema(description = "主键ID")
-    private Long id;
 
     /**
      * 通知ID
@@ -53,17 +45,4 @@ public class SysUserNotice extends BaseEntity<SysUserNotice> {
      */
     @Schema(description = "阅读时间")
     private LocalDateTime readTime;
-
-    /**
-     * 租户id
-     */
-    @Schema(description = "租户id")
-    private String tenantId;
-
-    /**
-     * 备注
-     */
-    @Schema(description = "备注")
-    private String remark;
-
 }

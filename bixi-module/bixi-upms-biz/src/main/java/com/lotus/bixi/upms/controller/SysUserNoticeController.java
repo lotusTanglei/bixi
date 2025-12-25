@@ -6,6 +6,7 @@ import com.lotus.bixi.common.core.util.R;
 import com.lotus.bixi.common.log.annotation.SysLog;
 import com.lotus.bixi.common.security.util.SecurityUtils;
 import com.lotus.bixi.upms.api.entity.SysUserNotice;
+import com.lotus.bixi.upms.api.vo.UserNoticeVO;
 import com.lotus.bixi.upms.service.SysUserNoticeService;
 import com.lotus.bixi.upms.sse.UserNoticeSseService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -39,13 +40,24 @@ public class SysUserNoticeController {
      */
     @Operation(summary = "分页查询", description = "分页查询")
     @GetMapping("/page")
-    public R getSysUserNoticePage(Page page, SysUserNotice sysUserNotice) {
+    public R getSysUserNoticePage(Page page, UserNoticeVO userNoticeVO) {
         Long userId = SecurityUtils.getUser().getId();
-        sysUserNotice.setUserId(userId);
-        return R.ok(sysUserNoticeService.page(page, Wrappers.<SysUserNotice>query(sysUserNotice)
-                .orderByDesc("create_time")));
+        userNoticeVO.setUserId(userId);
+        return R.ok(sysUserNoticeService.getUserNoticePage(page, userNoticeVO));
     }
 
+
+    /**
+     * 分页查询通知发送记录
+     * @param page 分页对象
+     * @param userNoticeVO 用户消息关联
+     * @return
+     */
+    @Operation(summary = "分页查询通知发送记录", description = "分页查询通知发送记录")
+    @GetMapping("/record/page")
+    public R getNoticeRecordPage(Page page, UserNoticeVO userNoticeVO) {
+        return R.ok(sysUserNoticeService.getUserNoticePage(page, userNoticeVO));
+    }
 
     /**
      * 通过id查询用户消息关联
@@ -56,7 +68,7 @@ public class SysUserNoticeController {
     @GetMapping("/{id}")
     public R getById(@PathVariable("id") Long id) {
         Long userId = SecurityUtils.getUser().getId();
-        SysUserNotice entity = sysUserNoticeService.getById(id);
+        UserNoticeVO entity = sysUserNoticeService.getUserNoticeById(id);
         if (entity == null || !Objects.equals(entity.getUserId(), userId)) {
             return R.failed("记录不存在");
         }

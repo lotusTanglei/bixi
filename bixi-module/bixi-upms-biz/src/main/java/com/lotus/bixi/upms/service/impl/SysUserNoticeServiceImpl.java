@@ -1,8 +1,11 @@
 package com.lotus.bixi.upms.service.impl;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lotus.bixi.upms.api.entity.SysUserNotice;
+import com.lotus.bixi.upms.api.vo.UserNoticeVO;
 import com.lotus.bixi.upms.mapper.SysUserNoticeMapper;
 import com.lotus.bixi.upms.service.SysUserNoticeService;
 import java.time.LocalDateTime;
@@ -16,6 +19,16 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class SysUserNoticeServiceImpl extends ServiceImpl<SysUserNoticeMapper, SysUserNotice> implements SysUserNoticeService {
+
+    @Override
+    public IPage<UserNoticeVO> getUserNoticePage(Page page, UserNoticeVO userNoticeVO) {
+        return baseMapper.selectUserNoticePage(page, userNoticeVO);
+    }
+
+    @Override
+    public UserNoticeVO getUserNoticeById(Long id) {
+        return baseMapper.selectUserNoticeById(id);
+    }
 
     @Override
     public boolean markRead(Long userNoticeId, Long userId) {

@@ -99,6 +99,13 @@ export async function setAddRoute() {
 	});
 }
 
+export async function backEndsResetRoute() {
+	await setFilterRouteEnd().forEach((route: RouteRecordRaw) => {
+		const routeName: any = route.name;
+		router.hasRoute(routeName) && router.removeRoute(routeName);
+	});
+}
+
 /**
  * 请求后端路由菜单接口
  * @description isRequestRoutes 为 true，则开启后端控制路由
@@ -106,6 +113,11 @@ export async function setAddRoute() {
  */
 export function getBackEndControlRoutes() {
 	return menuApi.getAdminMenu();
+}
+
+export async function refreshBackEndControlRoutes() {
+	await backEndsResetRoute();
+	await initBackEndControlRoutes();
 }
 
 /**

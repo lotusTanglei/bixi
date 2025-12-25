@@ -38,4 +38,13 @@ public class NoticeMessageDTO implements Serializable {
     @Schema(description = "业务类型（可选）")
     private String bizType;
 
+    @Schema(description = "通知ID（已有通知ID）")
+    private Long noticeId;
+
+    @Schema(description = "通告对象类型（0全体成员 1部门 2角色 3指定用户）")
+    private String targetType;
+
+    @Schema(description = "通告对象ID（逗号分隔）")
+    private String targetIds;
+
 }

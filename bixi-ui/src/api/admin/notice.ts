@@ -37,3 +37,10 @@ export const putObj = (obj: Object) => {
 		data: obj,
 	});
 };
+
+export const sendNotice = (id: String) => {
+	return request({
+		url: '/admin/notice/send/' + id,
+		method: 'post',
+	});
+};

@@ -46,7 +46,6 @@ public class UserNoticeSseService {
         for (SseEmitter emitter : emitters) {
             try {
                 emitter.send(SseEmitter.event()
-                        .name("notice")
                         .data(payload, MediaType.APPLICATION_JSON));
             } catch (IOException e) {
                 remove(userId, emitter);

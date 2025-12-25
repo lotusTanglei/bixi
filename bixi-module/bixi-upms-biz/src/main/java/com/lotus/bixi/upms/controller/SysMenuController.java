@@ -122,4 +122,15 @@ public class SysMenuController {
         return R.ok(sysMenuService.updateMenuById(sysMenu));
     }
 
+    /**
+     * 清除菜单缓存
+     */
+    @SysLog("清除菜单缓存")
+    @DeleteMapping("/cache")
+    @HasPermission("sys_menu_del")
+    public R clearMenuCache() {
+        sysMenuService.clearMenuCache();
+        return R.ok();
+    }
+
 }

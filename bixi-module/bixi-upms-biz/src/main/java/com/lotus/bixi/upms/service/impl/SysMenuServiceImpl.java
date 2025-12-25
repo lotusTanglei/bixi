@@ -21,6 +21,7 @@ import com.lotus.bixi.common.core.constant.enums.MenuTypeEnum;
 import com.lotus.bixi.common.core.exception.ErrorCodes;
 import com.lotus.bixi.common.core.util.MsgUtils;
 import com.lotus.bixi.common.core.util.R;
+import com.lotus.bixi.common.security.util.SecurityUtils;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -52,6 +53,39 @@ import java.util.stream.Collectors;
 public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> implements SysMenuService {
 
     private final SysRoleMenuMapper sysRoleMenuMapper;
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = CacheConstants.MENU_DETAILS, allEntries = true)
+    public boolean save(SysMenu sysMenu) {
+        boolean result = super.save(sysMenu);
+        if (!result) {
+            return false;
+        }
+
+        List<Long> roleIds = SecurityUtils.getRoles();
+        if (CollUtil.isEmpty(roleIds)) {
+            return true;
+        }
+
+        for (Long roleId : roleIds) {
+            if (roleId == null) {
+                continue;
+            }
+            Long count = sysRoleMenuMapper.selectCount(Wrappers.<SysRoleMenu>lambdaQuery()
+                    .eq(SysRoleMenu::getRoleId, roleId)
+                    .eq(SysRoleMenu::getMenuId, sysMenu.getId()));
+            if (count != null && count > 0) {
+                continue;
+            }
+            SysRoleMenu sysRoleMenu = new SysRoleMenu();
+            sysRoleMenu.setRoleId(roleId);
+            sysRoleMenu.setMenuId(sysMenu.getId());
+            sysRoleMenuMapper.insert(sysRoleMenu);
+        }
+
+        return true;
+    }
 
     @Override
     @Cacheable(value = CacheConstants.MENU_DETAILS, key = "#roleId", unless = "#result.isEmpty()")
@@ -113,12 +147,18 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         return TreeUtil.build(collect, parent);
     }
 
+    @Override
+    @CacheEvict(value = CacheConstants.MENU_DETAILS, allEntries = true)
+    public void clearMenuCache() {
+
+    }
+
     /**
      * 查询菜单
      *
-     * @param all      全部菜单
-     * @param type     类型
-     * @param parentId 父节点ID
+     * @param all
+     * @param type
+     * @param parentId
      * @return
      */
     @Override

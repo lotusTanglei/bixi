@@ -1,26 +1,29 @@
 package com.lotus.bixi.upms.mq;
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.lotus.bixi.upms.api.constant.MQConstants;
 import com.lotus.bixi.upms.api.dto.NoticeMessageDTO;
 import com.lotus.bixi.upms.api.entity.SysNotice;
 import com.lotus.bixi.upms.api.entity.SysUserNotice;
+import com.lotus.bixi.upms.api.vo.SysNoticeVO;
 import com.lotus.bixi.upms.service.SysNoticeService;
 import com.lotus.bixi.upms.service.SysUserNoticeService;
 import com.lotus.bixi.upms.sse.UserNoticeSseService;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 /**
  * 系统通知消费者（UPMS 统一消费下发通知）
  *
  * 消费逻辑：
- * - 新增 sys_notice
- * - 批量新增 sys_user_notice（写入接收人未读状态）
+ * - 确保 sys_notice 存在且状态为发布
+ * - 确保 sys_user_notice 存在（由 Service 层创建）
+ * - 发送 SSE 通知
  *
  * @author bixi
  */
@@ -39,40 +42,54 @@ public class NoticeConsumer {
             return;
         }
 
-        SysNotice notice = new SysNotice();
-        notice.setTitle(noticeDTO.getTitle());
-        notice.setContent(noticeDTO.getContent());
-        notice.setSenderId(noticeDTO.getSenderId());
-        notice.setType(noticeDTO.getType() == null ? "0" : noticeDTO.getType());
-        notice.setStatus("1");
-        noticeService.save(notice);
-
-        if (noticeDTO.getReceiverIds() == null || noticeDTO.getReceiverIds().isEmpty()) {
-            log.info("通知已保存，noticeId={}", notice.getId());
-            return;
+        SysNotice notice;
+        if (noticeDTO.getNoticeId() != null) {
+            notice = noticeService.getById(noticeDTO.getNoticeId());
+            if (notice == null) {
+                log.error("Notice not found: {}", noticeDTO.getNoticeId());
+                notice = createNoticeFromDto(noticeDTO);
+            } else {
+                // Ensure status is Published
+                if (!"1".equals(notice.getStatus())) {
+                    notice.setStatus("1");
+                    noticeService.updateById(notice);
+                }
+            }
+        } else {
+            notice = createNoticeFromDto(noticeDTO);
         }
 
         Long noticeId = notice.getId();
-        List<SysUserNotice> userNotices = new ArrayList<>(noticeDTO.getReceiverIds().size());
-        for (Long receiverId : noticeDTO.getReceiverIds()) {
-            if (receiverId == null) {
-                continue;
-            }
-            SysUserNotice userNotice = new SysUserNotice();
-            userNotice.setNoticeId(noticeId);
-            userNotice.setUserId(receiverId);
-            userNotice.setIsRead("0");
-            userNotices.add(userNotice);
+
+        // Fetch recipients from sys_user_notice
+        // (They are created by SysNoticeService.save/update now)
+        List<SysUserNotice> userNotices = userNoticeService.list(Wrappers.<SysUserNotice>lambdaQuery()
+                .eq(SysUserNotice::getNoticeId, noticeId));
+
+        if (userNotices == null || userNotices.isEmpty()) {
+            log.info("No receivers found for notice: {}", noticeId);
+            return;
         }
 
-        if (!userNotices.isEmpty()) {
-            userNoticeService.saveBatch(userNotices);
-            for (SysUserNotice userNotice : userNotices) {
-                userNoticeSseService.publishRefresh(userNotice.getUserId(), userNotice.getNoticeId(), userNotice.getId());
-            }
+        for (SysUserNotice userNotice : userNotices) {
+            userNoticeSseService.publishRefresh(userNotice.getUserId(), userNotice.getNoticeId(), userNotice.getId());
         }
 
-        log.info("通知已下发，noticeId={}, receivers={}", noticeId, userNotices.size());
+        log.info("Notice notification sent to {} users via SSE, noticeId={}", userNotices.size(), noticeId);
+    }
+
+
+    private SysNotice createNoticeFromDto(NoticeMessageDTO noticeDTO) {
+        SysNoticeVO noticeVO = new SysNoticeVO();
+        noticeVO.setTitle(noticeDTO.getTitle());
+        noticeVO.setContent(noticeDTO.getContent());
+        noticeVO.setSenderId(noticeDTO.getSenderId());
+        noticeVO.setType(noticeDTO.getType() == null ? "0" : noticeDTO.getType());
+        noticeVO.setStatus("1");
+        noticeVO.setTargetType(noticeDTO.getTargetType());
+        noticeVO.setTargetIds(noticeDTO.getTargetIds());
+        noticeService.saveNotice(noticeVO);
+        return noticeVO;
     }
 
 }

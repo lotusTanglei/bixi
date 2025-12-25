@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia';
 import { useUserInfo } from '/@/stores/userInfo';
-import { pageList as userNoticePageList, putObj as updateUserNotice, delObj as deleteUserNotice } from '/@/api/admin/user-notice';
-import { getObj as getNotice } from '/@/api/admin/notice';
+import { pageList as userNoticePageList, putObj as updateUserNotice, delObj as deleteUserNotice, deleteAllObj } from '/@/api/admin/user-notice';
 
 export interface NoticeCenterItem {
 	userNoticeId: number;
@@ -13,31 +12,14 @@ export interface NoticeCenterItem {
 	isRead: string;
 	createTime?: string;
 	readTime?: string;
+	senderName?: string;
+	senderAvatar?: string;
 }
-
-type NoticeEntity = {
-	id: number;
-	title: string;
-	content: string;
-	type?: string;
-	priority?: string;
-	createTime?: string;
-};
-
-type UserNoticeEntity = {
-	id: number;
-	noticeId: number;
-	userId: number;
-	isRead: string;
-	createTime?: string;
-	readTime?: string;
-};
 
 export const useNoticeCenter = defineStore('noticeCenter', {
 	state: () => ({
 		loading: false,
 		items: [] as NoticeCenterItem[],
-		noticeCache: {} as Record<number, NoticeEntity>,
 	}),
 	getters: {
 		unreadItems(state) {
@@ -67,36 +49,21 @@ export const useNoticeCenter = defineStore('noticeCenter', {
 					userId,
 				});
 
-				const records: UserNoticeEntity[] = res?.data?.records ?? [];
-				const noticeIds = Array.from(new Set(records.map((r) => r.noticeId).filter(Boolean)));
-				const missingIds = noticeIds.filter((id) => !this.noticeCache[id]);
-				if (missingIds.length) {
-					const results = await Promise.allSettled(missingIds.map((id) => getNotice(String(id))));
-					for (const result of results) {
-						if (result.status !== 'fulfilled') continue;
-						const notice: NoticeEntity | undefined = result.value?.data;
-						if (notice?.id) {
-							this.noticeCache[notice.id] = notice;
-						}
-					}
-				}
-
-				this.items = records
-					.map((r) => {
-						const notice = this.noticeCache[r.noticeId];
-						return {
-							userNoticeId: r.id,
-							noticeId: r.noticeId,
-							title: notice?.title ?? '',
-							content: notice?.content ?? '',
-							type: notice?.type,
-							priority: notice?.priority,
-							isRead: r.isRead,
-							createTime: notice?.createTime ?? r.createTime,
-							readTime: r.readTime,
-						} as NoticeCenterItem;
-					})
-					.filter((i) => i.noticeId && i.userNoticeId);
+				const records = res?.data?.records ?? [];
+				
+				this.items = records.map((r: any) => ({
+					userNoticeId: r.id,
+					noticeId: r.noticeId,
+					title: r.title,
+					content: r.content,
+					type: r.type,
+					priority: r.priority,
+					isRead: r.isRead,
+					createTime: r.createTime,
+					readTime: r.readTime,
+					senderName: r.senderName,
+					senderAvatar: r.senderAvatar,
+				}));
 			} finally {
 				this.loading = false;
 			}
@@ -126,11 +93,8 @@ export const useNoticeCenter = defineStore('noticeCenter', {
 		},
 
 		async removeAll() {
-			const ids = this.items.map((i) => i.userNoticeId);
-			if (!ids.length) return;
-			await Promise.all(ids.map((id) => deleteUserNotice(String(id))));
+			await deleteAllObj();
 			this.items = [];
 		},
 	},
 });
-

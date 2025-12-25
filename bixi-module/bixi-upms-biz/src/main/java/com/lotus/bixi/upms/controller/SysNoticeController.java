@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lotus.bixi.common.core.util.R;
 import com.lotus.bixi.common.log.annotation.SysLog;
 import com.lotus.bixi.upms.api.entity.SysNotice;
+import com.lotus.bixi.upms.api.vo.SysNoticeVO;
 import com.lotus.bixi.upms.service.SysNoticeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -57,8 +58,8 @@ public class SysNoticeController {
     @Operation(summary = "新增消息通知", description = "新增消息通知")
     @SysLog("新增消息通知")
     @PostMapping
-    public R save(@RequestBody SysNotice sysNotice) {
-        return R.ok(sysNoticeService.save(sysNotice));
+    public R save(@RequestBody SysNoticeVO sysNotice) {
+        return R.ok(sysNoticeService.saveNotice(sysNotice));
     }
 
     /**
@@ -69,8 +70,8 @@ public class SysNoticeController {
     @Operation(summary = "修改消息通知", description = "修改消息通知")
     @SysLog("修改消息通知")
     @PutMapping
-    public R updateById(@RequestBody SysNotice sysNotice) {
-        return R.ok(sysNoticeService.updateById(sysNotice));
+    public R updateById(@RequestBody SysNoticeVO sysNotice) {
+        return R.ok(sysNoticeService.updateNotice(sysNotice));
     }
 
     /**
@@ -83,6 +84,18 @@ public class SysNoticeController {
     @DeleteMapping("/{id}")
     public R removeById(@PathVariable Long id) {
         return R.ok(sysNoticeService.removeById(id));
+    }
+
+    /**
+     * 发送通知
+     * @param id 通知ID
+     * @return R
+     */
+    @Operation(summary = "发送通知", description = "发送通知")
+    @SysLog("发送通知")
+    @PostMapping("/send/{id}")
+    public R send(@PathVariable Long id) {
+        return R.ok(sysNoticeService.sendNotice(id));
     }
 
 }
