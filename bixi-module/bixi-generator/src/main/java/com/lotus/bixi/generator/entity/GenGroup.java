@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
  * 模板分组
  *
  * @author tanglei
- * @date 2023-02-21 20:01:53
+ * @date 2025-01-01
  */
 @Data
 @TableName("gen_group")

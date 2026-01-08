@@ -31,7 +31,7 @@ import java.util.Map;
 
 /**
  * @author 唐磊
- * @date 2022-06-02
+ * @date 2025-01-01
  */
 @Slf4j
 public class BixiAuthenticationSuccessEventHandler implements AuthenticationSuccessHandler {

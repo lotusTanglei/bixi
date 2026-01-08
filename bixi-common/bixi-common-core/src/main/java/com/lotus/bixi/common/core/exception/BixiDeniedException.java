@@ -5,7 +5,7 @@ import lombok.NoArgsConstructor;
 /**
  * 自定义服务拒绝异常类
  * @author 唐磊
- * @date 2024/09/21
+ * @date 2025-01-01
  */
 @NoArgsConstructor
 public class BixiDeniedException extends RuntimeException {

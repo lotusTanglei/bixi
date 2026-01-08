@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
  * 验证码相关的接口
  *
  * @author 唐磊
- * @date 2022/6/27
+ * @date 2025-01-01
  */
 @RestController
 @RequestMapping("/code")

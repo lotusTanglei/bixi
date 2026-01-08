@@ -13,7 +13,7 @@ import static java.util.Collections.emptyMap;
  * 针对 nacos 2.x 服务注册处理
  *
  * @author 唐磊
- * @date 2021/12/20
+ * @date 2025-01-01
  */
 @Configuration(proxyBeanMethods = false)
 public class NacosServiceInstanceConverter extends DefaultServiceInstanceConverter {

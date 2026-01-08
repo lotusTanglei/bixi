@@ -10,7 +10,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
 /**
  * @author 唐磊
- * @date 2023-07-05
+ * @date 2025-01-01
  */
 @EnableDynamicDataSource
 @EnableBixiDoc("job")

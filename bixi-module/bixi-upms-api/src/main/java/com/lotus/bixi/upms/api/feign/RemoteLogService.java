@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 /**
  * @author 唐磊
- * @date 2018/6/28
+ * @date 2025-01-01
  */
 @FeignClient(contextId = "remoteLogService", value = ServiceNameConstants.UPMS_SERVICE)
 public interface RemoteLogService {

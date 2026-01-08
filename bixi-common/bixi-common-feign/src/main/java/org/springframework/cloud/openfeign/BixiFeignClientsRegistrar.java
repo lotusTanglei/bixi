@@ -26,7 +26,7 @@ import java.util.Map;
 
 /**
  * @author 唐磊
- * @date 2020/2/8
+ * @date 2025-01-01
  * <p>
  * feign 自动配置功能 from mica
  */

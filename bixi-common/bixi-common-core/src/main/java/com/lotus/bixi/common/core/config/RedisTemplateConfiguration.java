@@ -14,7 +14,7 @@ import org.springframework.data.redis.serializer.RedisSerializer;
  * RedisTemplate配置
  *
  * @author 唐磊
- * @date 2024/09/21
+ * @date 2025-01-01
  */
 @EnableCaching
 @AutoConfiguration

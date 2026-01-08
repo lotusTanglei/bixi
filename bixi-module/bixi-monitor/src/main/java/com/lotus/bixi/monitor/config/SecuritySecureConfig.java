@@ -30,7 +30,7 @@ import static org.springframework.http.HttpMethod.POST;
  * WebSecurityConfigurer
  *
  * @author 唐磊
- * @date 2019/2/1
+ * @date 2025-01-01
  */
 @Configuration(proxyBeanMethods = false)
 public class SecuritySecureConfig {

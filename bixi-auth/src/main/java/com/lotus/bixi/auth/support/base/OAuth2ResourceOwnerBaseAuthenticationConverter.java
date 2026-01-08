@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 
 /**
  * @author tanglei
- * @date 2022-06-02
+ * @date 2025-01-01
  * <p>
  * 自定义模式认证转换器
  */

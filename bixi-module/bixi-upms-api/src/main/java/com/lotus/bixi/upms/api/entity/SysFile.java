@@ -11,7 +11,7 @@ import lombok.EqualsAndHashCode;
  * 文件管理
  *
  * @author 唐磊
- * @date 2019-06-18 17:18:42
+ * @date 2025-01-01
  */
 @Data
 @Schema(description = "文件")

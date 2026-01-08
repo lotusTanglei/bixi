@@ -19,7 +19,7 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 /**
  * @author 唐磊
- * @date 2022-06-04
+ * @date 2025-01-01
  * <p>
  * 资源服务器认证授权配置
  */

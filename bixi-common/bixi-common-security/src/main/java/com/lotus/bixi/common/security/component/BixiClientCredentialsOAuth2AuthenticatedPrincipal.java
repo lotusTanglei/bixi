@@ -9,8 +9,8 @@ import java.util.Collection;
 import java.util.Map;
 
 /**
- * @author 唐磊
- * @date 2022/7/6
+ * @author bixi
+ * @date 2025-01-01
  * <p>
  * credential 支持客户端模式的用户存储
  */

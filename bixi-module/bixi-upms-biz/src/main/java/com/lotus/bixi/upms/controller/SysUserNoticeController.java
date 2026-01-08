@@ -21,7 +21,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
  * 用户消息关联管理
  *
  * @author bixi
- * @date 2024-05-20
+ * @date 2025-01-01
  */
 @RestController
 @RequiredArgsConstructor

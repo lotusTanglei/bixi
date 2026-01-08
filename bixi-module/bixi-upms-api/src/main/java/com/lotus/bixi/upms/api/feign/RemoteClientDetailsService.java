@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 /**
  * @author 唐磊
- * @date 2020/12/05
+ * @date 2025-01-01
  */
 @FeignClient(contextId = "remoteClientDetailsService", value = ServiceNameConstants.UPMS_SERVICE)
 public interface RemoteClientDetailsService {

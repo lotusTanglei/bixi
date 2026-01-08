@@ -12,7 +12,7 @@ import org.apache.ibatis.annotations.Param;
  * 用户消息关联表 Mapper 接口
  *
  * @author bixi
- * @date 2024-05-20
+ * @date 2025-01-01
  */
 @Mapper
 public interface SysUserNoticeMapper extends BaseMapper<SysUserNotice> {

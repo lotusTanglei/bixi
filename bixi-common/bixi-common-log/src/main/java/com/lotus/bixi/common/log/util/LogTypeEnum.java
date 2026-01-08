@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 
 /**
  * @author 唐磊
- * @date 2020/7/30
+ * @date 2025-01-01
  * <p>
  * 日志类型
  */

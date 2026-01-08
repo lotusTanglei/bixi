@@ -8,7 +8,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
 /**
  * @author 唐磊
- * @date 2018年06月21日
+ * @date 2025-01-01
  * <p>
  * 网关应用
  */

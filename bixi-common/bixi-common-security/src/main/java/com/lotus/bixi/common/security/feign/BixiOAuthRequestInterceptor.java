@@ -21,7 +21,7 @@ import java.util.Collection;
  * 重新 OAuth2FeignRequestInterceptor ，官方实现部分常见不适用
  *
  * @author 唐磊
- * @date 2022/5/29
+ * @date 2025-01-01
  */
 @Slf4j
 @RequiredArgsConstructor

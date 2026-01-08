@@ -16,7 +16,7 @@ import java.util.Map;
 
 /**
  * @author 唐磊
- * @date 2019/2/1 扩展用户信息
+ * @date 2025-01-01
  */
 public class BixiUser extends User implements OAuth2AuthenticatedPrincipal {
 

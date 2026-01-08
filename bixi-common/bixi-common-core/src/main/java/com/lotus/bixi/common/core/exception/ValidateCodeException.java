@@ -4,8 +4,8 @@ import lombok.NoArgsConstructor;
 
 /**
  * 验证码异常类
- * @author 唐磊
- * @date 2024/09/21
+ * @author bixi
+ * @date 2025-01-01
  */
 @NoArgsConstructor
 public class ValidateCodeException extends RuntimeException {

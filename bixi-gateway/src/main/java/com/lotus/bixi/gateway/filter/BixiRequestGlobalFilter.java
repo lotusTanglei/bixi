@@ -21,7 +21,7 @@ import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.a
 
 /**
  * @author 唐磊
- * @date 2019/2/1
+ * @date 2025-01-01
  * <p>
  * 全局拦截器，作用所有的微服务
  * <p>

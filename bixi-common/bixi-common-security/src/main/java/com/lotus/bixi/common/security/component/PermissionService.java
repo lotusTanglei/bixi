@@ -14,7 +14,7 @@ import java.util.Collection;
 
 /**
  * @author 唐磊
- * @date 2019/2/1 接口权限判断工具
+ * @date 2025-01-01
  */
 public class PermissionService {
 

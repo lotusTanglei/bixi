@@ -21,7 +21,7 @@ import java.io.PrintWriter;
 
 /**
  * @author 唐磊
- * @date 2019/2/1
+ * @date 2025-01-01
  * <p>
  * 客户端异常处理 AuthenticationException 不同细化异常处理
  */

@@ -6,7 +6,7 @@ import java.util.zip.ZipOutputStream;
 
 /**
  * @author 唐磊
- * @date 2018/7/29
+ * @date 2025-01-01
  */
 public interface GeneratorService {
 

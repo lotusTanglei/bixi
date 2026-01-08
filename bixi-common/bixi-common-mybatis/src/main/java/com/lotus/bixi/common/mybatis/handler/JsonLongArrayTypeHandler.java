@@ -20,7 +20,7 @@ import java.sql.SQLException;
  * MappedJdbcTypes 数据库中的数据类型 MappedTypes java中的的数据类型
  *
  * @author 唐磊
- * @date 2019-11-20
+ * @date 2025-01-01
  */
 @MappedTypes(value = {Long[].class})
 @MappedJdbcTypes(value = JdbcType.VARCHAR)

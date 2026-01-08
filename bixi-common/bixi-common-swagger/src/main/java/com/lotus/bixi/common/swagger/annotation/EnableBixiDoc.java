@@ -15,7 +15,7 @@ import java.lang.annotation.*;
  * 开启 bixi spring doc
  *
  * @author 唐磊
- * @date 2022-03-26
+ * @date 2025-01-01
  */
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)

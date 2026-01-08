@@ -16,7 +16,7 @@ import org.springframework.security.web.SecurityFilterChain;
  * 服务安全相关配置
  *
  * @author 唐磊
- * @date 2022/1/12
+ * @date 2025-01-01
  */
 @EnableWebSecurity
 public class WebSecurityConfiguration {

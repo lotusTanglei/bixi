@@ -28,7 +28,7 @@ import java.util.Optional;
  * 查询客户端相关信息实现
  *
  * @author 唐磊
- * @date 2022/5/29
+ * @date 2025-01-01
  */
 @RequiredArgsConstructor
 public class BixiRemoteRegisteredClientRepository implements RegisteredClientRepository {

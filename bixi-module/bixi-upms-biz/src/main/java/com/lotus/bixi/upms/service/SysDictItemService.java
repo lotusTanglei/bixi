@@ -9,7 +9,7 @@ import com.lotus.bixi.common.core.util.R;
  * 字典项
  *
  * @author 唐磊
- * @date 2019/03/19
+ * @date 2025-01-01
  */
 public interface SysDictItemService extends IService<SysDictItem> {
 

@@ -7,9 +7,9 @@ import org.springframework.core.env.StandardEnvironment;
 import java.util.Scanner;
 
 /**
- * @author tanglei
+ * @author bixi
  * @description 不依赖Spring容器
- * @date 2024/11/16 15:19
+ * @date 2025-01-01
  */
 public class JasyptUtils {
 

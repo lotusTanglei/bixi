@@ -8,8 +8,8 @@ import java.util.Locale;
 /**
  * i18n 工具类
  *
- * @author 唐磊
- * @date 2024/09/21
+ * @author bixi
+ * @date 2025-01-01
  */
 @UtilityClass
 public class MsgUtils {

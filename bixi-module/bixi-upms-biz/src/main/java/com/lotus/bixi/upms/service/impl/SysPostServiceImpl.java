@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
  * 岗位信息表
  *
  * @author fxz
- * @date 2022-03-26 12:50:43
+ * @date 2025-01-01
  */
 @Service
 public class SysPostServiceImpl extends ServiceImpl<SysPostMapper, SysPost> implements SysPostService {

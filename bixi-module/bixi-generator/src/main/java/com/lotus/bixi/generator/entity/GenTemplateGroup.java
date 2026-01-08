@@ -14,7 +14,7 @@ import lombok.experimental.Accessors;
  * 模板分组关联表
  *
  * @author tanglei
- * @date 2023-02-22 09:25:15
+ * @date 2025-01-01
  */
 @Data
 @TableName("gen_template_group")

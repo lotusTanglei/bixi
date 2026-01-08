@@ -5,7 +5,7 @@ package com.lotus.bixi.common.core.exception;
  * 配合i18n进行国际化处理
  *
  * @author 唐磊
- * @date 2024/09/21
+ * @date 2025-01-01
  */
 public interface ErrorCodes {
 

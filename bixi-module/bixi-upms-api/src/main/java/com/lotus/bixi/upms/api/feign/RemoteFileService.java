@@ -13,7 +13,7 @@ import java.util.List;
 /**
  * @author tanglei
  * @description TODO
- * @date 2024/12/9 22:46
+ * @date 2025-01-01
  */
 @FeignClient(contextId = "remoteFileService", value = ServiceNameConstants.UPMS_SERVICE)
 public interface RemoteFileService {

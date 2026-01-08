@@ -9,7 +9,7 @@ import java.lang.annotation.*;
 
 /**
  * @author 唐磊
- * @date 2019/2/1
+ * @date 2025-01-01
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)

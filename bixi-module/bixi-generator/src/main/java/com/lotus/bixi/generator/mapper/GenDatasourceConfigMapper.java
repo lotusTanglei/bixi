@@ -8,7 +8,7 @@ import org.apache.ibatis.annotations.Mapper;
  * 数据源表
  *
  * @author tanglei
- * @date 2019-03-31 16:00:20
+ * @date 2025-01-01
  */
 @Mapper
 public interface GenDatasourceConfigMapper extends BaseMapper<GenDatasourceConfig> {

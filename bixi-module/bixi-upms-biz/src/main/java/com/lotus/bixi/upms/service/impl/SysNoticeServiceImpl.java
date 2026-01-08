@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
  * 消息通知表 服务实现类
  *
  * @author bixi
- * @date 2024-05-20
+ * @date 2025-01-01
  */
 @Service
 @RequiredArgsConstructor

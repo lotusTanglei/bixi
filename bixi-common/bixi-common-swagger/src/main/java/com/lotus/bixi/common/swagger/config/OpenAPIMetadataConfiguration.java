@@ -9,7 +9,7 @@ import org.springframework.context.ApplicationContextAware;
 
 /**
  * @author 唐磊
- * @date 2023/1/4
+ * @date 2025-01-01
  */
 public class OpenAPIMetadataConfiguration implements InitializingBean, ApplicationContextAware {
 

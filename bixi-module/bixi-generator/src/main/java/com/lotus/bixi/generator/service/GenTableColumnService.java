@@ -8,7 +8,7 @@ import java.util.List;
  * 列属性
  *
  * @author 唐磊x code generator
- * @date 2023-02-06 20:16:01
+ * @date 2025-01-01
  */
 public interface GenTableColumnService extends IService<GenTableColumn> {
 

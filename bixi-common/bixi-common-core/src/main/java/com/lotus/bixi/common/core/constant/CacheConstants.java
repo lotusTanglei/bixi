@@ -2,7 +2,7 @@ package com.lotus.bixi.common.core.constant;
 
 /**
  * @author 唐磊
- * @date 2024/09/21
+ * @date 2025-01-01
  * <p>
  * 缓存的key 常量
  */
@@ -47,5 +47,10 @@ public interface CacheConstants {
      * 参数缓存
      */
     String PARAMS_DETAILS = "params_details";
+
+    /**
+     * 默认过期时间，单位：秒（12小时）
+     */
+    Long DEFAULT_EXPIRE_TIME = 60 * 60 * 12L;
 
 }

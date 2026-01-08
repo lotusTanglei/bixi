@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
  * 列属性
  *
  * @author 唐磊x code generator
- * @date 2023-02-06 20:16:01
+ * @date 2025-01-01
  */
 @Service
 public class GenFieldTypeServiceImpl extends ServiceImpl<GenFieldTypeMapper, GenFieldType>

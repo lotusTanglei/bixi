@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 
 /**
  * @author 唐磊
- * @date 2024/09/21
+ * @date 2025-01-01
  * 登录类型
  */
 @Getter

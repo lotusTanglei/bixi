@@ -53,7 +53,7 @@ import java.util.stream.Collectors;
 
 /**
  * @author 唐磊
- * @date 2019/2/1 删除token端点
+ * @date 2025-01-01
  */
 @Slf4j
 @RestController

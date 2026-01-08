@@ -10,7 +10,7 @@ import java.io.Serializable;
 
 /**
  * @author 唐磊
- * @date 2017/11/11
+ * @date 2025-01-01
  */
 @Data
 @Schema(description = "用户信息")

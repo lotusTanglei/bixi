@@ -20,7 +20,7 @@ import java.util.TimeZone;
  * JacksonConfiguration
  *
  * @author 唐磊
- * @date 2024/09/21
+ * @date 2025-01-01
  */
 @AutoConfiguration
 @ConditionalOnClass(ObjectMapper.class)

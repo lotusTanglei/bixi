@@ -8,7 +8,7 @@ import com.lotus.bixi.upms.api.vo.SysNoticeVO;
  * 消息通知表 服务类
  *
  * @author bixi
- * @date 2024-05-20
+ * @date 2025-01-01
  */
 public interface SysNoticeService extends IService<SysNotice> {
 

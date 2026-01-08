@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
  * 任务表
  *
  * @author bixi
- * @date 2024-05-20
+ * @date 2025-01-01
  */
 @Data
 @TableName("script_task")

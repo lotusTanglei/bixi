@@ -7,7 +7,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
 /**
  * @author 唐磊
- * @date 2018年06月21日 监控中心
+ * @date 2025-01-01
  */
 @EnableAdminServer
 @EnableDiscoveryClient

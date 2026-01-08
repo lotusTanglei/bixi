@@ -12,7 +12,7 @@ import java.util.Map;
  * SwaggerProperties
  *
  * @author 唐磊
- * @date 2018/7/25 14:00
+ * @date 2025-01-01
  */
 @Data
 @ConfigurationProperties("swagger")

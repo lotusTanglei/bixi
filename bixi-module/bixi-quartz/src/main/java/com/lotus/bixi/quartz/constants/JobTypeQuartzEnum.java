@@ -5,7 +5,7 @@ import lombok.Getter;
 
 /**
  * @author 唐磊
- * @date 2019-03-14
+ * @date 2025-01-01
  * <p>
  * 任务类型枚举
  */

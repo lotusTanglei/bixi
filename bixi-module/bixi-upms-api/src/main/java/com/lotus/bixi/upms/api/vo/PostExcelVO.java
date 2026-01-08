@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
  * 岗位excel 对应的实体
  *
  * @author fxz
- * @date 2022/3/21
+ * @date 2025-01-01
  */
 @Data
 @ColumnWidth(30)

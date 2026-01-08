@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * @author 唐磊
- * @date 2022/3/30
+ * @date 2025-01-01
  * <p>
  * 客户端注册功能 register.user = false
  */

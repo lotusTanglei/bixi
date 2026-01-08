@@ -13,7 +13,7 @@ import org.springframework.security.oauth2.server.resource.introspection.OpaqueT
 
 /**
  * @author 唐磊
- * @date 2022-06-02
+ * @date 2025-01-01
  */
 @RequiredArgsConstructor
 @EnableConfigurationProperties(PermitAllUrlProperties.class)

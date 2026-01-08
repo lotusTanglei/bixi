@@ -6,7 +6,7 @@ import com.lotus.bixi.common.core.util.R;
 
 /**
  * @author 唐磊
- * @date 2018/11/14
+ * @date 2025-01-01
  */
 public interface SysMobileService {
 

@@ -18,7 +18,7 @@ import org.springframework.security.access.AccessDeniedException;
 
 /**
  * @author 唐磊
- * @date 2022-06-04
+ * @date 2025-01-01
  * <p>
  * 服务间接口不鉴权处理逻辑
  */

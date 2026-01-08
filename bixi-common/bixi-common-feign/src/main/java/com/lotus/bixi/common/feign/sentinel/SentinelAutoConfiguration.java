@@ -19,7 +19,7 @@ import org.springframework.context.annotation.Scope;
 
 /**
  * @author 唐磊
- * @date 2020-02-12
+ * @date 2025-01-01
  * <p>
  * sentinel 配置
  */

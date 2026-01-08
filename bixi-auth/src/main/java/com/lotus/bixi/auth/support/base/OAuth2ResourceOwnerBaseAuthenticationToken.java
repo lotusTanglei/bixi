@@ -11,7 +11,7 @@ import java.util.*;
 
 /**
  * @author 唐磊
- * @date 2022/6/2
+ * @date 2025-01-01
  * <p>
  * 自定义授权模式抽象
  */

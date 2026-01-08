@@ -8,7 +8,7 @@ import com.lotus.bixi.generator.entity.GenTemplate;
  * 模板
  *
  * @author 唐磊
- * @date 2023-02-21 17:15:44
+ * @date 2025-01-01
  */
 public interface GenTemplateService extends IService<GenTemplate> {
 

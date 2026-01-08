@@ -14,7 +14,7 @@ import static org.springframework.boot.autoconfigure.condition.ConditionalOnWebA
 
 /**
  * @author 唐磊
- * @date 2022-06-04
+ * @date 2025-01-01
  * <p>
  * 注入自定义错误处理,覆盖 org/springframework/security/messages 内置异常
  */

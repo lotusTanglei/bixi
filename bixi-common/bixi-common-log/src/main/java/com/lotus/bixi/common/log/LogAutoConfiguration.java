@@ -14,7 +14,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 
 /**
  * @author 唐磊
- * @date 2019/2/1 日志自动配置
+ * @date 2025-01-01
  */
 @EnableAsync
 @Configuration(proxyBeanMethods = false)

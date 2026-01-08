@@ -14,7 +14,7 @@ import java.util.concurrent.ThreadPoolExecutor;
  * 线程池配置
  *
  * @author 唐磊
- * @date 2024/09/21
+ * @date 2025-01-01
  */
 @AutoConfiguration
 public class TaskExecutorConfiguration implements AsyncConfigurer {

@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
  * 公共参数配置
  *
  * @author 唐磊
- * @date 2019-04-29
+ * @date 2025-01-01
  */
 @Data
 @Schema(description = "公共参数")

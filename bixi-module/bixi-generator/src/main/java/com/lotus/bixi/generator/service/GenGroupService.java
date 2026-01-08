@@ -9,7 +9,7 @@ import com.lotus.bixi.generator.util.vo.TemplateGroupDTO;
  * 模板分组
  *
  * @author 唐磊
- * @date 2023-02-21 20:01:53
+ * @date 2025-01-01
  */
 public interface GenGroupService extends IService<GenGroup> {
 

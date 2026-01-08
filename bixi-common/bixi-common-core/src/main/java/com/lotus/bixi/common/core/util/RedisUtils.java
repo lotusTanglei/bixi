@@ -8,14 +8,16 @@ import org.springframework.data.redis.core.*;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.data.redis.core.script.RedisScript;
 
+import com.lotus.bixi.common.core.constant.CacheConstants;
+
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
  * 缓存工具类
- *
+ * 如不明文指定过期时间，默认采用 {@link CacheConstants#DEFAULT_EXPIRE_TIME}
  * @author 唐磊
- * @date 2024/09/21
+ * @date 2025-01-01
  */
 @UtilityClass
 public class RedisUtils {
@@ -195,7 +197,7 @@ public class RedisUtils {
     public boolean set(String key, Object value) {
         RedisTemplate<Object, Object> redisTemplate = SpringContextHolder.getBean(RedisTemplate.class);
         Optional.ofNullable(redisTemplate).map(template -> {
-            template.opsForValue().set(key, value);
+            template.opsForValue().set(key, value, CacheConstants.DEFAULT_EXPIRE_TIME, TimeUnit.SECONDS);
             return true;
         });
         return true;
@@ -279,6 +281,7 @@ public class RedisUtils {
         RedisTemplate<Object, Object> redisTemplate = SpringContextHolder.getBean(RedisTemplate.class);
         Optional.ofNullable(redisTemplate).map(template -> {
             template.opsForHash().putAll(key, map);
+            template.expire(key, CacheConstants.DEFAULT_EXPIRE_TIME, TimeUnit.SECONDS);
             return true;
         });
         return true;

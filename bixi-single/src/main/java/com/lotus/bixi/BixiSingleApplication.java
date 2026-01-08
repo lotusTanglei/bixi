@@ -8,7 +8,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 /**
  * @author tanglei
  * @description TODO
- * @date 2024/12/8 22:11
+ * @date 2025-01-01
  */
 @EnableBixiDoc(value = "admin", isMicro = false)
 @EnableBixiResourceServer

@@ -19,7 +19,7 @@ import java.util.Map;
  * 扩展原生的实现，支持 Long2String
  *
  * @author 唐磊
- * @date 2023/6/28
+ * @date 2025-01-01
  */
 public class BixiCustomOAuth2AccessTokenResponseHttpMessageConverter
         extends OAuth2AccessTokenResponseHttpMessageConverter {

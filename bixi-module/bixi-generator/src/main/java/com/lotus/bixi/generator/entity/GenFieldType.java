@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
  * 列属性
  *
  * @author tanglei
- * @date 2023-02-06 20:16:01
+ * @date 2025-01-01
  */
 @Data
 @TableName("gen_field_type")

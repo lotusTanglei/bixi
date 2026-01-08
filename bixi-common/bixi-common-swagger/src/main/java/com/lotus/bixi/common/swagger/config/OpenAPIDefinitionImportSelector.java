@@ -13,7 +13,7 @@ import java.util.Objects;
  * openapi 配置类
  *
  * @author 唐磊
- * @date 2023/1/1
+ * @date 2025-01-01
  */
 public class OpenAPIDefinitionImportSelector implements ImportBeanDefinitionRegistrar {
 

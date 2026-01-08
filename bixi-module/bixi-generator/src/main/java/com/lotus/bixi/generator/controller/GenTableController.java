@@ -22,7 +22,7 @@ import java.util.List;
  * 列属性
  *
  * @author 唐磊x code generator
- * @date 2023-02-06 20:34:55
+ * @date 2025-01-01
  */
 @RestController
 @RequiredArgsConstructor

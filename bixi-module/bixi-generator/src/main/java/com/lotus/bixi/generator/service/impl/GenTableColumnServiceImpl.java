@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
  * 表字段信息管理
  *
  * @author 唐磊
- * @date 2020/5/18
+ * @date 2025-01-01
  */
 @Service
 @RequiredArgsConstructor

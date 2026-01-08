@@ -5,7 +5,7 @@ import org.springframework.http.HttpHeaders;
 
 /**
  * @author 唐磊
- * @date 2024/3/15
+ * @date 2025-01-01
  * <p>
  * http connection close
  */

@@ -22,7 +22,7 @@ import java.util.Set;
 
 /**
  * @author 唐磊
- * @date 2021/12/21
+ * @date 2025-01-01
  */
 public interface BixiUserDetailsService extends UserDetailsService, Ordered {
 

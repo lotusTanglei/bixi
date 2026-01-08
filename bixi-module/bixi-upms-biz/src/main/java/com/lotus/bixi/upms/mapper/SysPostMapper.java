@@ -12,7 +12,7 @@ import java.util.List;
  * 岗位信息表
  *
  * @author fxz
- * @date 2022-03-26 12:50:43
+ * @date 2025-01-01
  */
 @Mapper
 public interface SysPostMapper extends BaseMapper<SysPost> {

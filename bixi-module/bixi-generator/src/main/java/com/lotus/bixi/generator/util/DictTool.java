@@ -8,7 +8,7 @@ import java.util.List;
 
 /**
  * @author 唐磊
- * @date 2023/2/7
+ * @date 2025-01-01
  */
 public class DictTool {
 

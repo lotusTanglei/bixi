@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
  * 模板分组关联表
  *
  * @author 唐磊
- * @date 2023-02-22 09:25:15
+ * @date 2025-01-01
  */
 @Service
 public class GenTemplateGroupServiceImpl extends ServiceImpl<GenTemplateGroupMapper, GenTemplateGroup>

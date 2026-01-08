@@ -22,7 +22,7 @@ import java.util.*;
 
 /**
  * @author 唐磊
- * @date 2022/5/29
+ * @date 2025-01-01
  */
 public class CustomeOAuth2AccessTokenGenerator implements OAuth2TokenGenerator<OAuth2AccessToken> {
 

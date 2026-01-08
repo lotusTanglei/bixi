@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
  * 定时任务执行日志表
  *
  * @author 唐磊
- * @date 2019-01-27 13:40:20
+ * @date 2025-01-01
  */
 @Slf4j
 @Service

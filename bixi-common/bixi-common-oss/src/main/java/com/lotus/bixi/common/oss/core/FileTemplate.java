@@ -12,7 +12,7 @@ import java.util.List;
  * 文件操作模板
  *
  * @author 唐磊
- * @date 2022/4/19
+ * @date 2025-01-01
  */
 public interface FileTemplate extends InitializingBean {
 

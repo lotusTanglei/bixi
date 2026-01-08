@@ -11,7 +11,7 @@ import lombok.EqualsAndHashCode;
  * 现场负责人关联表
  *
  * @author bixi
- * @date 2024-05-20
+ * @date 2025-01-01
  */
 @Data
 @TableName("script_site_manager")

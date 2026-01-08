@@ -6,8 +6,8 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 /**
- * @author 唐磊
- * @date 2024/09/21
+ * @author bixi
+ * @date 2025-01-01
  * <p>
  * 菜单类型
  */

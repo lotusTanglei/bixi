@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
  * 用户excel 对应的实体
  *
  * @author 唐磊
- * @date 2021/8/4
+ * @date 2025-01-01
  */
 @Data
 @ColumnWidth(30)

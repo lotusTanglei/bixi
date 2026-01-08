@@ -10,7 +10,7 @@ import org.apache.ibatis.annotations.Param;
  * 模板分组
  *
  * @author 唐磊
- * @date 2023-02-21 20:01:53
+ * @date 2025-01-01
  */
 @Mapper
 public interface GenGroupMapper extends BaseMapper<GenGroup> {

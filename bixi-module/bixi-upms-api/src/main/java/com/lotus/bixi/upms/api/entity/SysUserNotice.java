@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
  * 用户消息关联表
  *
  * @author bixi
- * @date 2024-05-20
+ * @date 2025-01-01
  */
 @Data
 @TableName("sys_user_notice")

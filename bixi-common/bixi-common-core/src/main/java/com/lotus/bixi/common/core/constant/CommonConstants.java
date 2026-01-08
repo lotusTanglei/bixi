@@ -2,8 +2,8 @@ package com.lotus.bixi.common.core.constant;
 
 /**
  * 公共常量
- * @author 唐磊
- * @date 2024/09/21
+ * @author bixi
+ * @date 2025-01-01
  */
 public interface CommonConstants {
 

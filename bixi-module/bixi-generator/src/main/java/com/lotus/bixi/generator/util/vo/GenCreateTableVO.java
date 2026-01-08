@@ -26,7 +26,7 @@ import java.time.LocalDateTime;
  * 自动创建表管理
  *
  * @author luolin
- * @date 2022-09-23 21:56:11
+ * @date 2025-01-01
  */
 @Data
 @Schema(description = "自动创建表管理")

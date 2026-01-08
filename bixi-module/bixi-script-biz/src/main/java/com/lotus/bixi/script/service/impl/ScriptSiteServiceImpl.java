@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
  * 现场信息表 服务实现类
  *
  * @author bixi
- * @date 2024-05-20
+ * @date 2025-01-01
  */
 @Service
 public class ScriptSiteServiceImpl extends ServiceImpl<ScriptSiteMapper, ScriptSite> implements ScriptSiteService {

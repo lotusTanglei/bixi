@@ -8,7 +8,7 @@ import org.apache.ibatis.annotations.Mapper;
  * 脚本执行记录表 Mapper 接口
  *
  * @author bixi
- * @date 2024-05-20
+ * @date 2025-01-01
  */
 @Mapper
 public interface ScriptExecutionLogMapper extends BaseMapper<ScriptExecutionLog> {

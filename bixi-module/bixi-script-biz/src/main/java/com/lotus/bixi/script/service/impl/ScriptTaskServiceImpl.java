@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
  * 任务表 服务实现类
  *
  * @author bixi
- * @date 2024-05-20
+ * @date 2025-01-01
  */
 @Service
 public class ScriptTaskServiceImpl extends ServiceImpl<ScriptTaskMapper, ScriptTask> implements ScriptTaskService {

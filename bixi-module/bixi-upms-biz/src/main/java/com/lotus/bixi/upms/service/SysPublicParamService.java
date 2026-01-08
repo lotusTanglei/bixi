@@ -10,7 +10,7 @@ import com.lotus.bixi.common.core.util.R;
  * 公共参数配置
  *
  * @author Lucky
- * @date 2019-04-29
+ * @date 2025-01-01
  */
 public interface SysPublicParamService extends IService<SysPublicParam> {
 

@@ -8,7 +8,7 @@ import java.lang.annotation.*;
  * 服务调用不鉴权注解
  *
  * @author 唐磊
- * @date 2020-06-14
+ * @date 2025-01-01
  */
 @Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)

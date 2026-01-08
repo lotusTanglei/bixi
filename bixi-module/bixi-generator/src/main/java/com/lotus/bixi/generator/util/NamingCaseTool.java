@@ -6,7 +6,7 @@ import cn.hutool.core.text.NamingCase;
  * 命名规则处理，针对驼峰，下划线等处理
  *
  * @author 唐磊
- * @date 2023/1/31
+ * @date 2025-01-01
  */
 public class NamingCaseTool {
 

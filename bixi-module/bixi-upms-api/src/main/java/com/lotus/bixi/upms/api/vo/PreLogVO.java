@@ -7,7 +7,7 @@ import lombok.Data;
 
 /**
  * @author 唐磊
- * @date 2018/8/27 前端日志vo
+ * @date 2025-01-01
  */
 @Data
 @Schema(description = "前端日志展示对象")

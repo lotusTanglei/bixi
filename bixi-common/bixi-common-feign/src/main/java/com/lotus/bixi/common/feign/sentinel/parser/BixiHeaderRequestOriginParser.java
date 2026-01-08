@@ -9,7 +9,7 @@ import jakarta.servlet.http.HttpServletRequest;
  * sentinel 请求头解析判断
  *
  * @author 唐磊
- * @date 2020-06-11
+ * @date 2025-01-01
  */
 public class BixiHeaderRequestOriginParser implements RequestOriginParser {
 

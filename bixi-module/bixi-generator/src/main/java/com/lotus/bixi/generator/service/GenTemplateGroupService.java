@@ -7,7 +7,7 @@ import com.lotus.bixi.generator.entity.GenTemplateGroup;
  * 模板分组关联表
  *
  * @author 唐磊
- * @date 2023-02-22 09:25:15
+ * @date 2025-01-01
  */
 public interface GenTemplateGroupService extends IService<GenTemplateGroup> {
 

@@ -27,7 +27,7 @@ import java.util.Map;
  * 支持自动降级注入 重写 {@link com.alibaba.cloud.sentinel.feign.SentinelFeign}
  *
  * @author 唐磊
- * @date 2020/6/9
+ * @date 2025-01-01
  */
 @NoArgsConstructor(access = lombok.AccessLevel.PRIVATE)
 public final class BixiSentinelFeign {

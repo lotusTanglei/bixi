@@ -7,7 +7,7 @@ import com.lotus.bixi.script.api.entity.ScriptTask;
  * 任务表 服务类
  *
  * @author bixi
- * @date 2024-05-20
+ * @date 2025-01-01
  */
 public interface ScriptTaskService extends IService<ScriptTask> {
 

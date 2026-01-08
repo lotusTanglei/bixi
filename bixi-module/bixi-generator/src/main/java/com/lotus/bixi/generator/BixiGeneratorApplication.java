@@ -13,7 +13,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
 /**
  * @author 唐磊
- * @date 2018/07/29 代码生成模块
+ * @date 2025-01-01
  */
 @EnableDynamicDataSource
 @EnableBixiFeignClients

@@ -13,9 +13,10 @@ import com.lotus.bixi.common.core.constant.SecurityConstants;
 import com.lotus.bixi.common.core.exception.ErrorCodes;
 import com.lotus.bixi.common.core.util.MsgUtils;
 import com.lotus.bixi.common.core.util.R;
+import com.lotus.bixi.common.core.util.RedisUtils;
+
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -23,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * @author 唐磊
- * @date 2018/11/14
+ * @date 2025-01-01
  * <p>
  * 手机登录相关业务实现
  */
@@ -31,8 +32,6 @@ import java.util.concurrent.TimeUnit;
 @Service
 @AllArgsConstructor
 public class SysMobileServiceImpl implements SysMobileService {
-
-    private final RedisTemplate redisTemplate;
 
     private final SysUserMapper userMapper;
 
@@ -52,7 +51,7 @@ public class SysMobileServiceImpl implements SysMobileService {
             return R.ok(Boolean.FALSE, MsgUtils.getMessage(ErrorCodes.SYS_APP_PHONE_UNREGISTERED, mobile));
         }
 
-        Object codeObj = redisTemplate.opsForValue().get(CacheConstants.DEFAULT_CODE_KEY + mobile);
+        Object codeObj = RedisUtils.get(CacheConstants.DEFAULT_CODE_KEY + mobile);
 
         if (codeObj != null) {
             log.info("手机号验证码未过期:{}，{}", mobile, codeObj);
@@ -61,7 +60,7 @@ public class SysMobileServiceImpl implements SysMobileService {
 
         String code = RandomUtil.randomNumbers(Integer.parseInt(SecurityConstants.CODE_SIZE));
         log.debug("手机号生成验证码成功:{},{}", mobile, code);
-        redisTemplate.opsForValue()
+        RedisUtils
                 .set(CacheConstants.DEFAULT_CODE_KEY + mobile, code, SecurityConstants.CODE_TIME, TimeUnit.SECONDS);
         return R.ok(Boolean.TRUE, code);
     }

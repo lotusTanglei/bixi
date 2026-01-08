@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 /**
  * @author tanglei
  * @description TODO
- * @date 2024/12/7 10:14
+ * @date 2025-01-01
  */
 public class BaseRelationEntity<T extends Model<?>> extends Model<T> {
 

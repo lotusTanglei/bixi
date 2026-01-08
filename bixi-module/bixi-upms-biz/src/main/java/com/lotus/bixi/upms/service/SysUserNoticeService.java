@@ -10,7 +10,7 @@ import com.lotus.bixi.upms.api.vo.UserNoticeVO;
  * 用户消息关联表 服务类
  *
  * @author bixi
- * @date 2024-05-20
+ * @date 2025-01-01
  */
 public interface SysUserNoticeService extends IService<SysUserNotice> {
 

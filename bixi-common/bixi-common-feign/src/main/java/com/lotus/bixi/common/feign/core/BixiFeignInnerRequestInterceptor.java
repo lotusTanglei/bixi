@@ -10,7 +10,7 @@ import java.lang.reflect.Method;
 
 /**
  * @author 唐磊
- * @date 2024/6/1
+ * @date 2025-01-01
  */
 public class BixiFeignInnerRequestInterceptor implements RequestInterceptor, Ordered {
 

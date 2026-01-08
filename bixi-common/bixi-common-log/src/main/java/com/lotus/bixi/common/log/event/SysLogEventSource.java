@@ -7,7 +7,7 @@ import lombok.Data;
  * spring event log
  *
  * @author 唐磊
- * @date 2023/8/11
+ * @date 2025-01-01
  */
 @Data
 public class SysLogEventSource extends SysLog {

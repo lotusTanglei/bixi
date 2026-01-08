@@ -9,7 +9,7 @@ import lombok.EqualsAndHashCode;
 
 /**
  * @author tanglei
- * @date 2023-02-06
+ * @date 2025-01-01
  *
  * 记录表字段的配置信息
  */

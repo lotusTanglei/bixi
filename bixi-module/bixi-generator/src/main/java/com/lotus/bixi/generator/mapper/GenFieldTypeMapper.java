@@ -11,7 +11,7 @@ import java.util.Set;
  * 列属性
  *
  * @author 唐磊
- * @date 2023-02-06 20:16:01
+ * @date 2025-01-01
  */
 @Mapper
 public interface GenFieldTypeMapper extends BaseMapper<GenFieldType> {

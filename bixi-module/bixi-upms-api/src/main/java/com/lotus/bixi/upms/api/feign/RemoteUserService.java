@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 /**
  * @author 唐磊
- * @date 2018/6/22
+ * @date 2025-01-01
  */
 @FeignClient(contextId = "remoteUserService", value = ServiceNameConstants.UPMS_SERVICE)
 public interface RemoteUserService {

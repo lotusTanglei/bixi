@@ -11,7 +11,7 @@ import java.util.List;
  * 动态查询
  *
  * @author 唐磊
- * @date 2022-07-09
+ * @date 2025-01-01
  */
 @Mapper
 public interface GenDynamicMapper {

@@ -11,7 +11,7 @@ import lombok.EqualsAndHashCode;
  * 消息通知表
  *
  * @author bixi
- * @date 2024-05-20
+ * @date 2025-01-01
  */
 @Data
 @TableName("sys_notice")

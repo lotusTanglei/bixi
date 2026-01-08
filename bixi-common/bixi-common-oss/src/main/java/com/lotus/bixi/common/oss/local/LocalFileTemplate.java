@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
  * 本地文件读取模式
  *
  * @author 唐磊
- * @date 2022/4/19
+ * @date 2025-01-01
  */
 @RequiredArgsConstructor
 public class LocalFileTemplate implements FileTemplate {

@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 /**
  * @author 唐磊
- * @date 2020/10/9
+ * @date 2025-01-01
  * <p>
  * 日志查询传输对象
  */

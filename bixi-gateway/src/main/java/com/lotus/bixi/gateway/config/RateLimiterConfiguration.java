@@ -11,7 +11,7 @@ import java.util.Objects;
 
 /**
  * @author 唐磊
- * @date 2019/2/1 路由限流配置
+ * @date 2025-01-01
  */
 @Configuration(proxyBeanMethods = false)
 public class RateLimiterConfiguration {

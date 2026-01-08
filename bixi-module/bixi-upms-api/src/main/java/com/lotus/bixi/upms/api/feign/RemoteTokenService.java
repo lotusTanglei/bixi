@@ -14,7 +14,7 @@ import java.util.Map;
 
 /**
  * @author 唐磊
- * @date 2018/9/4
+ * @date 2025-01-01
  */
 @FeignClient(contextId = "remoteTokenService", value = ServiceNameConstants.AUTH_SERVICE)
 public interface RemoteTokenService {

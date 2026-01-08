@@ -9,7 +9,7 @@ import org.springframework.context.annotation.PropertySource;
  * Seata 配置类
  *
  * @author 唐磊
- * @date 2022/3/29
+ * @date 2025-01-01
  */
 @PropertySource(value = "classpath:seata-config.yml", factory = YamlPropertySourceFactory.class)
 @EnableAutoDataSourceProxy(useJdkProxy = true)

@@ -7,8 +7,8 @@ import org.springframework.web.client.RestTemplate;
 /**
  * RestTemplate 配置
  *
- * @author 唐磊
- * @date 2024/09/21
+ * @author bixi
+ * @date 2025-01-01
  */
 @AutoConfiguration
 public class RestTemplateConfiguration {

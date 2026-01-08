@@ -11,7 +11,7 @@ import java.lang.annotation.Target;
  * 判断是否有权限
  *
  * @author 唐磊
- * @date 2024/07/15
+ * @date 2025-01-01
  */
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)

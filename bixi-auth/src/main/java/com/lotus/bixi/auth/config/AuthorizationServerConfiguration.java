@@ -39,7 +39,7 @@ import java.util.Arrays;
 
 /**
  * @author 唐磊
- * @date 2022/5/27
+ * @date 2025-01-01
  * <p>
  * 认证服务器配置
  */

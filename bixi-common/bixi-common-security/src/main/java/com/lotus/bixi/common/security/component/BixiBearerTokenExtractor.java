@@ -17,8 +17,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * @author caiqy
- * @date 2020.05.15
+ * @author bixi
+ * @date 2025-01-01
  */
 public class BixiBearerTokenExtractor implements BearerTokenResolver {
 

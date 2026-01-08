@@ -9,7 +9,7 @@ import org.springframework.core.env.ConfigurableEnvironment;
 
 /**
  * @author 唐磊
- * @date 2019-06-25
+ * @date 2025-01-01
  * <p>
  * 通过环境变量的形式注入 logging.file 自动维护 Spring Boot Admin Logger Viewer
  */

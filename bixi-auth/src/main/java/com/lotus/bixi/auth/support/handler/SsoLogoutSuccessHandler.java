@@ -11,7 +11,7 @@ import java.io.IOException;
 
 /**
  * @author 唐磊
- * @date 2022-06-02
+ * @date 2025-01-01
  * <p>
  * sso 退出功能 ，根据客户端传入跳转
  */
