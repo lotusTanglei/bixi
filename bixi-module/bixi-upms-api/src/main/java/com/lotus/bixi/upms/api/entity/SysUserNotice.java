@@ -1,7 +1,9 @@
 package com.lotus.bixi.upms.api.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.lotus.bixi.common.mybatis.base.BaseEntity;
+import com.lotus.bixi.common.mybatis.base.BaseRelationEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -18,9 +20,16 @@ import java.time.LocalDateTime;
 @TableName("sys_user_notice")
 @EqualsAndHashCode(callSuper = true)
 @Schema(description = "用户消息关联表")
-public class SysUserNotice extends BaseEntity<SysUserNotice> {
+public class SysUserNotice extends BaseRelationEntity<SysUserNotice> {
 
     private static final long serialVersionUID = 1L;
+
+    /**
+     * ID
+     */
+    @TableId(value = "id", type = IdType.ASSIGN_ID)
+    @Schema(description = "ID")
+    private Long id;
 
     /**
      * 通知ID
