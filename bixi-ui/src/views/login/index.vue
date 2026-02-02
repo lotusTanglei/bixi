@@ -129,14 +129,14 @@ onMounted(() => {
 }
 
 .brand-title {
-	font-size: 40px;
+	font-size: 46px;
 	font-weight: 700;
 	letter-spacing: 0.5px;
 }
 
 .brand-subtitle {
 	margin-top: 12px;
-	font-size: 20px;
+	font-size: 24px;
 	opacity: 0.85;
 }
 
