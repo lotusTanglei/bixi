@@ -29,4 +29,9 @@ public interface MQConstants {
      */
     String SYS_NOTICE_QUEUE = "sys.notice.queue";
 
+    /**
+     * 系统通知广播交换机
+     */
+    String SYS_NOTICE_FANOUT_EXCHANGE = "sys.notice.fanout.exchange";
+
 }

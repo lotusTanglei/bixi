@@ -62,34 +62,41 @@ public class SysNoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice
         return result;
     }
 
+    /**
+     * 解析通知接收人并保存到用户通知关联表
+     *
+     * @param noticeId 通知ID
+     * @param targetType 目标类型（0=全体，1=部门，2=角色，3=指定用户）
+     * @param targetIds 目标ID集合，逗号分隔
+     */
     private void resolveAndSaveRecipients(Long noticeId, String targetType, String targetIds) {
-        // 1. Delete existing recipients
+        // 删除已存在的接收人
         userNoticeService.remove(Wrappers.<SysUserNotice>lambdaQuery().eq(SysUserNotice::getNoticeId, noticeId));
 
         Set<Long> receiverIds = new HashSet<>();
 
-        if ("0".equals(targetType)) { // All Users
+        if ("0".equals(targetType)) { // 全体用户
             List<SysUser> users = userService.list(Wrappers.<SysUser>lambdaQuery().select(SysUser::getId));
             if (users != null) {
                 receiverIds.addAll(users.stream().map(SysUser::getId).collect(Collectors.toList()));
             }
         } else if (StrUtil.isNotBlank(targetIds)) {
             List<String> ids = Arrays.asList(targetIds.split(","));
-            if ("1".equals(targetType)) { // Department
+            if ("1".equals(targetType)) { // 部门
                 List<SysUser> users = userService.list(Wrappers.<SysUser>lambdaQuery()
                         .select(SysUser::getId)
                         .in(SysUser::getDeptId, ids));
                 if (users != null) {
                     receiverIds.addAll(users.stream().map(SysUser::getId).collect(Collectors.toList()));
                 }
-            } else if ("2".equals(targetType)) { // Role
+            } else if ("2".equals(targetType)) { // 角色
                 List<SysUserRole> userRoles = userRoleService.list(Wrappers.<SysUserRole>lambdaQuery()
                         .select(SysUserRole::getUserId)
                         .in(SysUserRole::getRoleId, ids));
                 if (userRoles != null) {
                     receiverIds.addAll(userRoles.stream().map(SysUserRole::getUserId).collect(Collectors.toList()));
                 }
-            } else if ("3".equals(targetType)) { // Specific Users
+            } else if ("3".equals(targetType)) { // 指定用户
                 receiverIds.addAll(ids.stream().map(Long::valueOf).collect(Collectors.toList()));
             }
         }
@@ -108,6 +115,12 @@ public class SysNoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice
         }
     }
 
+    /**
+     * 发布通知并发送消息到MQ
+     *
+     * @param id 通知ID
+     * @return 是否发送成功
+     */
     @Override
     public boolean sendNotice(Long id) {
         SysNotice notice = this.getById(id);
@@ -129,7 +142,7 @@ public class SysNoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice
         // Target info is not stored in DB anymore, and resolution is done.
         // Consumer just needs to notify.
 
-        rabbitTemplate.convertAndSend(MQConstants.SYS_NOTICE_QUEUE, dto);
+        rabbitTemplate.convertAndSend(MQConstants.SYS_NOTICE_FANOUT_EXCHANGE, "", dto);
         return true;
     }
 }

@@ -1,6 +1,5 @@
 package com.lotus.bixi.upms.controller;
 
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lotus.bixi.common.core.util.R;
 import com.lotus.bixi.common.log.annotation.SysLog;
@@ -8,7 +7,7 @@ import com.lotus.bixi.common.security.util.SecurityUtils;
 import com.lotus.bixi.upms.api.entity.SysUserNotice;
 import com.lotus.bixi.upms.api.vo.UserNoticeVO;
 import com.lotus.bixi.upms.service.SysUserNoticeService;
-import com.lotus.bixi.upms.sse.UserNoticeSseService;
+import com.lotus.bixi.upms.service.SysUserNoticeSseService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.Objects;
@@ -30,7 +29,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 public class SysUserNoticeController {
 
     private final SysUserNoticeService sysUserNoticeService;
-    private final UserNoticeSseService userNoticeSseService;
+    private final SysUserNoticeSseService sysUserNoticeSseService;
 
     /**
      * 分页查询
@@ -141,6 +140,6 @@ public class SysUserNoticeController {
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter stream() {
         Long userId = SecurityUtils.getUser().getId();
-        return userNoticeSseService.subscribe(userId);
+        return sysUserNoticeSseService.subscribe(userId);
     }
 }
