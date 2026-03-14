@@ -13,31 +13,89 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "spring.ai.alibaba.dashscope")
 public class AiProperties {
 
+    /**
+     * DashScope API Key
+     */
     private String apiKey;
 
-    private ChatOptions chat = new ChatOptions();
+    /**
+     * Chat configuration
+     */
+    private Chat chat = new Chat();
 
-    private EmbeddingOptions embedding = new EmbeddingOptions();
+    /**
+     * Embedding configuration
+     */
+    private Embedding embedding = new Embedding();
 
+    /**
+     * Chat properties
+     */
     @Data
-    public static class ChatOptions {
-
-        private String model = "qwen-plus";
-
-        private Double temperature = 0.7;
-
-        private Double topP = 0.9;
-
-        private Integer maxTokens = 2000;
-
+    public static class Chat {
+        /**
+         * Chat options
+         */
+        private ChatOptions options = new ChatOptions();
+        
+        /**
+         * Whether to enable chat support
+         */
         private Boolean enabled = true;
     }
 
+    /**
+     * Embedding properties
+     */
+    @Data
+    public static class Embedding {
+        /**
+         * Embedding options
+         */
+        private EmbeddingOptions options = new EmbeddingOptions();
+        
+        /**
+         * Whether to enable embedding support
+         */
+        private Boolean enabled = true;
+    }
+
+    /**
+     * Chat options
+     */
+    @Data
+    public static class ChatOptions {
+
+        /**
+         * Model name, e.g., qwen-plus
+         */
+        private String model = "qwen-plus";
+
+        /**
+         * Sampling temperature
+         */
+        private Double temperature = 0.7;
+
+        /**
+         * Nucleus sampling probability
+         */
+        private Double topP = 0.9;
+
+        /**
+         * Max tokens to generate
+         */
+        private Integer maxTokens = 2000;
+    }
+
+    /**
+     * Embedding options
+     */
     @Data
     public static class EmbeddingOptions {
 
+        /**
+         * Model name, e.g., text-embedding-v2
+         */
         private String model = "text-embedding-v2";
-
-        private Boolean enabled = true;
     }
 }

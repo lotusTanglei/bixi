@@ -1,10 +1,9 @@
 package com.lotus.bixi.ai.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.lotus.bixi.ai.api.constant.AiConstants;
 import com.lotus.bixi.ai.api.dto.MessageDTO;
 import com.lotus.bixi.ai.api.dto.SearchDTO;
 import com.lotus.bixi.ai.api.entity.AiMessage;
@@ -28,20 +27,19 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class MessageServiceImpl implements MessageService {
+public class MessageServiceImpl extends ServiceImpl<AiMessageMapper, AiMessage> implements MessageService {
 
-    private final AiMessageMapper messageMapper;
     private final ChatClient chatClient;
     private final VectorStoreService vectorStoreService;
     private final ObjectMapper objectMapper;
 
     @Override
     public List<MessageVO> listMessages(Long sessionId) {
-        LambdaQueryWrapper<AiMessage> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(AiMessage::getSessionId, sessionId)
+        List<AiMessage> messages = lambdaQuery()
+                .eq(AiMessage::getSessionId, sessionId)
                 .eq(AiMessage::getDelFlag, "0")
-                .orderByAsc(AiMessage::getCreateTime);
-        List<AiMessage> messages = messageMapper.selectList(wrapper);
+                .orderByAsc(AiMessage::getCreateTime)
+                .list();
         return messages.stream().map(this::convertToVO).collect(Collectors.toList());
     }
 
@@ -54,7 +52,7 @@ public class MessageServiceImpl implements MessageService {
         userMessage.setSessionId(dto.getSessionId());
         userMessage.setRole("user");
         userMessage.setContent(filteredContent);
-        messageMapper.insert(userMessage);
+        save(userMessage);
 
         String answer = chatClient.prompt()
                 .user(filteredContent)
@@ -65,7 +63,7 @@ public class MessageServiceImpl implements MessageService {
         assistantMessage.setSessionId(dto.getSessionId());
         assistantMessage.setRole("assistant");
         assistantMessage.setContent(answer);
-        messageMapper.insert(assistantMessage);
+        save(assistantMessage);
 
         return convertToVO(assistantMessage);
     }
@@ -79,7 +77,7 @@ public class MessageServiceImpl implements MessageService {
         userMessage.setSessionId(dto.getSessionId());
         userMessage.setRole("user");
         userMessage.setContent(filteredContent);
-        messageMapper.insert(userMessage);
+        save(userMessage);
 
         String context = buildContext(dto.getContent(), dto.getDocumentIds());
         String enhancedPrompt = buildRagPrompt(filteredContent, context);
@@ -93,7 +91,7 @@ public class MessageServiceImpl implements MessageService {
         assistantMessage.setSessionId(dto.getSessionId());
         assistantMessage.setRole("assistant");
         assistantMessage.setContent(answer);
-        messageMapper.insert(assistantMessage);
+        save(assistantMessage);
 
         MessageVO vo = convertToVO(assistantMessage);
         if (dto.getDocumentIds() != null && !dto.getDocumentIds().isEmpty()) {
@@ -105,9 +103,9 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     public void deleteMessages(Long sessionId) {
-        LambdaQueryWrapper<AiMessage> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(AiMessage::getSessionId, sessionId);
-        messageMapper.delete(wrapper);
+        lambdaUpdate()
+                .eq(AiMessage::getSessionId, sessionId)
+                .remove();
     }
 
     private String buildContext(String query, List<Long> documentIds) {

@@ -14,7 +14,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
 
 import java.util.List;
 
@@ -38,6 +40,12 @@ public class AiController {
     @Operation(summary = "同步对话")
     public R<ChatVO> chat(@RequestBody @Valid ChatDTO dto) {
         return R.ok(chatService.chat(dto));
+    }
+
+    @GetMapping(value = "/stream/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @Operation(summary = "流式对话")
+    public Flux<String> streamChat(@Valid ChatDTO dto) {
+        return chatService.streamChat(dto);
     }
 
     @PostMapping("/rag")
