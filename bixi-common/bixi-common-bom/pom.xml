@@ -38,6 +38,8 @@
         <common.io.version>2.18.0</common.io.version>
         <spring.checkstyle.plugin>0.0.43</spring.checkstyle.plugin>
         <flatten-maven-plugin.version>1.6.0</flatten-maven-plugin.version>
+        <spring-ai-alibaba.version>1.0.0.2</spring-ai-alibaba.version>
+        <lombok.version>1.18.36</lombok.version>
 
     </properties>
 
@@ -106,7 +108,19 @@
 
             <dependency>
                 <groupId>com.lotus</groupId>
+                <artifactId>bixi-common-ai</artifactId>
+                <version>${revision}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.lotus</groupId>
                 <artifactId>bixi-upms-api</artifactId>
+                <version>${revision}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.lotus</groupId>
+                <artifactId>bixi-ai-api</artifactId>
                 <version>${revision}</version>
             </dependency>
 
@@ -184,6 +198,13 @@
                 <scope>import</scope>
             </dependency>
 
+            <!-- Lombok -->
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
+            </dependency>
+
             <!-- commons.io 覆盖easyexcel-->
             <dependency>
                 <artifactId>commons-io</artifactId>
@@ -210,6 +231,15 @@
                         <groupId>org.springframework.boot</groupId>
                     </exclusion>
                 </exclusions>
+            </dependency>
+
+            <!-- Spring AI Alibaba BOM -->
+            <dependency>
+                <groupId>com.alibaba.cloud.ai</groupId>
+                <artifactId>spring-ai-alibaba-bom</artifactId>
+                <version>${spring-ai-alibaba.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
