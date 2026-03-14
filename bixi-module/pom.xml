@@ -21,6 +21,8 @@
         <module>bixi-quartz</module>
         <module>bixi-ai-api</module>
         <module>bixi-ai-biz</module>
+        <module>bixi-workflow-api</module>
+        <module>bixi-workflow-biz</module>
     </modules>
 
 </project>

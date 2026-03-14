@@ -28,5 +28,6 @@
         <module>bixi-common-xss</module>
         <module>bixi-common-mq</module>
         <module>bixi-common-ai</module>
+        <module>bixi-common-workflow</module>
     </modules>
 </project>

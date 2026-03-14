@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <artifactId>bixi-common</artifactId>
+        <groupId>com.lotus</groupId>
+        <version>${revision}</version>
+    </parent>
+
+    <artifactId>bixi-common-workflow</artifactId>
+    <packaging>jar</packaging>
+    <description>bixi 工作流基础能力模块</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.lotus</groupId>
+            <artifactId>bixi-common-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flowable</groupId>
+            <artifactId>flowable-spring-boot-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
+        </dependency>
+    </dependencies>
+</project>

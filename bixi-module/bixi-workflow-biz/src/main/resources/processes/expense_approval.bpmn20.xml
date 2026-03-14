@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:flowable="http://flowable.org/bpmn"
+             xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+             xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC"
+             xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI"
+             typeLanguage="http://www.w3.org/2001/XMLSchema"
+             expressionLanguage="http://www.w3.org/1999/XPath"
+             targetNamespace="http://lotus.com/bixi/workflow">
+
+    <process id="expense_approval" name="报销审批流程" isExecutable="true">
+
+        <documentation>报销审批流程：根据报销金额决定审批路径，超过5000需要财务审批，超过50000需要总经理审批</documentation>
+
+        <startEvent id="startEvent" name="开始"/>
+
+        <sequenceFlow id="flow1" sourceRef="startEvent" targetRef="submitExpense"/>
+
+        <userTask id="submitExpense" name="提交报销申请" flowable:assignee="${applicant}">
+            <documentation>发起人提交报销申请</documentation>
+            <extensionElements>
+                <flowable:taskListener event="create" class="com.lotus.bixi.common.workflow.listener.BaseTaskListener"/>
+            </extensionElements>
+        </userTask>
+
+        <sequenceFlow id="flow2" sourceRef="submitExpense" targetRef="deptManagerApproval"/>
+
+        <userTask id="deptManagerApproval" name="部门经理审批" flowable:candidateGroups="dept_manager">
+            <documentation>部门经理审批报销申请</documentation>
+            <extensionElements>
+                <flowable:taskListener event="create" class="com.lotus.bixi.common.workflow.listener.BaseTaskListener"/>
+            </extensionElements>
+        </userTask>
+
+        <sequenceFlow id="flow3" sourceRef="deptManagerApproval" targetRef="gatewayAmountCheck"/>
+
+        <exclusiveGateway id="gatewayAmountCheck" name="报销金额判断"/>
+
+        <sequenceFlow id="flow4" name="金额大于5000" sourceRef="gatewayAmountCheck" targetRef="financeApproval">
+            <conditionExpression xsi:type="tFormalExpression">${amount > 5000}</conditionExpression>
+        </sequenceFlow>
+
+        <sequenceFlow id="flow5" name="金额小于等于5000" sourceRef="gatewayAmountCheck" targetRef="endEvent">
+            <conditionExpression xsi:type="tFormalExpression">${amount &lt;= 5000}</conditionExpression>
+        </sequenceFlow>
+
+        <userTask id="financeApproval" name="财务审批" flowable:candidateGroups="finance">
+            <documentation>财务审批报销申请（报销金额超过5000）</documentation>
+            <extensionElements>
+                <flowable:taskListener event="create" class="com.lotus.bixi.common.workflow.listener.BaseTaskListener"/>
+            </extensionElements>
+        </userTask>
+
+        <sequenceFlow id="flow6" sourceRef="financeApproval" targetRef="gatewayHighAmountCheck"/>
+
+        <exclusiveGateway id="gatewayHighAmountCheck" name="高额报销判断"/>
+
+        <sequenceFlow id="flow7" name="金额大于50000" sourceRef="gatewayHighAmountCheck" targetRef="ceoApproval">
+            <conditionExpression xsi:type="tFormalExpression">${amount > 50000}</conditionExpression>
+        </sequenceFlow>
+
+        <sequenceFlow id="flow8" name="金额小于等于50000" sourceRef="gatewayHighAmountCheck" targetRef="endEvent">
+            <conditionExpression xsi:type="tFormalExpression">${amount &lt;= 50000}</conditionExpression>
+        </sequenceFlow>
+
+        <userTask id="ceoApproval" name="总经理审批" flowable:candidateGroups="ceo">
+            <documentation>总经理审批报销申请（报销金额超过50000）</documentation>
+            <extensionElements>
+                <flowable:taskListener event="create" class="com.lotus.bixi.common.workflow.listener.BaseTaskListener"/>
+            </extensionElements>
+        </userTask>
+
+        <sequenceFlow id="flow9" sourceRef="ceoApproval" targetRef="endEvent"/>
+
+        <endEvent id="endEvent" name="结束">
+            <extensionElements>
+                <flowable:executionListener event="end" class="com.lotus.bixi.common.workflow.listener.BaseExecutionListener"/>
+            </extensionElements>
+        </endEvent>
+
+    </process>
+
+    <bpmndi:BPMNDiagram id="BPMNDiagram_expense_approval">
+        <bpmndi:BPMNPlane bpmnElement="expense_approval" id="BPMNPlane_expense_approval">
+            <bpmndi:BPMNShape bpmnElement="startEvent" id="BPMNShape_startEvent">
+                <omgdc:Bounds height="30.0" width="30.0" x="100.0" y="163.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="submitExpense" id="BPMNShape_submitExpense">
+                <omgdc:Bounds height="60.0" width="100.0" x="180.0" y="148.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="deptManagerApproval" id="BPMNShape_deptManagerApproval">
+                <omgdc:Bounds height="60.0" width="100.0" x="330.0" y="148.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="gatewayAmountCheck" id="BPMNShape_gatewayAmountCheck" isMarkerVisible="true">
+                <omgdc:Bounds height="40.0" width="40.0" x="480.0" y="158.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="financeApproval" id="BPMNShape_financeApproval">
+                <omgdc:Bounds height="60.0" width="100.0" x="570.0" y="48.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="gatewayHighAmountCheck" id="BPMNShape_gatewayHighAmountCheck" isMarkerVisible="true">
+                <omgdc:Bounds height="40.0" width="40.0" x="720.0" y="58.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="ceoApproval" id="BPMNShape_ceoApproval">
+                <omgdc:Bounds height="60.0" width="100.0" x="810.0" y="48.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="endEvent" id="BPMNShape_endEvent">
+                <omgdc:Bounds height="30.0" width="30.0" x="970.0" y="163.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNEdge bpmnElement="flow1" id="BPMNEdge_flow1">
+                <omgdi:waypoint x="130.0" y="178.0"/>
+                <omgdi:waypoint x="180.0" y="178.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow2" id="BPMNEdge_flow2">
+                <omgdi:waypoint x="280.0" y="178.0"/>
+                <omgdi:waypoint x="330.0" y="178.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow3" id="BPMNEdge_flow3">
+                <omgdi:waypoint x="430.0" y="178.0"/>
+                <omgdi:waypoint x="480.0" y="178.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow4" id="BPMNEdge_flow4">
+                <omgdi:waypoint x="500.0" y="158.0"/>
+                <omgdi:waypoint x="500.0" y="78.0"/>
+                <omgdi:waypoint x="570.0" y="78.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow5" id="BPMNEdge_flow5">
+                <omgdi:waypoint x="520.0" y="178.0"/>
+                <omgdi:waypoint x="970.0" y="178.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow6" id="BPMNEdge_flow6">
+                <omgdi:waypoint x="670.0" y="78.0"/>
+                <omgdi:waypoint x="720.0" y="78.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow7" id="BPMNEdge_flow7">
+                <omgdi:waypoint x="760.0" y="78.0"/>
+                <omgdi:waypoint x="810.0" y="78.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow8" id="BPMNEdge_flow8">
+                <omgdi:waypoint x="740.0" y="98.0"/>
+                <omgdi:waypoint x="740.0" y="178.0"/>
+                <omgdi:waypoint x="970.0" y="178.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow9" id="BPMNEdge_flow9">
+                <omgdi:waypoint x="910.0" y="78.0"/>
+                <omgdi:waypoint x="985.0" y="78.0"/>
+                <omgdi:waypoint x="985.0" y="163.0"/>
+            </bpmndi:BPMNEdge>
+        </bpmndi:BPMNPlane>
+    </bpmndi:BPMNDiagram>
+
+</definitions>

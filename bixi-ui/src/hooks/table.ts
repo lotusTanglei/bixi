@@ -60,6 +60,19 @@ export interface Pagination {
 	layout?: String;
 }
 
+/**
+ * 定义表格通用样式
+ */
+export const tableStyle: TableStyle = {
+	cellStyle: { textAlign: 'center' },
+	headerCellStyle: {
+		textAlign: 'center',
+		background: 'var(--el-table-row-hover-bg-color)',
+		color: 'var(--el-text-color-primary)',
+	},
+	rowStyle: { textAlign: 'center' },
+};
+
 export function useTable(options?: BasicTableProps) {
 	const defaultOptions: { createdIsNeed: boolean; pagination: Pagination; queryForm: {}; loading: boolean; dataListSelections: any[]; ascs: any[]; props: { item: string; totalCount: string }; selectObjs: any[]; descs: any[]; dataListLoading: boolean; dataList: any[]; isPage: boolean } = {
 		// 列表数据是否正在加载中，默认为false
@@ -232,20 +245,6 @@ export function useTable(options?: BasicTableProps) {
 	 */
 	const downBlobFile = (url: string, query: any, fileName: string) => {
 		return other.downBlobFile(url, query, fileName);
-	};
-
-	/**
-	 * 定义表格通用样式
-	 * @returns  css
-	 */
-	const tableStyle: TableStyle = {
-		cellStyle: { textAlign: 'center' },
-		headerCellStyle: {
-			textAlign: 'center',
-			background: 'var(--el-table-row-hover-bg-color)',
-			color: 'var(--el-text-color-primary)',
-		},
-		rowStyle: { textAlign: 'center' },
 	};
 
 	return {

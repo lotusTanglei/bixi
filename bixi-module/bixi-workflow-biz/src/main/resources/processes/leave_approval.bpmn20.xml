@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:flowable="http://flowable.org/bpmn"
+             xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+             xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC"
+             xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI"
+             typeLanguage="http://www.w3.org/2001/XMLSchema"
+             expressionLanguage="http://www.w3.org/1999/XPath"
+             targetNamespace="http://lotus.com/bixi/workflow">
+
+    <process id="leave_approval" name="请假审批流程" isExecutable="true">
+
+        <documentation>请假审批流程：根据请假天数决定审批路径，超过3天需要HR审批</documentation>
+
+        <startEvent id="startEvent" name="开始"/>
+
+        <sequenceFlow id="flow1" sourceRef="startEvent" targetRef="submitApplication"/>
+
+        <userTask id="submitApplication" name="提交申请" flowable:assignee="${applicant}">
+            <documentation>发起人提交请假申请</documentation>
+            <extensionElements>
+                <flowable:taskListener event="create" class="com.lotus.bixi.common.workflow.listener.BaseTaskListener"/>
+            </extensionElements>
+        </userTask>
+
+        <sequenceFlow id="flow2" sourceRef="submitApplication" targetRef="deptManagerApproval"/>
+
+        <userTask id="deptManagerApproval" name="部门经理审批" flowable:candidateGroups="dept_manager">
+            <documentation>部门经理审批请假申请</documentation>
+            <extensionElements>
+                <flowable:taskListener event="create" class="com.lotus.bixi.common.workflow.listener.BaseTaskListener"/>
+            </extensionElements>
+        </userTask>
+
+        <sequenceFlow id="flow3" sourceRef="deptManagerApproval" targetRef="gatewayDaysCheck"/>
+
+        <exclusiveGateway id="gatewayDaysCheck" name="请假天数判断"/>
+
+        <sequenceFlow id="flow4" name="大于3天" sourceRef="gatewayDaysCheck" targetRef="hrApproval">
+            <conditionExpression xsi:type="tFormalExpression">${days > 3}</conditionExpression>
+        </sequenceFlow>
+
+        <sequenceFlow id="flow5" name="小于等于3天" sourceRef="gatewayDaysCheck" targetRef="endEvent">
+            <conditionExpression xsi:type="tFormalExpression">${days &lt;= 3}</conditionExpression>
+        </sequenceFlow>
+
+        <userTask id="hrApproval" name="HR审批" flowable:candidateGroups="hr">
+            <documentation>HR审批请假申请（请假天数超过3天）</documentation>
+            <extensionElements>
+                <flowable:taskListener event="create" class="com.lotus.bixi.common.workflow.listener.BaseTaskListener"/>
+            </extensionElements>
+        </userTask>
+
+        <sequenceFlow id="flow6" sourceRef="hrApproval" targetRef="endEvent"/>
+
+        <endEvent id="endEvent" name="结束">
+            <extensionElements>
+                <flowable:executionListener event="end" class="com.lotus.bixi.common.workflow.listener.BaseExecutionListener"/>
+            </extensionElements>
+        </endEvent>
+
+    </process>
+
+    <bpmndi:BPMNDiagram id="BPMNDiagram_leave_approval">
+        <bpmndi:BPMNPlane bpmnElement="leave_approval" id="BPMNPlane_leave_approval">
+            <bpmndi:BPMNShape bpmnElement="startEvent" id="BPMNShape_startEvent">
+                <omgdc:Bounds height="30.0" width="30.0" x="100.0" y="163.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="submitApplication" id="BPMNShape_submitApplication">
+                <omgdc:Bounds height="60.0" width="100.0" x="180.0" y="148.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="deptManagerApproval" id="BPMNShape_deptManagerApproval">
+                <omgdc:Bounds height="60.0" width="100.0" x="330.0" y="148.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="gatewayDaysCheck" id="BPMNShape_gatewayDaysCheck" isMarkerVisible="true">
+                <omgdc:Bounds height="40.0" width="40.0" x="480.0" y="158.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="hrApproval" id="BPMNShape_hrApproval">
+                <omgdc:Bounds height="60.0" width="100.0" x="570.0" y="48.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="endEvent" id="BPMNShape_endEvent">
+                <omgdc:Bounds height="30.0" width="30.0" x="730.0" y="163.0"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNEdge bpmnElement="flow1" id="BPMNEdge_flow1">
+                <omgdi:waypoint x="130.0" y="178.0"/>
+                <omgdi:waypoint x="180.0" y="178.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow2" id="BPMNEdge_flow2">
+                <omgdi:waypoint x="280.0" y="178.0"/>
+                <omgdi:waypoint x="330.0" y="178.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow3" id="BPMNEdge_flow3">
+                <omgdi:waypoint x="430.0" y="178.0"/>
+                <omgdi:waypoint x="480.0" y="178.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow4" id="BPMNEdge_flow4">
+                <omgdi:waypoint x="500.0" y="158.0"/>
+                <omgdi:waypoint x="500.0" y="78.0"/>
+                <omgdi:waypoint x="570.0" y="78.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow5" id="BPMNEdge_flow5">
+                <omgdi:waypoint x="520.0" y="178.0"/>
+                <omgdi:waypoint x="730.0" y="178.0"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flow6" id="BPMNEdge_flow6">
+                <omgdi:waypoint x="670.0" y="78.0"/>
+                <omgdi:waypoint x="745.0" y="78.0"/>
+                <omgdi:waypoint x="745.0" y="163.0"/>
+            </bpmndi:BPMNEdge>
+        </bpmndi:BPMNPlane>
+    </bpmndi:BPMNDiagram>
+
+</definitions>

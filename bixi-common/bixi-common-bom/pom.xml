@@ -40,6 +40,7 @@
         <flatten-maven-plugin.version>1.6.0</flatten-maven-plugin.version>
         <spring-ai-alibaba.version>1.0.0.2</spring-ai-alibaba.version>
         <lombok.version>1.18.36</lombok.version>
+        <flowable.version>7.1.0</flowable.version>
 
     </properties>
 
@@ -240,6 +241,41 @@
                 <version>${spring-ai-alibaba.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+
+            <!-- Flowable BOM -->
+            <dependency>
+                <groupId>org.flowable</groupId>
+                <artifactId>flowable-spring-boot</artifactId>
+                <version>${flowable.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- Flowable 核心依赖 -->
+            <dependency>
+                <groupId>org.flowable</groupId>
+                <artifactId>flowable-spring-boot-starter</artifactId>
+                <version>${flowable.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.flowable</groupId>
+                <artifactId>flowable-spring-boot-starter-rest</artifactId>
+                <version>${flowable.version}</version>
+            </dependency>
+
+            <!-- 工作流模块依赖 -->
+            <dependency>
+                <groupId>com.lotus</groupId>
+                <artifactId>bixi-common-workflow</artifactId>
+                <version>${revision}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.lotus</groupId>
+                <artifactId>bixi-workflow-api</artifactId>
+                <version>${revision}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

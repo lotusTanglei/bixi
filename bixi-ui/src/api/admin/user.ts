@@ -8,6 +8,14 @@ export const pageList = (params?: Object) => {
 	});
 };
 
+export const list = (params?: Object) => {
+	return request({
+		url: '/admin/user/list',
+		method: 'get',
+		params,
+	});
+};
+
 export const addObj = (obj: Object) => {
 	return request({
 		url: '/admin/user',
