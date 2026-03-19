@@ -45,6 +45,7 @@
         <spring.checkstyle.plugin>0.0.43</spring.checkstyle.plugin>
         <flatten-maven-plugin.version>1.6.0</flatten-maven-plugin.version>
         <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
+        <jsr305.version>3.0.2</jsr305.version>
     </properties>
 
     <!-- 以下依赖 全局所有的模块都会引入  -->
@@ -77,6 +78,11 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+            <version>${jsr305.version}</version>
         </dependency>
         <!-- JAVA 17 -->
         <dependency>

@@ -7,7 +7,6 @@ import com.lotus.bixi.common.log.annotation.SysLog;
 import com.lotus.bixi.common.security.annotation.HasPermission;
 import com.lotus.bixi.workflow.api.dto.FormDTO;
 import com.lotus.bixi.workflow.api.dto.FormQueryDTO;
-import com.lotus.bixi.workflow.api.entity.WfForm;
 import com.lotus.bixi.workflow.api.vo.FormRenderVO;
 import com.lotus.bixi.workflow.api.vo.FormVO;
 import com.lotus.bixi.workflow.service.FormService;
@@ -47,7 +46,8 @@ public class FormController {
     @HasPermission("wf_form_add")
     @Operation(summary = "创建表单")
     public R<Boolean> save(@Valid @RequestBody FormDTO formDTO) {
-        return R.ok(formService.saveForm(formDTO));
+        formService.saveForm(formDTO);
+        return R.ok(Boolean.TRUE);
     }
 
     @PutMapping
@@ -55,7 +55,8 @@ public class FormController {
     @HasPermission("wf_form_edit")
     @Operation(summary = "更新表单")
     public R<Boolean> update(@Valid @RequestBody FormDTO formDTO) {
-        return R.ok(formService.updateForm(formDTO));
+        formService.updateForm(formDTO);
+        return R.ok(Boolean.TRUE);
     }
 
     @DeleteMapping("/{id}")

@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.lotus.bixi.common.mybatis.base.BaseEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -20,6 +21,7 @@ import java.time.LocalDateTime;
  * @since 2017-10-29
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @Schema(description = "用户")
 public class SysUser extends BaseEntity<SysUser> {
 

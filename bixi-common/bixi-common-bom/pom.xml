@@ -39,7 +39,7 @@
         <spring.checkstyle.plugin>0.0.43</spring.checkstyle.plugin>
         <flatten-maven-plugin.version>1.6.0</flatten-maven-plugin.version>
         <spring-ai-alibaba.version>1.0.0.2</spring-ai-alibaba.version>
-        <lombok.version>1.18.36</lombok.version>
+        <lombok.version>1.18.38</lombok.version>
         <flowable.version>7.1.0</flowable.version>
 
     </properties>

@@ -4,8 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "vite --force",
-    "build": "cross-env NODE_OPTIONS=--max-old-space-size=4096 vite build",
-    "build:docker": "cross-env NODE_OPTIONS=--max-old-space-size=4096 vite build --outDir ./docker/dist/",
+    "build": "cross-env NODE_OPTIONS=--max-old-space-size=4096 BROWSERSLIST_IGNORE_OLD_DATA=1 vite build",
+    "build:dev": "cross-env NODE_OPTIONS=--max-old-space-size=4096 BROWSERSLIST_IGNORE_OLD_DATA=1 vite build --mode development",
+    "build:test": "cross-env NODE_OPTIONS=--max-old-space-size=4096 BROWSERSLIST_IGNORE_OLD_DATA=1 vite build --mode test",
+    "build:prod": "cross-env NODE_OPTIONS=--max-old-space-size=4096 BROWSERSLIST_IGNORE_OLD_DATA=1 vite build --mode production",
+    "build:docker": "cross-env NODE_OPTIONS=--max-old-space-size=4096 BROWSERSLIST_IGNORE_OLD_DATA=1 vite build --outDir ./docker/dist/",
     "lint:eslint": "eslint ./src --fix",
     "prettier": "prettier --write ."
   },

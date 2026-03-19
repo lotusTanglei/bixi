@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.toolkit.ParameterUtils;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.pagination.dialects.IDialect;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.mapping.BoundSql;
@@ -25,6 +26,7 @@ import java.sql.SQLException;
  */
 @Data
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 public class BixiPaginationInnerInterceptor extends PaginationInnerInterceptor {
 
     /**

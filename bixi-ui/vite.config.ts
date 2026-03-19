@@ -71,7 +71,7 @@ const viteConfig = defineConfig((mode: ConfigEnv) => {
 		},
 		build: {
 			outDir: 'dist', // 打包输出目录
-			chunkSizeWarningLimit: 1500, // 代码分包阈值
+			chunkSizeWarningLimit: 2500, // 代码分包阈值
 			// 开发使用 esbuild 更快，生产环境打包使用 terser 可以删除更多注释
 			minify: isDev ?  'esbuild' : 'terser',
 			terserOptions: {

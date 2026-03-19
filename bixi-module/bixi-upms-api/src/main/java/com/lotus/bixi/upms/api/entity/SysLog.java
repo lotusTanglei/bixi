@@ -8,6 +8,7 @@ import com.lotus.bixi.common.mybatis.base.BaseEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * <p>
@@ -18,6 +19,7 @@ import lombok.Data;
  * @since 2017-11-20
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @Schema(description = "日志")
 public class SysLog extends BaseEntity<SysLog> {
 

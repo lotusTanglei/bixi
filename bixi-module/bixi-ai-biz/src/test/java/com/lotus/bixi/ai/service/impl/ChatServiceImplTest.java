@@ -1,7 +1,6 @@
 package com.lotus.bixi.ai.service.impl;
 
 import com.lotus.bixi.ai.api.dto.ChatDTO;
-import com.lotus.bixi.ai.api.entity.AiConversation;
 import com.lotus.bixi.ai.api.vo.ChatVO;
 import com.lotus.bixi.ai.mapper.AiConversationMapper;
 import com.lotus.bixi.ai.service.VectorStoreService;
@@ -17,7 +16,6 @@ import org.springframework.ai.chat.client.ChatClient.ChatClientRequestSpec;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -55,7 +53,6 @@ class ChatServiceImplTest {
         // Arrange
         String expectedAnswer = "AI Response";
         when(responseSpec.content()).thenReturn(expectedAnswer);
-        when(conversationMapper.insert(any(AiConversation.class))).thenReturn(1);
 
         ChatDTO dto = new ChatDTO();
         dto.setMessage("Hello");
@@ -66,9 +63,9 @@ class ChatServiceImplTest {
         // Assert
         assertNotNull(result);
         assertEquals(expectedAnswer, result.getContent());
-        
-        // Verify that conversation was saved using the inherited service method
-        // which eventually calls baseMapper.insert
-        verify(conversationMapper, times(1)).insert(any(AiConversation.class));
+        verify(chatClient, times(1)).prompt();
+        verify(requestSpec, times(1)).user(anyString());
+        verify(requestSpec, times(1)).call();
+        verify(responseSpec, times(1)).content();
     }
 }
