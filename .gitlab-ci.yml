@@ -1,0 +1,40 @@
+image: maven:3.8.8-eclipse-temurin-17
+
+stages:
+  - build
+  - test
+  - package
+
+variables:
+  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
+
+cache:
+  paths:
+    - .m2/repository/
+    - bixi-ui/node_modules/
+
+build_frontend:
+  image: node:18
+  stage: build
+  before_script:
+    - apt-get update && apt-get install -y make
+  script:
+    - make frontend-ci
+  artifacts:
+    paths:
+      - bixi-ui/dist/
+
+build_backend:
+  stage: build
+  before_script:
+    - apt-get update && apt-get install -y make
+  script:
+    - make backend-ci
+
+package_backend:
+  stage: package
+  script:
+    - mvn package -DskipTests
+  artifacts:
+    paths:
+      - "**/target/*.jar"
