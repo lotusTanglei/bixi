@@ -36,7 +36,7 @@ public class SysRegisterController {
     @SysLog("注册用户")
     @PostMapping("/user")
     public R<Boolean> registerUser(@RequestBody UserDTO userDto) {
-        return userService.registerUser(userDto);
+        return R.ok(userService.registerUser(userDto));
     }
 
 }

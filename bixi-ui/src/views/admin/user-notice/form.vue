@@ -16,7 +16,7 @@
 				<el-descriptions-item label="发送人">{{ dataForm.senderName }}</el-descriptions-item>
 				<el-descriptions-item label="发送时间">{{ dataForm.createTime }}</el-descriptions-item>
 				<el-descriptions-item label="内容">
-					<div v-html="dataForm.content" style="min-height: 100px;"></div>
+					<div v-html="DOMPurify.sanitize(dataForm.content || '')" style="min-height: 100px;"></div>
 				</el-descriptions-item>
 			</el-descriptions>
 			<template #footer>
@@ -31,6 +31,7 @@
 <script lang="ts" setup name="sysUserNoticeDialog">
 import { getObj } from '/@/api/admin/user-notice';
 import { useMessage } from '/@/hooks/message';
+import DOMPurify from 'dompurify';
 
 const visible = ref(false);
 const loading = ref(false);

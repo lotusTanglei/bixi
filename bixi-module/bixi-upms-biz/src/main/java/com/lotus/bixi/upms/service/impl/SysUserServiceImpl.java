@@ -189,7 +189,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
     @Override
     @CacheEvict(value = CacheConstants.USER_DETAILS, key = "#userDto.username")
-    public R<Boolean> updateUserInfo(UserDTO userDto) {
+    public Boolean updateUserInfo(UserDTO userDto) {
         SysUser sysUser = new SysUser();
         sysUser.setPhone(userDto.getPhone());
         sysUser.setId(SecurityUtils.getUser().getId());
@@ -197,7 +197,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         sysUser.setNickname(userDto.getNickname());
         sysUser.setName(userDto.getName());
         sysUser.setEmail(userDto.getEmail());
-        return R.ok(this.updateById(sysUser));
+        return this.updateById(sysUser);
     }
 
     @Override
@@ -374,14 +374,14 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public R<Boolean> registerUser(UserDTO userDto) {
+    public Boolean registerUser(UserDTO userDto) {
         // 判断用户名是否存在
         SysUser sysUser = this.getOne(Wrappers.<SysUser>lambdaQuery().eq(SysUser::getUsername, userDto.getUsername()));
         if (sysUser != null) {
             String message = MsgUtils.getMessage(ErrorCodes.SYS_USER_USERNAME_EXISTING, userDto.getUsername());
-            return R.failed(message);
+            throw new RuntimeException(message);
         }
-        return R.ok(saveUser(userDto));
+        return saveUser(userDto);
     }
 
     /**
@@ -392,14 +392,14 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
      */
     @Override
     @CacheEvict(value = CacheConstants.USER_DETAILS, key = "#username")
-    public R<Boolean> lockUser(String username) {
+    public Boolean lockUser(String username) {
         SysUser sysUser = baseMapper.selectOne(Wrappers.<SysUser>lambdaQuery().eq(SysUser::getUsername, username));
 
         if (Objects.nonNull(sysUser)) {
             sysUser.setLockFlag(CommonConstants.STATUS_LOCK);
-            baseMapper.updateById(sysUser);
+            return baseMapper.updateById(sysUser) > 0;
         }
-        return R.ok();
+        return false;
     }
 
     @Override

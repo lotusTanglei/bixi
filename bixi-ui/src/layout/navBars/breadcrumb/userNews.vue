@@ -12,58 +12,62 @@
 				<template v-if="noticeCount > 0">
 					<el-tabs v-model="activeTab" class="notice-tabs">
 						<el-tab-pane :label="`${$t('user.newUnreadTab')}(${unreadCount})`" name="unread">
-							<div class="notice-list">
-								<div class="content-box-item" v-for="item in noticeCenter.unreadItems" :key="item.userNoticeId" @click="openNotice(item)">
-									<div class="content-box-title">
-										<div class="content-box-title-header">
-											<el-avatar :size="30" :src="item.senderAvatar" v-if="item.senderAvatar" class="mr10" />
-											<el-avatar :size="30" class="mr10" v-else>{{ item.senderName?.charAt(0) }}</el-avatar>
-											<div class="header-info">
-												<div class="title-row">
-													<span class="content-box-title-text">{{ item.title }}</span>
-													<el-tag size="small" v-if="item.type === '0'" class="ml5">通知</el-tag>
-													<el-tag size="small" type="warning" v-else-if="item.type === '1'" class="ml5">公告</el-tag>
-													<el-tag size="small" type="info" v-else class="ml5">私信</el-tag>
+							<div class="notice-list" v-bind="unreadContainerProps" style="height: 360px; overflow: auto; padding-right: 4px;">
+								<div v-bind="unreadWrapperProps">
+									<div class="content-box-item" v-for="{ data: item, index } in unreadVirtualList" :key="item.userNoticeId" @click="openNotice(item)">
+										<div class="content-box-title">
+											<div class="content-box-title-header">
+												<el-avatar :size="30" :src="item.senderAvatar" v-if="item.senderAvatar" class="mr10" />
+												<el-avatar :size="30" class="mr10" v-else>{{ item.senderName?.charAt(0) }}</el-avatar>
+												<div class="header-info">
+													<div class="title-row">
+														<span class="content-box-title-text">{{ item.title }}</span>
+														<el-tag size="small" v-if="item.type === '0'" class="ml5">通知</el-tag>
+														<el-tag size="small" type="warning" v-else-if="item.type === '1'" class="ml5">公告</el-tag>
+														<el-tag size="small" type="info" v-else class="ml5">私信</el-tag>
 
-													<el-tag size="small" type="info" v-if="item.priority === '0'" class="ml5">普通</el-tag>
-													<el-tag size="small" type="warning" v-else-if="item.priority === '1'" class="ml5">重要</el-tag>
-													<el-tag size="small" type="danger" v-else class="ml5">紧急</el-tag>
+														<el-tag size="small" type="info" v-if="item.priority === '0'" class="ml5">普通</el-tag>
+														<el-tag size="small" type="warning" v-else-if="item.priority === '1'" class="ml5">重要</el-tag>
+														<el-tag size="small" type="danger" v-else class="ml5">紧急</el-tag>
+													</div>
+													<div class="sender-name">{{ item.senderName }}</div>
 												</div>
-												<div class="sender-name">{{ item.senderName }}</div>
 											</div>
+											<el-button icon="Delete" link type="primary" @click.stop="onDeleteItem(item.userNoticeId)" />
 										</div>
-										<el-button icon="Delete" link type="primary" @click.stop="onDeleteItem(item.userNoticeId)" />
+										<div class="content-box-msg">{{ item.content }}</div>
+										<div class="content-box-time">{{ item.createTime }}</div>
 									</div>
-									<div class="content-box-msg">{{ item.content }}</div>
-									<div class="content-box-time">{{ item.createTime }}</div>
 								</div>
 							</div>
 						</el-tab-pane>
 						<el-tab-pane :label="`${$t('user.newReadTab')}(${readCount})`" name="read">
-							<div class="notice-list">
-								<div class="content-box-item" v-for="item in noticeCenter.readItems" :key="item.userNoticeId" @click="openNotice(item)">
-									<div class="content-box-title">
-										<div class="content-box-title-header">
-											<el-avatar :size="30" :src="item.senderAvatar" v-if="item.senderAvatar" class="mr10" />
-											<el-avatar :size="30" class="mr10" v-else>{{ item.senderName?.charAt(0) }}</el-avatar>
-											<div class="header-info">
-												<div class="title-row">
-													<span class="content-box-title-text">{{ item.title }}</span>
-													<el-tag size="small" v-if="item.type === '0'" class="ml5">通知</el-tag>
-													<el-tag size="small" type="warning" v-else-if="item.type === '1'" class="ml5">公告</el-tag>
-													<el-tag size="small" type="info" v-else class="ml5">私信</el-tag>
+							<div class="notice-list" v-bind="readContainerProps" style="height: 360px; overflow: auto; padding-right: 4px;">
+								<div v-bind="readWrapperProps">
+									<div class="content-box-item" v-for="{ data: item, index } in readVirtualList" :key="item.userNoticeId" @click="openNotice(item)">
+										<div class="content-box-title">
+											<div class="content-box-title-header">
+												<el-avatar :size="30" :src="item.senderAvatar" v-if="item.senderAvatar" class="mr10" />
+												<el-avatar :size="30" class="mr10" v-else>{{ item.senderName?.charAt(0) }}</el-avatar>
+												<div class="header-info">
+													<div class="title-row">
+														<span class="content-box-title-text">{{ item.title }}</span>
+														<el-tag size="small" v-if="item.type === '0'" class="ml5">通知</el-tag>
+														<el-tag size="small" type="warning" v-else-if="item.type === '1'" class="ml5">公告</el-tag>
+														<el-tag size="small" type="info" v-else class="ml5">私信</el-tag>
 
-													<el-tag size="small" type="info" v-if="item.priority === '0'" class="ml5">普通</el-tag>
-													<el-tag size="small" type="warning" v-else-if="item.priority === '1'" class="ml5">重要</el-tag>
-													<el-tag size="small" type="danger" v-else class="ml5">紧急</el-tag>
+														<el-tag size="small" type="info" v-if="item.priority === '0'" class="ml5">普通</el-tag>
+														<el-tag size="small" type="warning" v-else-if="item.priority === '1'" class="ml5">重要</el-tag>
+														<el-tag size="small" type="danger" v-else class="ml5">紧急</el-tag>
+													</div>
+													<div class="sender-name">{{ item.senderName }}</div>
 												</div>
-												<div class="sender-name">{{ item.senderName }}</div>
 											</div>
+											<el-button icon="Delete" link type="primary" @click.stop="onDeleteItem(item.userNoticeId)" />
 										</div>
-										<el-button icon="Delete" link type="primary" @click.stop="onDeleteItem(item.userNoticeId)" />
+										<div class="content-box-msg">{{ item.content }}</div>
+										<div class="content-box-time">{{ item.createTime }}</div>
 									</div>
-									<div class="content-box-msg">{{ item.content }}</div>
-									<div class="content-box-time">{{ item.createTime }}</div>
 								</div>
 							</div>
 						</el-tab-pane>
@@ -74,15 +78,18 @@
 		</div>
 
 		<el-dialog v-model="dialogVisible" :title="currentNotice?.title" width="520px">
-			<div class="dialog-content" v-html="currentNotice?.content"></div>
+			<div class="dialog-content" v-html="DOMPurify.sanitize(currentNotice?.content || '')"></div>
 		</el-dialog>
 	</div>
 </template>
 
 <script setup lang="ts" name="layoutBreadcrumbUserNews">
+import { ref, computed, onMounted } from 'vue';
 import { useNoticeCenter, type NoticeCenterItem } from '/@/stores/noticeCenter';
 import { useMessage, useMessageBox } from '/@/hooks/message';
 import { useI18n } from 'vue-i18n';
+import DOMPurify from 'dompurify';
+import { useVirtualList } from '@vueuse/core';
 
 const noticeCenter = useNoticeCenter();
 const message = useMessage();
@@ -97,6 +104,16 @@ const currentNotice = ref<NoticeCenterItem | null>(null);
 const unreadCount = computed(() => noticeCenter.unreadCount);
 const readCount = computed(() => noticeCenter.readItems.length);
 const noticeCount = computed(() => noticeCenter.items.length);
+
+const { list: unreadVirtualList, containerProps: unreadContainerProps, wrapperProps: unreadWrapperProps } = useVirtualList(
+        computed(() => noticeCenter.unreadItems),
+        { itemHeight: 90 }
+);
+
+const { list: readVirtualList, containerProps: readContainerProps, wrapperProps: readWrapperProps } = useVirtualList(
+        computed(() => noticeCenter.readItems),
+        { itemHeight: 90 }
+);
 
 const onAllReadClick = () => {
 	messageBox
@@ -231,7 +248,7 @@ onMounted(async () => {
 	}
 
 	.notice-list {
-		max-height: 360px;
+		height: 360px;
 		overflow: auto;
 		padding-right: 4px;
 	}

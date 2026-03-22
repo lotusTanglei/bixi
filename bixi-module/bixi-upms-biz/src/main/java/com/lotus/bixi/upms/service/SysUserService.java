@@ -47,12 +47,11 @@ public interface SysUserService extends IService<SysUser> {
     Boolean deleteUserByIds(Long[] ids);
 
     /**
-     * 更新当前用户基本信息
-     *
+     * 更新用户信息
      * @param userDto 用户信息
      * @return Boolean
      */
-    R<Boolean> updateUserInfo(UserDTO userDto);
+    Boolean updateUserInfo(UserDTO userDto);
 
     /**
      * 更新指定用户信息
@@ -97,19 +96,17 @@ public interface SysUserService extends IService<SysUser> {
 
     /**
      * 注册用户
-     *
      * @param userDto 用户信息
-     * @return success/false
+     * @return Boolean
      */
-    R<Boolean> registerUser(UserDTO userDto);
+    Boolean registerUser(UserDTO userDto);
 
     /**
      * 锁定用户
-     *
-     * @param username
-     * @return
+     * @param username 用户名
+     * @return Boolean
      */
-    R<Boolean> lockUser(String username);
+    Boolean lockUser(String username);
 
     /**
      * 修改密码

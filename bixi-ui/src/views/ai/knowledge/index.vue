@@ -36,7 +36,7 @@
 								<el-avatar :size="32" :icon="msg.role === 'user' ? User : ChatDotRound" />
 							</div>
 							<div class="message-body">
-								<div class="message-content" v-html="formatContent(msg.content)"></div>
+								<div class="message-content" v-html="DOMPurify.sanitize(formatContent(msg.content))"></div>
 								<SourceReference
 									v-if="msg.role === 'assistant' && msg.sources?.length"
 									:sources="msg.sources"
@@ -79,6 +79,7 @@
 <script lang="ts" name="AiKnowledge" setup>
 import { User, ChatDotRound, Loading } from '@element-plus/icons-vue';
 import { useMessage } from '/@/hooks/message';
+import DOMPurify from 'dompurify';
 import { ragChat, chat } from '/@/api/ai/chat';
 import { documentList as fetchDocumentList } from '/@/api/ai/document';
 import SourceReference from './components/SourceReference.vue';

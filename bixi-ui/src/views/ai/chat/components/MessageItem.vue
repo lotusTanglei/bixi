@@ -11,7 +11,7 @@
 			</div>
 			<div class="message-text">
 				<el-scrollbar max-height="400px">
-					<div class="message-text-content" v-html="formatContent(message.content)"></div>
+					<div class="message-text-content" v-html="DOMPurify.sanitize(formatContent(message.content))"></div>
 				</el-scrollbar>
 			</div>
 			<div class="message-actions">
@@ -27,6 +27,7 @@
 <script lang="ts" name="MessageItem" setup>
 import { CopyDocument } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
+import DOMPurify from 'dompurify';
 
 interface Message {
 	id: string;
