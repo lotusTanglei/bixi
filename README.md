@@ -60,10 +60,16 @@ npm run dev
 ```
 
 ## 🤝 参与贡献
+本项目采用标准的 **Git Flow** 工作流进行协作开发：
+- `main` 分支：生产环境稳定版本，仅接受来自 `develop` 的合并。
+- `develop` 分支：日常开发主分支，包含最新的功能集成。
+- `feature/*` 分支：新功能开发分支，基于 `develop` 创建，开发完成后合并回 `develop`。
+
+参与步骤：
 1. Fork 本仓库
-2. 新建 `Feat_xxx` 或 `Fix_xxx` 分支
+2. 基于 `develop` 分支新建 `feature/xxx` 分支
 3. 提交代码 (`git commit -m "feat: xxx"`)
-4. 新建 Pull Request
+4. 新建 Pull Request 到原仓库的 `develop` 分支
 
 ## 📄 许可证
 [MIT License](LICENSE)
