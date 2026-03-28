@@ -56,125 +56,150 @@
 	</div>
 </template>
 
-<script>
+<script setup lang="ts">
+import { ref, watch, onMounted, nextTick } from 'vue';
 import Sortable from 'sortablejs';
+import { WarningFilled, Sort } from '@element-plus/icons-vue';
 
-export default {
-	props: {
-		/**
-		 * 表格数据
-		 */
-		modelValue: { type: Array, default: () => [] },
-		/**
-		 * 新增行模板
-		 */
-		addTemplate: { type: Object, default: () => {} },
-		/**
-		 * 无数据时的提示语
-		 */
-		placeholder: { type: String, default: '暂无数据' },
-		/**
-		 * 是否启用拖拽排序
-		 */
-		dragSort: { type: Boolean, default: false },
-		/**
-		 * 是否隐藏新增按钮
-		 */
-		hideAdd: { type: Boolean, default: false },
-		/**
-		 * 是否隐藏删除按钮
-		 */
-		hideDelete: { type: Boolean, default: false },
+interface Props {
+	/**
+	 * 表格数据
+	 */
+	modelValue?: any[];
+	/**
+	 * 新增行模板
+	 */
+	addTemplate?: Record<string, any>;
+	/**
+	 * 无数据时的提示语
+	 */
+	placeholder?: string;
+	/**
+	 * 是否启用拖拽排序
+	 */
+	dragSort?: boolean;
+	/**
+	 * 是否隐藏新增按钮
+	 */
+	hideAdd?: boolean;
+	/**
+	 * 是否隐藏删除按钮
+	 */
+	hideDelete?: boolean;
+}
+
+const props = withDefaults(defineProps<Props>(), {
+	modelValue: () => [],
+	addTemplate: () => ({}),
+	placeholder: '暂无数据',
+	dragSort: false,
+	hideAdd: false,
+	hideDelete: false,
+});
+
+const emit = defineEmits<{
+	(e: 'update:modelValue', value: any[]): void;
+	(e: 'delete', row: any): void;
+}>();
+
+const scFormTable = ref<HTMLElement>();
+const table = ref();
+const data = ref<any[]>([]);
+
+watch(
+	() => props.modelValue,
+	() => {
+		data.value = props.modelValue;
 	},
-	data() {
-		return {
-			/**
-			 * 表格数据
-			 */
-			data: [],
-		};
-	},
-	mounted() {
-		this.data = this.modelValue;
-		if (this.dragSort) {
-			this.rowDrop();
-		}
-	},
-	watch: {
-		modelValue() {
-			this.data = this.modelValue;
-		},
-		data: {
-			handler() {
-				/**
-				 * 更新表格数据
-				 * @event update:modelValue
-				 * @type {Array}
-				 */
-				this.$emit('update:modelValue', this.data);
-			},
-			deep: true,
-		},
-	},
-	methods: {
+);
+
+watch(
+	data,
+	() => {
 		/**
-		 * 启用表格行拖拽排序
+		 * 更新表格数据
+		 * @event update:modelValue
+		 * @type {Array}
 		 */
-		rowDrop() {
-			const _this = this;
-			const tbody = this.$refs.table.$el.querySelector('.el-table__body-wrapper tbody');
-			Sortable.create(tbody, {
-				handle: '.move',
-				animation: 300,
-				ghostClass: 'ghost',
-				onEnd({ newIndex, oldIndex }) {
-					_this.data.splice(newIndex, 0, _this.data.splice(oldIndex, 1)[0]);
-					const newArray = _this.data.slice(0);
-					const tmpHeight = _this.$refs.scFormTable.offsetHeight;
-					_this.$refs.scFormTable.style.setProperty('height', tmpHeight + 'px');
-					_this.data = [];
-					_this.$nextTick(() => {
-						_this.data = newArray;
-						_this.$nextTick(() => {
-							_this.$refs.scFormTable.style.removeProperty('height');
-						});
-					});
-				},
+		emit('update:modelValue', data.value);
+	},
+	{ deep: true },
+);
+
+/**
+ * 启用表格行拖拽排序
+ */
+const rowDrop = () => {
+	const tbody = table.value.$el.querySelector('.el-table__body-wrapper tbody');
+	Sortable.create(tbody, {
+		handle: '.move',
+		animation: 300,
+		ghostClass: 'ghost',
+		onEnd({ newIndex, oldIndex }: { newIndex: number; oldIndex: number }) {
+			const currRow = data.value.splice(oldIndex, 1)[0];
+			data.value.splice(newIndex, 0, currRow);
+			const newArray = data.value.slice(0);
+			const tmpHeight = scFormTable.value!.offsetHeight;
+			scFormTable.value!.style.setProperty('height', tmpHeight + 'px');
+			data.value = [];
+			nextTick(() => {
+				data.value = newArray;
+				nextTick(() => {
+					scFormTable.value!.style.removeProperty('height');
+				});
 			});
 		},
-		/**
-		 * 新增一行
-		 */
-		rowAdd() {
-			const temp = JSON.parse(JSON.stringify(this.addTemplate));
-			this.data.push(temp);
-		},
-		/**
-		 * 删除一行
-		 * @param {Object} row - 要删除的行数据
-		 * @param {number} index - 要删除的行的索引
-		 */
-		rowDel(row, index) {
-			this.data.splice(index, 1);
-			this.$emit('delete', row);
-		},
-		/**
-		 * 插入一行
-		 * @param {Object} row - 要插入的行数据，默认为新增行模板
-		 */
-		pushRow(row) {
-			const temp = row || JSON.parse(JSON.stringify(this.addTemplate));
-			this.data.push(temp);
-		},
-		/**
-		 * 根据索引删除一行
-		 * @param {number} index - 要删除的行的索引
-		 */
-		deleteRow(index) {
-			this.data.splice(index, 1);
-		},
-	},
+	});
 };
+
+/**
+ * 新增一行
+ */
+const rowAdd = () => {
+	const temp = JSON.parse(JSON.stringify(props.addTemplate));
+	data.value.push(temp);
+};
+
+/**
+ * 删除一行
+ * @param row - 要删除的行数据
+ * @param index - 要删除的行的索引
+ */
+const rowDel = (row: any, index: number) => {
+	data.value.splice(index, 1);
+	emit('delete', row);
+};
+
+/**
+ * 插入一行
+ * @param row - 要插入的行数据，默认为新增行模板
+ */
+const pushRow = (row?: Record<string, any>) => {
+	const temp = row || JSON.parse(JSON.stringify(props.addTemplate));
+	data.value.push(temp);
+};
+
+/**
+ * 根据索引删除一行
+ * @param index - 要删除的行的索引
+ */
+const deleteRow = (index: number) => {
+	data.value.splice(index, 1);
+};
+
+onMounted(() => {
+	data.value = props.modelValue;
+	if (props.dragSort) {
+		rowDrop();
+	}
+});
+
+defineExpose({
+	rowAdd,
+	rowDel,
+	pushRow,
+	deleteRow,
+});
 </script>
 
 <style scoped>

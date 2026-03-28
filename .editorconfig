@@ -1,0 +1,47 @@
+# EditorConfig for Bixi Project
+# https://editorconfig.org
+
+# 所有文件默认设置
+root = true
+
+[*]
+charset = utf-8
+indent_style = space
+indent_size = 2
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Java 文件
+[*.{java,xml}]
+indent_size = 4
+continuation_indent_size = 4
+
+# Vue/TypeScript/JavaScript 文件
+[*.{vue,ts,tsx,js,jsx,json}]
+indent_size = 2
+
+# CSS/SCSS 文件
+[*.{css,scss,less}]
+indent_size = 2
+
+# Markdown 文件
+[*.md]
+trim_trailing_whitespace = false
+max_line_length = off
+
+# YAML 文件
+[*.{yml,yaml}]
+indent_size = 2
+
+# Gradle 文件
+[*.{gradle,properties}]
+indent_size = 4
+
+# Shell 脚本
+[*.{sh,bash}]
+end_of_line = lf
+
+# Windows 批处理
+[*.{bat,cmd}]
+end_of_line = crlf

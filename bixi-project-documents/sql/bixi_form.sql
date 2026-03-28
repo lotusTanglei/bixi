@@ -1,3 +1,10 @@
+-- =====================================================
+-- 工作流表单模块数据库表
+-- 版本: 1.0.0
+-- 说明: 动态表单、表单版本、表单权限、表单数据
+-- =====================================================
+
+-- 表单定义表
 CREATE TABLE `wf_form` (
     `id` BIGINT NOT NULL COMMENT '主键ID',
     `form_key` VARCHAR(64) NOT NULL COMMENT '表单标识',
@@ -20,6 +27,7 @@ CREATE TABLE `wf_form` (
     KEY `idx_status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='表单定义表';
 
+-- 表单版本表
 CREATE TABLE `wf_form_version` (
     `id` BIGINT NOT NULL COMMENT '主键ID',
     `form_id` BIGINT NOT NULL COMMENT '表单ID',
@@ -39,6 +47,7 @@ CREATE TABLE `wf_form_version` (
     KEY `idx_version` (`form_id`, `version`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='表单版本表';
 
+-- 表单数据表
 CREATE TABLE `wf_form_data` (
     `id` BIGINT NOT NULL COMMENT '主键ID',
     `form_id` BIGINT NOT NULL COMMENT '表单ID',
@@ -64,6 +73,7 @@ CREATE TABLE `wf_form_data` (
     KEY `idx_business_key` (`business_key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='表单数据表';
 
+-- 表单权限表
 CREATE TABLE `sys_form_permission` (
     `id` BIGINT NOT NULL COMMENT '主键ID',
     `form_id` BIGINT NOT NULL COMMENT '表单ID',
@@ -83,6 +93,7 @@ CREATE TABLE `sys_form_permission` (
     KEY `idx_permission` (`permission`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='表单权限表';
 
+-- 角色表单权限关联表
 CREATE TABLE `sys_role_form_permission` (
     `id` BIGINT NOT NULL COMMENT '主键ID',
     `role_id` BIGINT NOT NULL COMMENT '角色ID',

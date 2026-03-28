@@ -30,13 +30,12 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'HelloWorld',
-  props: {
-    msg: String
-  }
+<script setup lang="ts">
+interface Props {
+	msg?: string;
 }
+
+defineProps<Props>();
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

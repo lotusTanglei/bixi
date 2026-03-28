@@ -5,72 +5,59 @@
 	</div>
 </template>
 
-<script>
-export default {
-	name: 'nameAvatar',
-	props: {
-		scale: {
-			type: String,
-			default: '1',
-		},
-		num: [Number, String],
-		name: String,
-		mode: {
-			type: String,
-			default: '',
-		},
-		fontColor: {
-			type: String,
-			default: '#fff',
-		},
-		backgroundColor: {
-			type: String,
-			default: '#3696F2',
-		},
-		faceUrl: {
-			type: String,
-			default: '',
-		},
-	},
-	data() {
-		return {};
-	},
-	watch: {},
-	computed: {
-		// eslint-disable-next-line vue/return-in-computed-property
-		text() {
-			if (this.num !== undefined) {
-				return `+${this.num}`;
-			} else {
-				if (this.name) {
-					return this.name.slice(-2);
-				}
-			}
-		},
-		transform() {
-			let style = {};
-			if (this.scale) {
-				style['transform'] = `scale(${this.scale}, ${this.scale})`;
-			}
-			return style;
-		},
-		styles() {
-			let style = {};
-			if (this.size) {
-				style['font-size'] = '12px';
-			}
-			if (this.fontColor) {
-				style.color = this.fontColor;
-			}
-			if (this.backgroundColor) {
-				style['background'] = this.backgroundColor;
-			}
-			return style;
-		},
-	},
-	methods: {},
-};
+<script setup lang="ts">
+import { computed } from 'vue';
+
+interface Props {
+	scale?: string;
+	num?: number | string;
+	name?: string;
+	mode?: string;
+	fontColor?: string;
+	backgroundColor?: string;
+	faceUrl?: string;
+}
+
+const props = withDefaults(defineProps<Props>(), {
+	scale: '1',
+	mode: '',
+	fontColor: '#fff',
+	backgroundColor: '#3696F2',
+	faceUrl: '',
+});
+
+const text = computed(() => {
+	if (props.num !== undefined) {
+		return `+${props.num}`;
+	} else if (props.name) {
+		return props.name.slice(-2);
+	}
+	return '';
+});
+
+const transform = computed(() => {
+	const style: Record<string, string> = {};
+	if (props.scale) {
+		style.transform = `scale(${props.scale}, ${props.scale})`;
+	}
+	return style;
+});
+
+const styles = computed(() => {
+	const style: Record<string, string> = {};
+	if (props.size) {
+		style['font-size'] = '12px';
+	}
+	if (props.fontColor) {
+		style.color = props.fontColor;
+	}
+	if (props.backgroundColor) {
+		style.background = props.backgroundColor;
+	}
+	return style;
+});
 </script>
+
 <style lang="scss" scoped>
 @import './base.scss';
 
