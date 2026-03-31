@@ -128,7 +128,6 @@ export function validateDictItemValue(rule: any, value: any, callback: any, type
 	}
 
 	getItemDetails({ dictType: type, value: value }).then((response) => {
-		debugger;
 		const result = response.data;
 		if (result !== null) {
 			callback(new Error('数据值已经存在'));
@@ -144,7 +143,6 @@ export function validateDictItemLabel(rule: any, value: any, callback: any, type
 	}
 
 	getItemDetails({ dictType: type, label: value }).then((response) => {
-		debugger;
 		const result = response.data;
 		if (result !== null) {
 			callback(new Error('标签已经存在'));
