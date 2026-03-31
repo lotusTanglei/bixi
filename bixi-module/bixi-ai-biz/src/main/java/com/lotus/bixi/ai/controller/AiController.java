@@ -8,6 +8,7 @@ import com.lotus.bixi.ai.api.vo.DocumentVO;
 import com.lotus.bixi.ai.service.ChatService;
 import com.lotus.bixi.ai.service.VectorStoreService;
 import com.lotus.bixi.common.core.util.R;
+import com.lotus.bixi.common.security.annotation.HasPermission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -38,24 +39,28 @@ public class AiController {
 
     @PostMapping("/chat")
     @Operation(summary = "同步对话")
+    @HasPermission("ai:chat:add")
     public R<ChatVO> chat(@RequestBody @Valid ChatDTO dto) {
         return R.ok(chatService.chat(dto));
     }
 
     @GetMapping(value = "/stream/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     @Operation(summary = "流式对话")
+    @HasPermission("ai:chat:add")
     public Flux<String> streamChat(@Valid ChatDTO dto) {
         return chatService.streamChat(dto);
     }
 
     @PostMapping("/rag")
     @Operation(summary = "RAG对话")
+    @HasPermission("ai:rag:add")
     public R<ChatVO> ragChat(@RequestBody @Valid ChatDTO dto) {
         return R.ok(chatService.ragChat(dto));
     }
 
     @PostMapping("/documents")
     @Operation(summary = "添加文档")
+    @HasPermission("ai:document:add")
     public R<Void> addDocument(@RequestBody @Valid DocumentDTO dto) {
         vectorStoreService.addDocument(dto);
         return R.ok();
@@ -63,6 +68,7 @@ public class AiController {
 
     @PostMapping("/documents/batch")
     @Operation(summary = "批量添加文档")
+    @HasPermission("ai:document:add")
     public R<Void> addDocuments(@RequestBody @Valid List<DocumentDTO> dtos) {
         vectorStoreService.addDocuments(dtos);
         return R.ok();
@@ -70,12 +76,14 @@ public class AiController {
 
     @PostMapping("/search")
     @Operation(summary = "相似度搜索")
+    @HasPermission("ai:document:view")
     public R<List<DocumentVO>> search(@RequestBody @Valid SearchDTO dto) {
         return R.ok(vectorStoreService.similaritySearch(dto));
     }
 
     @DeleteMapping("/documents/{id}")
     @Operation(summary = "删除文档")
+    @HasPermission("ai:document:del")
     public R<Void> deleteDocument(@PathVariable Long id) {
         vectorStoreService.deleteDocument(id);
         return R.ok();
