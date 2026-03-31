@@ -24,7 +24,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.CacheManager;
+import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -46,8 +48,10 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.security.Principal;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -191,21 +195,32 @@ public class BixiTokenEndpoint {
     @PostMapping("/page")
     public R<Page> tokenList(@RequestBody Map<String, Object> params) {
         // 根据分页参数获取对应数据
-        String key = String.format("%s::*", CacheConstants.PROJECT_OAUTH_ACCESS);
+        String pattern = String.format("%s::*", CacheConstants.PROJECT_OAUTH_ACCESS);
         int current = MapUtil.getInt(params, CommonConstants.CURRENT);
         int size = MapUtil.getInt(params, CommonConstants.SIZE);
-        Set<String> keys = redisTemplate.keys(key);
+
+        // 使用 SCAN 替代 KEYS 命令，避免在大数据量下阻塞 Redis
+        Set<String> keys = new HashSet<>();
+        try (Cursor<String> cursor = redisTemplate.scan(ScanOptions.scanOptions().match(pattern).count(1000).build())) {
+            cursor.forEachRemaining(keys::add);
+        }
+
         List<String> pages = keys.stream().skip((current - 1) * size).limit(size).collect(Collectors.toList());
         Page result = new Page(current, size);
 
-        List<TokenVo> tokenVoList = redisTemplate.opsForValue().multiGet(pages).stream().map(obj -> {
+        List<TokenVo> tokenVoList = redisTemplate.opsForValue().multiGet(pages).stream().filter(Objects::nonNull).map(obj -> {
             OAuth2Authorization authorization = (OAuth2Authorization) obj;
             TokenVo tokenVo = new TokenVo();
             tokenVo.setClientId(authorization.getRegisteredClientId());
             tokenVo.setId(authorization.getId());
             tokenVo.setUsername(authorization.getPrincipalName());
             OAuth2Authorization.Token<OAuth2AccessToken> accessToken = authorization.getAccessToken();
-            tokenVo.setAccessToken(accessToken.getToken().getTokenValue());
+
+            // Token 值截断处理，仅显示前8位和后8位
+            String tokenValue = accessToken.getToken().getTokenValue();
+            tokenVo.setAccessToken(tokenValue.length() > 16
+                    ? tokenValue.substring(0, 8) + "..." + tokenValue.substring(tokenValue.length() - 8)
+                    : tokenValue);
 
             String expiresAt = TemporalAccessorUtil.format(accessToken.getToken().getExpiresAt(),
                     DatePattern.NORM_DATETIME_PATTERN);
