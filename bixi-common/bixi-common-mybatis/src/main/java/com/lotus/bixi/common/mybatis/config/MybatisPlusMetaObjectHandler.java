@@ -1,9 +1,9 @@
 package com.lotus.bixi.common.mybatis.config;
 
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
 import com.lotus.bixi.common.core.constant.CommonConstants;
+import com.lotus.bixi.common.security.service.BixiUser;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.reflection.MetaObject;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -15,7 +15,6 @@ import java.nio.charset.Charset;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 
 /**
@@ -79,28 +78,26 @@ public class MybatisPlusMetaObjectHandler implements MetaObjectHandler {
     }
 
     /**
-     * 获取 spring security 当前的用户名
+     * 获取 spring security 当前的用户ID
      *
-     * @return 当前用户名
+     * @return 当前用户ID
      */
     private Long getUserID() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         // 匿名接口直接返回
-        if (authentication instanceof AnonymousAuthenticationToken) {
+        if (authentication == null || authentication instanceof AnonymousAuthenticationToken) {
             return null;
         }
 
-        //通过解析Json获取用户ID
-        if (Optional.ofNullable(authentication).isPresent()) {
-
-            String id = JSONUtil.toJsonPrettyStr(authentication.getPrincipal()).trim();
-            id = id.substring(id.indexOf("\"id\":") + 5).trim();
-            id = id.substring(0, id.indexOf(","));
-
-            return Long.valueOf(id);
+        // 正确方式：检查 principal 类型并强转
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof BixiUser) {
+            return ((BixiUser) principal).getId();
         }
 
+        log.debug("Cannot get user id from principal type: {}",
+                principal != null ? principal.getClass().getName() : "null");
         return null;
     }
 
