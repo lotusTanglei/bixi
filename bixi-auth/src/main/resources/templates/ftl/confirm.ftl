@@ -24,7 +24,7 @@
                 <#if principalName=="anonymousUser">
                     未登录
                 <#else>
-                    <a target="_blank" href="http://lotus-studio.top">${principalName}</a>
+                    <a target="_blank" href="http://lotus-studio.top">${principalName?html}</a>
                 </#if>
             </p>
         </div>
@@ -32,15 +32,15 @@
 </nav>
 <div style="padding-top: 80px;width: 300px; color: #555; margin:0px auto;">
     <form id='confirmationForm' name='confirmationForm' action="/oauth2/authorize" method='post'>
-        <input type="hidden" name="client_id" value="${clientId}">
-        <input type="hidden" name="state" value="${state}">
+        <input type="hidden" name="client_id" value="${clientId?html}">
+        <input type="hidden" name="state" value="${state?html}">
 
         <p>
             将获得以下权限：</p>
         <ul class="list-group">
             <li class="list-group-item"> <span>
               <#list scopeList as scope>
-                  <input type="checkbox" checked="checked" name="scope" value="${scope}"/><label>${scope}</label>
+                  <input type="checkbox" checked="checked" name="scope" value="${scope?html}"/><label>${scope?html}</label>
               </#list>
         </ul>
         <p class="help-block">授权后表明你已同意 <a>服务协议</a></p>

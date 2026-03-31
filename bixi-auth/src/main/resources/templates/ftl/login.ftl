@@ -42,7 +42,7 @@
 
                     <#if error??>
                         <div class="relative text-center">
-                            <span class="text-red-600">${error}</span>
+                            <span class="text-red-600">${error?html}</span>
                         </div>
                     </#if>
 
