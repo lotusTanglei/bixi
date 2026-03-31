@@ -13,7 +13,17 @@ export function authDirective(app: App) {
 	app.directive('auth', {
 		mounted(el, binding) {
 			const stores = useUserInfo();
-			if (!stores.userInfos.authBtnList.some((v: string) => v === binding.value)) el.parentNode.removeChild(el);
+			if (!stores.userInfos.authBtnList.some((v: string) => v === binding.value)) {
+				el.style.display = 'none';
+			}
+		},
+		updated(el, binding) {
+			const stores = useUserInfo();
+			if (!stores.userInfos.authBtnList.some((v: string) => v === binding.value)) {
+				el.style.display = 'none';
+			} else {
+				el.style.display = '';
+			}
 		},
 	});
 	// 多个权限验证，满足一个则显示（v-auths="[xxx,xxx]"）
@@ -21,12 +31,28 @@ export function authDirective(app: App) {
 		mounted(el, binding) {
 			let flag = false;
 			const stores = useUserInfo();
-			stores.userInfos.authBtnList.map((val: string) => {
-				binding.value.map((v: string) => {
+			stores.userInfos.authBtnList.forEach((val: string) => {
+				binding.value.forEach((v: string) => {
 					if (val === v) flag = true;
 				});
 			});
-			if (!flag) el.parentNode.removeChild(el);
+			if (!flag) {
+				el.style.display = 'none';
+			}
+		},
+		updated(el, binding) {
+			let flag = false;
+			const stores = useUserInfo();
+			stores.userInfos.authBtnList.forEach((val: string) => {
+				binding.value.forEach((v: string) => {
+					if (val === v) flag = true;
+				});
+			});
+			if (!flag) {
+				el.style.display = 'none';
+			} else {
+				el.style.display = '';
+			}
 		},
 	});
 	// 多个权限验证，全部满足则显示（v-auth-all="[xxx,xxx]"）
@@ -34,7 +60,18 @@ export function authDirective(app: App) {
 		mounted(el, binding) {
 			const stores = useUserInfo();
 			const flag = judementSameArr(binding.value, stores.userInfos.authBtnList);
-			if (!flag) el.parentNode.removeChild(el);
+			if (!flag) {
+				el.style.display = 'none';
+			}
+		},
+		updated(el, binding) {
+			const stores = useUserInfo();
+			const flag = judementSameArr(binding.value, stores.userInfos.authBtnList);
+			if (!flag) {
+				el.style.display = 'none';
+			} else {
+				el.style.display = '';
+			}
 		},
 	});
 }
