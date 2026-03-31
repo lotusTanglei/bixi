@@ -121,10 +121,13 @@ public class BixiTokenEndpoint {
     }
 
     /**
-     * 校验token
+     * 校验token (仅内部服务调用)
      *
      * @param token 令牌
+     * @param response 响应
+     * @param request 请求
      */
+    @Inner
     @SneakyThrows
     @GetMapping("/check_token")
     public void checkToken(String token, HttpServletResponse response, HttpServletRequest request) {
