@@ -1,0 +1,25 @@
+{
+  "tool": "init",
+  "generated_at": "2026-04-26T04:18:28.224022+00:00",
+  "project_root": "/Users/dundundebaba/code/lotus/bixi/bixi",
+  "project_name": "bixi",
+  "lock": {
+    "created_at": 1777177108,
+    "ttl_seconds": 600,
+    "pid": 55747,
+    "user": "dundundebaba",
+    "host": "dundundebabadeMacBook-Pro.local",
+    "expires_at": 1777177708
+  },
+  "mode": "overwrite",
+  "files": [
+    ".docs/0_INDEX.md",
+    ".docs/3_ROADMAP.md",
+    ".docs/4_DECISIONS.md",
+    ".docs/5_CHANGELOG.md"
+  ],
+  "git": {
+    "available": true,
+    "head": "fdf1bb8b3875d3e57cb276c08cb51c7ca03c48c1"
+  }
+}

@@ -120,7 +120,7 @@ help.md
 # AI & Tools
 # =======================================================================
 .trae/
-.docs/
 .tmp/
 .claude/
 docs/
+.docs/users/*/notepad.md
