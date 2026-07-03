@@ -17,7 +17,8 @@ CREATE INDEX idx_user_status_del ON sys_user(status, del_flag);
 CREATE INDEX idx_user_create_time ON sys_user(create_time);
 
 -- 角色表索引优化
-CREATE INDEX idx_role_code ON sys_role(role_code);
+CREATE INDEX idx_sys_role_code_status ON sys_role(code, status, del_flag);
+CREATE INDEX idx_sys_role_name_status ON sys_role(name, status, del_flag);
 CREATE INDEX idx_role_status_del ON sys_role(status, del_flag);
 
 -- 菜单表索引优化
@@ -108,7 +109,7 @@ CREATE INDEX idx_embedding_vector ON ai_embedding(vector_id);
 -- =====================================================
 
 -- 数据源配置索引
-CREATE INDEX idx_ds_type_status ON gen_datasource_config(db_type, status);
+CREATE INDEX idx_ds_type_status ON gen_datasource_config(ds_type, status);
 
 -- 业务表索引
 CREATE INDEX idx_gen_table_name ON gen_table(table_name);
@@ -127,7 +128,7 @@ CREATE INDEX idx_gen_class_name ON gen_table(class_name);
 CREATE INDEX idx_user_login_cover ON sys_user(username, password, status, del_flag);
 
 -- 角色权限查询覆盖索引
-CREATE INDEX idx_role_perm_cover ON sys_role(role_code, role_name, status, del_flag);
+CREATE INDEX idx_role_perm_cover ON sys_role(code, name, status, del_flag);
 
 -- 日志查询覆盖索引
 CREATE INDEX idx_log_query_cover ON sys_log(type, create_time, del_flag);

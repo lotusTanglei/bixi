@@ -103,14 +103,15 @@
 | 字段名 | 类型 | 说明 | 枚举值/备注 |
 |--------|------|------|-----------|
 | id | BIGINT | 主键ID | |
-| role_name | VARCHAR(50) | 角色名称 | |
-| role_code | VARCHAR(50) | 角色编码 | 唯一，如：ROLE_ADMIN |
-| role_desc | VARCHAR(255) | 角色描述 | |
-| ds_type | CHAR(1) | 权限类型 | 0-全部，1-自定义，2-本部门，3-本部门及子部门，4-仅本人 |
-| ds_scope | VARCHAR(255) | 数据权限范围 | |
+| name | VARCHAR(64) | 角色名称 | |
+| code | VARCHAR(64) | 角色编码 | 索引字段，如：ROLE_ADMIN |
+| description | VARCHAR(255) | 角色描述 | |
+| sn | INT | 排序 | |
 | status | CHAR(1) | 状态 | 0-正常，1-停用 |
 | del_flag | CHAR(1) | 删除标志 | 0-正常，1-删除 |
-| tenant_id | VARCHAR(32) | 租户ID | |
+| data_status | CHAR(1) | 数据状态 | 用来标识数据状态 |
+| tenant_id | BIGINT | 租户ID | |
+| remark | VARCHAR(500) | 备注 | |
 | create_by | BIGINT | 创建人 | |
 | update_by | BIGINT | 修改人 | |
 | create_time | DATETIME | 创建时间 | |

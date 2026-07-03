@@ -20,7 +20,7 @@ ALTER TABLE sys_user ADD CONSTRAINT uk_email UNIQUE (email);
 ALTER TABLE sys_dict ADD CONSTRAINT uk_dict_type UNIQUE (type);
 
 -- 角色表唯一约束
-ALTER TABLE sys_role ADD CONSTRAINT uk_role_code UNIQUE (role_code);
+ALTER TABLE sys_role ADD CONSTRAINT uk_role_code UNIQUE (code);
 
 -- 菜单表唯一约束
 ALTER TABLE sys_menu ADD CONSTRAINT uk_menu_perm UNIQUE (permission);
@@ -39,19 +39,9 @@ ALTER TABLE wf_form ADD CONSTRAINT uk_form_key UNIQUE (form_key);
 -- =====================================================
 -- 注意：外键约束会影响性能，请根据实际需求决定是否启用
 
--- 菜单自关联
-ALTER TABLE sys_menu
-ADD CONSTRAINT fk_menu_parent
-FOREIGN KEY (parent_id) REFERENCES sys_menu(id)
-ON DELETE RESTRICT
-ON UPDATE CASCADE;
-
--- 部门自关联
-ALTER TABLE sys_dept
-ADD CONSTRAINT fk_dept_parent
-FOREIGN KEY (parent_id) REFERENCES sys_dept(id)
-ON DELETE RESTRICT
-ON UPDATE CASCADE;
+-- sys_menu and sys_dept use sentinel parent_id values for roots (`-1` and `0`).
+-- Self-referential foreign keys are intentionally not added here because they
+-- would reject existing root records in 04_init_data.sql.
 
 -- 用户-部门关联
 ALTER TABLE sys_user

@@ -1,11 +1,11 @@
 # Bixi 数据库文档
 
-## 📊 数据库概览
+## 数据库脚本总览
 
 **数据库类型**: MySQL 8.0+
 **字符集**: utf8mb4
 **排序规则**: utf8mb4_unicode_ci
-**总表数**: 36 个
+**总表数**: 50 个
 
 ### 表分布
 
@@ -16,7 +16,19 @@
 | 表单管理 | `wf_form`, `sys_form_permission` 等 | 5 | 动态表单、表单版本、表单权限等 |
 | AI 模块 | `ai_*` | 5 | 会话、消息、文档、向量等 |
 | 代码生成 | `gen_*` | 5 | 数据源、字段配置、模板等 |
-| 定时任务 | `qrtz_*` | 3 | Quartz 定时任务框架表 |
+| 定时任务 | `sys_job*`, `QRTZ_*` | 13 | 系统任务表和 Quartz 原生表 |
+
+当前完整建表脚本 `01_init_all_tables.sql` 包含 50 张表，其中包含系统基础表、代码生成表、表单表、工作流表、AI 表、定时任务表以及 Quartz 原生表。
+
+推荐执行顺序：
+
+1. 创建数据库：`CREATE DATABASE bixi DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;`
+2. 执行 `01_init_all_tables.sql`
+3. 执行 `04_init_data.sql`
+4. 执行修正后的 `02_add_constraints.sql`
+5. 执行修正后的 `03_add_indexes.sql`
+
+部署步骤只以本目录实际存在的 SQL 和 Markdown 文件为准，不引用未随仓库提交的模板更新指南或模板更新脚本。
 
 ---
 
@@ -46,13 +58,11 @@ mysql -u root -p bixi < 04_init_data.sql
 # 1. 创建数据库
 mysql -u root -p -e "CREATE DATABASE bixi CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
-# 2. 导入表结构（按顺序）
+# 2. 导入表结构和初始化数据（按顺序）
 mysql -u root -p bixi < 01_init_all_tables.sql   # 所有表结构
+mysql -u root -p bixi < 04_init_data.sql        # 系统初始数据
 mysql -u root -p bixi < 02_add_constraints.sql  # 约束（可选）
 mysql -u root -p bixi < 03_add_indexes.sql      # 索引（可选）
-
-# 3. 导入初始数据（必须）
-mysql -u root -p bixi < 04_init_data.sql        # 系统初始数据
 ```
 
 ---
@@ -73,9 +83,7 @@ sql/
 ├── bixi_workflow.sql             # 工作流模块（4 个表）
 ├── bixi_form.sql                 # 表单模块（5 个表）
 ├── bixi_gen.sql                  # 代码生成器（5 个表）
-├── bixi_job.sql                  # 定时任务（3 个表）
-├── update_generator_templates.sql # 代码生成器模板更新脚本
-└── UPDATE_TEMPLATES_GUIDE.md      # 模板更新执行指南
+└── bixi_job.sql                  # 定时任务（系统任务表和 Quartz 表）
 ```
 
 ---
@@ -84,7 +92,7 @@ sql/
 
 ### 1. 多租户支持
 
-**所有表都包含 `tenant_id` 字段**，支持 SaaS 多租户模式：
+业务主表通常包含 `tenant_id` 字段，支持 SaaS 多租户模式；中间关系表、Quartz 原生表和部分配置表按实际用途保留精简字段。
 
 ```sql
 `tenant_id` VARCHAR(32) DEFAULT NULL COMMENT '租户id'
@@ -97,7 +105,7 @@ sql/
 
 ### 2. 逻辑删除
 
-**所有表都包含 `del_flag` 字段**，实现软删除：
+业务主表通常包含 `del_flag` 字段，实现软删除；中间关系表、Quartz 原生表和部分配置表按实际用途保留精简字段。
 
 ```sql
 `del_flag` CHAR(1) DEFAULT '0' COMMENT '删除标志（0正常 1删除）'
@@ -110,7 +118,7 @@ sql/
 
 ### 3. 审计字段
 
-**所有表都包含完整的审计字段**：
+业务主表通常包含完整的审计字段：
 
 ```sql
 create_by BIGINT       -- 创建人
@@ -159,6 +167,8 @@ sys_user (用户)
 - 用户-角色：多对多（`sys_user_role`）
 - 角色-菜单：多对多（`sys_role_menu`）
 - 用户-部门：多对一（`sys_user.dept_id` → `sys_dept.id`）
+
+`sys_menu.parent_id` 和 `sys_dept.parent_id` 使用根节点哨兵值，因此约束脚本不为这两个字段创建自引用外键。
 
 ### 工作流模型
 
