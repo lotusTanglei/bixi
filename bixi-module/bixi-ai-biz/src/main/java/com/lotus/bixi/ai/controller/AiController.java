@@ -1,8 +1,11 @@
 package com.lotus.bixi.ai.controller;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lotus.bixi.ai.api.dto.ChatDTO;
 import com.lotus.bixi.ai.api.dto.DocumentDTO;
 import com.lotus.bixi.ai.api.dto.SearchDTO;
+import com.lotus.bixi.ai.api.entity.AiDocument;
 import com.lotus.bixi.ai.api.vo.ChatVO;
 import com.lotus.bixi.ai.api.vo.DocumentVO;
 import com.lotus.bixi.ai.service.ChatService;
@@ -17,8 +20,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Flux;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -72,6 +77,30 @@ public class AiController {
     public R<Void> addDocuments(@RequestBody @Valid List<DocumentDTO> dtos) {
         vectorStoreService.addDocuments(dtos);
         return R.ok();
+    }
+
+    @GetMapping("/documents/page")
+    @Operation(summary = "分页查询文档")
+    @HasPermission("ai:document:view")
+    public R<IPage<DocumentVO>> pageDocuments(Page<AiDocument> page,
+                                              @RequestParam(value = "name", required = false) String name,
+                                              @RequestParam(value = "title", required = false) String title) {
+        return R.ok(vectorStoreService.pageDocuments(page, title != null ? title : name));
+    }
+
+    @GetMapping("/documents/list")
+    @Operation(summary = "查询文档列表")
+    @HasPermission("ai:document:view")
+    public R<List<DocumentVO>> listDocuments(@RequestParam(value = "name", required = false) String name,
+                                             @RequestParam(value = "title", required = false) String title) {
+        return R.ok(vectorStoreService.listDocuments(title != null ? title : name));
+    }
+
+    @PostMapping("/documents/upload")
+    @Operation(summary = "上传文档")
+    @HasPermission("ai:document:add")
+    public R<DocumentVO> uploadDocument(@RequestParam("file") MultipartFile file) throws IOException {
+        return R.ok(vectorStoreService.uploadDocument(file));
     }
 
     @PostMapping("/search")

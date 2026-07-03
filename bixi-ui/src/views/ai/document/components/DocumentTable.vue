@@ -7,10 +7,10 @@
 		:header-cell-style="tableStyle.headerCellStyle"
 	>
 		<el-table-column label="序号" type="index" width="60" />
-		<el-table-column label="文档名称" prop="name" show-overflow-tooltip />
-		<el-table-column label="类型" prop="type" width="120">
+		<el-table-column label="文档名称" prop="title" show-overflow-tooltip />
+		<el-table-column label="类型" prop="docType" width="120">
 			<template #default="scope">
-				<el-tag>{{ scope.row.type }}</el-tag>
+				<el-tag>{{ scope.row.docType }}</el-tag>
 			</template>
 		</el-table-column>
 		<el-table-column label="来源" prop="source" width="120" show-overflow-tooltip />

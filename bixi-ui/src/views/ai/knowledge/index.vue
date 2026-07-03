@@ -155,7 +155,7 @@ const handleSend = async () => {
 
 	try {
 		const requestData = {
-			content,
+			message: content,
 			documentIds: ragMode.value ? selectedDocuments.value : undefined,
 		};
 

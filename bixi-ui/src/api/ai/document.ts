@@ -1,5 +1,15 @@
 import request from '/@/utils/request';
 
+export interface AiDocument {
+	id: string;
+	title: string;
+	content?: string;
+	source?: string;
+	docType?: string;
+	vectorStatus?: string | number;
+	createTime?: string;
+}
+
 export const pageList = (params?: object) => {
 	return request({
 		url: '/ai/documents/page',

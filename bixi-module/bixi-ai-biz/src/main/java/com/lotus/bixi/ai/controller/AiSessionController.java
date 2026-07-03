@@ -93,6 +93,12 @@ public class AiSessionController {
         return R.ok(modelConfigService.getConfig());
     }
 
+    @GetMapping("/models")
+    @Operation(summary = "获取模型列表")
+    public R<List<ModelConfigVO.ModelInfo>> listModels() {
+        return R.ok(modelConfigService.listModels());
+    }
+
     @PutMapping("/config")
     @Operation(summary = "更新模型配置")
     public R<Void> updateConfig(@RequestBody @Valid ModelConfigDTO dto) {

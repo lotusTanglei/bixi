@@ -30,8 +30,18 @@ public class ModelConfigServiceImpl implements ModelConfigService {
         vo.setMaxTokens(maxTokens);
         vo.setTopP(topP);
         vo.setSystemPrompt(systemPrompt);
-        vo.setAvailableModels(getAvailableModels());
+        vo.setAvailableModels(listModels());
         return vo;
+    }
+
+    @Override
+    public List<ModelConfigVO.ModelInfo> listModels() {
+        return Arrays.asList(
+                createModelInfo("qwen-turbo", "通义千问-Turbo", "快速响应，适合简单对话"),
+                createModelInfo("qwen-plus", "通义千问-Plus", "平衡性能，适合日常使用"),
+                createModelInfo("qwen-max", "通义千问-Max", "最强能力，适合复杂任务"),
+                createModelInfo("qwen-long", "通义千问-Long", "超长上下文，适合长文档处理")
+        );
     }
 
     @Override
@@ -51,15 +61,6 @@ public class ModelConfigServiceImpl implements ModelConfigService {
         if (dto.getSystemPrompt() != null) {
             this.systemPrompt = dto.getSystemPrompt();
         }
-    }
-
-    private List<ModelConfigVO.ModelInfo> getAvailableModels() {
-        return Arrays.asList(
-                createModelInfo("qwen-turbo", "通义千问-Turbo", "快速响应，适合简单对话"),
-                createModelInfo("qwen-plus", "通义千问-Plus", "平衡性能，适合日常使用"),
-                createModelInfo("qwen-max", "通义千问-Max", "最强能力，适合复杂任务"),
-                createModelInfo("qwen-long", "通义千问-Long", "超长上下文，适合长文档处理")
-        );
     }
 
     private ModelConfigVO.ModelInfo createModelInfo(String id, String name, String description) {

@@ -18,9 +18,9 @@ export const ragChat = (data: object) => {
 
 export const streamChat = (data: object) => {
 	return request({
-		url: '/ai/stream',
-		method: 'post',
-		data,
+		url: '/ai/stream/chat',
+		method: 'get',
+		params: data,
 		responseType: 'stream',
 	});
 };

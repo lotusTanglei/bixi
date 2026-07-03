@@ -61,7 +61,7 @@ const handleSend = async (content: string) => {
 	try {
 		const res = await chat({
 			sessionId: aiStore.currentSession.id,
-			content,
+			message: content,
 			...aiStore.config,
 		});
 

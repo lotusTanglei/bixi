@@ -3,8 +3,8 @@
 		<div class="layout-padding-auto layout-padding-view">
 			<el-row v-show="showSearch">
 				<el-form ref="queryRef" :inline="true" :model="state.queryForm" @keyup.enter="getDataList">
-					<el-form-item label="文档名称" prop="name">
-						<el-input v-model="state.queryForm.name" placeholder="请输入文档名称" clearable />
+					<el-form-item label="文档名称" prop="title">
+						<el-input v-model="state.queryForm.title" placeholder="请输入文档名称" clearable />
 					</el-form-item>
 					<el-form-item>
 						<el-button icon="Search" type="primary" @click="getDataList">查询</el-button>
@@ -40,7 +40,7 @@ const uploadDialogRef = ref();
 
 const state: BasicTableProps = reactive<BasicTableProps>({
 	queryForm: {
-		name: '',
+		title: '',
 	},
 	pageList: pageList,
 });
