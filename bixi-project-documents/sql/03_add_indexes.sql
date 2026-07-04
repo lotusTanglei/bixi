@@ -88,7 +88,6 @@ CREATE INDEX idx_session_create_time ON ai_session(create_time);
 
 -- 消息表索引
 CREATE INDEX idx_msg_session_time ON ai_message(session_id, create_time DESC);
-CREATE INDEX idx_msg_user_time ON ai_message(user_id, create_time DESC);
 
 -- 对话记录索引
 CREATE INDEX idx_conv_user_time ON ai_conversation(user_id, create_time DESC);

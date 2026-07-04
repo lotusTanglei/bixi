@@ -32,7 +32,7 @@ ALTER TABLE sys_dept ADD CONSTRAINT uk_dept_code UNIQUE (code);
 ALTER TABLE wf_category ADD CONSTRAINT uk_category_code UNIQUE (category_code);
 
 -- 表单定义唯一约束
-ALTER TABLE wf_form ADD CONSTRAINT uk_form_key UNIQUE (form_key);
+-- wf_form.uk_form_key is already defined in 01_init_all_tables.sql.
 
 -- =====================================================
 -- 2. 外键约束（可选执行）
