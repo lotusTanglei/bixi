@@ -28,6 +28,9 @@ public class AiEmbedding extends BaseEntity<AiEmbedding> {
     @Schema(description = "嵌入模型")
     private String embeddingModel;
 
+    @Schema(description = "向量数据，JSON数组或逗号分隔数字")
+    private String embedding;
+
     @Schema(description = "向量维度")
     private Integer dimension;
 

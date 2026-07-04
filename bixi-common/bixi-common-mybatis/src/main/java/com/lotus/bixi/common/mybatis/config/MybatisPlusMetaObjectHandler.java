@@ -3,7 +3,6 @@ package com.lotus.bixi.common.mybatis.config;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
 import com.lotus.bixi.common.core.constant.CommonConstants;
-import com.lotus.bixi.common.security.service.BixiUser;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.reflection.MetaObject;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -90,10 +89,16 @@ public class MybatisPlusMetaObjectHandler implements MetaObjectHandler {
             return null;
         }
 
-        // 正确方式：检查 principal 类型并强转
         Object principal = authentication.getPrincipal();
-        if (principal instanceof BixiUser) {
-            return ((BixiUser) principal).getId();
+        try {
+            Object id = principal == null ? null : principal.getClass().getMethod("getId").invoke(principal);
+            if (id instanceof Long) {
+                return (Long) id;
+            }
+        }
+        catch (ReflectiveOperationException ignored) {
+            log.debug("Cannot read user id from principal type: {}",
+                    principal != null ? principal.getClass().getName() : "null");
         }
 
         log.debug("Cannot get user id from principal type: {}",

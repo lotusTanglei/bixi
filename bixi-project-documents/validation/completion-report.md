@@ -15,6 +15,7 @@ This report records the completion validation performed for the current Bixi cod
 | Backend compile | `JAVA_HOME=$(/usr/libexec/java_home -v 17) mvn -DskipTests compile` | PASS |
 | Backend tests | `JAVA_HOME=$(/usr/libexec/java_home -v 17) mvn test` | PASS |
 | AI focused test | `JAVA_HOME=$(/usr/libexec/java_home -v 17) mvn -pl bixi-module/bixi-ai-biz -Dtest=VectorStoreServiceImplTest test` | PASS |
+| AI clean focused test | `JAVA_HOME=$(/usr/libexec/java_home -v 17) mvn -pl bixi-module/bixi-ai-biz -am -Dtest=VectorStoreServiceImplTest -Dsurefire.failIfNoSpecifiedTests=false clean test` | PASS |
 | Frontend production build | `npm run build:prod` in `bixi-ui` | PASS |
 | MySQL 8 create tables | `source /tmp/bixi-sql-current/01_init_all_tables.sql` | PASS |
 | MySQL 8 seed data | `source /tmp/bixi-sql-current/04_init_data.sql` | PASS |
@@ -53,9 +54,11 @@ Post-run checks:
 | `04_init_data.sql` | `sys_menu.permission` had duplicate and empty-string values incompatible with the unique permission constraint. | Kept menu rows, converted non-permission values to `NULL`, and preserved the newer `codegen_template_add` permission. |
 | `02_add_constraints.sql` | `wf_form.uk_form_key` was added again even though it already exists in the create-table script. | Replaced the duplicate executable statement with a comment. |
 | `03_add_indexes.sql` | `ai_message(user_id, create_time)` referenced a non-existent `user_id` column. | Removed the stale index and kept `ai_message(session_id, create_time)`. |
+| `ai_embedding` / `VectorStoreServiceImpl` | The vector table stored only vector metadata, so retrieval could not perform cosine similarity. | Added `ai_embedding.embedding` and vector-first cosine ranking with keyword fallback. |
+| `MybatisPlusMetaObjectHandler` | Clean AI reactor builds exposed a direct compile dependency on `BixiUser` without a matching module dependency. | Removed the project-security type dependency and read the authenticated principal ID generically. |
 
 ## Remaining Notes
 
 - The database scripts now run successfully as a full chain on MySQL 8.
 - The generator template seed data was already truncated before validation. The schema and metadata can initialize, but actual generator templates should be imported from a verified template source before relying on generator output.
-- The AI document retrieval repair provides database-backed keyword fallback search. It is not true vector cosine retrieval because the current `ai_embedding` schema stores vector metadata but not the embedding vector itself.
+- AI document retrieval now uses stored embedding vectors for cosine ranking when vectors exist, and falls back to database-backed keyword ranking when no usable vectors are available.

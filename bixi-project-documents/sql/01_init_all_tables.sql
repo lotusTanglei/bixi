@@ -466,6 +466,7 @@ CREATE TABLE `ai_embedding` (
     `document_id` BIGINT DEFAULT NULL COMMENT '文档ID',
     `vector_id` VARCHAR(128) DEFAULT NULL COMMENT '向量ID（向量数据库中的ID）',
     `embedding_model` VARCHAR(64) DEFAULT NULL COMMENT '嵌入模型',
+    `embedding` TEXT COMMENT '向量数据，JSON数组或逗号分隔数字',
     `dimension` INT DEFAULT NULL COMMENT '向量维度',
     `chunk_index` INT DEFAULT NULL COMMENT '分块索引',
     `create_by` BIGINT DEFAULT NULL COMMENT '创建者',

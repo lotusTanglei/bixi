@@ -498,6 +498,7 @@
 | document_id | BIGINT | 文档ID | 外键：ai_document |
 | vector_id | VARCHAR(128) | 向量ID | 向量数据库中的ID |
 | embedding_model | VARCHAR(64) | 嵌入模型 | 如：text-embedding-v2 |
+| embedding | TEXT | 向量数据 | JSON数组或逗号分隔数字 |
 | dimension | INT | 向量维度 | 如：1536 |
 | chunk_index | INT | 分块索引 | |
 | del_flag | CHAR(1) | 删除标记 | 0-正常，1-删除 |
