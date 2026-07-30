@@ -1,4 +1,4 @@
-com.lotus.bixi.common.core.config.TaskExecutorConfiguration
+com.lotus.bixi.common.core.config.DynamicTpConfiguration
 com.lotus.bixi.common.core.config.JacksonConfiguration
 com.lotus.bixi.common.core.config.RedisTemplateConfiguration
 com.lotus.bixi.common.core.config.RestTemplateConfiguration
