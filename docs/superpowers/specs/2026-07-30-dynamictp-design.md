@@ -33,7 +33,9 @@
 5. DynamicTp 从配置自动创建名为 `taskExecutor` 的原生 `DtpExecutor`。
 6. Spring `@Async` 按标准默认执行器名称选中 `taskExecutor`，不增加包装器或业务侧执行器
    注解。
-7. 删除现有 `TaskExecutorConfiguration` 和全部 `thread.pool.*` 配置。
+7. 公共核心模块通过 `AutoConfigurationImportFilter` 排除 Spring Boot 自带的静态
+   `TaskExecutionAutoConfiguration`，避免它抢先注册同名 `taskExecutor`。
+8. 删除现有 `TaskExecutorConfiguration` 和全部 `thread.pool.*` 配置。
 
 `bixi-single` 通过 `single` Profile 构建，不激活默认的 `cloud` Profile，因此只有 Common
 Starter，不包含 DynamicTp 的 Nacos Cloud Starter。
@@ -128,6 +130,8 @@ Actuator Web Exposure 包含 `dynamictp` 端点，但访问控制继续沿用各
   只负责启用 DynamicTp 和导入公共 YAML。
 - 新增
   `bixi-common/bixi-common-core/src/main/resources/dynamic-tp-config.yml`。
+- 新增自动配置过滤器并通过 `META-INF/spring.factories` 注册，统一排除 Spring Boot
+  静态任务执行器。
 - 更新 Spring Boot 自动配置 imports，用新配置替代旧配置。
 
 ### 应用配置
