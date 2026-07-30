@@ -18,3 +18,4 @@ spring:
     import:
       - nacos:application-@profiles.active@.yml
       - nacos:${spring.application.name}-@profiles.active@.yml
+      - optional:nacos:${spring.application.name}-dtp-@profiles.active@.yml
