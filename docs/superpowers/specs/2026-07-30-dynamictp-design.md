@@ -64,6 +64,12 @@ dynamictp:
       waitForTasksToCompleteOnShutdown: true
       awaitTerminationSeconds: 60
       notifyEnabled: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,dynamictp
 ```
 
 公共自动配置通过项目已有的 `YamlPropertySourceFactory` 导入该资源。应用本地配置、环境
@@ -81,8 +87,9 @@ Actuator Web Exposure 包含 `dynamictp` 端点，但访问控制继续沿用各
 ```
 
 使用独立 Data ID 可让不同服务分别调整线程池参数。Data ID 缺失时，应用使用公共本地
-默认配置继续启动。Nacos 文件使用与公共配置相同的 `dynamictp` 结构，并至少包含
-`threadPoolName: taskExecutor`。
+默认配置继续启动。由于 Spring 配置绑定不会跨 Property Source 合并列表，Nacos 文件必须
+包含完整的 `dynamictp.executors[0]` 对象，而不能只发布单个线程池字段；该对象的
+`threadPoolName` 固定为 `taskExecutor`。
 
 配置变化的数据流如下：
 
