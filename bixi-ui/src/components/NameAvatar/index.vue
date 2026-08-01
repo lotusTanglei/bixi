@@ -22,7 +22,7 @@ const props = withDefaults(defineProps<Props>(), {
 	scale: '1',
 	mode: '',
 	fontColor: '#fff',
-	backgroundColor: '#3696F2',
+	backgroundColor: '#F04A2A',
 	faceUrl: '',
 });
 

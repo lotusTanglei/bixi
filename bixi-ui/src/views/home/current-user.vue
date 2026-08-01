@@ -1,14 +1,14 @@
 <template>
-	<el-card style="height: 100%">
-		<div style="display: flex; justify-content: space-between">
-			<div style="display: flex">
-				<el-avatar style="width: 60px; height: 60px" shape="circle" :size="100" fit="cover" :src="userData.avatar" />
+	<el-card class="user-card">
+		<div class="user-card__header">
+			<div class="user-card__identity">
+				<el-avatar class="user-card__avatar" shape="circle" :size="60" fit="cover" :src="userData.avatar" />
 				<div class="info">
-					<span style="font-weight: 600; margin: 2px; font-size: 18px">{{ userData.name }}</span>
-					<span style="color: #6d737b; margin: 2px">{{ userData.deptName }} | {{ userData.postName }}</span>
+					<span class="user-card__name">{{ userData.name }}</span>
+					<span class="user-card__meta">{{ userData.deptName }} | {{ userData.postName }}</span>
 				</div>
 			</div>
-			<span style="margin: 2px">
+			<span class="user-card__time">
 				{{ parseTime(date) }}
 			</span>
 		</div>
@@ -62,6 +62,38 @@ const initUserInfo = async (id: any): Promise<void> => {
 </script>
 
 <style scoped>
+.user-card {
+	height: 100%;
+	border-top: 3px solid var(--bixi-color-primary);
+}
+
+.user-card__header,
+.user-card__identity {
+	display: flex;
+	align-items: center;
+}
+
+.user-card__header {
+	justify-content: space-between;
+}
+
+.user-card__avatar {
+	background: var(--bixi-color-primary);
+	color: var(--bixi-color-paper);
+}
+
+.user-card__name {
+	display: block;
+	font-size: 18px;
+	font-weight: 800;
+}
+
+.user-card__meta,
+.user-card__time {
+	color: var(--bixi-color-muted);
+	font-size: 13px;
+}
+
 .info {
 	margin-left: 8px;
 	display: flex;

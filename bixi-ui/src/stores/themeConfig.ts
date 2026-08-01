@@ -15,7 +15,7 @@ export const useThemeConfig = defineStore('themeConfig', {
 			 * 全局主题
 			 */
 			// 默认 primary 主题颜色
-			primary: '#2E5CF6',
+			primary: '#F04A2A',
 			// 是否开启深色模式
 			isIsDark: false,
 
@@ -23,9 +23,9 @@ export const useThemeConfig = defineStore('themeConfig', {
 			 * 顶栏设置
 			 */
 			// 默认顶栏导航背景颜色
-			topBar: '#ffffff',
+			topBar: '#FFF8E8',
 			// 默认顶栏导航字体颜色
-			topBarColor: '#606266',
+			topBarColor: '#171714',
 			// 是否开启顶栏背景颜色渐变
 			isTopBarColorGradual: false,
 
@@ -33,11 +33,11 @@ export const useThemeConfig = defineStore('themeConfig', {
 			 * 菜单设置
 			 */
 			// 默认菜单导航背景颜色
-			menuBar: '#FFFFFF',
+			menuBar: '#FFF8E8',
 			// 默认菜单导航字体颜色
-			menuBarColor: '#505968',
+			menuBarColor: '#292825',
 			// 默认菜单高亮背景色
-			menuBarActiveColor: 'rgba(242, 243, 245, 1)',
+			menuBarActiveColor: 'rgba(240, 74, 42, 0.12)',
 			// 是否开启菜单背景颜色渐变
 			isMenuBarColorGradual: false,
 
@@ -45,9 +45,9 @@ export const useThemeConfig = defineStore('themeConfig', {
 			 * 分栏设置
 			 */
 			// 默认分栏菜单背景颜色
-			columnsMenuBar: '#545c64',
+			columnsMenuBar: '#FFF8E8',
 			// 默认分栏菜单字体颜色
-			columnsMenuBarColor: '#e6e6e6',
+			columnsMenuBarColor: '#292825',
 			// 是否开启分栏菜单背景颜色渐变
 			isColumnsMenuBarColorGradual: false,
 			// 是否开启分栏菜单鼠标悬停预加载(预览菜单)
@@ -99,7 +99,7 @@ export const useThemeConfig = defineStore('themeConfig', {
 			// 是否开启色弱模式
 			isInvert: false,
 			// 是否开启水印
-			isWartermark: true,
+			isWartermark: false,
 			// 水印文案
 			wartermarkText: 'LOTUS-BIXI',
 

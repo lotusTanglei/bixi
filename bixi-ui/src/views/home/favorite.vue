@@ -1,5 +1,5 @@
 <template>
-	<el-card class="box-card" style="height: 100%">
+	<el-card class="box-card favorite-card">
 		<template #header>
 			<div class="card-header">
 				<span>{{ $t('home.quickNavigationToolsTip') }}</span>
@@ -50,6 +50,7 @@ const handleCloseFavorite = (item: any) => {
 <style lang="scss" scoped>
 .shortcutCard {
 	position: relative;
+	margin-bottom: 12px;
 	.shortcutCardClose {
 		position: absolute;
 		top: 0;
@@ -59,5 +60,13 @@ const handleCloseFavorite = (item: any) => {
 		cursor: pointer;
 		color: #6d6b6b;
 	}
+}
+
+.favorite-card {
+	height: 100%;
+}
+
+.card-header {
+	font-weight: 800;
 }
 </style>

@@ -30,25 +30,25 @@ const onThemeConfigChange = () => {
 <style scoped lang="scss">
 .layout-logo {
 	width: 220px;
-	height: 50px;
+	height: 58px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	box-shadow: rgb(0 21 41 / 2%) 0px 1px 4px;
-	color: var(--el-color-primary);
+	border-bottom: 1px solid var(--bixi-color-border);
+	color: var(--bixi-color-ink);
 	font-size: 16px;
 	cursor: pointer;
 	animation: logoAnimation 0.3s ease-in-out;
 	span {
 		white-space: nowrap;
 		display: inline-block;
-		font-size: 21.5px;
+		font-size: 20px;
 		font-weight: 700;
 		white-space: nowrap;
 	}
 	&:hover {
 		span {
-			color: var(--color-primary-light-2);
+			color: var(--bixi-color-primary);
 		}
 	}
 }

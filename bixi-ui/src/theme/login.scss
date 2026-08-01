@@ -1,6 +1,6 @@
 // 用户名密码登录
 .login-content-form {
-	margin-top: 20px;
+	margin-top: 24px;
 
 	@for $i from 1 through 4 {
 		.login-animation#{$i} {
@@ -31,14 +31,37 @@
 
 	.login-content-submit {
 		width: 100%;
-		letter-spacing: 2px;
-		font-weight: 300;
-		margin-top: 15px;
+		letter-spacing: 1px;
+		font-weight: 700;
+		margin-top: 18px;
+		min-height: 44px;
 	}
 
 	.login-msg {
 		color: var(--el-text-color-disabled-base);
 	}
+}
+
+.login-content-form .el-form-item {
+	margin-bottom: 16px;
+}
+
+.login-content-form .el-input__wrapper {
+	background: #fffdf7;
+}
+
+.login-content-form .el-input__prefix-inner,
+.login-content-form .el-input__suffix-inner {
+	color: var(--bixi-color-muted);
+}
+
+.login-content-form img {
+	height: 40px;
+	width: 100%;
+	object-fit: cover;
+	border: 1px solid var(--bixi-color-border);
+	border-radius: var(--bixi-radius-sm);
+	cursor: pointer;
 }
 
 // 社交登录

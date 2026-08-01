@@ -1,5 +1,5 @@
 <template>
-	<el-card class="box-card" style="height: 100%">
+	<el-card class="box-card log-card">
 		<template #header>
 			<div class="card-header">
 				<span>{{ $t('home.systemLogsTip') }}</span>
@@ -46,5 +46,10 @@ const handleRoutr = () => {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
+	font-weight: 800;
+}
+
+.log-card {
+	height: 100%;
 }
 </style>

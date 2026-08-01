@@ -44,8 +44,22 @@ const getGlobalComponentSize = computed(() => {
 const getGlobalI18n = computed(() => {
 	return messages.value[locale.value];
 });
+
+// 清理旧版蓝色主题缓存，确保已有用户能看到新的视觉基线
+const resetLegacyTheme = () => {
+	const savedTheme = Local.get('themeConfig');
+	if (!savedTheme) return;
+
+	const legacyTheme = ['#2E5CF6', '#409EFF', '#409eff'].includes(savedTheme.primary) || savedTheme.topBarColor === '#606266';
+	if (legacyTheme) {
+		Local.remove('themeConfig');
+		Local.remove('themeConfigStyle');
+	}
+};
+
 // 设置初始化，防止刷新时恢复默认
 onBeforeMount(() => {
+	resetLegacyTheme();
 	// 设置批量第三方 icon 图标
 	setIntroduction.cssCdn();
 	// 设置批量第三方 js
