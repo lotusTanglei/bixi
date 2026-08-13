@@ -1,10 +1,41 @@
+server:
+  port: 9999    # 项目端口
+  servlet:
+    context-path: /admin  # 项目访问路径
+
+
+## spring security 对外暴露接口设置（不鉴权直接可访问）
+security:
+  micro: false
+  oauth2:
+    ignore:
+      urls:
+        - /webjars/**
+        - /v3/api-docs/**
+        - /doc.html
+        - /swagger-ui.html
+        - /swagger-ui/**
+        - /swagger-resources
+        - /error
+        - /token/**
+        - /actuator/**
+        - /code/**
+        - /druid/**
+
 spring:
+  # RabbitMQ 配置：部署时通过环境变量替换占位默认值
+  rabbitmq:
+    host: ${RABBITMQ_HOST:127.0.0.1}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    virtual-host: ${RABBITMQ_VIRTUAL_HOST:/}
   cache:
     type: redis # 缓存类型 Redis
   data:
     redis:
       host: 47.116.24.41
-      prot: 6379
+      port: 6379
       password: ENC(pywXxOGqXFgTO25aMV5GGw==)
   # 数据源
   datasource:

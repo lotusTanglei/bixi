@@ -1,8 +1,3 @@
-server:
-  port: 9999    # 项目端口
-  servlet:
-    context-path: /admin  # 项目访问路径
-
 spring:
   application:
     name: @project.artifactId@  # 服务名称，取 pom.xml 中的 artifactId
@@ -27,25 +22,6 @@ spring:
     active: dev  # 激活dev，对应 application-dev.yml
 
 
-## spring security 对外暴露接口设置（不鉴权直接可访问）
-security:
-  micro: false
-  oauth2:
-    ignore:
-      urls:
-        - /webjars/**
-        - /v3/api-docs/**
-        - /doc.html
-        - /swagger-ui.html
-        - /swagger-ui/**
-        - /swagger-resources
-        - /error
-        - /token/**
-        - /actuator/**
-        - /code/**
-        - /druid/**
-
-#--------------如下配置尽量不要变动-------------
 # mybatis-plus 配置
 mybatis-plus:
   mapper-locations: classpath*:/mapper/*Mapper.xml # mapper文件位置
