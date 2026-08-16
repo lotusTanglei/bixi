@@ -221,17 +221,19 @@ body,
 	height: 40px !important;
 	padding: 0 24px !important;
 
-	.layout-navbars-tagsview-ul-li {
-		border: 0 !important;
-		border-radius: 999px !important;
-		margin-right: 6px !important;
-		padding: 0 12px !important;
-		color: var(--bixi-color-muted);
+	&:not(.tags-style-five) {
+		.layout-navbars-tagsview-ul-li {
+			border: 0 !important;
+			border-radius: 999px !important;
+			margin-right: 6px !important;
+			padding: 0 12px !important;
+			color: var(--bixi-color-muted);
 
-		&:hover,
-		&.is-active {
-			background: #ffe8e1 !important;
-			color: var(--bixi-color-primary) !important;
+			&:hover,
+			&.is-active {
+				background: #ffe8e1 !important;
+				color: var(--bixi-color-primary) !important;
+			}
 		}
 	}
 }

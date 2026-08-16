@@ -8,7 +8,6 @@ import com.lotus.bixi.common.core.util.SpringContextHolder;
 import com.lotus.bixi.common.log.event.SysLogEvent;
 import com.lotus.bixi.common.log.util.SysLogUtils;
 import com.lotus.bixi.common.security.component.BixiCustomOAuth2AccessTokenResponseHttpMessageConverter;
-import com.lotus.bixi.common.security.service.BixiUser;
 import com.lotus.bixi.upms.api.entity.SysLog;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -54,8 +53,9 @@ public class BixiAuthenticationSuccessEventHandler implements AuthenticationSucc
         Map<String, Object> map = accessTokenAuthentication.getAdditionalParameters();
         if (MapUtil.isNotEmpty(map)) {
             // 发送异步日志事件
-            BixiUser userInfo = (BixiUser) map.get(SecurityConstants.DETAILS_USER);
-            log.info("用户：{} 登录成功", userInfo.getName());
+            Object userInfo = map.get(SecurityConstants.DETAILS_USER);
+            Object username = map.get(SecurityConstants.USERNAME);
+            log.info("用户：{} 登录成功", username != null ? username : userInfo);
             SecurityContextHolder.getContext().setAuthentication(accessTokenAuthentication);
             SysLog logVo = SysLogUtils.getSysLog();
             logVo.setTitle("登录成功");

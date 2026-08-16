@@ -14,7 +14,11 @@
 @media screen and (max-width: $sm) {
 	// Breadcrumb 面包屑
 	.layout-navbars-breadcrumb-hide {
-		display: none;
+		display: block;
+		min-width: 0;
+		overflow: hidden;
+		white-space: nowrap;
+		text-overflow: ellipsis;
 	}
 	// 外链视图
 	.layout-view-link {
@@ -34,6 +38,37 @@
 /* 页面宽度小于1000px
 ------------------------------- */
 @media screen and (max-width: 1000px) {
+	// 小屏页面内容允许横向滚动，避免表格、按钮和长文字被主容器裁切
+	.layout-container {
+		.layout-main {
+			overflow: auto !important;
+		}
+
+		.layout-main-scroll,
+		.layout-main-scroll .el-scrollbar__wrap {
+			overflow-x: auto !important;
+		}
+
+		.layout-padding {
+			min-width: 760px;
+			overflow: visible;
+		}
+	}
+
+	// 标签页固定高度，内容超出时只在标签区域横向滚动
+	.layout-navbars-container {
+		min-width: 0;
+	}
+
+	.layout-navbars-tagsview {
+		flex: 0 0 40px;
+		overflow: hidden;
+
+		.layout-navbars-tagsview-ul {
+			min-width: max-content;
+		}
+	}
+
 	// 布局配置
 	.layout-drawer-content-flex {
 		position: relative;

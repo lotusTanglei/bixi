@@ -6,7 +6,6 @@ server:
 
 ## spring security 对外暴露接口设置（不鉴权直接可访问）
 security:
-  micro: false
   oauth2:
     ignore:
       urls:
@@ -21,6 +20,10 @@ security:
         - /actuator/**
         - /code/**
         - /druid/**
+  encode-key: 'bixi:hello,world'
+  ignore-clients:
+    - bixi
+    - test
 
 spring:
   # RabbitMQ 配置：部署时通过环境变量替换占位默认值
@@ -34,9 +37,9 @@ spring:
     type: redis # 缓存类型 Redis
   data:
     redis:
-      host: 47.116.24.41
-      port: 6379
-      password: ENC(pywXxOGqXFgTO25aMV5GGw==)
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
   # 数据源
   datasource:
     dynamic:
@@ -46,9 +49,9 @@ spring:
         master:
           type: com.alibaba.druid.pool.DruidDataSource
           driver-class-name: com.mysql.cj.jdbc.Driver
-          username: root
-          password: ENC(F43szYsrW+lDWHpdyJzU2rTPrM4KSxTK)
-          url: jdbc:mysql://47.116.24.41:3306/bixi_single?characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowMultiQueries=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=Asia/Shanghai&nullCatalogMeansCurrent=true&allowPublicKeyRetrieval=true
+          username: ${MYSQL_USERNAME:root}
+          password: ${MYSQL_PASSWORD:bixi}
+          url: jdbc:mysql://${MYSQL_HOST:127.0.0.1}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:bixi_single}?characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowMultiQueries=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=Asia/Shanghai&nullCatalogMeansCurrent=true&allowPublicKeyRetrieval=true
     druid:
       # 初始化大小，最小，最大
       initial-size: 5
@@ -94,18 +97,12 @@ spring:
         login-password: 123456
 
 file:
-  bucketName: bixi
+  bucket: bixi
   oss:
     enable: true
-    endpoint: http://47.116.24.41:9800
-    access-key: minio
-    secret-key: ENC(NTZByGiHj7ciIHra48Lhddhq8vGa1KvH)
-
-## 登录配置
-security:
-  encode-key: 'bixi:hello,world'
-  ignore-clients:
-    - test
+    endpoint: ${MINIO_ENDPOINT:http://127.0.0.1:9800}
+    access-key: ${MINIO_ACCESS_KEY:minio}
+    secret-key: ${MINIO_SECRET_KEY:minioadmin}
 
 # 配置文件加密根密码
 jasypt:

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <clipPath id="b-shell">
+      <path d="M132 82h137c84 0 135 40 135 105 0 34-15 61-45 80 36 18 56 48 56 89 0 69-53 110-145 110H132V82Zm92 78v101h37c35 0 56-17 56-51 0-34-21-50-61-50h-32Zm0 178v78h44c43 0 65-18 65-53 0-34-22-51-68-51h-41Z"/>
+    </clipPath>
+  </defs>
+
+  <rect width="512" height="512" rx="116" fill="#0B2340"/>
+
+  <!-- One continuous B silhouette: the shell is the B, not a ring of petals. -->
+  <path fill="#16B7A7" d="M132 82h137c84 0 135 40 135 105 0 34-15 61-45 80 36 18 56 48 56 89 0 69-53 110-145 110H132V82Zm92 78v101h37c35 0 56-17 56-51 0-34-21-50-61-50h-32Zm0 178v78h44c43 0 65-18 65-53 0-34-22-51-68-51h-41Z"/>
+
+  <g clip-path="url(#b-shell)">
+    <!-- Large carapace plates: restrained, aligned, and kept inside the B silhouette. -->
+    <path fill="#F26D61" d="M250 78h150v190H250l52-47c17-16 26-35 26-58 0-40-25-68-78-85Z"/>
+    <path fill="#F26D61" d="M250 272h180v128H250l54-40c17-13 25-31 25-52 0-20-9-36-28-49l-51-35Z"/>
+    <!-- Shell seams. -->
+    <path fill="none" stroke="#0B2340" stroke-width="13" stroke-linecap="round" d="M224 80v382M232 261h88M232 260l76-57M232 260l76 58"/>
+    <!-- A small central scute gives the mark a shell cue without adding noise. -->
+    <path fill="#16B7A7" d="M230 238h34l28 22-28 22h-34l-28-22 28-22Z"/>
+  </g>
+
+  <!-- Re-cut the B counters so they remain crisp at favicon size. -->
+  <path fill="#0B2340" d="M224 160h32v101h-32zM224 338h41v78h-41z"/>
+</svg>

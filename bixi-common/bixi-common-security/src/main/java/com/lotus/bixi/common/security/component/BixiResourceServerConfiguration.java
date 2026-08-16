@@ -38,7 +38,7 @@ public class BixiResourceServerConfiguration {
     private final OpaqueTokenIntrospector customOpaqueTokenIntrospector;
 
     @Bean
-    @Order(Ordered.HIGHEST_PRECEDENCE)
+    @Order(Ordered.HIGHEST_PRECEDENCE + 1)
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         AntPathRequestMatcher[] requestMatchers = permitAllUrl.getUrls()
                 .stream()

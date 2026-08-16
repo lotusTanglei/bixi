@@ -114,9 +114,11 @@ onBeforeRouteUpdate((to) => {
 <style scoped lang="scss">
 .layout-navbars-breadcrumb {
 	flex: 1;
+	min-width: 0;
 	height: inherit;
 	display: flex;
 	align-items: center;
+	overflow: hidden;
 
 	.layout-navbars-breadcrumb-icon {
 		cursor: pointer;
@@ -133,6 +135,7 @@ onBeforeRouteUpdate((to) => {
 
 	.layout-navbars-breadcrumb-span {
 		display: flex;
+		white-space: nowrap;
 		opacity: 0.7;
 		color: var(--next-bg-topBarColor);
 	}
@@ -154,6 +157,13 @@ onBeforeRouteUpdate((to) => {
 		&:hover {
 			color: var(--el-color-primary) !important;
 		}
+	}
+
+	:deep(.el-breadcrumb) {
+		min-width: 0;
+		overflow: hidden;
+		white-space: nowrap;
+		text-overflow: ellipsis;
 	}
 }
 </style>

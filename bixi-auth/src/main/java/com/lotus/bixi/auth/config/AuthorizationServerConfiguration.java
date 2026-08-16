@@ -59,6 +59,9 @@ public class AuthorizationServerConfiguration {
     public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
         OAuth2AuthorizationServerConfigurer authorizationServerConfigurer = new OAuth2AuthorizationServerConfigurer();
 
+        // 仅让授权服务器链处理 OAuth2 端点，避免与单体资源服务器链冲突
+        http.securityMatcher(authorizationServerConfigurer.getEndpointsMatcher());
+
         // 增加验证码过滤器
         http.addFilterBefore(validateCodeFilter, UsernamePasswordAuthenticationFilter.class);
         // 增加密码解密过滤器

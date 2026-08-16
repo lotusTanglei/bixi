@@ -2,457 +2,417 @@
 
 # Bixi
 
-### 基于 JDK 17 + Spring Boot 3 的企业级微服务架构脚手架
+### 基于 Java 17 + Spring Boot 3 的企业级微服务 / 单体双模式开发脚手架
 
 [![JDK](https://img.shields.io/badge/JDK-17+-orange.svg)](https://openjdk.org/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4.1-brightgreen.svg)](https://spring.io/projects/spring-boot)
-[![Vue](https://img.shields.io/badge/Vue-3.5-brightgreen.svg)](https://vuejs.org/)
+[![Vue](https://img.shields.io/badge/Vue-3.5.12-brightgreen.svg)](https://vuejs.org/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![GitHub Stars](https://img.shields.io/github/stars/lotus-bixi/bixi?style=social)](https://github.com/lotus-bixi/bixi)
 
-**现代化 · 企业级 · 双模架构 · 开箱即用**
-
-[快速开始](#-快速开始) · [文档](#-文档) · [贡献指南](CONTRIBUTING.md) · [安全政策](SECURITY.md)
+现代化 · 企业级 · 双模式部署 · 开箱即用
 
 </div>
 
 ---
 
-## 📖 项目介绍
+## 项目介绍
 
-> **Bixi** (碧玺) 是一种珍贵的宝石，寓意项目如宝石般璀璨、坚固、有价值。
+Bixi（碧玺）是一套面向企业后台和 SaaS 场景的前后端开发脚手架，后端基于 Java 17、Spring Boot 3.4、Spring Cloud Alibaba 构建，前端基于 Vue 3、TypeScript 和 Vite 构建。
 
-Bixi 是一个**现代化的企业级开发脚手架**，基于 **JDK 17**、**Spring Boot 3.4**、**Spring Cloud Alibaba** 和 **Vue 3.5** 构建，旨在提供一套完整、优雅、易用的微服务/单体双架构解决方案。
+项目支持两种部署形态：
 
-### 💡 核心亮点
+- **微服务模式**：各业务服务独立运行，通过 Nacos 注册与配置，通过 Spring Cloud Gateway 统一入口。
+- **单体模式**：认证、用户权限、代码生成和定时任务等模块组合为一个 `bixi-single` 应用，不依赖 Nacos 和 Gateway。
 
-- **🎯 双模架构**：Maven Profile 一键切换微服务/单体模式
-- **🚀 现代化技术栈**：全面拥抱 Java 17、Spring Boot 3、Vue 3 Composition API
-- **🔐 完善的权限体系**：OAuth2.1 + JWT，支持接口级和按钮级权限控制
-- **🌊 强大的工作流引擎**：基于 Flowable 深度定制，支持中国式审批流
-- **🤖 AI 集成能力**：内置 AI 接口，快速接入大模型服务
-- **📦 开箱即用**：内置代码生成器、OSS 存储、定时任务、系统监控
-- **🛡️ 安全可靠**：XSS 防护、SQL 注入防护、数据脱敏、审计日志
+### 核心能力
 
-### 🎯 适用场景
-
-- ✅ 企业后台管理系统
-- ✅ SaaS 平台开发
-- ✅ 微服务架构项目
-- ✅ 快速原型开发
-- ✅ 学习参考和二次开发
+- OAuth2.1 / JWT 认证授权与接口、菜单、按钮权限控制
+- 用户、角色、菜单、部门、字典、参数和日志管理
+- MyBatis-Plus、动态数据源和 Druid 数据库连接池
+- RabbitMQ 消息、Redis 缓存、MinIO 对象存储
+- Quartz 定时任务
+- Flowable 工作流模块
+- Spring AI Alibaba AI 模块
+- Spring Boot Actuator / Admin 服务监控
+- DynamicTp 全局异步线程池
+- Vue 3 + Element Plus 管理后台
 
 ---
 
-## 🏗️ 技术栈
+## 架构模式
+
+| 对比项 | 微服务模式（`cloud`） | 单体模式（`single`） |
+|---|---|---|
+| 构建方式 | `mvn clean package -Pcloud`，根项目默认激活 | `mvn clean package -Psingle` |
+| 应用形态 | Gateway、Auth、UPMS、AI、Workflow、Quartz、Monitor 等服务独立部署 | `bixi-single` 组合为一个 Spring Boot 应用 |
+| 注册与配置 | 使用 Nacos 服务发现和配置中心 | 配置文件本地加载，Nacos 运行时关闭 |
+| API 入口 | Spring Cloud Gateway | 直接访问单体应用 |
+| 服务调用 | OpenFeign + LoadBalancer | 不需要外部服务发现；保留公共调用组件依赖 |
+| 限流与降级 | Gateway Redis 限流、Sentinel / Feign 降级 | 不启用 Gateway 层能力 |
+| DynamicTp | 本地默认配置 + Nacos 动态刷新 | 本地配置 + 环境变量，修改后重启 |
+| 外部基础设施 | MySQL、Redis、RabbitMQ、MinIO 等 | MySQL、Redis、RabbitMQ、MinIO 等 |
+
+### 单体模式当前聚合范围
+
+当前 [bixi-single/pom.xml](bixi-single/pom.xml) 直接聚合以下模块：
+
+- `bixi-auth`：认证授权
+- `bixi-upms-biz`：用户权限管理
+- `bixi-generator`：代码生成
+- `bixi-quartz`：定时任务
+
+AI、Workflow 和 Monitor 在当前工程中作为独立模块存在，默认不在 `bixi-single` 的依赖列表中；需要按部署形态单独启动或按实际需求加入单体聚合。
+
+---
+
+## 技术栈与中间件
 
 ### 后端技术栈
 
-| 技术 | 版本 | 说明 |
-|------|------|------|
-| JDK | 17+ | 采用最新的 LTS 版本 |
-| Spring Boot | 3.4.1 | 核心框架 |
-| Spring Cloud Alibaba | 2022.x | 微服务组件 |
-| Spring Security | 6.x | 安全框架 |
-| OAuth2 | 2.1 | 认证授权 |
-| MyBatis Plus | 3.5.x | ORM 框架 |
-| Flowable | 7.x | 工作流引擎 |
-| Redis | 6.0+ | 缓存中间件 |
-| MySQL | 8.0+ | 关系型数据库 |
-| Nacos | 2.5.x+ | 配置中心和服务发现 |
+| 技术 | 版本 / 实现 | 用途 |
+|---|---|---|
+| Java | 17 | 后端运行环境 |
+| Spring Boot | 3.4.1 | 应用基础框架 |
+| Spring Cloud | 2024.0.0 | 微服务基础能力 |
+| Spring Cloud Alibaba | 2023.0.3.2 | Nacos、Sentinel 等集成 |
+| Spring Authorization Server | 1.4.1 | OAuth2.1 授权服务器 |
+| MyBatis-Plus | 3.5.9 | ORM 与分页能力 |
+| Druid | 1.2.23 | 数据库连接池与监控 |
+| Dynamic Datasource | 4.3.1 | 动态数据源切换 |
+| Flowable | 7.1.0 | 工作流引擎，独立 Workflow 模块使用 |
+| Spring AI Alibaba | 1.0.0.2 | AI / DashScope 集成，独立 AI 模块使用 |
+| SpringDoc OpenAPI | 2.7.0 | OpenAPI 接口文档 |
+| Undertow | Spring Boot Starter | Web 容器 |
+
+### 中间件清单
+
+| 中间件 / 组件 | 主要用途 | 单体模式 | 微服务模式 |
+|---|---|:---:|:---:|
+| MySQL | 业务数据库 | ✅ | ✅ |
+| Redis | 缓存、Token、验证码、限流 | ✅ | ✅ |
+| RabbitMQ | 消息队列 | ✅ | ✅ |
+| MinIO / S3 | 文件对象存储 | ✅ | ✅ |
+| Druid | 数据库连接池、SQL 监控 | ✅ | ✅ |
+| Dynamic Datasource | 动态数据源 | ✅ | ✅ |
+| MyBatis-Plus | ORM | ✅ | ✅ |
+| Spring Authorization Server + JWT | 登录、Token 签发与校验 | ✅ | ✅ |
+| Quartz | 定时任务调度 | ✅ | ✅ |
+| Nacos | 注册中心、配置中心 | 运行时关闭 | ✅ |
+| Spring Cloud Gateway | 路由、全局过滤、网关限流 | — | ✅ |
+| OpenFeign + LoadBalancer | 微服务间调用与负载均衡 | 按模块依赖 | ✅ |
+| Sentinel | Feign 降级、熔断和限流 | 按模块依赖 | ✅ |
+| Flowable | 工作流引擎 | 当前未聚合 | ✅ / 独立模块 |
+| Spring Boot Admin + Actuator | 服务监控与运行指标 | Actuator | ✅ / Monitor 服务 |
+| DynamicTp | 全局 `@Async` 异步线程池 | 本地配置 | Nacos 可刷新 |
+
+Seata、ShardingSphere 等目前仅存在版本管理或公共代码目录中，当前业务模块没有确认实际引入，因此不列为已启用中间件。
 
 ### 前端技术栈
 
-| 技术 | 版本 | 说明 |
-|------|------|------|
-| Vue | 3.5 | 前端框架 |
-| TypeScript | 5.6 | 类型系统 |
-| Vite | 5.3 | 构建工具 |
-| Element Plus | 2.8 | UI 组件库 |
-| Pinia | 2.2 | 状态管理 |
-| Vue Router | 4.x | 路由管理 |
+| 技术 | 版本 | 用途 |
+|---|---|---|
+| Vue | 3.5.12 | 前端框架 |
+| TypeScript | 5.6.3 | 类型系统 |
+| Vite | 5.3.3 | 开发与构建工具 |
+| Element Plus | 2.8.6 | UI 组件库 |
+| Pinia | 2.2.6 | 状态管理 |
+| Vue Router | 4.4.5 | 路由管理 |
+| Tailwind CSS | 3.4.14 | 原子化 CSS |
 
 ---
 
-## 📂 项目结构
+## 项目结构
 
-```
+```text
 bixi/
-├── bixi-common/              # 通用组件库
-│   ├── bixi-common-bom           # 依赖版本管理
-│   ├── bixi-common-core          # 核心工具（R、异常、工具类）
-│   ├── bixi-common-security      # 安全认证（OAuth2、JWT）
-│   ├── bixi-common-mybatis       # MyBatis Plus 扩展
-│   ├── bixi-common-oss           # 对象存储抽象（S3 协议）
-│   ├── bixi-common-workflow      # 工作流扩展（Flowable）
-│   ├── bixi-common-ai            # AI 集成
-│   └── ...                       # 其他通用组件
-├── bixi-gateway/             # Gateway 网关
-├── bixi-auth/                # OAuth2.1 认证中心
-├── bixi-module/              # 业务模块
-│   ├── bixi-upms-biz             # 权限管理（用户、角色、菜单、部门）
-│   ├── bixi-workflow-biz         # 工作流管理
-│   ├── bixi-ai-biz               # AI 集成
+├── bixi-common/                  # 公共基础能力
+│   ├── bixi-common-bom           # 依赖与版本管理
+│   ├── bixi-common-core          # 核心工具、Redis、DynamicTp
+│   ├── bixi-common-datasource    # 动态数据源
+│   ├── bixi-common-feign         # Feign、Sentinel、负载均衡
+│   ├── bixi-common-log           # 日志与审计能力
+│   ├── bixi-common-mq            # RabbitMQ 封装
+│   ├── bixi-common-mybatis       # MyBatis-Plus 封装
+│   ├── bixi-common-oss           # S3 / MinIO 对象存储
+│   ├── bixi-common-security      # OAuth2、JWT、安全组件
+│   ├── bixi-common-swagger       # OpenAPI 文档
+│   ├── bixi-common-workflow      # Flowable 公共配置
+│   └── bixi-common-ai            # AI 公共配置
+├── bixi-gateway/                 # 微服务 API 网关
+├── bixi-auth/                    # 认证授权服务
+├── bixi-module/
+│   ├── bixi-upms-api             # UPMS API、DTO
+│   ├── bixi-upms-biz             # 用户权限管理
 │   ├── bixi-generator            # 代码生成器
 │   ├── bixi-quartz               # 定时任务
-│   └── bixi-monitor              # 系统监控
-├── bixi-single/              # 单体模式入口
-├── bixi-ui/                  # Vue 3 前端
-├── bixi-project-documents/   # 项目文档
-│   └── sql/                      # 数据库脚本
-├── Makefile                  # 构建脚本
-├── CLAUDE.md                 # AI 辅助开发说明
-├── CONTRIBUTING.md           # 贡献指南
-├── SECURITY.md               # 安全政策
-└── pom.xml                   # Maven 配置
+│   ├── bixi-monitor              # Spring Boot Admin 监控服务
+│   ├── bixi-ai-api / bixi-ai-biz # AI API 与业务服务
+│   └── bixi-workflow-api / biz   # Workflow API 与业务服务
+├── bixi-single/                  # 单体模式入口
+├── bixi-ui/                      # Vue 3 管理前端
+├── bixi-project-documents/sql/   # 数据库脚本与数据字典
+├── .env.example                  # 环境变量模板
+├── Makefile                      # 常用构建命令
+└── pom.xml                       # Maven 根配置
 ```
 
 ---
 
-## 🚀 快速开始
+## 快速开始
 
-### 1. 环境准备
+### 环境要求
 
-确保你的开发环境满足以下要求：
+- JDK 17+
+- Maven 3.8+
+- Node.js 18+
+- npm 8+
 
-```bash
-# 检查 Java 版本（需要 17+）
-java -version
+运行时中间件：
 
-# 检查 Node.js 版本（需要 18+）
-node -v
+- 两种模式都需要 MySQL、Redis；启用消息和文件功能时需要 RabbitMQ、MinIO。
+- 微服务模式额外需要 Nacos。
+- 单体模式不需要 Nacos 和 Gateway。
 
-# 检查 Maven 版本（需要 3.8+）
-mvn -v
-```
-
-**必需组件**：
-- MySQL 8.0+
-- Redis 6.0+
-- Nacos 2.5.x+ (微服务模式)
-
-### 2. 克隆项目
+### 1. 获取项目
 
 ```bash
 git clone https://github.com/lotus-bixi/bixi.git
 cd bixi
 ```
 
-### 3. 数据库初始化
+### 2. 初始化数据库
+
+单体配置默认使用 `bixi_single` 数据库；也可以通过 `MYSQL_DATABASE` 指定其他名称。
 
 ```bash
-# 1. 创建数据库
 mysql -u root -p
-CREATE DATABASE bixi CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+CREATE DATABASE bixi_single CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+exit
 
-# 2. 导入表结构
-mysql -u root -p bixi < bixi-project-documents/sql/01_init_all_tables.sql
+mysql -u root -p bixi_single < bixi-project-documents/sql/01_init_all_tables.sql
+mysql -u root -p bixi_single < bixi-project-documents/sql/04_init_data.sql
 
-# 3. 导入初始数据（⚠️ 重要！系统需要基础数据才能运行）
-mysql -u root -p bixi < bixi-project-documents/sql/04_init_data.sql
-
-# 4. 可选：导入约束和索引优化
-mysql -u root -p bixi < bixi-project-documents/sql/02_add_constraints.sql
-mysql -u root -p bixi < bixi-project-documents/sql/03_add_indexes.sql
+# 可选：增加约束和索引
+mysql -u root -p bixi_single < bixi-project-documents/sql/02_add_constraints.sql
+mysql -u root -p bixi_single < bixi-project-documents/sql/03_add_indexes.sql
 ```
 
-> ⚠️ **重要**：
-> - **必须执行 `04_init_data.sql`**，否则系统无法正常使用！
-> - 初始数据包含：默认管理员、角色、菜单、字典、代码生成器模板
-> - 默认管理员账号：`admin` / `admin123`（首次登录后请立即修改）
+`04_init_data.sql` 包含系统运行所需的基础数据。默认管理员账号通常为 `admin` / `admin123`，首次登录后请立即修改密码。
 
-### 4. 配置文件
+### 3. 配置环境变量
 
 ```bash
-# 复制环境变量模板
 cp .env.example .env
-
-# 编辑 .env 文件，填写真实的配置信息
-# 主要是数据库、Redis、Nacos 等连接信息
 ```
 
-### 5. 启动项目
+根据部署模式填写数据库、Redis、RabbitMQ、MinIO、Nacos、短信和 AI 等配置。应用配置中的环境变量也可以直接由启动环境提供。
 
-#### 方式一：单体模式（推荐快速体验）
+### 4. 启动单体模式
 
 ```bash
-# 编译项目
-mvn clean install -DskipTests
+# 在项目根目录执行
+mvn clean package -Psingle -DskipTests
 
-# 启动单体应用
-cd bixi-single
-mvn spring-boot:run
+java -jar bixi-single/target/bixi-single.jar
 ```
 
-#### 方式二：微服务模式
+默认访问地址：<http://localhost:9999/admin>
+
+单体模式会读取 `bixi-single/src/main/resources/application.yml` 和 `application-dev.yml`，并关闭 Nacos 服务发现和配置中心。
+
+### 5. 启动微服务模式
 
 ```bash
-# 1. 启动 Nacos
-cd nacos/bin
-./startup.sh -m standalone
+# 编译微服务模式，cloud Profile 为根项目默认 Profile
+mvn clean package -Pcloud -DskipTests
+```
 
-# 2. 启动网关
-cd bixi-gateway
-mvn spring-boot:run
+启动顺序建议：
 
-# 3. 启动认证中心
-cd bixi-auth
-mvn spring-boot:run
+1. 启动 Nacos，并准备各服务需要的配置。
+2. 启动 `bixi-gateway`。
+3. 启动 `bixi-auth`。
+4. 启动 `bixi-module` 下需要的业务服务，例如 `bixi-upms-biz`、`bixi-ai-biz`、`bixi-workflow-biz`、`bixi-quartz`。
+5. 按需启动 `bixi-monitor`。
 
-# 4. 启动业务模块
-cd bixi-module/bixi-upms-biz
+开发时也可以在各模块目录执行：
+
+```bash
 mvn spring-boot:run
 ```
+
+微服务应用会通过各自的 `application.yml` 从 Nacos 导入公共配置和服务配置。
 
 ### 6. 启动前端
 
 ```bash
 cd bixi-ui
-
-# 安装依赖
-npm install
-
-# 启动开发服务器
+npm ci
 npm run dev
 ```
 
-访问：http://localhost:3000
+前端开发服务器默认地址：<http://localhost:3000>
 
-**默认账号**：
-- 用户名：`admin`
-- 密码：`admin123`
-
----
-
-## 🛠️ 使用 Makefile 快速构建
-
-项目提供了便捷的 `Makefile` 进行环境构建和启动。
+常用构建命令：
 
 ```bash
-# 查看所有可用命令
-make help
+npm run build:dev
+npm run build:test
+npm run build:prod
+```
 
-# 后端全量编译
+---
+
+## 配置说明
+
+### 单体模式基础配置
+
+单体模式的关键配置位于 [application-dev.yml](bixi-single/src/main/resources/application-dev.yml)：
+
+```yaml
+spring:
+  cache:
+    type: redis
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+  datasource:
+    dynamic:
+      primary: master
+      datasource:
+        master:
+          type: com.alibaba.druid.pool.DruidDataSource
+          driver-class-name: com.mysql.cj.jdbc.Driver
+          url: jdbc:mysql://${MYSQL_HOST:127.0.0.1}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:bixi_single}
+```
+
+RabbitMQ 和 MinIO 也在该文件中配置，生产环境请通过环境变量注入账号、密码和 endpoint。
+
+### 微服务模式 Nacos 配置
+
+微服务模块的 `application.yml` 会导入以下类型的 Nacos Data ID：
+
+```text
+application-${profiles.active}.yml
+${spring.application.name}-${profiles.active}.yml
+${spring.application.name}-dtp-${profiles.active}.yml  # 可选，DynamicTp
+```
+
+常用服务包括：
+
+- `bixi-gateway`
+- `bixi-auth`
+- `bixi-upms-biz`
+- `bixi-ai-biz`
+- `bixi-workflow-biz`
+- `bixi-quartz`
+- `bixi-monitor`
+
+Nacos 地址默认由 `NACOS_HOST` 和 `NACOS_PORT` 提供，命名空间和账号由 Maven Profile / 部署环境决定。
+
+### DynamicTp 全局异步线程池
+
+DynamicTp 在单体和微服务模式下都会启用，默认执行器名称为 `taskExecutor`，用于未指定执行器的 `@Async` 任务。
+
+默认配置：
+
+| 参数 | 默认值 | 环境变量 |
+|---|---:|---|
+| 核心线程数 | `2` | `BIXI_ASYNC_CORE_POOL_SIZE` |
+| 最大线程数 | `8` | `BIXI_ASYNC_MAX_POOL_SIZE` |
+| 队列容量 | `1024` | `BIXI_ASYNC_QUEUE_CAPACITY` |
+| 队列类型 | `VariableLinkedBlockingQueue` | — |
+| 拒绝策略 | `CallerRunsPolicy` | — |
+| 优雅停机等待 | `60s` | — |
+
+- 单体模式：读取公共 [dynamic-tp-config.yml](bixi-common/bixi-common-core/src/main/resources/dynamic-tp-config.yml) 和环境变量，修改后重启。
+- 微服务模式：在本地默认值基础上，可从对应的 Nacos Data ID 动态刷新，通常形如 `bixi-auth-dtp-dev.yml`。
+- 可通过 `/actuator/dynamictp` 查看线程池信息，具体访问权限沿用 Actuator 安全配置。
+- DynamicTp 当前只管理全局 `@Async` 执行器，不接管 Undertow 或 Quartz 自身的线程池。
+
+---
+
+## 常用构建命令
+
+```bash
+# 后端开发编译
+make backend-dev
+
+# 后端验证构建
 make backend-ci
 
-# 前端构建
-make frontend-build
+# 前端开发 / 测试 / 生产构建
+make frontend-dev
+make frontend-test
+make frontend-prod
 
-# 全量构建
-make all
-
-# 代码格式化
-make format
-
-# 运行测试
-make test
+# 前后端 CI 门禁
+make ci-gate
 ```
 
 ---
 
-## ⚙️ 配置说明
+## 功能模块
 
-### Nacos 配置
-
-微服务模式下，需要在 Nacos 中创建配置文件：
-
-**命名空间**：`dev`（开发环境）
-
-**配置列表**：
-- `bixi-gateway.yml` - 网关配置
-- `bixi-auth.yml` - 认证中心配置
-- `bixi-upms-biz.yml` - 权限管理配置
-- `bixi-workflow-biz.yml` - 工作流配置
-- `bixi-ai-biz.yml` - AI 服务配置
-- `bixi-common.yml` - 公共配置
-
-详细配置说明请参考：[bixi-project-documents/sql/README.md](bixi-project-documents/sql/README.md)
-
-### 数据源配置
-
-```yaml
-spring:
-  datasource:
-    type: com.zaxxer.hikari.HikariDataSource
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/bixi?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
-    username: root
-    password: your-password-here
-```
-
-### Redis 配置
-
-```yaml
-spring:
-  redis:
-    host: 127.0.0.1
-    port: 6379
-    password: your-redis-password
-    database: 0
-```
+| 模块 | 主要能力 | 当前形态 |
+|---|---|---|
+| Auth | 登录、OAuth2 Token、验证码、客户端认证 | 单体 / 微服务 |
+| UPMS | 用户、角色、菜单、部门、岗位、字典、参数、日志、文件 | 单体 / 微服务 |
+| Generator | 数据库表导入、模板配置、代码生成、预览下载 | 单体 / 微服务 |
+| Quartz | Cron 任务、执行记录、手动触发、暂停恢复 | 单体 / 微服务 |
+| AI | 会话、消息、模型调用、SSE、知识库 | 独立 AI 服务 |
+| Workflow | 流程定义、部署、实例、任务、表单和审批 | 独立 Workflow 服务 |
+| Monitor | Spring Boot Admin 服务监控 | 独立 Monitor 服务 |
 
 ---
 
-## 📚 文档
+## 文档入口
 
-- [数据库设计文档](bixi-project-documents/sql/DATA_DICTIONARY.md)
-- [贡献指南](CONTRIBUTING.md)
-- [安全政策](SECURITY.md)
+- [架构说明](.docs/1_ARCHITECTURE.md)
+- [数据库脚本说明](bixi-project-documents/sql/README.md)
+- [数据字典](bixi-project-documents/sql/DATA_DICTIONARY.md)
+- [环境变量模板](.env.example)
 - [AI 辅助开发说明](CLAUDE.md)
+- [许可证](LICENSE)
 
 ---
 
-## 🎨 核心功能
+## 安全注意事项
 
-### 1. 权限管理 (UPMS)
+生产部署前至少完成以下配置：
 
-- ✅ 用户管理：用户增删改查、密码重置、用户导入导出
-- ✅ 角色管理：角色权限分配、数据权限控制
-- ✅ 菜单管理：动态菜单配置、按钮级权限控制
-- ✅ 部门管理：组织架构树形管理
-- ✅ 字典管理：系统字典配置
-- ✅ 参数管理：系统参数配置
-- ✅ 日志管理：操作日志、登录日志
-- ✅ 在线用户：在线用户监控、强制下线
-
-### 2. 工作流引擎 (Workflow)
-
-- ✅ 流程设计器：可视化 BPMN 2.0 流程设计
-- ✅ 流程管理：流程部署、挂起、激活
-- ✅ 流程实例：流程发起、审批、撤回、驳回
-- ✅ 任务管理：待办任务、已办任务、抄送任务
-- ✅ 表单管理：业务表单配置
-- ✅ 中国式审批：会签、或签、驳回、转办、委派
-
-### 3. AI 集成 (AI)
-
-- ✅ 对话管理：AI 对话历史记录
-- ✅ 模型配置：多模型切换、参数配置
-- ✅ 流式响应：支持 SSE 流式输出
-- ✅ Prompt 管理：提示词模板管理
-
-### 4. 代码生成器 (Generator)
-
-- ✅ 表管理：数据库表导入
-- ✅ 模板配置：代码生成模板
-- ✅ 代码生成：一键生成前后端代码
-- ✅ 预览下载：支持在线预览和打包下载
-
-### 5. 定时任务 (Quartz)
-
-- ✅ 任务管理：Cron 表达式配置
-- ✅ 执行日志：任务执行历史
-- ✅ 任务调度：手动触发、暂停、恢复
-
-### 6. 系统监控 (Monitor)
-
-- ✅ 在线用户：在线用户列表
-- ✅ 服务器监控：CPU、内存、磁盘使用率
-- ✅ 服务监控：服务状态、健康检查
+1. 修改默认管理员密码。
+2. 使用强随机值替换 OAuth2、JWT、Jasypt 等密钥。
+3. 不要使用示例中的 Redis、RabbitMQ、MinIO、Druid 默认密码。
+4. 不要将真实 `.env`、Nacos 配置和密钥提交到 Git。
+5. 通过 HTTPS、网络 ACL 和防火墙限制管理端口。
+6. 按需限制 `/actuator`、`/druid` 和接口文档的访问权限。
 
 ---
 
-## 🤝 参与贡献
+## 常见问题
 
-我们欢迎任何形式的贡献！
+### 单体启动时报连接失败
 
-### Git Flow 工作流
+单体模式不依赖 Nacos。优先检查 MySQL、Redis、RabbitMQ、MinIO 是否已启动，以及 `application-dev.yml` 或环境变量中的地址、端口、账号和密码是否正确。
 
-- **main** 分支：生产环境稳定版本
-- **develop** 分支：日常开发主分支
-- **feature/*** 分支：新功能开发
-- **fix/*** 分支：Bug 修复
-- **hotfix/*** 分支：紧急修复
+### 微服务启动后 Gateway 找不到服务
 
-### 贡献流程
+检查 Nacos 是否可访问、服务是否注册成功、命名空间是否一致，以及各服务是否加载了正确的 Nacos 配置。
 
-1. Fork 本仓库
-2. 基于 `develop` 创建特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'feat: 添加某个功能'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 创建 Pull Request
+### 前端访问接口出现 404 或跨域
 
-详细贡献指南请参考：[CONTRIBUTING.md](CONTRIBUTING.md)
+单体模式确认后端上下文路径为 `/admin`；微服务模式确认前端 API 地址指向 Gateway，并检查 Gateway 的路由和跨域配置。
 
-### 代码规范
+### DynamicTp 参数修改后没有生效
 
-- **后端**：遵循阿里巴巴 Java 开发手册（嵩山版）
-- **前端**：遵循 Vue 3 风格指南
-- **提交规范**：使用 Conventional Commits 规范
+单体模式修改本地配置或环境变量后必须重启。微服务模式需要确认对应的 Nacos Data ID 已发布，并且包含完整的 `dynamictp.executors[0]` 配置对象。
 
 ---
 
-## 🔒 安全配置
-
-⚠️ **生产环境部署前请务必**：
-
-1. ✅ 修改默认管理员密码
-2. ✅ 更新 JWT 密钥（使用强随机密钥）
-3. ✅ 配置 HTTPS
-4. ✅ 启用 API 速率限制
-5. ✅ 检查 Nacos/Redis/MySQL 访问控制
-6. ✅ 配置防火墙规则
-
-详细安全配置清单请参考：[SECURITY.md](SECURITY.md)
-
----
-
-## ❓ 常见问题
-
-### 1. 启动时报错 "Connection refused"
-
-检查 MySQL、Redis、Nacos 是否正常启动。
-
-### 2. 前端访问后端接口跨域
-
-检查 Gateway 或 Nginx 配置，确保 CORS 正确设置。
-
-### 3. 登录后提示 "Token 已过期"
-
-检查系统时间是否同步，检查 JWT 过期时间配置。
-
-### 4. 代码生成器生成的代码无法编译
-
-检查模板配置和数据库表结构是否符合规范。
-
-更多问题请查阅 [Issue](https://github.com/lotus-bixi/bixi/issues)。
-
----
-
-## 📞 联系我们
-
-- 📧 邮箱：dev@lotus-bixi.com
-- 💬 微信群：[扫码加入](docs/images/wechat-group.png)
-- 🐛 问题反馈：[GitHub Issues](https://github.com/lotus-bixi/bixi/issues)
-- 💡 功能建议：[GitHub Discussions](https://github.com/lotus-bixi/bixi/discussions)
-
----
-
-## 🌟 鸣谢
-
-感谢以下开源项目：
-
-- [Spring Boot](https://spring.io/projects/spring-boot)
-- [Spring Cloud Alibaba](https://github.com/alibaba/spring-cloud-alibaba)
-- [MyBatis Plus](https://baomidou.com/)
-- [Flowable](https://www.flowable.com/)
-- [Vue](https://vuejs.org/)
-- [Element Plus](https://element-plus.org/)
-
----
-
-## 📄 许可证
+## 许可证
 
 [MIT License](LICENSE)
 
 Copyright (c) 2025 Lotus Bixi Team
-
----
-
-<div align="center">
-
-**如果这个项目对你有帮助，请给我们一个 ⭐Star**
-
-Made with ❤️ by Lotus Bixi Team
-
-</div>

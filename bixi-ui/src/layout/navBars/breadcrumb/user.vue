@@ -245,6 +245,7 @@ onMounted(() => {
 	display: flex;
 	align-items: center;
 	justify-content: flex-end;
+	flex-shrink: 0;
 
 	&-link {
 		height: 100%;
@@ -291,6 +292,23 @@ onMounted(() => {
 
 	:deep(.el-badge__content.is-fixed) {
 		top: 12px;
+	}
+}
+
+// 小屏保留用户入口，收起非核心工具，避免挤压面包屑文字
+@media screen and (max-width: 768px) {
+	.layout-navbars-breadcrumb-user {
+		flex: 0 0 auto !important;
+		padding-right: 6px !important;
+
+		&-icon {
+			display: none;
+		}
+
+		&-link-photo {
+			width: 22px;
+			height: 22px;
+		}
 	}
 }
 </style>

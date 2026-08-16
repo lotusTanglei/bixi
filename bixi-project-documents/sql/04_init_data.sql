@@ -3,6 +3,8 @@
 -- 包含核心模块基础字典、菜单、角色及代码生成器配置等
 -- [已自动清洗测试脏数据、移除库名硬编码并进行脱敏处理]
 -- ----------------------------
+SET NAMES utf8mb4;
+
 BEGIN;
 
 INSERT INTO sys_dept (id, name, code, sn, leader, create_by, update_by, create_time, update_time, del_flag, status, data_status, parent_id, tenant_id, remark) VALUES (1858145535235653601, '总裁办', 'CEO Office', 1, NULL, NULL, NULL, '2023-04-03 13:04:47', '2024-12-02 20:32:16', '0', '0', '0', 0, NULL, NULL);
@@ -322,7 +324,7 @@ INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 9063, '2025
 INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 9064, '2025-01-05 22:11:04');
 INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 9065, '2025-01-05 22:11:04');
 INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 2003471392852377602, '2025-12-23 22:22:57');
-INSERT INTO sys_user (id, username, password, salt, phone, avatar, nickname, name, email, dept_id, lock_flag, wx_openid, mini_openid, qq_openid, gitee_login, osc_id, create_by, update_by, create_time, update_time, del_flag, status, data_status, tenant_id, remark) VALUES (1, 'admin', '$2a$10$c/Ae0pRjJtMZg3BnvVpO.eIK6WYWVbKTzqgdy3afR7w.vd.xi3Mgy', '', '17034642999', '/admin/file/bixi/bcbf0519d4574e848ca54bce8dfa650d.jpeg', '管理员', '管理员', 'pig4cloud@qq.com', 1858145535235653601, '0', NULL, 'oBxPy5E-v82xWGsfzZVzkD3wEX64', NULL, 'log4j', NULL, NULL, 1, '2018-04-20 07:15:18', '2026-01-19 21:54:10', '0', '0', '0', NULL, NULL);
+INSERT INTO sys_user (id, username, password, salt, phone, avatar, nickname, name, email, dept_id, lock_flag, wx_openid, mini_openid, qq_openid, gitee_login, osc_id, create_by, update_by, create_time, update_time, del_flag, status, data_status, tenant_id, remark) VALUES (1, 'admin', '$2a$10$vSsdr0vb6NU6zzWqzMnAHeqtN4F2Hq/WCE/HK0atNW3qmQDcpF2xq', '', '17034642999', '/admin/file/bixi/bcbf0519d4574e848ca54bce8dfa650d.jpeg', '管理员', '管理员', 'pig4cloud@qq.com', 1858145535235653601, '0', NULL, 'oBxPy5E-v82xWGsfzZVzkD3wEX64', NULL, 'log4j', NULL, NULL, 1, '2018-04-20 07:15:18', '2026-01-19 21:54:10', '0', '0', '0', NULL, NULL);
 INSERT INTO sys_user_post (user_id, post_id, create_time) VALUES (1, 1, NULL);
 INSERT INTO sys_user_role (user_id, role_id, create_time) VALUES (1, 1, NULL);
 INSERT INTO gen_datasource_config (id, name, url, username, password, ds_type, config_type, ds_name, instance, port, host, create_by, update_by, create_time, update_time, del_flag, status, data_status, tenant_id, remark) VALUES (1872891796993679362, 'bixi_sys', 'jdbc:mysql://127.0.0.1:3306/bixi?characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&allowMultiQueries=true&allowPublicKeyRetrieval=true', 'root', '123456', 'mysql', NULL, 'bixi', '', 3306, '127.0.0.1', 1, 1, '2024-12-28 14:26:16', '2024-12-31 14:46:10', '0', '0', '0', NULL, NULL);

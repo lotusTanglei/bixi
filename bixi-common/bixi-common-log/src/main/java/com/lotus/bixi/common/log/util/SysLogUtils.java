@@ -25,6 +25,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -49,7 +50,8 @@ public class SysLogUtils {
 
         // get 参数脱敏
         BixiLogProperties logProperties = SpringContextHolder.getBean(BixiLogProperties.class);
-        Map<String, String[]> paramsMap = MapUtil.removeAny(request.getParameterMap(),
+        // Servlet 参数表由 Tomcat 锁定，复制后再脱敏，避免登录失败日志处理反过来抛出 500
+        Map<String, String[]> paramsMap = MapUtil.removeAny(new HashMap<>(request.getParameterMap()),
                 ArrayUtil.toArray(logProperties.getExcludeFields(), String.class));
         sysLog.setParams(HttpUtil.toParams(paramsMap));
         return sysLog;
