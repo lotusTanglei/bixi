@@ -68,10 +68,12 @@ public interface BixiUserDetailsService extends UserDetailsService, Ordered {
         Collection<GrantedAuthority> authorities = AuthorityUtils
                 .createAuthorityList(dbAuthsSet.toArray(new String[0]));
         SysUser user = info.getSysUser();
+        String encodedPassword = StrUtil.isNotBlank(info.getEncodedPassword())
+                ? info.getEncodedPassword() : user.getPassword();
 
         // 构造security用户
         return new BixiUser(user.getId(), user.getDeptId(), user.getUsername(),
-                SecurityConstants.BCRYPT + user.getPassword(), user.getPhone(), true, true, true,
+                SecurityConstants.BCRYPT + encodedPassword, user.getPhone(), true, true, true,
                 StrUtil.equals(user.getLockFlag(), CommonConstants.STATUS_NORMAL), authorities);
     }
 

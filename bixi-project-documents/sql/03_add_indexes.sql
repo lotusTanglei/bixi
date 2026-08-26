@@ -9,6 +9,11 @@
 -- 1. 核心系统模块索引优化
 -- =====================================================
 
+-- 标准示例任务索引
+CREATE INDEX idx_demo_task_status_due ON biz_demo_task(task_status, due_date, del_flag);
+CREATE INDEX idx_demo_task_assignee ON biz_demo_task(assignee, del_flag);
+CREATE INDEX idx_demo_task_create_time ON biz_demo_task(create_time);
+
 -- 用户表索引优化
 CREATE INDEX idx_user_phone ON sys_user(phone);
 CREATE INDEX idx_user_email ON sys_user(email);

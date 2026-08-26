@@ -3,6 +3,7 @@ package com.lotus.bixi.upms.api.feign;
 import com.lotus.bixi.common.core.constant.ServiceNameConstants;
 import com.lotus.bixi.common.core.util.R;
 import com.lotus.bixi.common.feign.annotation.NoToken;
+import com.lotus.bixi.upms.api.service.PublicParamQueryService;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,8 +14,8 @@ import org.springframework.web.bind.annotation.PathVariable;
  * <p>
  * 查询参数相关
  */
-@FeignClient(contextId = "remoteParamService", value = ServiceNameConstants.UPMS_SERVICE)
-public interface RemoteParamService {
+@FeignClient(contextId = "remoteParamService", value = ServiceNameConstants.UPMS_SERVICE, primary = false)
+public interface RemoteParamService extends PublicParamQueryService {
 
     /**
      * 通过key 查询参数配置
@@ -23,6 +24,7 @@ public interface RemoteParamService {
      * @NoToken 声明成内部调用，避免MQ 等无法调用
      */
     @NoToken
+    @Override
     @GetMapping("/param/publicValue/{key}")
     R<String> getByKey(@PathVariable("key") String key);
 

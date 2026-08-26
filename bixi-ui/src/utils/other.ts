@@ -201,12 +201,12 @@ export const openWindow = (url: string, title: string, w: number, h: number) => 
  *加密处理
  */
 export function encryption(src: string, keyWord: string) {
-    const key = CryptoJS.enc.Utf8.parse(keyWord);
-    // 加密
-    var encrypted = CryptoJS.AES.encrypt(src, key, {
-        iv: key,
-        mode: CryptoJS.mode.CFB,
-        padding: CryptoJS.pad.NoPadding,
+    const key = CryptoJS.SHA256(keyWord);
+    const iv = CryptoJS.MD5(`${keyWord}bixi-iv-salt-2025`);
+    const encrypted = CryptoJS.AES.encrypt(src, key, {
+        iv,
+        mode: CryptoJS.mode.CBC,
+        padding: CryptoJS.pad.Pkcs7,
     });
     return encrypted.toString();
 }
@@ -217,15 +217,15 @@ export function encryption(src: string, keyWord: string) {
  * @returns 明文
  */
 export function decryption(src: string, keyWord: string) {
-    const key = CryptoJS.enc.Utf8.parse(keyWord);
-    // 解密逻辑
-    var decryptd = CryptoJS.AES.decrypt(src, key, {
-        iv: key,
-        mode: CryptoJS.mode.CFB,
-        padding: CryptoJS.pad.NoPadding,
+    const key = CryptoJS.SHA256(keyWord);
+    const iv = CryptoJS.MD5(`${keyWord}bixi-iv-salt-2025`);
+    const decrypted = CryptoJS.AES.decrypt(src, key, {
+        iv,
+        mode: CryptoJS.mode.CBC,
+        padding: CryptoJS.pad.Pkcs7,
     });
 
-    return decryptd.toString(CryptoJS.enc.Utf8);
+    return decrypted.toString(CryptoJS.enc.Utf8);
 }
 
 /**

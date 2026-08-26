@@ -6,7 +6,7 @@ import com.lotus.bixi.common.core.constant.CacheConstants;
 import com.lotus.bixi.common.core.constant.SecurityConstants;
 import com.lotus.bixi.common.core.util.RetOps;
 import com.lotus.bixi.upms.api.entity.SysOauthClientDetails;
-import com.lotus.bixi.upms.api.feign.RemoteClientDetailsService;
+import com.lotus.bixi.upms.api.service.ClientDetailsQueryService;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.cache.annotation.Cacheable;
@@ -43,7 +43,7 @@ public class BixiRemoteRegisteredClientRepository implements RegisteredClientRep
      */
     private final static int accessTokenValiditySeconds = 60 * 60 * 12;
 
-    private final RemoteClientDetailsService clientDetailsService;
+    private final ClientDetailsQueryService clientDetailsService;
 
     /**
      * Saves the registered client.

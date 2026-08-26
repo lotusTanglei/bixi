@@ -3,7 +3,7 @@ package com.lotus.bixi.upms.api.util;
 import cn.hutool.core.convert.Convert;
 import cn.hutool.core.util.StrUtil;
 import com.lotus.bixi.common.core.util.SpringContextHolder;
-import com.lotus.bixi.upms.api.feign.RemoteParamService;
+import com.lotus.bixi.upms.api.service.PublicParamQueryService;
 import lombok.experimental.UtilityClass;
 
 /**
@@ -43,9 +43,9 @@ public class ParamResolver {
             throw new IllegalArgumentException("参数不合法");
         }
 
-        RemoteParamService remoteParamService = SpringContextHolder.getBean(RemoteParamService.class);
+        PublicParamQueryService paramQueryService = SpringContextHolder.getBean(PublicParamQueryService.class);
 
-        String result = remoteParamService.getByKey(key).getData();
+        String result = paramQueryService.getByKey(key).getData();
 
         if (StrUtil.isNotBlank(result)) {
             return Convert.convert(clazz, result);

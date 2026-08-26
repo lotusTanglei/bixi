@@ -3,6 +3,7 @@ image: maven:3.8.8-eclipse-temurin-17
 stages:
   - build
   - test
+  - acceptance
   - package
 
 variables:
@@ -24,17 +25,54 @@ build_frontend:
     paths:
       - bixi-ui/dist/
 
-build_backend:
-  stage: build
+test_backend_cloud:
+  stage: test
   before_script:
     - apt-get update && apt-get install -y make
   script:
-    - make backend-ci
+    - make backend-cloud-ci
 
-package_backend:
+test_backend_single:
+  stage: test
+  before_script:
+    - apt-get update && apt-get install -y make
+  script:
+    - make backend-single-ci
+
+accept_dual_mode:
+  image: docker:27.5-cli
+  stage: acceptance
+  services:
+    - name: docker:27.5-dind
+      command: ["--tls=false"]
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_DRIVER: overlay2
+  before_script:
+    - apk add --no-cache apache2-utils curl make nodejs openssl
+  script:
+    - make init-env
+    - make start-cloud
+    - make verify-cloud
+    - make start-single
+    - make verify-single
+  after_script:
+    - make status || true
+    - make stop || true
+
+package_backend_cloud:
   stage: package
   script:
-    - mvn package -DskipTests
+    - mvn -Pcloud package -DskipTests
   artifacts:
     paths:
       - "**/target/*.jar"
+
+package_backend_single:
+  stage: package
+  script:
+    - mvn -Psingle -pl bixi-single -am package -DskipTests
+  artifacts:
+    paths:
+      - "bixi-single/target/*.jar"

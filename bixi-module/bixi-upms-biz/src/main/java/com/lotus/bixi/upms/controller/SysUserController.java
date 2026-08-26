@@ -15,6 +15,7 @@ import com.lotus.bixi.common.security.annotation.Inner;
 import com.lotus.bixi.common.security.util.SecurityUtils;
 import com.lotus.bixi.upms.api.dto.UserDTO;
 import com.lotus.bixi.upms.api.entity.SysUser;
+import com.lotus.bixi.upms.api.service.UserQueryService;
 import com.lotus.bixi.upms.api.vo.UserExcelVO;
 import com.lotus.bixi.upms.service.SysUserService;
 import com.pig4cloud.plugin.excel.annotation.RequestExcel;
@@ -44,6 +45,8 @@ public class SysUserController {
 
     private final SysUserService userService;
 
+    private final UserQueryService userQueryService;
+
     /**
      * 获取指定用户全部信息
      *
@@ -52,14 +55,10 @@ public class SysUserController {
     @Inner
     @GetMapping(value = {"/info/query"})
     public R info(@RequestParam(required = false) String username, @RequestParam(required = false) String phone) {
-        SysUser user = userService.getOne(Wrappers.<SysUser>query()
-                .lambda()
-                .eq(StrUtil.isNotBlank(username), SysUser::getUsername, username)
-                .eq(StrUtil.isNotBlank(phone), SysUser::getPhone, phone));
-        if (user == null) {
-            return R.failed(MsgUtils.getMessage(ErrorCodes.SYS_USER_USERINFO_EMPTY, username));
-        }
-        return R.ok(userService.findUserInfo(user));
+        UserDTO query = new UserDTO();
+        query.setUsername(username);
+        query.setPhone(phone);
+        return userQueryService.info(query);
     }
 
     /**

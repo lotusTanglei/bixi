@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lotus.bixi.common.core.constant.ServiceNameConstants;
 import com.lotus.bixi.common.core.util.R;
 import com.lotus.bixi.common.feign.annotation.NoToken;
+import com.lotus.bixi.upms.api.service.TokenManagementService;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,8 +17,8 @@ import java.util.Map;
  * @author 唐磊
  * @date 2025-01-01
  */
-@FeignClient(contextId = "remoteTokenService", value = ServiceNameConstants.AUTH_SERVICE)
-public interface RemoteTokenService {
+@FeignClient(contextId = "remoteTokenService", value = ServiceNameConstants.AUTH_SERVICE, primary = false)
+public interface RemoteTokenService extends TokenManagementService {
 
     /**
      * 分页查询token 信息
@@ -26,6 +27,7 @@ public interface RemoteTokenService {
      * @return page
      */
     @NoToken
+    @Override
     @PostMapping("/token/page")
     R<Page> getTokenPage(@RequestBody Map<String, Object> params);
 
@@ -36,6 +38,7 @@ public interface RemoteTokenService {
      * @return
      */
     @NoToken
+    @Override
     @DeleteMapping("/token/remove/{token}")
     R<Boolean> removeTokenById(@PathVariable("token") String token);
 
@@ -46,6 +49,7 @@ public interface RemoteTokenService {
      * @return
      */
     @NoToken
+    @Override
     @GetMapping("/token/query-token")
     R<Map<String, Object>> queryToken(@RequestParam("token") String token);
 

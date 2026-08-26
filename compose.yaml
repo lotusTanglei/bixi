@@ -1,0 +1,321 @@
+name: bixi
+
+x-backend-environment: &backend-environment
+  TZ: ${TIME_ZONE:-Asia/Shanghai}
+  MYSQL_HOST: mysql
+  MYSQL_PORT: 3306
+  MYSQL_DATABASE: ${MYSQL_DATABASE}
+  MYSQL_USERNAME: ${MYSQL_USERNAME}
+  MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+  REDIS_HOST: redis
+  REDIS_PORT: 6379
+  REDIS_PASSWORD: ${REDIS_PASSWORD}
+  REDIS_DATABASE: ${REDIS_DATABASE:-0}
+  RABBITMQ_HOST: rabbitmq
+  RABBITMQ_PORT: 5672
+  RABBITMQ_USERNAME: ${RABBITMQ_USERNAME}
+  RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+  RABBITMQ_VIRTUAL_HOST: /
+  BIXI_ENCODE_KEY: ${BIXI_ENCODE_KEY}
+  SECURITY_ENCODE_KEY: ${BIXI_ENCODE_KEY}
+  JASYPT_ENCRYPTOR_PASSWORD: ${JASYPT_ENCRYPTOR_PASSWORD}
+  DRUID_USERNAME: ${DRUID_USERNAME}
+  DRUID_PASSWORD: ${DRUID_PASSWORD}
+  MINIO_ENDPOINT: ${MINIO_ENDPOINT}
+  MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+  MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+
+x-backend-build: &backend-build
+  context: .
+  dockerfile: deploy/docker/backend.Dockerfile
+
+services:
+  mysql:
+    image: ${BIXI_REGISTRY_MIRROR:-}library/mysql:8.4.3
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USERNAME}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      ADMIN_PASSWORD_BCRYPT_B64: ${ADMIN_PASSWORD_BCRYPT_B64}
+      OAUTH_PASSWORD_CLIENT_SECRET: ${OAUTH_PASSWORD_CLIENT_SECRET}
+      OAUTH_MOBILE_CLIENT_SECRET: ${OAUTH_MOBILE_CLIENT_SECRET}
+      OAUTH_INTERNAL_SEED: ${OAUTH_INTERNAL_SEED}
+      TENANT_DEFAULT_PASSWORD: ${TENANT_DEFAULT_PASSWORD}
+      TZ: ${TIME_ZONE:-Asia/Shanghai}
+    ports:
+      - "127.0.0.1:${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./bixi-project-documents/sql/01_init_all_tables.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ./bixi-project-documents/sql/04_init_data.sql:/docker-entrypoint-initdb.d/02_data.sql:ro
+      - ./bixi-project-documents/sql/02_add_constraints.sql:/docker-entrypoint-initdb.d/03_constraints.sql:ro
+      - ./bixi-project-documents/sql/03_add_indexes.sql:/docker-entrypoint-initdb.d/04_indexes.sql:ro
+      - ./deploy/mysql/05_runtime_secrets.sh:/docker-entrypoint-initdb.d/05_runtime_secrets.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 40
+      start_period: 20s
+    networks: [bixi]
+
+  redis:
+    image: ${BIXI_REGISTRY_MIRROR:-}library/redis:7.4.2-alpine
+    restart: unless-stopped
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    command: ["sh", "-c", "exec redis-server --appendonly yes --requirepass \"$${REDIS_PASSWORD}\""]
+    ports:
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$${REDIS_PASSWORD}\" ping | grep PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    networks: [bixi]
+
+  rabbitmq:
+    image: ${BIXI_REGISTRY_MIRROR:-}library/rabbitmq:4.0.5-management-alpine
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    ports:
+      - "127.0.0.1:${RABBITMQ_PORT:-5672}:5672"
+      - "127.0.0.1:${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    networks: [bixi]
+
+  nacos:
+    image: ${BIXI_THIRD_PARTY_REGISTRY_MIRROR:-}nacos/nacos-server:v2.4.3
+    profiles: [cloud]
+    restart: unless-stopped
+    environment:
+      MODE: standalone
+      NACOS_AUTH_ENABLE: "false"
+      PREFER_HOST_MODE: hostname
+      JVM_XMS: 256m
+      JVM_XMX: 512m
+      JVM_XMN: 128m
+    ports:
+      - "127.0.0.1:${NACOS_PORT:-8848}:8848"
+    volumes:
+      - nacos-data:/home/nacos/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8848/nacos/v1/console/health/readiness"]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+      start_period: 30s
+    networks: [bixi]
+
+  nacos-config:
+    image: ${BIXI_THIRD_PARTY_REGISTRY_MIRROR:-}nacos/nacos-server:v2.4.3
+    profiles: [cloud]
+    restart: "no"
+    environment:
+      NACOS_HOST: nacos
+      NACOS_PORT: 8848
+      NACOS_NAMESPACE: ${NACOS_NAMESPACE:-bixi}
+      NACOS_GROUP: ${NACOS_GROUP:-DEFAULT_GROUP}
+    volumes:
+      - ./deploy/nacos:/config:ro
+    entrypoint: ["/bin/sh", "/config/publish.sh"]
+    depends_on:
+      nacos:
+        condition: service_healthy
+    networks: [bixi]
+
+  gateway:
+    profiles: [cloud]
+    build:
+      <<: *backend-build
+      args:
+        REGISTRY_MIRROR: ${BIXI_REGISTRY_MIRROR:-}
+        MODULE: bixi-gateway
+        MAVEN_PROFILE: cloud
+    restart: unless-stopped
+    environment:
+      <<: *backend-environment
+      BIXI_DEPLOYMENT_MODE: cloud
+      NACOS_HOST: nacos
+      NACOS_PORT: 8848
+      NACOS_NAMESPACE: ${NACOS_NAMESPACE:-bixi}
+      JAVA_OPTS: ${GATEWAY_JAVA_OPTS:--Xms192m -Xmx384m}
+    ports:
+      - "127.0.0.1:${GATEWAY_PORT:-9999}:9999"
+    depends_on:
+      redis:
+        condition: service_healthy
+      nacos-config:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:9999/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 40
+      start_period: 30s
+    networks: [bixi]
+
+  auth:
+    profiles: [cloud]
+    build:
+      <<: *backend-build
+      args:
+        REGISTRY_MIRROR: ${BIXI_REGISTRY_MIRROR:-}
+        MODULE: bixi-auth
+        MAVEN_PROFILE: cloud
+    restart: unless-stopped
+    environment:
+      <<: *backend-environment
+      BIXI_DEPLOYMENT_MODE: cloud
+      NACOS_HOST: nacos
+      NACOS_PORT: 8848
+      NACOS_NAMESPACE: ${NACOS_NAMESPACE:-bixi}
+      JAVA_OPTS: ${AUTH_JAVA_OPTS:--Xms192m -Xmx384m}
+    depends_on:
+      redis:
+        condition: service_healthy
+      nacos-config:
+        condition: service_completed_successfully
+      upms:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:3000/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 40
+      start_period: 30s
+    networks: [bixi]
+
+  upms:
+    profiles: [cloud]
+    build:
+      <<: *backend-build
+      args:
+        REGISTRY_MIRROR: ${BIXI_REGISTRY_MIRROR:-}
+        MODULE: bixi-module/bixi-upms-biz
+        MAVEN_PROFILE: cloud
+    restart: unless-stopped
+    environment:
+      <<: *backend-environment
+      BIXI_DEPLOYMENT_MODE: cloud
+      NACOS_HOST: nacos
+      NACOS_PORT: 8848
+      NACOS_NAMESPACE: ${NACOS_NAMESPACE:-bixi}
+      JAVA_OPTS: ${UPMS_JAVA_OPTS:--Xms256m -Xmx512m}
+    volumes:
+      - upms-files:/data/files
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      nacos-config:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:4000/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 40
+      start_period: 40s
+    networks: [bixi]
+
+  frontend-cloud:
+    profiles: [cloud]
+    build:
+      context: .
+      dockerfile: deploy/docker/frontend.Dockerfile
+      args:
+        REGISTRY_MIRROR: ${BIXI_REGISTRY_MIRROR:-}
+        PUBLIC_MICRO_MODE: "true"
+        PUBLIC_WEB_CLIENT: bixi:${OAUTH_PASSWORD_CLIENT_SECRET}
+        PUBLIC_MOBILE_CLIENT: app:${OAUTH_MOBILE_CLIENT_SECRET}
+        PUBLIC_CIPHER_CONFIG: ${BIXI_ENCODE_KEY}
+        NGINX_CONFIG: cloud.conf
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${BIXI_HTTP_PORT:-8080}:8080"
+    depends_on:
+      gateway:
+        condition: service_healthy
+      auth:
+        condition: service_healthy
+      upms:
+        condition: service_healthy
+    networks: [bixi]
+
+  single:
+    profiles: [single]
+    build:
+      <<: *backend-build
+      args:
+        REGISTRY_MIRROR: ${BIXI_REGISTRY_MIRROR:-}
+        MODULE: bixi-single
+        MAVEN_PROFILE: single
+    restart: unless-stopped
+    environment:
+      <<: *backend-environment
+      BIXI_DEPLOYMENT_MODE: single
+      JAVA_OPTS: ${SINGLE_JAVA_OPTS:--Xms384m -Xmx768m}
+    volumes:
+      - upms-files:/data/files
+    ports:
+      - "127.0.0.1:${SINGLE_PORT:-9998}:9999"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:9999/admin/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 50
+      start_period: 45s
+    networks: [bixi]
+
+  frontend-single:
+    profiles: [single]
+    build:
+      context: .
+      dockerfile: deploy/docker/frontend.Dockerfile
+      args:
+        REGISTRY_MIRROR: ${BIXI_REGISTRY_MIRROR:-}
+        PUBLIC_MICRO_MODE: "false"
+        PUBLIC_WEB_CLIENT: bixi:${OAUTH_PASSWORD_CLIENT_SECRET}
+        PUBLIC_MOBILE_CLIENT: app:${OAUTH_MOBILE_CLIENT_SECRET}
+        PUBLIC_CIPHER_CONFIG: ${BIXI_ENCODE_KEY}
+        NGINX_CONFIG: single.conf
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${BIXI_HTTP_PORT:-8080}:8080"
+    depends_on:
+      single:
+        condition: service_healthy
+    networks: [bixi]
+
+networks:
+  bixi:
+    driver: bridge
+
+volumes:
+  mysql-data:
+  redis-data:
+  rabbitmq-data:
+  nacos-data:
+  upms-files:

@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lotus.bixi.upms.api.entity.SysPublicParam;
+import com.lotus.bixi.upms.api.service.PublicParamQueryService;
 import com.lotus.bixi.upms.service.SysPublicParamService;
 import com.lotus.bixi.common.core.util.R;
 import com.lotus.bixi.common.log.annotation.SysLog;
@@ -38,6 +39,8 @@ public class SysPublicParamController {
 
     private final SysPublicParamService sysPublicParamService;
 
+    private final PublicParamQueryService publicParamQueryService;
+
     /**
      * 通过key查询公共参数值
      *
@@ -48,7 +51,7 @@ public class SysPublicParamController {
     @Operation(description = "查询公共参数值", summary = "根据key查询公共参数值")
     @GetMapping("/publicValue/{publicKey}")
     public R publicKey(@PathVariable("publicKey") String publicKey) {
-        return R.ok(sysPublicParamService.getSysPublicParamKeyToValue(publicKey));
+        return publicParamQueryService.getByKey(publicKey);
     }
 
     /**

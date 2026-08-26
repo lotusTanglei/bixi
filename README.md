@@ -43,7 +43,7 @@ Bixi（碧玺）是一套面向企业后台和 SaaS 场景的前后端开发脚�
 
 | 对比项 | 微服务模式（`cloud`） | 单体模式（`single`） |
 |---|---|---|
-| 构建方式 | `mvn clean package -Pcloud`，根项目默认激活 | `mvn clean package -Psingle` |
+| 构建方式 | `mvn clean package -Pcloud`，根项目默认激活 | `mvn -Psingle -pl bixi-single -am clean package` |
 | 应用形态 | Gateway、Auth、UPMS、AI、Workflow、Quartz、Monitor 等服务独立部署 | `bixi-single` 组合为一个 Spring Boot 应用 |
 | 注册与配置 | 使用 Nacos 服务发现和配置中心 | 配置文件本地加载，Nacos 运行时关闭 |
 | API 入口 | Spring Cloud Gateway | 直接访问单体应用 |
@@ -162,104 +162,64 @@ bixi/
 
 ### 环境要求
 
-- JDK 17+
-- Maven 3.8+
-- Node.js 18+
-- npm 8+
+- Docker 24+
+- Docker Compose v2
+- GNU Make
 
-运行时中间件：
+只有本地源码构建与调试才需要 JDK 17、Maven 3.8、Node.js 18 和 npm 8。Compose 会自动准备 MySQL、Redis、RabbitMQ、Nacos 和应用镜像。
 
-- 两种模式都需要 MySQL、Redis；启用消息和文件功能时需要 RabbitMQ、MinIO。
-- 微服务模式额外需要 Nacos。
-- 单体模式不需要 Nacos 和 Gateway。
-
-### 1. 获取项目
+### 1. 默认微服务模式
 
 ```bash
 git clone https://github.com/lotus-bixi/bixi.git
 cd bixi
+make init-env
+make doctor
+make start-cloud
+make verify-cloud
 ```
 
-### 2. 初始化数据库
+首次执行 `make init-env` 会在忽略提交的 `.env` 中随机生成数据库、Redis、RabbitMQ、OAuth、Jasypt、前端密码加密和管理员密码。不要从 `.env.example` 手工复制固定密码。
 
-单体配置默认使用 `bixi_single` 数据库；也可以通过 `MYSQL_DATABASE` 指定其他名称。
+启动完成后访问 <http://localhost:8080>，API 统一前缀为 <http://localhost:8080/api>。查看本地登录信息：
 
 ```bash
-mysql -u root -p
-CREATE DATABASE bixi_single CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-exit
-
-mysql -u root -p bixi_single < bixi-project-documents/sql/01_init_all_tables.sql
-mysql -u root -p bixi_single < bixi-project-documents/sql/04_init_data.sql
-
-# 可选：增加约束和索引
-mysql -u root -p bixi_single < bixi-project-documents/sql/02_add_constraints.sql
-mysql -u root -p bixi_single < bixi-project-documents/sql/03_add_indexes.sql
+make credentials
 ```
 
-`04_init_data.sql` 包含系统运行所需的基础数据。默认管理员账号通常为 `admin` / `admin123`，首次登录后请立即修改密码。
+`make verify-cloud` 会真实验证健康检查、登录、用户信息、菜单、示例任务四类权限、CRUD、非法请求和操作日志。
 
-### 3. 配置环境变量
+### 2. 切换单体模式
 
 ```bash
-cp .env.example .env
+make start-single
+make verify-single
 ```
 
-根据部署模式填写数据库、Redis、RabbitMQ、MinIO、Nacos、短信和 AI 等配置。应用配置中的环境变量也可以直接由启动环境提供。
+两种模式使用同一 `http://localhost:8080` 入口和同一业务验收脚本。启动脚本会停止另一模式的应用容器；MySQL、Redis 和 RabbitMQ 数据保持不变。
 
-### 4. 启动单体模式
+### 3. 诊断与停止
 
 ```bash
-# 在项目根目录执行
-mvn clean package -Psingle -DskipTests
-
-java -jar bixi-single/target/bixi-single.jar
+make status
+make diagnose
+make logs
+make stop
 ```
 
-默认访问地址：<http://localhost:9999/admin>
+`make stop` 保留数据卷。`make reset` 会删除本地 Compose 数据卷，只应用于可丢弃的开发或 CI 环境。
 
-单体模式会读取 `bixi-single/src/main/resources/application.yml` 和 `application-dev.yml`，并关闭 Nacos 服务发现和配置中心。
-
-### 5. 启动微服务模式
+### 4. 源码门禁
 
 ```bash
-# 编译微服务模式，cloud Profile 为根项目默认 Profile
-mvn clean package -Pcloud -DskipTests
+make architecture-check
+make runtime-config-check
+make backend-cloud-ci
+make backend-single-ci
+make frontend-ci
 ```
 
-启动顺序建议：
-
-1. 启动 Nacos，并准备各服务需要的配置。
-2. 启动 `bixi-gateway`。
-3. 启动 `bixi-auth`。
-4. 启动 `bixi-module` 下需要的业务服务，例如 `bixi-upms-biz`、`bixi-ai-biz`、`bixi-workflow-biz`、`bixi-quartz`。
-5. 按需启动 `bixi-monitor`。
-
-开发时也可以在各模块目录执行：
-
-```bash
-mvn spring-boot:run
-```
-
-微服务应用会通过各自的 `application.yml` 从 Nacos 导入公共配置和服务配置。
-
-### 6. 启动前端
-
-```bash
-cd bixi-ui
-npm ci
-npm run dev
-```
-
-前端开发服务器默认地址：<http://localhost:3000>
-
-常用构建命令：
-
-```bash
-npm run build:dev
-npm run build:test
-npm run build:prod
-```
+AI 开发约束、模块职责、常用命令和任务模板见 [AGENTS.md](AGENTS.md) 与 [.docs/5_AI_DEVELOPMENT.md](.docs/5_AI_DEVELOPMENT.md)。发布安全、升级回滚和已知限制见 [.docs/6_RELEASE_BASELINE.md](.docs/6_RELEASE_BASELINE.md)。
 
 ---
 
@@ -284,7 +244,7 @@ spring:
         master:
           type: com.alibaba.druid.pool.DruidDataSource
           driver-class-name: com.mysql.cj.jdbc.Driver
-          url: jdbc:mysql://${MYSQL_HOST:127.0.0.1}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:bixi_single}
+          url: jdbc:mysql://${MYSQL_HOST:127.0.0.1}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:bixi}
 ```
 
 RabbitMQ 和 MinIO 也在该文件中配置，生产环境请通过环境变量注入账号、密码和 endpoint。
@@ -339,8 +299,9 @@ DynamicTp 在单体和微服务模式下都会启用，默认执行器名称为 
 # 后端开发编译
 make backend-dev
 
-# 后端验证构建
-make backend-ci
+# 微服务 / 单体分别执行验证构建
+make backend-cloud-ci
+make backend-single-ci
 
 # 前端开发 / 测试 / 生产构建
 make frontend-dev
@@ -359,6 +320,7 @@ make ci-gate
 |---|---|---|
 | Auth | 登录、OAuth2 Token、验证码、客户端认证 | 单体 / 微服务 |
 | UPMS | 用户、角色、菜单、部门、岗位、字典、参数、日志、文件 | 单体 / 微服务 |
+| Demo Task | 独立业务表、CRUD、按钮权限、操作日志、统一验收 | 单体 / 微服务 |
 | Generator | 数据库表导入、模板配置、代码生成、预览下载 | 单体 / 微服务 |
 | Quartz | Cron 任务、执行记录、手动触发、暂停恢复 | 单体 / 微服务 |
 | AI | 会话、消息、模型调用、SSE、知识库 | 独立 AI 服务 |
@@ -373,7 +335,8 @@ make ci-gate
 - [数据库脚本说明](bixi-project-documents/sql/README.md)
 - [数据字典](bixi-project-documents/sql/DATA_DICTIONARY.md)
 - [环境变量模板](.env.example)
-- [AI 辅助开发说明](CLAUDE.md)
+- [AI 辅助开发契约](AGENTS.md)
+- [第一阶段发布基线](.docs/6_RELEASE_BASELINE.md)
 - [许可证](LICENSE)
 
 ---
@@ -382,9 +345,9 @@ make ci-gate
 
 生产部署前至少完成以下配置：
 
-1. 修改默认管理员密码。
-2. 使用强随机值替换 OAuth2、JWT、Jasypt 等密钥。
-3. 不要使用示例中的 Redis、RabbitMQ、MinIO、Druid 默认密码。
+1. 使用外部 Secret 管理注入管理员、数据库、OAuth2、Jasypt 等凭据，不复用本地 `.env`。
+2. 验证所有运行凭据均为强随机值，并建立轮换流程。
+3. 不要在 Nacos、Compose、镜像构建参数或日志中写入生产密钥。
 4. 不要将真实 `.env`、Nacos 配置和密钥提交到 Git。
 5. 通过 HTTPS、网络 ACL 和防火墙限制管理端口。
 6. 按需限制 `/actuator`、`/druid` 和接口文档的访问权限。
@@ -395,7 +358,7 @@ make ci-gate
 
 ### 单体启动时报连接失败
 
-单体模式不依赖 Nacos。优先检查 MySQL、Redis、RabbitMQ、MinIO 是否已启动，以及 `application-dev.yml` 或环境变量中的地址、端口、账号和密码是否正确。
+单体模式不依赖 Nacos。优先运行 `make diagnose`，再检查 MySQL、Redis、RabbitMQ 以及 `.env` 中的连接配置。
 
 ### 微服务启动后 Gateway 找不到服务
 
@@ -403,7 +366,7 @@ make ci-gate
 
 ### 前端访问接口出现 404 或跨域
 
-单体模式确认后端上下文路径为 `/admin`；微服务模式确认前端 API 地址指向 Gateway，并检查 Gateway 的路由和跨域配置。
+两种模式都应通过 `http://localhost:8080/api` 访问接口。运行 `make diagnose`，并检查当前前端容器是否与启动模式一致。
 
 ### DynamicTp 参数修改后没有生效
 

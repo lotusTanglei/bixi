@@ -23,6 +23,7 @@ import org.springframework.context.annotation.Scope;
  * @date 2025-01-01
  */
 @Configuration(proxyBeanMethods = false)
+@ConditionalOnProperty(name = "bixi.deployment.mode", havingValue = "cloud", matchIfMissing = true)
 @Import(BixiFeignClientsRegistrar.class)
 @AutoConfigureBefore(SentinelFeignAutoConfiguration.class)
 public class BixiFeignAutoConfiguration {

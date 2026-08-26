@@ -1,5 +1,6 @@
 package com.lotus.bixi;
 
+import com.lotus.bixi.common.datasource.annotation.EnableDynamicDataSource;
 import com.lotus.bixi.common.security.annotation.EnableBixiResourceServer;
 import com.lotus.bixi.common.swagger.annotation.EnableBixiDoc;
 import org.springframework.boot.SpringApplication;
@@ -10,6 +11,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @description TODO
  * @date 2025-01-01
  */
+@EnableDynamicDataSource
 @EnableBixiDoc(value = "admin", isMicro = false)
 @EnableBixiResourceServer
 @SpringBootApplication

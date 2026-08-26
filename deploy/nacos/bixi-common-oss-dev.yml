@@ -1,0 +1,7 @@
+file:
+  bucket: local
+  local:
+    enable: true
+    base-path: /data/files
+  oss:
+    enable: false

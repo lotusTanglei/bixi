@@ -115,6 +115,10 @@ help.md
 
 # Scripts
 *.sh
+!scripts/
+!scripts/*.sh
+!deploy/
+!deploy/**/*.sh
 
 # =======================================================================
 # AI & Tools

@@ -4,6 +4,7 @@ import com.lotus.bixi.common.core.constant.ServiceNameConstants;
 import com.lotus.bixi.common.core.util.R;
 import com.lotus.bixi.common.feign.annotation.NoToken;
 import com.lotus.bixi.upms.api.entity.SysDictItem;
+import com.lotus.bixi.upms.api.service.DictionaryQueryService;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,8 +17,8 @@ import java.util.List;
  * <p>
  * 查询参数相关
  */
-@FeignClient(contextId = "remoteDictService", value = ServiceNameConstants.UPMS_SERVICE)
-public interface RemoteDictService {
+@FeignClient(contextId = "remoteDictService", value = ServiceNameConstants.UPMS_SERVICE, primary = false)
+public interface RemoteDictService extends DictionaryQueryService {
 
     /**
      * 通过字典类型查找字典
@@ -26,6 +27,7 @@ public interface RemoteDictService {
      * @return 同类型字典
      */
     @NoToken
+    @Override
     @GetMapping("/dict/remote/type/{type}")
     R<List<SysDictItem>> getDictByType(@PathVariable("type") String type);
 

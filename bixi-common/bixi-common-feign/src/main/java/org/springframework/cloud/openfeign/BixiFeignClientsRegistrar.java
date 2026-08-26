@@ -32,8 +32,6 @@ import java.util.Map;
  */
 public class BixiFeignClientsRegistrar implements ImportBeanDefinitionRegistrar, BeanClassLoaderAware, EnvironmentAware {
 
-    private final static String BASE_URL = "http://127.0.0.1:${server.port}${server.servlet.context-path}";
-
     @Getter
     private ClassLoader beanClassLoader;
 
@@ -51,6 +49,10 @@ public class BixiFeignClientsRegistrar implements ImportBeanDefinitionRegistrar,
     }
 
     private void registerFeignClients(BeanDefinitionRegistry registry) {
+        if (!isDiscoveryEnabled()) {
+            return;
+        }
+
         List<String> feignClients = new ArrayList<>();
 
         // 支持 springboot 2.7 + 最新版本的配置方式
@@ -69,10 +71,8 @@ public class BixiFeignClientsRegistrar implements ImportBeanDefinitionRegistrar,
                     continue;
                 }
 
-                // 如果是单体项目自动注入 & url 为空
-                Boolean isMicro = environment.getProperty("spring.cloud.nacos.discovery.enabled", Boolean.class, true);
                 // 如果已经存在该 bean，支持原生的 Feign
-                if (registry.containsBeanDefinition(className) && isMicro) {
+                if (registry.containsBeanDefinition(className)) {
                     continue;
                 }
 
@@ -181,23 +181,11 @@ public class BixiFeignClientsRegistrar implements ImportBeanDefinitionRegistrar,
 
     private String getUrl(Map<String, Object> attributes) {
 
-        // 如果是单体项目自动注入 & url 为空
-        Boolean isMicro = environment.getProperty("spring.cloud.nacos.discovery.enabled", Boolean.class, true);
-
-        if (isMicro) {
-            return null;
-        }
-
         Object objUrl = attributes.get("url");
-
-        String url = "";
         if (StringUtils.hasText(objUrl.toString())) {
-            url = resolve(objUrl.toString());
-        } else {
-            url = resolve(BASE_URL);
+            return FeignClientsRegistrar.getUrl(resolve(objUrl.toString()));
         }
-
-        return FeignClientsRegistrar.getUrl(url);
+        return null;
     }
 
     private String getPath(Map<String, Object> attributes) {
@@ -261,6 +249,10 @@ public class BixiFeignClientsRegistrar implements ImportBeanDefinitionRegistrar,
     @Override
     public void setEnvironment(Environment environment) {
         this.environment = environment;
+    }
+
+    private boolean isDiscoveryEnabled() {
+        return environment.getProperty("spring.cloud.nacos.discovery.enabled", Boolean.class, true);
     }
 
 }

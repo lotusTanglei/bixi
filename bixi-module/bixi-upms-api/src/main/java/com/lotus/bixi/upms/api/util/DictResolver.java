@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.toolkit.StringPool;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.lotus.bixi.common.core.util.SpringContextHolder;
 import com.lotus.bixi.upms.api.entity.SysDictItem;
-import com.lotus.bixi.upms.api.feign.RemoteDictService;
+import com.lotus.bixi.upms.api.service.DictionaryQueryService;
 import lombok.experimental.UtilityClass;
 
 import java.util.List;
@@ -28,9 +28,9 @@ public class DictResolver {
     public List<SysDictItem> getDictItemsByType(String type) {
         Assert.isTrue(StringUtils.isNotBlank(type), "参数不合法");
 
-        RemoteDictService remoteDictService = SpringContextHolder.getBean(RemoteDictService.class);
+        DictionaryQueryService dictionaryQueryService = SpringContextHolder.getBean(DictionaryQueryService.class);
 
-        return remoteDictService.getDictByType(type).getData();
+        return dictionaryQueryService.getDictByType(type).getData();
     }
 
     /**

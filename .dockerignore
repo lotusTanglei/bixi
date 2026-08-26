@@ -1,0 +1,15 @@
+.git
+.codegraph
+.idea
+.docs/.chiwen.state.json
+**/target
+bixi-ui/node_modules
+bixi-ui/dist
+logs
+*.log
+.env
+compose.yaml
+deploy/docker
+deploy/mysql
+deploy/nacos
+scripts

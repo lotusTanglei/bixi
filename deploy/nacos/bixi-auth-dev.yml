@@ -1,0 +1,19 @@
+spring:
+  freemarker:
+    suffix: .ftl
+    template-loader-path: classpath:/templates/
+    request-context-attribute: request
+
+security:
+  micro: true
+  encode-key: ${BIXI_ENCODE_KEY}
+  ignore-clients:
+    - bixi
+    - test
+  oauth2:
+    ignore:
+      urls:
+        - /token/**
+        - /code/**
+        - /actuator/**
+        - /error

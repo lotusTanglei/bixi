@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lotus.bixi.upms.api.entity.SysDict;
 import com.lotus.bixi.upms.api.entity.SysDictItem;
+import com.lotus.bixi.upms.api.service.DictionaryQueryService;
 import com.lotus.bixi.upms.service.SysDictItemService;
 import com.lotus.bixi.upms.service.SysDictService;
 import com.lotus.bixi.common.core.constant.CacheConstants;
@@ -21,7 +22,6 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -46,6 +46,8 @@ public class SysDictController {
     private final SysDictService sysDictService;
 
     private final SysDictItemService sysDictItemService;
+
+    private final DictionaryQueryService dictionaryQueryService;
 
     /**
      * 通过ID查询字典信息
@@ -233,9 +235,8 @@ public class SysDictController {
      * @return 同类型字典
      */
     @GetMapping("/type/{type}")
-    @Cacheable(value = CacheConstants.DICT_DETAILS, key = "#type", unless = "#result.data.isEmpty()")
     public R<List<SysDictItem>> getDictByType(@PathVariable String type) {
-        return R.ok(sysDictItemService.list(Wrappers.<SysDictItem>query().lambda().eq(SysDictItem::getDictType, type)));
+        return dictionaryQueryService.getDictByType(type);
     }
 
     /**
@@ -246,9 +247,8 @@ public class SysDictController {
      */
     @Inner
     @GetMapping("/remote/type/{type}")
-    @Cacheable(value = CacheConstants.DICT_DETAILS, key = "#type", unless = "#result.data.isEmpty()")
     public R<List<SysDictItem>> getRemoteDictByType(@PathVariable String type) {
-        return R.ok(sysDictItemService.list(Wrappers.<SysDictItem>query().lambda().eq(SysDictItem::getDictType, type)));
+        return dictionaryQueryService.getDictByType(type);
     }
 
 }

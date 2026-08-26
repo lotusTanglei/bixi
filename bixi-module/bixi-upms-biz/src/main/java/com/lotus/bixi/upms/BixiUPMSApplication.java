@@ -8,6 +8,7 @@ import com.lotus.bixi.common.security.annotation.EnableBixiResourceServer;
 import com.lotus.bixi.common.swagger.annotation.EnableBixiDoc;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
 /**
@@ -21,6 +22,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 @EnableBixiFeignClients
 @EnableBixiResourceServer
 @EnableDiscoveryClient
+@ConditionalOnProperty(name = "bixi.deployment.mode", havingValue = "cloud", matchIfMissing = true)
 @SpringBootApplication
 public class BixiUPMSApplication {
 

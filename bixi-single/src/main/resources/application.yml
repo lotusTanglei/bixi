@@ -21,6 +21,10 @@ spring:
   profiles:
     active: dev  # 激活dev，对应 application-dev.yml
 
+bixi:
+  deployment:
+    mode: single
+
 
 # mybatis-plus 配置
 mybatis-plus:

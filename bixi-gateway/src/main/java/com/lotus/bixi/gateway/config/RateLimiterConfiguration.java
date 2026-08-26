@@ -3,6 +3,7 @@ package com.lotus.bixi.gateway.config;
 import org.springframework.cloud.gateway.filter.ratelimit.KeyResolver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import reactor.core.publisher.Mono;
 
 /**
@@ -20,6 +21,7 @@ public class RateLimiterConfiguration {
 	 * 适用场景：防止 DDoS 攻击、限制单 IP 请求频率
 	 */
 	@Bean
+	@Primary
 	public KeyResolver remoteAddrKeyResolver() {
 		return exchange -> {
 			String remoteAddr = exchange.getRequest().getRemoteAddress() != null

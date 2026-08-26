@@ -1,0 +1,28 @@
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: bixi-auth
+          uri: lb://bixi-auth
+          predicates:
+            - Path=/auth/**
+        - id: bixi-upms
+          uri: lb://bixi-upms-biz
+          predicates:
+            - Path=/admin/**
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowed-origin-patterns: '*'
+            allowed-headers: '*'
+            allowed-methods: '*'
+            allow-credentials: true
+      httpclient:
+        connect-timeout: 5000
+        response-timeout: 30s
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    use-root-path: true

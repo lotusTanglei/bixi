@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lotus.bixi.upms.api.entity.SysOauthClientDetails;
+import com.lotus.bixi.upms.api.service.ClientDetailsQueryService;
 import com.lotus.bixi.upms.service.SysOauthClientDetailsService;
 import com.lotus.bixi.common.core.util.R;
 import com.lotus.bixi.common.log.annotation.SysLog;
@@ -40,6 +41,8 @@ import java.util.List;
 public class SysClientController {
 
     private final SysOauthClientDetailsService clientDetailsService;
+
+    private final ClientDetailsQueryService clientDetailsQueryService;
 
     /**
      * 通过ID查询
@@ -115,8 +118,7 @@ public class SysClientController {
     @Inner
     @GetMapping("/getClientDetailsById/{clientId}")
     public R getClientDetailsById(@PathVariable String clientId) {
-        return R.ok(clientDetailsService.getOne(
-                Wrappers.<SysOauthClientDetails>lambdaQuery().eq(SysOauthClientDetails::getClientId, clientId), false));
+        return clientDetailsQueryService.getClientDetailsById(clientId);
     }
 
     /**

@@ -12,6 +12,9 @@ import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -29,7 +32,8 @@ public class RepeatBodyRequestWrapper extends HttpServletRequestWrapper {
     public RepeatBodyRequestWrapper(HttpServletRequest request) {
         super(request);
         this.bodyByteArray = getByteBody(request);
-        this.parameterMap = super.getParameterMap();
+        this.parameterMap = new LinkedHashMap<>();
+        super.getParameterMap().forEach((key, values) -> this.parameterMap.put(key, values.clone()));
     }
 
     @Override
@@ -82,6 +86,22 @@ public class RepeatBodyRequestWrapper extends HttpServletRequestWrapper {
     @Override
     public Map<String, String[]> getParameterMap() {
         return this.parameterMap;
+    }
+
+    @Override
+    public String getParameter(String name) {
+        String[] values = this.parameterMap.get(name);
+        return ObjectUtils.isEmpty(values) ? null : values[0];
+    }
+
+    @Override
+    public Enumeration<String> getParameterNames() {
+        return Collections.enumeration(this.parameterMap.keySet());
+    }
+
+    @Override
+    public String[] getParameterValues(String name) {
+        return this.parameterMap.get(name);
     }
 
 }

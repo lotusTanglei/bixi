@@ -12,6 +12,8 @@
 | 3_ROADMAP.md | 路线图（近/中/远期） | 人工维护，AI 辅助格式化 |
 | 4_DECISIONS.md | 架构决策记录（ADR） | 人工记录，AI 辅助格式化 |
 | 5_CHANGELOG.md | 文档变更日志 | AI 全自动维护 |
+| 5_AI_DEVELOPMENT.md | AI 架构上下文、编码规则、命令和任务模板 | 人工维护，AI 辅助更新 |
+| 6_RELEASE_BASELINE.md | 第一阶段安全、启动、验收、升级回滚与已知限制 | 随发布基线更新 |
 | users/@{{username}}/ | 个人空间 | 个人维护 |
 
 ## 外部资源链接

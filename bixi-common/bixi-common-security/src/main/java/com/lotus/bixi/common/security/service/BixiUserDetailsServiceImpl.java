@@ -6,7 +6,7 @@ import com.lotus.bixi.common.core.constant.CacheConstants;
 import com.lotus.bixi.common.core.util.R;
 import com.lotus.bixi.upms.api.dto.UserDTO;
 import com.lotus.bixi.upms.api.dto.UserInfo;
-import com.lotus.bixi.upms.api.feign.RemoteUserService;
+import com.lotus.bixi.upms.api.service.UserQueryService;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +25,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 @RequiredArgsConstructor
 public class BixiUserDetailsServiceImpl implements BixiUserDetailsService {
 
-    private final RemoteUserService remoteUserService;
+    private final UserQueryService userQueryService;
 
     private final CacheManager cacheManager;
 
@@ -45,7 +45,7 @@ public class BixiUserDetailsServiceImpl implements BixiUserDetailsService {
 
         UserDTO userDTO = new UserDTO();
         userDTO.setUsername(username);
-        R<UserInfo> result = remoteUserService.info(userDTO);
+        R<UserInfo> result = userQueryService.info(userDTO);
         UserDetails userDetails = getUserDetails(result);
         if (cache != null) {
             cache.put(username, userDetails);

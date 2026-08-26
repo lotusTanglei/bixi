@@ -2,7 +2,7 @@
 
 package com.lotus.bixi.upms.controller;
 
-import com.lotus.bixi.upms.api.feign.RemoteTokenService;
+import com.lotus.bixi.upms.api.service.TokenManagementService;
 import com.lotus.bixi.common.core.util.R;
 import com.lotus.bixi.common.log.annotation.SysLog;
 import com.lotus.bixi.common.security.annotation.HasPermission;
@@ -28,7 +28,7 @@ import java.util.Map;
 @SecurityRequirement(name = HttpHeaders.AUTHORIZATION)
 public class SysTokenController {
 
-    private final RemoteTokenService remoteTokenService;
+    private final TokenManagementService tokenManagementService;
 
     /**
      * 分页token 信息
@@ -38,7 +38,7 @@ public class SysTokenController {
      */
     @RequestMapping("/page")
     public R getTokenPage(@RequestBody Map<String, Object> params) {
-        return remoteTokenService.getTokenPage(params);
+        return tokenManagementService.getTokenPage(params);
     }
 
     /**
@@ -52,7 +52,7 @@ public class SysTokenController {
     @HasPermission("sys_token_del")
     public R removeById(@RequestBody String[] tokens) {
         for (String token : tokens) {
-            remoteTokenService.removeTokenById(token);
+            tokenManagementService.removeTokenById(token);
         }
         return R.ok();
     }

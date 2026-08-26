@@ -20,13 +20,17 @@ public class JasyptUtils {
          * # 配置文件加密根密码
          * jasypt:
          *  encryptor:
-         *   # 指定密钥，非生产环境可以指明在配置文件中，生产环境请删除此配置项，通过启动命令添加 -Djasypt.encryptorpassword=bixi 实现。
-         *   password: bixi
+         *   # 密钥通过 JASYPT_ENCRYPTOR_PASSWORD 环境变量提供。
+         *   password: ${JASYPT_ENCRYPTOR_PASSWORD}
          *   algorithm: PBEWithMD5AndDES
          *   iv-generator-classname: org.jasypt.iv.NoIvGenerator
          */
 
-        System.setProperty("jasypt.encryptor.password", "bixi");
+        String password = System.getenv("JASYPT_ENCRYPTOR_PASSWORD");
+        if (password == null || password.isBlank()) {
+            throw new IllegalStateException("JASYPT_ENCRYPTOR_PASSWORD is required");
+        }
+        System.setProperty("jasypt.encryptor.password", password);
         System.setProperty("jasypt.encryptor.ivGeneratorClassName", "org.jasypt.iv.NoIvGenerator");
         System.setProperty("jasypt.encryptor.algorithm", "PBEWithMD5AndDES");
         StringEncryptor stringEncryptor = new DefaultLazyEncryptor(new StandardEnvironment());

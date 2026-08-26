@@ -3,6 +3,7 @@ package com.lotus.bixi.auth;
 import com.lotus.bixi.common.feign.annotation.EnableBixiFeignClients;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
 /**
@@ -11,6 +12,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
  */
 @EnableBixiFeignClients
 @EnableDiscoveryClient
+@ConditionalOnProperty(name = "bixi.deployment.mode", havingValue = "cloud", matchIfMissing = true)
 @SpringBootApplication
 public class BixiAuthApplication {
 

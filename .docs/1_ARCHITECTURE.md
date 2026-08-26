@@ -15,7 +15,7 @@
 - 配置加密：Jasypt 3.0.5
 - 监控：Spring Boot Admin 3.4.1 + Actuator
 - 构建工具：Maven，使用 flatten-maven-plugin 统一 revision 版本管理
-- 数据库：MySQL 9.0
+- 数据库：MySQL 8.0+
 
 **前端**
 
@@ -27,7 +27,7 @@
 - 国际化：vue-i18n
 - 路由：Vue Router 4
 
-项目支持双模部署：通过 Maven Profile 切换微服务模式（`-Pcloud`，默认）和单体模式（`-Psingle`）。微服务模式下使用 Nacos 作为注册中心和配置中心，Spring Cloud Gateway 作为 API 网关。
+项目支持双模部署：通过 Maven Profile 切换微服务模式（`-Pcloud`，默认）和单体模式（`-Psingle`）。微服务模式下使用 Nacos 作为注册中心和配置中心，Spring Cloud Gateway 作为 API 网关。当前单体模式聚合 Auth、UPMS、Generator 和 Quartz；AI、Workflow、Monitor 仍作为独立应用运行。
 
 ## 2. 分层架构
 
@@ -78,6 +78,7 @@
 | 认证服务 | `bixi-auth/` | OAuth 2.1 认证中心，处理登录认证、令牌签发与刷新、验证码校验 |
 | 业务模块 | `bixi-module/bixi-upms-api/` | 用户权限管理系统 Feign 接口定义和 DTO |
 | 业务模块 | `bixi-module/bixi-upms-biz/` | 用户权限管理系统业务实现（用户、角色、菜单、部门、岗位、字典、参数、日志等） |
+| 示例业务 | `bixi-module/bixi-upms-biz/.../demo/` | 独立示例任务域，提供两种模式共享的数据库、CRUD、权限和操作日志闭环 |
 | 业务模块 | `bixi-module/bixi-ai-api/` | AI 模块 Feign 接口定义和 DTO |
 | 业务模块 | `bixi-module/bixi-ai-biz/` | AI 对话业务实现（会话管理、消息处理、多模型调用、知识库、SSE 流式响应） |
 | 业务模块 | `bixi-module/bixi-workflow-api/` | 工作流模块 Feign 接口定义和 DTO |
@@ -99,10 +100,28 @@
 | 基础设施层 | `bixi-common/bixi-common-ai/` | Spring AI Alibaba 公共配置 |
 | 基础设施层 | `bixi-common/bixi-common-workflow/` | Flowable 工作流公共配置和工具类 |
 | 基础设施层 | `bixi-common/bixi-common-bom/` | Maven BOM，统一管理所有第三方依赖版本 |
-| 单体部署 | `bixi-single/` | 单体模式聚合模块，通过 `-Psingle` Profile 激活，无需网关和注册中心 |
+| 单体部署 | `bixi-single/` | 单体模式聚合模块，通过 `-Psingle` Profile 激活；当前聚合 Auth、UPMS、Generator、Quartz，无需网关和注册中心 |
 | 项目文档 | `bixi-project-documents/` | SQL 初始化脚本、数据字典文档、部署工具脚本 |
 
-## 4. 核心执行流程
+## 4. 双模边界与依赖规则
+
+模块按以下职责划分：
+
+| 类型 | 模块 | 依赖规则 |
+| --- | --- | --- |
+| 公共基础模块 | `bixi-common/*` | 提供跨业务基础能力，不得依赖 `bixi-module/*-biz` 或部署入口 |
+| 业务 API | `bixi-module/*-api` | 保存跨模块契约、DTO 和远程适配定义，不包含业务实现 |
+| 业务实现 | `bixi-module/*-biz`、`bixi-generator`、`bixi-quartz` | 保存唯一一套 Controller、Service、Mapper 和领域实现，可依赖业务 API 与公共模块 |
+| 独立应用 | `bixi-gateway`、`bixi-auth`、各业务应用入口 | 在微服务模式独立启动，通过 Nacos、Gateway 和 Feign 协作 |
+| 聚合应用 | `bixi-single` | 组合业务实现并提供单一进程入口，不复制业务代码 |
+
+依赖方向必须保持为：部署入口 -> 业务实现 -> 业务 API / 公共模块。公共模块不能反向依赖业务实现，业务 API 不能依赖对应业务实现。
+
+跨模块调用使用同一业务接口、两种适配器：微服务模式选择 Feign 远程适配器，单体模式选择 `@Primary` 本地实现。消费者只依赖 `*-api/service` 下的传输无关契约。Feign 自动配置仅在 `bixi.deployment.mode=cloud` 时启用，单体不注册 Feign 客户端，也不使用本机 HTTP 回环。
+
+当前 UPMS 已固化六个传输无关契约：用户查询、客户端查询、字典查询、公共参数查询、操作日志和 Token 管理。`bixi-auth`、安全组件、日志组件及 UPMS Controller 均通过这些契约协作。
+
+## 5. 核心执行流程
 
 **微服务模式请求处理流程：**
 
@@ -124,8 +143,25 @@
 
 **单体模式：**
 
-激活 `-Psingle` Profile 后，`bixi-single` 模块将所有业务模块聚合为单个 Spring Boot 应用，无需网关和注册中心，直接启动即可运行。
+激活 `-Psingle` Profile 后，`bixi-single` 将 Auth、UPMS、Generator 和 Quartz 聚合为单个 Spring Boot 应用，无需网关和注册中心。AI、Workflow 和 Monitor 当前不在单体聚合范围内。
 
-## 5. ADR 快速索引
+## 6. 双模验证命令
+
+```bash
+make backend-cloud-ci
+make backend-single-ci
+make frontend-ci
+```
+
+这两条后端命令分别激活 `cloud` 和 `single` Profile，执行编译和单元测试。运行级验收使用同一脚本验证登录、用户信息、菜单、示例任务权限、CRUD、非法请求和操作日志：
+
+```bash
+make start-cloud && make verify-cloud
+make start-single && make verify-single
+```
+
+GitLab CI 的 `accept_dual_mode` 作业按上述顺序验证两种模式。
+
+## 7. ADR 快速索引
 
 暂无 ADR 记录，请在 [4_DECISIONS.md](4_DECISIONS.md) 中添加。

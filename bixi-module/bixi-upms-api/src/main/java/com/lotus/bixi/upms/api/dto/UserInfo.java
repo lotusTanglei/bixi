@@ -2,6 +2,7 @@
 
 package com.lotus.bixi.upms.api.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.lotus.bixi.upms.api.entity.SysUser;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -33,5 +34,12 @@ public class UserInfo implements Serializable {
      */
     @Schema(description = "角色标识集合")
     private Long[] roles;
+
+	/**
+	 * 仅供内部认证链路传输的密码哈希。
+	 */
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	@Schema(hidden = true)
+	private String encodedPassword;
 
 }

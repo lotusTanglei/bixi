@@ -11,7 +11,7 @@ import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.lotus.bixi.common.core.jackson.BixiJavaTimeModule;
 import com.lotus.bixi.common.log.config.BixiLogProperties;
 import com.lotus.bixi.upms.api.entity.SysLog;
-import com.lotus.bixi.upms.api.feign.RemoteLogService;
+import com.lotus.bixi.upms.api.service.OperationLogService;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +33,7 @@ public class SysLogListener implements InitializingBean {
     // new 一个 避免日志脱敏策略影响全局ObjectMapper
     private final static ObjectMapper objectMapper = new ObjectMapper();
 
-    private final RemoteLogService remoteLogService;
+    private final OperationLogService operationLogService;
 
     private final BixiLogProperties logProperties;
 
@@ -52,7 +52,7 @@ public class SysLogListener implements InitializingBean {
             sysLog.setParams(StrUtil.subPre(params, logProperties.getMaxLength()));
         }
 
-        remoteLogService.saveLog(sysLog);
+        operationLogService.saveLog(sysLog);
     }
 
     @Override

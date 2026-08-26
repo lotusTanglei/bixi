@@ -6,6 +6,7 @@ import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lotus.bixi.upms.api.dto.SysLogDTO;
 import com.lotus.bixi.upms.api.entity.SysLog;
+import com.lotus.bixi.upms.api.service.OperationLogService;
 import com.lotus.bixi.upms.service.SysLogService;
 import com.lotus.bixi.common.core.util.R;
 import com.lotus.bixi.common.security.annotation.HasPermission;
@@ -37,6 +38,8 @@ import java.util.List;
 public class SysLogController {
 
     private final SysLogService sysLogService;
+
+    private final OperationLogService operationLogService;
 
     /**
      * 简单分页查询
@@ -71,7 +74,7 @@ public class SysLogController {
     @Inner
     @PostMapping("/save")
     public R save(@Valid @RequestBody SysLog sysLog) {
-        return R.ok(sysLogService.saveLog(sysLog));
+        return operationLogService.saveLog(sysLog);
     }
 
     /**

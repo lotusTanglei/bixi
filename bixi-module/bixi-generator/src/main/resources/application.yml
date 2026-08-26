@@ -6,8 +6,8 @@ spring:
     name: @artifactId@
   cloud:
     nacos:
-      username: @nacos.username@
-      password: @nacos.password@
+      username: ${NACOS_USERNAME:}
+      password: ${NACOS_PASSWORD:}
       discovery:
         server-addr: ${NACOS_HOST:127.0.0.1}:${NACOS_PORT:8848}
         namespace: @nacos.namespace@
@@ -19,4 +19,3 @@ spring:
       - nacos:application-@profiles.active@.yml
       - nacos:${spring.application.name}-@profiles.active@.yml
       - optional:nacos:${spring.application.name}-dtp-@profiles.active@.yml
-
