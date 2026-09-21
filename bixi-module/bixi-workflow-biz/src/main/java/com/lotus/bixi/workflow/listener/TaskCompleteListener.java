@@ -1,5 +1,7 @@
 package com.lotus.bixi.workflow.listener;
 
+import com.lotus.bixi.workflow.api.config.ConditionalOnWorkflowEnabled;
+
 import com.lotus.bixi.common.workflow.listener.BaseTaskListener;
 import com.lotus.bixi.workflow.api.constant.WorkflowConstants;
 import com.lotus.bixi.workflow.api.entity.WfApprovalRecord;
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 
 @Slf4j
+@ConditionalOnWorkflowEnabled
 @Component
 @AllArgsConstructor
 public class TaskCompleteListener extends BaseTaskListener {

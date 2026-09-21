@@ -51,6 +51,7 @@ public class SysClientController {
      * @return SysOauthClientDetails
      */
     @GetMapping("/{clientId}")
+    @HasPermission("sys_client_view")
     public R getByClientId(@PathVariable String clientId) {
         SysOauthClientDetails details = clientDetailsService
                 .getOne(Wrappers.<SysOauthClientDetails>lambdaQuery().eq(SysOauthClientDetails::getClientId, clientId));
@@ -65,6 +66,7 @@ public class SysClientController {
      * @return
      */
     @GetMapping("/page")
+    @HasPermission("sys_client_view")
     public R getOauthClientDetailsPage(@ParameterObject Page page,
                                        @ParameterObject SysOauthClientDetails sysOauthClientDetails) {
         LambdaQueryWrapper<SysOauthClientDetails> wrapper = Wrappers.<SysOauthClientDetails>lambdaQuery()
@@ -128,6 +130,7 @@ public class SysClientController {
      */
     @SysLog("同步终端")
     @PutMapping("/sync")
+    @HasPermission("sys_client_edit")
     public R sync() {
         return clientDetailsService.syncClientCache();
     }
@@ -140,6 +143,7 @@ public class SysClientController {
     @ResponseExcel
     @SysLog("导出excel")
     @GetMapping("/export")
+    @HasPermission("sys_client_export")
     public List<SysOauthClientDetails> export(SysOauthClientDetails sysOauthClientDetails) {
         return clientDetailsService.list(Wrappers.query(sysOauthClientDetails));
     }

@@ -22,7 +22,7 @@
 					<el-button v-auth="'sys_client_add'" @click="formDialogRef.openDialog()" class="ml10" icon="folder-add" type="primary">
 						{{ $t('common.addBtn') }}
 					</el-button>
-					<el-button v-auth="'sys_client_del'" plain @click="handleRefreshCache()" class="ml10" icon="refresh-left" type="primary">
+					<el-button v-auth="'sys_client_edit'" plain @click="handleRefreshCache()" class="ml10" icon="refresh-left" type="primary">
 						{{ $t('common.refreshCacheBtn') }}
 					</el-button>
 
@@ -31,7 +31,7 @@
 					</el-button>
 
 					<right-toolbar
-						:export="'sys_client_del'"
+						:export="'sys_client_export'"
 						@exportExcel="exportExcel"
 						@queryTable="getDataList"
 						class="ml10"
@@ -63,7 +63,7 @@
 				<el-table-column :label="t('client.refreshTokenValidity')" prop="refreshTokenValidity" show-overflow-tooltip />
 				<el-table-column :label="$t('common.action')" width="150">
 					<template #default="scope">
-						<el-button icon="edit-pen" @click="formDialogRef.openDialog(scope.row.clientId)" text type="primary" v-auth="'sys_client_add'"
+						<el-button icon="edit-pen" @click="formDialogRef.openDialog(scope.row.clientId)" text type="primary" v-auth="'sys_client_edit'"
 							>{{ $t('common.editBtn') }}
 						</el-button>
 						<el-button icon="delete" @click="handleDelete([scope.row.id])" text type="primary" v-auth="'sys_client_del'">

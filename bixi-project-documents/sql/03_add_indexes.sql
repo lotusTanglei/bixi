@@ -197,3 +197,19 @@ WHERE
     TABLE_SCHEMA = 'bixi'
 ORDER BY
     TABLE_NAME, INDEX_NAME, SEQ_IN_INDEX;
+
+-- 请假申请列表与状态筛选
+CREATE INDEX idx_leave_applicant_created ON demo_leave_request(applicant_id, del_flag, create_time);
+CREATE INDEX idx_leave_applicant_status ON demo_leave_request(applicant_id, leave_status, del_flag);
+
+-- Actor-scoped command recovery and process diagnostics.
+CREATE INDEX idx_wf_command_actor_created ON wf_command(tenant_scope, actor_id, created_at);
+CREATE INDEX idx_wf_command_process ON wf_command(process_instance_id);
+
+-- Bounded, index-ordered outbox claims; these names are used by FORCE INDEX.
+CREATE INDEX idx_reliable_outbox_due ON reliable_outbox(source_owner, status, next_attempt_at, created_at);
+CREATE INDEX idx_reliable_outbox_lease ON reliable_outbox(source_owner, status, lease_until);
+
+-- Bounded, index-ordered Inbox claims; these names are used by FORCE INDEX.
+CREATE INDEX idx_reliable_inbox_due ON reliable_inbox(target_owner, status, next_attempt_at, received_at);
+CREATE INDEX idx_reliable_inbox_lease ON reliable_inbox(target_owner, status, lease_until);

@@ -24,11 +24,11 @@ import java.util.List;
  *
  * 核心职责：
  * - 消费 MQ 中的通知消息
- * - 保证通知状态为已发布
+ * - 只转发已发布通知，或从可信系统消息创建已发布通知
  * - 基于 sys_user_notice 下发 SSE 通知
  *
  * 处理流程：
- * - noticeId 存在时，直接加载通知并确保状态
+ * - noticeId 存在时，只读取当前已发布通知
  * - noticeId 不存在时，根据 DTO 创建通知
  * - 读取接收人列表并逐个推送 SSE
  *
@@ -52,19 +52,13 @@ public class NoticeConsumer {
             return;
         }
 
-        // 根据通知ID获取通知，或根据消息内容新建通知
+        // 现有通知的延迟消息不能重新发布草稿、撤回或已删除通知。
         SysNotice notice;
         if (noticeDTO.getNoticeId() != null) {
             notice = noticeService.getById(noticeDTO.getNoticeId());
-            if (notice == null) {
-                log.error("Notice not found: {}", noticeDTO.getNoticeId());
-                notice = createNoticeFromDto(noticeDTO);
-            } else {
-                // 确保通知状态为已发布
-                if (!"1".equals(notice.getStatus())) {
-                    notice.setStatus("1");
-                    noticeService.updateById(notice);
-                }
+            if (notice == null || !"1".equals(notice.getStatus())) {
+                log.info("Skip notification for unavailable notice: {}", noticeDTO.getNoticeId());
+                return;
             }
         } else {
             notice = createNoticeFromDto(noticeDTO);
@@ -75,7 +69,8 @@ public class NoticeConsumer {
 
         // 从 sys_user_notice 表读取接收人（由保存/更新通知时创建）
         List<SysUserNotice> userNotices = userNoticeService.list(Wrappers.<SysUserNotice>lambdaQuery()
-                .eq(SysUserNotice::getNoticeId, noticeId));
+                .eq(SysUserNotice::getNoticeId, noticeId)
+                .apply("del_flag = '0'"));
 
         if (userNotices == null || userNotices.isEmpty()) {
             log.info("No receivers found for notice: {}", noticeId);
@@ -98,11 +93,12 @@ public class NoticeConsumer {
         noticeVO.setContent(noticeDTO.getContent());
         noticeVO.setSenderId(noticeDTO.getSenderId());
         noticeVO.setType(noticeDTO.getType() == null ? "0" : noticeDTO.getType());
-        noticeVO.setStatus("1");
         noticeVO.setTargetType(noticeDTO.getTargetType());
         noticeVO.setTargetIds(noticeDTO.getTargetIds());
         // 保存通知并生成接收人关联记录
-        noticeService.saveNotice(noticeVO);
+        if (!noticeService.savePublishedNotice(noticeVO)) {
+            throw new IllegalStateException("系统通知保存失败");
+        }
         return noticeVO;
     }
 

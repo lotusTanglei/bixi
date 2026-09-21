@@ -20,7 +20,7 @@
         <userTask id="submitApplication" name="提交申请" flowable:assignee="${applicant}">
             <documentation>发起人提交请假申请</documentation>
             <extensionElements>
-                <flowable:taskListener event="create" class="com.lotus.bixi.common.workflow.listener.BaseTaskListener"/>
+                <flowable:taskListener event="create" delegateExpression="${taskCreateListener}"/>
             </extensionElements>
         </userTask>
 
@@ -29,7 +29,7 @@
         <userTask id="deptManagerApproval" name="部门经理审批" flowable:candidateGroups="dept_manager">
             <documentation>部门经理审批请假申请</documentation>
             <extensionElements>
-                <flowable:taskListener event="create" class="com.lotus.bixi.common.workflow.listener.BaseTaskListener"/>
+                <flowable:taskListener event="create" delegateExpression="${taskCreateListener}"/>
             </extensionElements>
         </userTask>
 
@@ -48,7 +48,7 @@
         <userTask id="hrApproval" name="HR审批" flowable:candidateGroups="hr">
             <documentation>HR审批请假申请（请假天数超过3天）</documentation>
             <extensionElements>
-                <flowable:taskListener event="create" class="com.lotus.bixi.common.workflow.listener.BaseTaskListener"/>
+                <flowable:taskListener event="create" delegateExpression="${taskCreateListener}"/>
             </extensionElements>
         </userTask>
 
@@ -56,7 +56,7 @@
 
         <endEvent id="endEvent" name="结束">
             <extensionElements>
-                <flowable:executionListener event="end" class="com.lotus.bixi.common.workflow.listener.BaseExecutionListener"/>
+                <flowable:executionListener event="end" delegateExpression="${processEndListener}"/>
             </extensionElements>
         </endEvent>
 

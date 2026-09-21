@@ -3,12 +3,14 @@ package com.lotus.bixi.workflow.api.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 @Schema(description = "任务评论传输对象")
-public class TaskCommentDTO implements Serializable {
+public class TaskCommentDTO extends WorkflowRequestDTO implements Serializable {
 
     private static final long serialVersionUID = 1L;
 

@@ -43,6 +43,12 @@ public class TaskVO implements Serializable {
     @Schema(description = "拥有者")
     private String owner;
 
+    @Schema(description = "委派状态: PENDING/RESOLVED")
+    private String delegationState;
+
+    @Schema(description = "办结时间")
+    private LocalDateTime endTime;
+
     @Schema(description = "创建时间")
     private LocalDateTime createTime;
 

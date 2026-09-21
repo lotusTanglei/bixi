@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lotus.bixi.common.core.util.R;
 import com.lotus.bixi.common.log.annotation.SysLog;
+import com.lotus.bixi.common.security.annotation.HasPermission;
 import com.lotus.bixi.upms.api.entity.SysNotice;
 import com.lotus.bixi.upms.api.vo.SysNoticeVO;
 import com.lotus.bixi.upms.service.SysNoticeService;
@@ -34,6 +35,7 @@ public class SysNoticeController {
      */
     @Operation(summary = "分页查询", description = "分页查询")
     @GetMapping("/page")
+    @HasPermission("sys_notice_view")
     public R getSysNoticePage(Page page, SysNotice sysNotice) {
         return R.ok(sysNoticeService.page(page, Wrappers.query(sysNotice)));
     }
@@ -46,6 +48,7 @@ public class SysNoticeController {
      */
     @Operation(summary = "通过id查询", description = "通过id查询")
     @GetMapping("/{id}")
+    @HasPermission("sys_notice_view")
     public R getById(@PathVariable("id") Long id) {
         return R.ok(sysNoticeService.getById(id));
     }
@@ -58,6 +61,7 @@ public class SysNoticeController {
     @Operation(summary = "新增消息通知", description = "新增消息通知")
     @SysLog("新增消息通知")
     @PostMapping
+    @HasPermission("sys_notice_add")
     public R save(@RequestBody SysNoticeVO sysNotice) {
         return R.ok(sysNoticeService.saveNotice(sysNotice));
     }
@@ -70,8 +74,9 @@ public class SysNoticeController {
     @Operation(summary = "修改消息通知", description = "修改消息通知")
     @SysLog("修改消息通知")
     @PutMapping
+    @HasPermission("sys_notice_edit")
     public R updateById(@RequestBody SysNoticeVO sysNotice) {
-        return R.ok(sysNoticeService.updateNotice(sysNotice));
+        return sysNoticeService.updateNotice(sysNotice) ? R.ok(Boolean.TRUE) : R.failed("仅草稿通知可修改");
     }
 
     /**
@@ -82,6 +87,7 @@ public class SysNoticeController {
     @Operation(summary = "通过id删除消息通知", description = "通过id删除消息通知")
     @SysLog("通过id删除消息通知")
     @DeleteMapping("/{id}")
+    @HasPermission("sys_notice_del")
     public R removeById(@PathVariable Long id) {
         return R.ok(sysNoticeService.removeById(id));
     }
@@ -91,11 +97,12 @@ public class SysNoticeController {
      * @param id 通知ID
      * @return R
      */
-    @Operation(summary = "发送通知", description = "发送通知")
+    @Operation(summary = "发送通知", description = "发布草稿或重发已发布通知的实时提醒")
     @SysLog("发送通知")
     @PostMapping("/send/{id}")
+    @HasPermission("sys_notice_send")
     public R send(@PathVariable Long id) {
-        return R.ok(sysNoticeService.sendNotice(id));
+        return sysNoticeService.sendNotice(id) ? R.ok(Boolean.TRUE) : R.failed("仅草稿或已发布通知可发送提醒");
     }
 
 }

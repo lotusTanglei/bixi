@@ -1,5 +1,7 @@
 package com.lotus.bixi.workflow.service.impl;
 
+import com.lotus.bixi.workflow.api.config.ConditionalOnWorkflowEnabled;
+
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lotus.bixi.workflow.api.dto.FormDataDTO;
@@ -14,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Slf4j
+@ConditionalOnWorkflowEnabled
 @Service
 @AllArgsConstructor
 public class FormDataServiceImpl extends ServiceImpl<WfFormDataMapper, WfFormData> implements FormDataService {
@@ -23,7 +26,7 @@ public class FormDataServiceImpl extends ServiceImpl<WfFormDataMapper, WfFormDat
     public void saveFormData(FormDataDTO dto) {
         WfFormData formData = new WfFormData();
         formData.setFormId(dto.getFormId());
-        formData.setFormVersion(dto.getFormVersionId() != null ? dto.getFormVersionId().intValue() : null);
+        formData.setFormVersionId(dto.getFormVersionId());
         formData.setProcessInstanceId(dto.getProcessInstanceId());
         formData.setTaskId(dto.getTaskId());
         formData.setBusinessKey(dto.getBusinessKey());

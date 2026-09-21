@@ -17,6 +17,8 @@ import com.lotus.bixi.upms.api.dto.UserDTO;
 import com.lotus.bixi.upms.api.entity.SysUser;
 import com.lotus.bixi.upms.api.service.UserQueryService;
 import com.lotus.bixi.upms.api.vo.UserExcelVO;
+import com.lotus.bixi.upms.api.vo.UserOptionVO;
+import com.lotus.bixi.upms.api.vo.UserVO;
 import com.lotus.bixi.upms.service.SysUserService;
 import com.pig4cloud.plugin.excel.annotation.RequestExcel;
 import com.pig4cloud.plugin.excel.annotation.ResponseExcel;
@@ -77,12 +79,23 @@ public class SysUserController {
     }
 
     /**
+     * 获取当前登录用户的个人资料，不接受客户端指定用户ID。
+     *
+     * @return 当前用户资料
+     */
+    @GetMapping("/me")
+    public R<UserVO> currentUser() {
+        return R.ok(userService.selectUserVoById(SecurityUtils.getUser().getId()));
+    }
+
+    /**
      * 通过ID查询用户信息
      *
      * @param id ID
      * @return 用户信息
      */
     @GetMapping("/details/{id}")
+    @HasPermission("sys_user_view")
     public R user(@PathVariable Long id) {
         return R.ok(userService.selectUserVoById(id));
     }
@@ -148,8 +161,19 @@ public class SysUserController {
      * @return 用户集合
      */
     @GetMapping("/page")
+    @HasPermission("sys_user_view")
     public R getUserPage(@ParameterObject Page page, @ParameterObject UserDTO userDTO) {
         return R.ok(userService.getUsersWithRolePage(page, userDTO));
+    }
+
+    @GetMapping("/options")
+    @HasPermission({"sys_user_view", "sys_notice_add", "sys_notice_edit"})
+    public R<List<UserOptionVO>> userOptions() {
+        Page<SysUser> page = userService.page(new Page<>(1, 1000, false), Wrappers.<SysUser>lambdaQuery()
+                .select(SysUser::getId, SysUser::getUsername, SysUser::getName)
+                .orderByAsc(SysUser::getId));
+        return R.ok(page.getRecords().stream()
+                .map(user -> new UserOptionVO(user.getId(), user.getUsername(), user.getName())).toList());
     }
 
     /**
@@ -184,8 +208,9 @@ public class SysUserController {
      * @param bindingResult 错误信息列表
      * @return R
      */
+    @SysLog("导入用户")
     @PostMapping("/import")
-    @HasPermission("sys_user_export")
+    @HasPermission("sys_user_import")
     public R importUser(@RequestExcel List<UserExcelVO> excelVOList, BindingResult bindingResult) {
         return userService.importUser(excelVOList, bindingResult);
     }

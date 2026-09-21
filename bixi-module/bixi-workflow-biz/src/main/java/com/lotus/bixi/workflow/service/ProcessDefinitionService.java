@@ -10,6 +10,8 @@ import java.util.List;
 
 public interface ProcessDefinitionService extends IService<WfProcessDefinition> {
 
+    ProcessDefinitionVO deployDemo();
+
     List<ProcessDefinitionVO> listDefinitions(ProcessQueryDTO query);
 
     List<ProcessDefinitionVO> listLatestVersions();

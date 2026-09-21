@@ -33,6 +33,7 @@ public class ProcessInstanceControllerTest {
     @Test
     void testStart() {
         ProcessStartDTO startDTO = new ProcessStartDTO();
+        startDTO.setRequestId(java.util.UUID.randomUUID().toString());
         startDTO.setProcessKey("testKey");
         
         ProcessInstanceVO vo = new ProcessInstanceVO();

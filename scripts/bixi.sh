@@ -176,7 +176,7 @@ compose() {
 
 compose_owns_port() {
     port="$1"
-    compose --profile cloud --profile single ps --format json 2>/dev/null \
+    compose --profile cloud --profile single --profile workflow ps --format json 2>/dev/null \
         | grep -F "\"PublishedPort\":${port}" >/dev/null
 }
 
@@ -242,7 +242,7 @@ doctor() {
     load_env
     require_docker
     prepare_admin_hash
-    compose --profile cloud --profile single config --quiet
+    compose --profile cloud --profile single --profile workflow config --quiet
     check_ports "${mode}"
 
     for file in \
@@ -298,14 +298,25 @@ start_cloud() {
     select_registry
     prepare_images cloud
     compose --profile single stop frontend-single single >/dev/null 2>&1 || true
-    for service in gateway upms auth frontend-cloud; do
+    workflow_service=""
+    if [ "${WORKFLOW_ENABLED:-false}" = "true" ]; then
+        workflow_service="workflow"
+    else
+        compose --profile cloud --profile workflow stop workflow >/dev/null 2>&1 || true
+    fi
+    for service in gateway upms auth frontend-cloud ${workflow_service}; do
         compose --profile cloud build "${service}"
     done
     compose --profile cloud up --detach --no-build \
-        mysql redis rabbitmq nacos nacos-config gateway upms auth frontend-cloud
+        mysql redis rabbitmq nacos nacos-config gateway upms auth frontend-cloud ${workflow_service}
+    if [ -n "${workflow_service}" ]; then
+        compose --profile cloud --profile workflow up --detach --no-build --wait workflow
+    fi
     wait_for_url gateway "http://localhost:${GATEWAY_PORT}/actuator/health"
     wait_for_url auth "http://localhost:${GATEWAY_PORT}/auth/actuator/health"
     wait_for_url upms "http://localhost:${GATEWAY_PORT}/admin/actuator/health"
+    # Refresh Docker DNS after a backend container has been recreated with a new IP.
+    compose --profile cloud exec -T frontend-cloud nginx -s reload
     wait_for_url frontend "http://localhost:${BIXI_HTTP_PORT}/healthz"
     show_access
 }
@@ -315,12 +326,13 @@ start_single() {
     load_env
     select_registry
     prepare_images single
-    compose --profile cloud stop frontend-cloud auth upms gateway >/dev/null 2>&1 || true
+    compose --profile cloud --profile workflow stop frontend-cloud auth upms gateway workflow nacos nacos-config >/dev/null 2>&1 || true
     for service in single frontend-single; do
         compose --profile single build "${service}"
     done
     compose --profile single up --detach --no-build mysql redis rabbitmq single frontend-single
     wait_for_url single "http://localhost:${SINGLE_PORT}/admin/actuator/health"
+    compose --profile single exec -T frontend-single nginx -s reload
     wait_for_url frontend "http://localhost:${BIXI_HTTP_PORT}/healthz"
     show_access
 }
@@ -328,7 +340,7 @@ start_single() {
 diagnose() {
     load_env
     require_docker
-    compose --profile cloud --profile single ps
+    compose --profile cloud --profile single --profile workflow ps
     for check in \
         "gateway|http://localhost:${GATEWAY_PORT}/actuator/health" \
         "auth|http://localhost:${GATEWAY_PORT}/auth/actuator/health" \
@@ -371,11 +383,11 @@ case "${command}" in
     doctor-dev) doctor dev ;;
     start-cloud) start_cloud ;;
     start-single) start_single ;;
-    status) load_env; require_docker; compose --profile cloud --profile single ps ;;
+    status) load_env; require_docker; compose --profile cloud --profile single --profile workflow ps ;;
     diagnose) diagnose ;;
-    logs) load_env; require_docker; compose --profile cloud --profile single logs --follow --tail=200 ;;
-    stop) load_env; require_docker; compose --profile cloud --profile single down ;;
-    reset) load_env; require_docker; compose --profile cloud --profile single down --volumes --remove-orphans ;;
+    logs) load_env; require_docker; compose --profile cloud --profile single --profile workflow logs --follow --tail=200 ;;
+    stop) load_env; require_docker; compose --profile cloud --profile single --profile workflow down ;;
+    reset) load_env; require_docker; compose --profile cloud --profile single --profile workflow down --volumes --remove-orphans ;;
     credentials) show_access ;;
     *) usage; [ -z "${command}" ] || exit 1 ;;
 esac

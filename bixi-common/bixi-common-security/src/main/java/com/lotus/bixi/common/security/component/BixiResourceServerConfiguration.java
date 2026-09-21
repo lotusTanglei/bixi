@@ -9,12 +9,16 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.ObjectPostProcessor;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.server.resource.introspection.OpaqueTokenIntrospector;
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationEntryPointFailureHandler;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 /**
@@ -52,10 +56,21 @@ public class BixiResourceServerConfiguration {
                         .permitAll()
                         .anyRequest()
                         .authenticated())
+                // SSO form sessions belong to the auth chains; business APIs require a bearer token.
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .oauth2ResourceServer(
                         oauth2 -> oauth2.opaqueToken(token -> token.introspector(customOpaqueTokenIntrospector))
                                 .authenticationEntryPoint(resourceAuthExceptionEntryPoint)
-                                .bearerTokenResolver(bixiBearerTokenExtractor))
+                                .bearerTokenResolver(bixiBearerTokenExtractor)
+                                .withObjectPostProcessor(new ObjectPostProcessor<BearerTokenAuthenticationFilter>() {
+                                    @Override
+                                    public <O extends BearerTokenAuthenticationFilter> O postProcess(O filter) {
+                                        var failureHandler = new AuthenticationEntryPointFailureHandler(resourceAuthExceptionEntryPoint);
+                                        failureHandler.setRethrowAuthenticationServiceException(false);
+                                        filter.setAuthenticationFailureHandler(failureHandler);
+                                        return filter;
+                                    }
+                                }))
                 .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
                 .csrf(AbstractHttpConfigurer::disable);
 

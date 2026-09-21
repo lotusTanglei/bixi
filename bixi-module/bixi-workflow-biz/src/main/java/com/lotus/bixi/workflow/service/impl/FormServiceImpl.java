@@ -1,5 +1,7 @@
 package com.lotus.bixi.workflow.service.impl;
 
+import com.lotus.bixi.workflow.api.config.ConditionalOnWorkflowEnabled;
+
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -22,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Collections;
 
 @Slf4j
+@ConditionalOnWorkflowEnabled
 @Service
 @AllArgsConstructor
 public class FormServiceImpl extends ServiceImpl<WfFormMapper, WfForm> implements FormService {

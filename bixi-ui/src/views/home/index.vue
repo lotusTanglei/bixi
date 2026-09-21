@@ -17,7 +17,7 @@
             <pane size="58">
               <schedule/>
             </pane>
-            <pane size="42">
+            <pane v-if="auth('sys_log_view')" size="42">
               <sys-log/>
             </pane>
           </splitpanes>
@@ -28,6 +28,8 @@
 </template>
 
 <script setup lang="ts" name="home">
+import { auth } from '/@/utils/authFunction';
+
 const CurrentUser = defineAsyncComponent(() => import('./current-user.vue'));
 const Favorite = defineAsyncComponent(() => import('./favorite.vue'));
 const Schedule = defineAsyncComponent(() => import('./schedule.vue'));

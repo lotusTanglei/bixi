@@ -31,6 +31,7 @@ import org.springframework.security.oauth2.server.authorization.OAuth2Authorizat
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
 import org.springframework.security.oauth2.server.resource.InvalidBearerTokenException;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
+import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
@@ -67,9 +68,11 @@ public class BixiTokenEndpoint {
      * @return ModelAndView
      */
     @GetMapping("/login")
-    public ModelAndView require(ModelAndView modelAndView, @RequestParam(required = false) String error) {
+    public ModelAndView require(ModelAndView modelAndView, @RequestParam(required = false) String error,
+                                HttpServletRequest request) {
         modelAndView.setViewName("ftl/login");
         modelAndView.addObject("error", error);
+        modelAndView.addObject("_csrf", request.getAttribute(CsrfToken.class.getName()));
         return modelAndView;
     }
 

@@ -63,6 +63,10 @@ public abstract class OAuth2ResourceOwnerBaseAuthenticationConverter<T extends O
         }
 
         MultiValueMap<String, String> parameters = OAuth2EndpointUtils.getParameters(request);
+        if (parameters.get(OAuth2ParameterNames.GRANT_TYPE).size() != 1) {
+            OAuth2EndpointUtils.throwError(OAuth2ErrorCodes.INVALID_REQUEST, OAuth2ParameterNames.GRANT_TYPE,
+                    OAuth2EndpointUtils.ACCESS_TOKEN_REQUEST_ERROR_URI);
+        }
         // scope (OPTIONAL)
         String scope = parameters.getFirst(OAuth2ParameterNames.SCOPE);
         if (StringUtils.hasText(scope) && parameters.get(OAuth2ParameterNames.SCOPE).size() != 1) {

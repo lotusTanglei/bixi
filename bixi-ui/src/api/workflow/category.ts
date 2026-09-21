@@ -2,7 +2,7 @@ import request from '/@/utils/request';
 
 export const list = (params?: Object) => {
 	return request({
-		url: '/workflow/category/list',
+		url: '/admin/workflow/category/list',
 		method: 'get',
 		params,
 	});
@@ -10,7 +10,7 @@ export const list = (params?: Object) => {
 
 export const tree = (params?: Object) => {
 	return request({
-		url: '/workflow/category/tree',
+		url: '/admin/workflow/category/tree',
 		method: 'get',
 		params,
 	});
@@ -18,14 +18,14 @@ export const tree = (params?: Object) => {
 
 export const getObj = (id: String) => {
 	return request({
-		url: '/workflow/category/details/' + id,
+		url: '/admin/workflow/category/details/' + id,
 		method: 'get',
 	});
 };
 
 export const addObj = (obj: Object) => {
 	return request({
-		url: '/workflow/category',
+		url: '/admin/workflow/category',
 		method: 'post',
 		data: obj,
 	});
@@ -33,7 +33,7 @@ export const addObj = (obj: Object) => {
 
 export const putObj = (obj: Object) => {
 	return request({
-		url: '/workflow/category',
+		url: '/admin/workflow/category',
 		method: 'put',
 		data: obj,
 	});
@@ -41,7 +41,7 @@ export const putObj = (obj: Object) => {
 
 export const delObj = (ids: Object) => {
 	return request({
-		url: '/workflow/category',
+		url: '/admin/workflow/category',
 		method: 'delete',
 		data: ids,
 	});

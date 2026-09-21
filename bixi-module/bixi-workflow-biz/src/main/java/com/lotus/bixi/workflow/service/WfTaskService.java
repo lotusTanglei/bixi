@@ -6,6 +6,7 @@ import com.lotus.bixi.workflow.api.dto.TaskCommentDTO;
 import com.lotus.bixi.workflow.api.dto.TaskCompleteDTO;
 import com.lotus.bixi.workflow.api.dto.TaskRejectDTO;
 import com.lotus.bixi.workflow.api.dto.TaskTransferDTO;
+import com.lotus.bixi.workflow.api.dto.TaskResolveDTO;
 import com.lotus.bixi.workflow.api.vo.TaskVO;
 
 public interface WfTaskService {
@@ -22,11 +23,17 @@ public interface WfTaskService {
     
     void delegate(TaskTransferDTO dto);
 
+    void resolve(TaskResolveDTO dto);
+
     TaskVO getById(String taskId);
 
     void claim(String taskId, Long userId);
+
+    void claim(String taskId, Long userId, String requestId);
     
     void unclaim(String taskId);
+
+    void unclaim(String taskId, String requestId);
     
     Object getComments(String taskId);
     

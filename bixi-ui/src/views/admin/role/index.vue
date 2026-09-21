@@ -19,10 +19,10 @@
 					<el-button icon="folder-add" type="primary" class="ml10" @click="roleDialogRef.openDialog()" v-auth="'sys_role_add'">
 						{{ $t('common.addBtn') }}
 					</el-button>
-					<el-button plain icon="upload-filled" type="primary" class="ml10" @click="excelUploadRef.show()" v-auth="'sys_user_add'">
+					<el-button plain icon="upload-filled" type="primary" class="ml10" @click="excelUploadRef.show()" v-auth="'sys_role_import'">
 						{{ $t('common.importBtn') }}
 					</el-button>
-					<el-button plain :disabled="multiple" icon="Delete" type="primary" class="ml10" v-auth="'sys_user_del'" @click="handleDelete(selectObjs)">
+					<el-button plain :disabled="multiple" icon="Delete" type="primary" class="ml10" v-auth="'sys_role_del'" @click="handleDelete(selectObjs)">
 						{{ $t('common.delBtn') }}
 					</el-button>
 					<right-toolbar
@@ -57,7 +57,7 @@
 							$t('common.editBtn')
 						}}</el-button>
 
-						<el-button text type="primary" icon="turn-off" v-auth="'sys_role_del'" @click="permessionRef.openDialog(scope.row)">{{
+						<el-button text type="primary" icon="turn-off" v-auth="'sys_role_perm'" @click="permessionRef.openDialog(scope.row)">{{
 							$t('sysrole.permissionTip')
 						}}</el-button>
 

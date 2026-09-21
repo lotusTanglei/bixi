@@ -48,6 +48,11 @@ public class OAuth2ResourceOwnerSmsAuthenticationConverter
     @Override
     public void checkParams(HttpServletRequest request) {
         MultiValueMap<String, String> parameters = OAuth2EndpointUtils.getParameters(request);
+        String code = parameters.getFirst("code");
+        if (!StringUtils.hasText(code) || parameters.get("code").size() != 1) {
+            OAuth2EndpointUtils.throwError(OAuth2ErrorCodes.INVALID_REQUEST, "code",
+                    OAuth2EndpointUtils.ACCESS_TOKEN_REQUEST_ERROR_URI);
+        }
         // PHONE (REQUIRED)
         String phone = parameters.getFirst(SecurityConstants.SMS_PARAMETER_NAME);
         if (!StringUtils.hasText(phone) || parameters.get(SecurityConstants.SMS_PARAMETER_NAME).size() != 1) {

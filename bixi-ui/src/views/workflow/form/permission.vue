@@ -143,7 +143,7 @@ import { useMessage } from '/@/hooks/message';
 import { getPermissionList, savePermission, getFieldPermissions } from '/@/api/workflow/form';
 import { useRoute, useRouter } from 'vue-router';
 import { tableStyle } from '/@/hooks/table';
-import { pageList as getRoleList } from '/@/api/admin/role';
+import { list as getRoleList } from '/@/api/admin/role';
 
 const route = useRoute();
 const router = useRouter();
@@ -176,8 +176,8 @@ onMounted(async () => {
 const loadRoleList = async () => {
 	try {
 		roleLoading.value = true;
-		const res = await getRoleList({ size: -1 });
-		roleList.value = res.data?.records || res.data || [];
+		const res = await getRoleList();
+		roleList.value = res.data || [];
 	} catch (err: any) {
 		useMessage().error(err.msg || '加载角色列表失败');
 	} finally {

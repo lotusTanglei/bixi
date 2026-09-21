@@ -2,11 +2,12 @@ package com.lotus.bixi.auth.support.core;
 
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.spring.SpringUtil;
-import com.lotus.bixi.common.core.util.WebUtils;
+import com.lotus.bixi.auth.support.sms.SmsAuthenticationToken;
+import com.lotus.bixi.common.core.constant.CacheConstants;
+import com.lotus.bixi.common.core.constant.SecurityConstants;
 import com.lotus.bixi.common.security.service.BixiUserDetailsService;
-import jakarta.servlet.http.HttpServletRequest;
-import lombok.SneakyThrows;
 import org.springframework.core.Ordered;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -20,14 +21,11 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
-import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
-import org.springframework.security.web.authentication.www.BasicAuthenticationConverter;
 import org.springframework.util.Assert;
 
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Supplier;
 
 /**
  * @author 唐磊
@@ -40,8 +38,6 @@ public class BixiDaoAuthenticationProvider extends AbstractUserDetailsAuthentica
      * String)} on when the user is not found to avoid SEC-2056.
      */
     private static final String USER_NOT_FOUND_PASSWORD = "userNotFoundPassword";
-
-    private final static BasicAuthenticationConverter basicConvert = new BasicAuthenticationConverter();
 
     private PasswordEncoder passwordEncoder;
 
@@ -66,9 +62,8 @@ public class BixiDaoAuthenticationProvider extends AbstractUserDetailsAuthentica
     protected void additionalAuthenticationChecks(UserDetails userDetails,
                                                   UsernamePasswordAuthenticationToken authentication) throws AuthenticationException {
 
-        // 只有密码模式需要校验密码
-        String grantType = WebUtils.getRequest().get().getParameter(OAuth2ParameterNames.GRANT_TYPE);
-        if (!StrUtil.equals(AuthorizationGrantType.PASSWORD.getValue(), grantType)) {
+        if (authentication instanceof SmsAuthenticationToken) {
+            checkSmsCode(authentication);
             return;
         }
 
@@ -85,21 +80,27 @@ public class BixiDaoAuthenticationProvider extends AbstractUserDetailsAuthentica
         }
     }
 
-    @SneakyThrows
-    @Override
+    @SuppressWarnings("unchecked")
+    private void checkSmsCode(UsernamePasswordAuthenticationToken authentication) {
+        String code = authentication.getCredentials() == null ? null : authentication.getCredentials().toString();
+        if (StrUtil.isBlank(authentication.getName()) || StrUtil.isBlank(code)) {
+            throw new BadCredentialsException("短信验证码不合法");
+        }
+        RedisTemplate<String, Object> redis = SpringUtil.getBean(RedisTemplate.class);
+        // GETDEL makes the challenge single-use even when concurrent requests arrive.
+        Object saved = redis.opsForValue().getAndDelete(CacheConstants.SMS_CODE_KEY + authentication.getName());
+        if (saved == null || !code.equals(saved.toString())) {
+            throw new BadCredentialsException("短信验证码不合法");
+        }
+    }
 
+    @Override
     protected final UserDetails retrieveUser(String username, UsernamePasswordAuthenticationToken authentication) {
         prepareTimingAttackProtection();
-        HttpServletRequest request = WebUtils.getRequest()
-                .orElseThrow(
-                        (Supplier<Throwable>) () -> new InternalAuthenticationServiceException("web request is empty"));
-
-        String grantType = WebUtils.getRequest().get().getParameter(OAuth2ParameterNames.GRANT_TYPE);
-        String clientId = WebUtils.getRequest().get().getParameter(OAuth2ParameterNames.CLIENT_ID);
-
-        if (StrUtil.isBlank(clientId)) {
-            clientId = basicConvert.convert(request).getName();
-        }
+        String grantType = authentication instanceof SmsAuthenticationToken
+                ? SecurityConstants.MOBILE : AuthorizationGrantType.PASSWORD.getValue();
+        // OAuth providers attach the authenticated client ID; ordinary form login has no client.
+        String clientId = authentication.getDetails() instanceof String id ? id : null;
 
         Map<String, BixiUserDetailsService> userDetailsServiceMap = SpringUtil
                 .getBeansOfType(BixiUserDetailsService.class);
@@ -134,7 +135,8 @@ public class BixiDaoAuthenticationProvider extends AbstractUserDetailsAuthentica
     @Override
     protected Authentication createSuccessAuthentication(Object principal, Authentication authentication,
                                                          UserDetails user) {
-        boolean upgradeEncoding = this.userDetailsPasswordService != null
+        boolean upgradeEncoding = !(authentication instanceof SmsAuthenticationToken)
+                && this.userDetailsPasswordService != null
                 && this.passwordEncoder.upgradeEncoding(user.getPassword());
         if (upgradeEncoding) {
             String presentedPassword = authentication.getCredentials().toString();

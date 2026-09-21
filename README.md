@@ -60,8 +60,9 @@ Bixi（碧玺）是一套面向企业后台和 SaaS 场景的前后端开发脚�
 - `bixi-upms-biz`：用户权限管理
 - `bixi-generator`：代码生成
 - `bixi-quartz`：定时任务
+- `bixi-workflow-biz`：工作流，默认关闭，通过 `workflow.enabled=true` 按需启用
 
-AI、Workflow 和 Monitor 在当前工程中作为独立模块存在，默认不在 `bixi-single` 的依赖列表中；需要按部署形态单独启动或按实际需求加入单体聚合。
+AI 和 Monitor 当前保持独立运行。Workflow 在 single 中复用已聚合的同一业务实现，在 cloud 中作为独立服务运行；启停配置和当前交付边界见[工作流运行说明](.docs/workflow/OPERATIONS.md)。
 
 ---
 
@@ -79,7 +80,7 @@ AI、Workflow 和 Monitor 在当前工程中作为独立模块存在，默认不
 | MyBatis-Plus | 3.5.9 | ORM 与分页能力 |
 | Druid | 1.2.23 | 数据库连接池与监控 |
 | Dynamic Datasource | 4.3.1 | 动态数据源切换 |
-| Flowable | 7.1.0 | 工作流引擎，独立 Workflow 模块使用 |
+| Flowable | 7.1.0 | 工作流引擎，cloud/single 复用同一 Workflow 模块 |
 | Spring AI Alibaba | 1.0.0.2 | AI / DashScope 集成，独立 AI 模块使用 |
 | SpringDoc OpenAPI | 2.7.0 | OpenAPI 接口文档 |
 | Undertow | Spring Boot Starter | Web 容器 |
@@ -101,7 +102,7 @@ AI、Workflow 和 Monitor 在当前工程中作为独立模块存在，默认不
 | Spring Cloud Gateway | 路由、全局过滤、网关限流 | — | ✅ |
 | OpenFeign + LoadBalancer | 微服务间调用与负载均衡 | 按模块依赖 | ✅ |
 | Sentinel | Feign 降级、熔断和限流 | 按模块依赖 | ✅ |
-| Flowable | 工作流引擎 | 当前未聚合 | ✅ / 独立模块 |
+| Flowable | 工作流引擎 | 已聚合，默认关闭 | 独立服务，默认关闭 |
 | Spring Boot Admin + Actuator | 服务监控与运行指标 | Actuator | ✅ / Monitor 服务 |
 | DynamicTp | 全局 `@Async` 异步线程池 | 本地配置 | Nacos 可刷新 |
 
@@ -324,7 +325,7 @@ make ci-gate
 | Generator | 数据库表导入、模板配置、代码生成、预览下载 | 单体 / 微服务 |
 | Quartz | Cron 任务、执行记录、手动触发、暂停恢复 | 单体 / 微服务 |
 | AI | 会话、消息、模型调用、SSE、知识库 | 独立 AI 服务 |
-| Workflow | 流程定义、部署、实例、任务、表单和审批 | 独立 Workflow 服务 |
+| Workflow | 流程定义、部署、实例、任务、表单和审批 | 单体可选聚合 / 独立 Workflow 服务，默认关闭 |
 | Monitor | Spring Boot Admin 服务监控 | 独立 Monitor 服务 |
 
 ---

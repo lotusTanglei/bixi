@@ -20,7 +20,7 @@
         <userTask id="submitExpense" name="提交报销申请" flowable:assignee="${applicant}">
             <documentation>发起人提交报销申请</documentation>
             <extensionElements>
-                <flowable:taskListener event="create" class="com.lotus.bixi.common.workflow.listener.BaseTaskListener"/>
+                <flowable:taskListener event="create" delegateExpression="${taskCreateListener}"/>
             </extensionElements>
         </userTask>
 
@@ -29,7 +29,7 @@
         <userTask id="deptManagerApproval" name="部门经理审批" flowable:candidateGroups="dept_manager">
             <documentation>部门经理审批报销申请</documentation>
             <extensionElements>
-                <flowable:taskListener event="create" class="com.lotus.bixi.common.workflow.listener.BaseTaskListener"/>
+                <flowable:taskListener event="create" delegateExpression="${taskCreateListener}"/>
             </extensionElements>
         </userTask>
 
@@ -48,7 +48,7 @@
         <userTask id="financeApproval" name="财务审批" flowable:candidateGroups="finance">
             <documentation>财务审批报销申请（报销金额超过5000）</documentation>
             <extensionElements>
-                <flowable:taskListener event="create" class="com.lotus.bixi.common.workflow.listener.BaseTaskListener"/>
+                <flowable:taskListener event="create" delegateExpression="${taskCreateListener}"/>
             </extensionElements>
         </userTask>
 
@@ -67,7 +67,7 @@
         <userTask id="ceoApproval" name="总经理审批" flowable:candidateGroups="ceo">
             <documentation>总经理审批报销申请（报销金额超过50000）</documentation>
             <extensionElements>
-                <flowable:taskListener event="create" class="com.lotus.bixi.common.workflow.listener.BaseTaskListener"/>
+                <flowable:taskListener event="create" delegateExpression="${taskCreateListener}"/>
             </extensionElements>
         </userTask>
 
@@ -75,7 +75,7 @@
 
         <endEvent id="endEvent" name="结束">
             <extensionElements>
-                <flowable:executionListener event="end" class="com.lotus.bixi.common.workflow.listener.BaseExecutionListener"/>
+                <flowable:executionListener event="end" delegateExpression="${processEndListener}"/>
             </extensionElements>
         </endEvent>
 

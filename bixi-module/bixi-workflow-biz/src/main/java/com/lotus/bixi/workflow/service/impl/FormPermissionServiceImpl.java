@@ -1,5 +1,7 @@
 package com.lotus.bixi.workflow.service.impl;
 
+import com.lotus.bixi.workflow.api.config.ConditionalOnWorkflowEnabled;
+
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -21,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
+@ConditionalOnWorkflowEnabled
 @Service
 @AllArgsConstructor
 public class FormPermissionServiceImpl extends ServiceImpl<SysFormPermissionMapper, SysFormPermission> implements FormPermissionService {

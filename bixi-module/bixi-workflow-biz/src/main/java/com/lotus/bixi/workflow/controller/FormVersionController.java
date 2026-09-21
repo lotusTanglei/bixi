@@ -1,5 +1,7 @@
 package com.lotus.bixi.workflow.controller;
 
+import com.lotus.bixi.workflow.api.config.ConditionalOnWorkflowEnabled;
+
 import com.lotus.bixi.common.core.util.R;
 import com.lotus.bixi.common.log.annotation.SysLog;
 import com.lotus.bixi.common.security.annotation.HasPermission;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
+@ConditionalOnWorkflowEnabled
 @RestController
 @AllArgsConstructor
 @RequestMapping("/workflow/form/version")

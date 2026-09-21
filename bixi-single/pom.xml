@@ -38,6 +38,12 @@
             <artifactId>bixi-quartz</artifactId>
             <version>${revision}</version>
         </dependency>
+        <!-- 可选工作流：同一业务实现，运行时通过 workflow.enabled 显式启用 -->
+        <dependency>
+            <groupId>com.lotus</groupId>
+            <artifactId>bixi-workflow-biz</artifactId>
+            <version>${revision}</version>
+        </dependency>
         <!--安全模块-->
         <dependency>
             <groupId>com.lotus</groupId>

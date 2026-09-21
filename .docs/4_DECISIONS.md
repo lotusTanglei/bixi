@@ -38,3 +38,7 @@ Accepted | Deprecated | Superseded by ADR-{XXX}
 ---
 
 > 请在下方添加新的 ADR 记录。
+
+## ADR-WF-001：Flowable 双模可选装配与可靠协作
+
+2026-09-21，Accepted。设计、替代方案、事务和迁移边界见 [详细 ADR](workflow/DESIGN.md)，实现与验收状态见 [工作流交付清单](workflow/PROGRESS.md)。该决策不代表各阶段已经验收。

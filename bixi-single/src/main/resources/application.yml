@@ -25,6 +25,11 @@ bixi:
   deployment:
     mode: single
 
+workflow:
+  enabled: ${WORKFLOW_ENABLED:false}
+  database-schema-update: ${WORKFLOW_SCHEMA_UPDATE:false}
+  async-executor-activate: ${WORKFLOW_ASYNC_EXECUTOR_ACTIVATE:true}
+
 
 # mybatis-plus 配置
 mybatis-plus:

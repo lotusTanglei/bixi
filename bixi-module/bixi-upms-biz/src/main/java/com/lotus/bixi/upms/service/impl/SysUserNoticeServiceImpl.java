@@ -20,9 +20,16 @@ import org.springframework.stereotype.Service;
 @Service
 public class SysUserNoticeServiceImpl extends ServiceImpl<SysUserNoticeMapper, SysUserNotice> implements SysUserNoticeService {
 
+    private static final String PUBLISHED_NOTICE_IDS = "SELECT id FROM sys_notice WHERE status = '1' AND del_flag = '0'";
+
     @Override
     public IPage<UserNoticeVO> getUserNoticePage(Page page, UserNoticeVO userNoticeVO) {
-        return baseMapper.selectUserNoticePage(page, userNoticeVO);
+        return baseMapper.selectUserNoticePage(page, userNoticeVO, true);
+    }
+
+    @Override
+    public IPage<UserNoticeVO> getNoticeRecordPage(Page page, UserNoticeVO userNoticeVO) {
+        return baseMapper.selectUserNoticePage(page, userNoticeVO, false);
     }
 
     @Override
@@ -35,6 +42,8 @@ public class SysUserNoticeServiceImpl extends ServiceImpl<SysUserNoticeMapper, S
         return this.update(Wrappers.<SysUserNotice>lambdaUpdate()
                 .set(SysUserNotice::getIsRead, "1")
                 .set(SysUserNotice::getReadTime, LocalDateTime.now())
+                .apply("del_flag = '0'")
+                .inSql(SysUserNotice::getNoticeId, PUBLISHED_NOTICE_IDS)
                 .eq(SysUserNotice::getId, userNoticeId)
                 .eq(SysUserNotice::getUserId, userId));
     }
@@ -44,6 +53,8 @@ public class SysUserNoticeServiceImpl extends ServiceImpl<SysUserNoticeMapper, S
         return this.baseMapper.update(null, Wrappers.<SysUserNotice>lambdaUpdate()
                 .set(SysUserNotice::getIsRead, "1")
                 .set(SysUserNotice::getReadTime, LocalDateTime.now())
+                .apply("del_flag = '0'")
+                .inSql(SysUserNotice::getNoticeId, PUBLISHED_NOTICE_IDS)
                 .eq(SysUserNotice::getUserId, userId)
                 .eq(SysUserNotice::getIsRead, "0"));
     }
@@ -51,12 +62,16 @@ public class SysUserNoticeServiceImpl extends ServiceImpl<SysUserNoticeMapper, S
     @Override
     public int deleteAll(Long userId) {
         return this.baseMapper.delete(Wrappers.<SysUserNotice>lambdaQuery()
+                .apply("del_flag = '0'")
+                .inSql(SysUserNotice::getNoticeId, PUBLISHED_NOTICE_IDS)
                 .eq(SysUserNotice::getUserId, userId));
     }
 
     @Override
     public boolean deleteOne(Long userNoticeId, Long userId) {
         return this.remove(Wrappers.<SysUserNotice>lambdaQuery()
+                .apply("del_flag = '0'")
+                .inSql(SysUserNotice::getNoticeId, PUBLISHED_NOTICE_IDS)
                 .eq(SysUserNotice::getId, userNoticeId)
                 .eq(SysUserNotice::getUserId, userId));
     }

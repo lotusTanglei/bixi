@@ -19,6 +19,7 @@ import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.security.authentication.event.LogoutSuccessEvent;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
@@ -32,6 +33,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.security.Principal;
 
 @Primary
 @Service
@@ -88,8 +90,13 @@ public class LocalTokenManagementService implements TokenManagementService {
             userDetailsCache.evictIfPresent(authorization.getPrincipalName());
         }
         authorizationService.remove(authorization);
+        // The public logout endpoint has no bearer SecurityContext. Carry the persisted identity
+        // into its audit event before the authorization is no longer available.
+        Object storedIdentity = authorization.getAttribute(Principal.class.getName());
+        Object principal = storedIdentity instanceof Authentication authentication
+                ? authentication.getPrincipal() : authorization.getPrincipalName();
         SpringContextHolder.publishEvent(new LogoutSuccessEvent(new PreAuthenticatedAuthenticationToken(
-                authorization.getPrincipalName(), authorization.getRegisteredClientId())));
+                principal, authorization.getRegisteredClientId())));
         return R.ok();
     }
 

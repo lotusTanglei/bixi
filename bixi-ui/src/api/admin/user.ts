@@ -8,6 +8,10 @@ export const pageList = (params?: Object) => {
 	});
 };
 
+export const userOptions = () => {
+	return request({ url: '/admin/user/options', method: 'get' });
+};
+
 export const list = (params?: Object) => {
 	return request({
 		url: '/admin/user/list',
@@ -27,6 +31,13 @@ export const addObj = (obj: Object) => {
 export const getObj = (id: String) => {
 	return request({
 		url: '/admin/user/details/' + id,
+		method: 'get',
+	});
+};
+
+export const getCurrentUser = () => {
+	return request({
+		url: '/admin/user/me',
 		method: 'get',
 	});
 };

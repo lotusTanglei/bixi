@@ -2,8 +2,6 @@
 
 package com.lotus.bixi.common.log.util;
 
-import cn.hutool.core.map.MapUtil;
-import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.URLUtil;
 import cn.hutool.extra.servlet.JakartaServletUtil;
 import cn.hutool.extra.spring.SpringUtil;
@@ -19,6 +17,7 @@ import org.springframework.expression.Expression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.http.HttpHeaders;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -27,7 +26,6 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * 系统日志工具类
@@ -38,23 +36,45 @@ import java.util.Objects;
 public class SysLogUtils {
 
     public SysLogEventSource getSysLog() {
-        HttpServletRequest request = ((ServletRequestAttributes) Objects
-                .requireNonNull(RequestContextHolder.getRequestAttributes())).getRequest();
         SysLogEventSource sysLog = new SysLogEventSource();
         sysLog.setType(LogTypeEnum.NORMAL.getType());
+        // Capture the trusted actor before the event moves to the async listener.
+        sysLog.setCreateBy(currentActorId());
+        sysLog.setServiceId(SpringUtil.getProperty("spring.application.name"));
+        if (!(RequestContextHolder.getRequestAttributes() instanceof ServletRequestAttributes attributes)) {
+            sysLog.setMethod("LOCAL");
+            sysLog.setRequestUri("local");
+            return sysLog;
+        }
+
+        HttpServletRequest request = attributes.getRequest();
         sysLog.setRequestUri(URLUtil.getPath(request.getRequestURI()));
         sysLog.setMethod(request.getMethod());
         sysLog.setRemoteAddr(JakartaServletUtil.getClientIP(request));
         sysLog.setUserAgent(request.getHeader(HttpHeaders.USER_AGENT));
-        sysLog.setServiceId(SpringUtil.getProperty("spring.application.name"));
 
         // get 参数脱敏
         BixiLogProperties logProperties = SpringContextHolder.getBean(BixiLogProperties.class);
         // Servlet 参数表由 Tomcat 锁定，复制后再脱敏，避免登录失败日志处理反过来抛出 500
-        Map<String, String[]> paramsMap = MapUtil.removeAny(new HashMap<>(request.getParameterMap()),
-                ArrayUtil.toArray(logProperties.getExcludeFields(), String.class));
+        Map<String, String[]> paramsMap = new HashMap<>(request.getParameterMap());
+        paramsMap.keySet().removeIf(logProperties::shouldExcludeField);
         sysLog.setParams(HttpUtil.toParams(paramsMap));
         return sysLog;
+    }
+
+    private Long currentActorId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()
+                || authentication instanceof AnonymousAuthenticationToken) {
+            return null;
+        }
+        Object principal = authentication.getPrincipal();
+        try {
+            Object id = principal == null ? null : principal.getClass().getMethod("getId").invoke(principal);
+            return id instanceof Long actorId ? actorId : null;
+        } catch (ReflectiveOperationException ignored) {
+            return null;
+        }
     }
 
 

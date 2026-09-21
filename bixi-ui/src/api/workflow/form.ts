@@ -2,7 +2,7 @@ import request from '/@/utils/request';
 
 export const getFormList = (params?: Object) => {
 	return request({
-		url: '/workflow/form/page',
+		url: '/admin/workflow/form/page',
 		method: 'get',
 		params,
 	});
@@ -10,14 +10,14 @@ export const getFormList = (params?: Object) => {
 
 export const getFormByKey = (formKey: String) => {
 	return request({
-		url: '/workflow/form/key/' + formKey,
+		url: '/admin/workflow/form/key/' + formKey,
 		method: 'get',
 	});
 };
 
 export const createForm = (data: Object) => {
 	return request({
-		url: '/workflow/form',
+		url: '/admin/workflow/form',
 		method: 'post',
 		data,
 	});
@@ -25,7 +25,7 @@ export const createForm = (data: Object) => {
 
 export const updateForm = (data: Object) => {
 	return request({
-		url: '/workflow/form',
+		url: '/admin/workflow/form',
 		method: 'put',
 		data,
 	});
@@ -33,28 +33,28 @@ export const updateForm = (data: Object) => {
 
 export const deleteForm = (id: String) => {
 	return request({
-		url: '/workflow/form/' + id,
+		url: '/admin/workflow/form/' + id,
 		method: 'delete',
 	});
 };
 
 export const getFormRender = (formKey: String) => {
 	return request({
-		url: '/workflow/form/render/' + formKey,
+		url: '/admin/workflow/form/render/' + formKey,
 		method: 'get',
 	});
 };
 
 export const getVersionList = (formId: String) => {
 	return request({
-		url: '/workflow/form/version/list/' + formId,
+		url: '/admin/workflow/form/version/list/' + formId,
 		method: 'get',
 	});
 };
 
 export const createVersion = (data: Object) => {
 	return request({
-		url: '/workflow/form/version',
+		url: '/admin/workflow/form/version',
 		method: 'post',
 		data,
 	});
@@ -62,28 +62,28 @@ export const createVersion = (data: Object) => {
 
 export const activateVersion = (formId: String, version: String) => {
 	return request({
-		url: '/workflow/form/version/activate/' + formId + '/' + version,
+		url: '/admin/workflow/form/version/activate/' + formId + '/' + version,
 		method: 'put',
 	});
 };
 
 export const rollbackVersion = (formId: String, version: String) => {
 	return request({
-		url: '/workflow/form/version/rollback/' + formId + '/' + version,
+		url: '/admin/workflow/form/version/rollback/' + formId + '/' + version,
 		method: 'put',
 	});
 };
 
 export const diffVersions = (formId: String, v1: String, v2: String) => {
 	return request({
-		url: '/workflow/form/version/diff/' + formId + '/' + v1 + '/' + v2,
+		url: '/admin/workflow/form/version/diff/' + formId + '/' + v1 + '/' + v2,
 		method: 'get',
 	});
 };
 
 export const saveFormData = (data: Object) => {
 	return request({
-		url: '/workflow/form/data',
+		url: '/admin/workflow/form/data',
 		method: 'post',
 		data,
 	});
@@ -91,28 +91,28 @@ export const saveFormData = (data: Object) => {
 
 export const getFormDataByProcess = (processInstanceId: String) => {
 	return request({
-		url: '/workflow/form/data/process/' + processInstanceId,
+		url: '/admin/workflow/form/data/process/' + processInstanceId,
 		method: 'get',
 	});
 };
 
 export const getFormDataByTask = (taskId: String) => {
 	return request({
-		url: '/workflow/form/data/task/' + taskId,
+		url: '/admin/workflow/form/data/task/' + taskId,
 		method: 'get',
 	});
 };
 
 export const getPermissionList = (formId: String) => {
 	return request({
-		url: '/workflow/form/permission/list/' + formId,
+		url: '/admin/workflow/form/permission/list/' + formId,
 		method: 'get',
 	});
 };
 
 export const savePermission = (data: Object) => {
 	return request({
-		url: '/workflow/form/permission',
+		url: '/admin/workflow/form/permission',
 		method: 'post',
 		data,
 	});
@@ -120,7 +120,7 @@ export const savePermission = (data: Object) => {
 
 export const getFieldPermissions = (formId: String, roleId: String) => {
 	return request({
-		url: '/workflow/form/permission/field/' + formId + '/' + roleId,
+		url: '/admin/workflow/form/permission/field/' + formId + '/' + roleId,
 		method: 'get',
 	});
 };

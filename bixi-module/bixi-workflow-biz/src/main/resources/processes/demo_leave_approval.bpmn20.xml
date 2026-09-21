@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:flowable="http://flowable.org/bpmn"
+             xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+             xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+             xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+             targetNamespace="https://bixi.example/workflow">
+    <process id="demo_leave_approval" name="请假申请审批" isExecutable="true">
+        <documentation>请假草稿在业务模块提交后进入审批。approverId 由业务服务校验并传入；拒绝结束通过任务服务处理。</documentation>
+        <startEvent id="start" name="提交申请"/>
+        <sequenceFlow id="toReview" sourceRef="start" targetRef="review"/>
+        <userTask id="review" name="请假审批" flowable:assignee="${approverId}">
+            <extensionElements>
+                <flowable:taskListener event="create" delegateExpression="${taskCreateListener}"/>
+            </extensionElements>
+        </userTask>
+        <sequenceFlow id="toEnd" sourceRef="review" targetRef="end"/>
+        <endEvent id="end" name="审批通过">
+            <extensionElements>
+                <flowable:executionListener event="end" delegateExpression="${processEndListener}"/>
+            </extensionElements>
+        </endEvent>
+    </process>
+    <bpmndi:BPMNDiagram id="demoLeaveDiagram">
+        <bpmndi:BPMNPlane id="demoLeavePlane" bpmnElement="demo_leave_approval">
+            <bpmndi:BPMNShape id="startShape" bpmnElement="start"><dc:Bounds x="100" y="115" width="30" height="30"/></bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="reviewShape" bpmnElement="review"><dc:Bounds x="190" y="90" width="120" height="80"/></bpmndi:BPMNShape>
+            <bpmndi:BPMNShape id="endShape" bpmnElement="end"><dc:Bounds x="370" y="115" width="30" height="30"/></bpmndi:BPMNShape>
+            <bpmndi:BPMNEdge id="reviewEdge" bpmnElement="toReview"><di:waypoint x="130" y="130"/><di:waypoint x="190" y="130"/></bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge id="endEdge" bpmnElement="toEnd"><di:waypoint x="310" y="130"/><di:waypoint x="370" y="130"/></bpmndi:BPMNEdge>
+        </bpmndi:BPMNPlane>
+    </bpmndi:BPMNDiagram>
+</definitions>

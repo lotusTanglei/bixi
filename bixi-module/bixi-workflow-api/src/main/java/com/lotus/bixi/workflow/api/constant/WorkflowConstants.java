@@ -10,9 +10,15 @@ public interface WorkflowConstants {
 
     String APPROVAL_TYPE_DELEGATE = "delegate";
 
+    String APPROVAL_TYPE_RESOLVE = "resolve";
+
     String STATUS_RUNNING = "running";
 
     String STATUS_COMPLETED = "completed";
+
+    String STATUS_REJECTED = "rejected";
+
+    String STATUS_SUSPENDED = "suspended";
 
     String STATUS_TERMINATED = "terminated";
 
@@ -20,5 +26,5 @@ public interface WorkflowConstants {
 
     Integer SUSPENSION_STATE_SUSPENDED = 0;
 
-    String WORKFLOW_SERVICE = "bixi-workflow";
+    String WORKFLOW_SERVICE = "bixi-workflow-biz";
 }

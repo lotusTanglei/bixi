@@ -1,5 +1,7 @@
 package com.lotus.bixi.workflow.controller;
 
+import com.lotus.bixi.workflow.api.config.ConditionalOnWorkflowEnabled;
+
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lotus.bixi.common.core.util.R;
@@ -22,6 +24,7 @@ import java.util.List;
 
 import com.lotus.bixi.workflow.service.ProcessDefinitionService;
 
+@ConditionalOnWorkflowEnabled
 @RestController
 @AllArgsConstructor
 @RequestMapping("/workflow/process")
@@ -34,28 +37,28 @@ public class ProcessInstanceController {
 
     @PostMapping("/start")
     @SysLog("发起流程")
-    @HasPermission("wf_process_start")
+    @HasPermission("workflow_process_add")
     @Operation(summary = "发起流程")
     public R<ProcessInstanceVO> start(@Valid @RequestBody ProcessStartDTO startDTO) {
         return R.ok(processInstanceService.start(startDTO));
     }
 
     @GetMapping("/page")
-    @HasPermission("wf_process_view")
+    @HasPermission("workflow_process_view")
     @Operation(summary = "分页查询流程实例")
     public R<IPage<ProcessInstanceVO>> page(Page<ProcessInstanceVO> page, ProcessQueryDTO queryDTO) {
         return R.ok(processInstanceService.page(page, queryDTO));
     }
 
     @GetMapping("/my/page")
-    @HasPermission("wf_process_view")
+    @HasPermission("workflow_process_view")
     @Operation(summary = "分页查询我的流程实例")
     public R<IPage<ProcessInstanceVO>> myPage(Page<ProcessInstanceVO> page, ProcessQueryDTO queryDTO) {
         return R.ok(processInstanceService.myPage(page, queryDTO));
     }
 
     @GetMapping("/details/{processInstanceId}")
-    @HasPermission("wf_process_view")
+    @HasPermission("workflow_process_view")
     @Operation(summary = "查询流程实例详情")
     public R<ProcessInstanceVO> getByProcessInstanceId(@PathVariable String processInstanceId) {
         return R.ok(processInstanceService.getById(processInstanceId));
@@ -63,44 +66,45 @@ public class ProcessInstanceController {
 
     @DeleteMapping("/cancel/{processInstanceId}")
     @SysLog("取消流程")
-    @HasPermission("wf_process_view")
+    @HasPermission("workflow_process_edit")
     @Operation(summary = "取消流程")
-    public R<Boolean> cancel(@PathVariable String processInstanceId, @RequestParam(required = false) String reason) {
-        return R.ok(processInstanceService.terminate(processInstanceId, reason != null ? reason : "用户取消"));
+    public R<Boolean> cancel(@PathVariable String processInstanceId, @RequestParam String requestId,
+                             @RequestParam(required = false) String reason) {
+        return R.ok(processInstanceService.terminate(processInstanceId, reason != null ? reason : "用户取消", requestId));
     }
 
     @PutMapping("/suspend/{processInstanceId}")
     @SysLog("挂起流程")
-    @HasPermission("wf_process_view")
+    @HasPermission("workflow_process_edit")
     @Operation(summary = "挂起流程")
-    public R<Boolean> suspend(@PathVariable String processInstanceId) {
-        return R.ok(processInstanceService.suspend(processInstanceId));
+    public R<Boolean> suspend(@PathVariable String processInstanceId, @RequestParam String requestId) {
+        return R.ok(processInstanceService.suspend(processInstanceId, requestId));
     }
 
     @PutMapping("/activate/{processInstanceId}")
     @SysLog("激活流程")
-    @HasPermission("wf_process_view")
+    @HasPermission("workflow_process_edit")
     @Operation(summary = "激活流程")
-    public R<Boolean> activate(@PathVariable String processInstanceId) {
-        return R.ok(processInstanceService.activate(processInstanceId));
+    public R<Boolean> activate(@PathVariable String processInstanceId, @RequestParam String requestId) {
+        return R.ok(processInstanceService.activate(processInstanceId, requestId));
     }
 
     @GetMapping("/diagram/{processInstanceId}")
-    @HasPermission("wf_process_view")
+    @HasPermission("workflow_process_view")
     @Operation(summary = "获取流程图")
     public R<String> getDiagram(@PathVariable String processInstanceId) {
         return R.ok(processInstanceService.getProcessDiagram(processInstanceId));
     }
 
     @GetMapping("/form/{processDefinitionId}")
-    @HasPermission("wf_process_view")
+    @HasPermission("workflow_process_view")
     @Operation(summary = "获取流程表单")
     public R<Object> getForm(@PathVariable String processDefinitionId) {
         return R.ok(processDefinitionService.getFormByDefinitionId(processDefinitionId));
     }
 
     @GetMapping("/history/{processInstanceId}")
-    @HasPermission("wf_process_view")
+    @HasPermission("workflow_process_view")
     @Operation(summary = "获取审批历史")
     public R<List<ApprovalRecordVO>> getHistory(@PathVariable String processInstanceId) {
         return R.ok(processInstanceService.getApprovalHistory(processInstanceId));

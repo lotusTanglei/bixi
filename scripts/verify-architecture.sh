@@ -30,8 +30,8 @@ fail_if_matches \
         '<artifactId>bixi-(single|auth|gateway)</artifactId>' {} +
 
 fail_if_matches \
-    "Architecture violation: consumers must use transport-neutral UPMS contracts, not Feign types." \
-    sh -c "find bixi-auth bixi-common bixi-module bixi-single -type f -path '*/src/main/java/*' -name '*.java' -exec grep -Hn 'import com.lotus.bixi.upms.api.feign.Remote.*Service;' {} + | grep -v '/upms/api/feign/Remote'"
+    "Architecture violation: consumers must use transport-neutral UPMS and workflow contracts, not Feign types." \
+    sh -c "find bixi-auth bixi-common bixi-module bixi-single -type f -path '*/src/main/java/*' -name '*.java' -exec grep -EHn 'import com.lotus.bixi.(upms|workflow).api.feign.Remote.*Service;' {} + | grep -Ev '/(upms|workflow)/api/feign/Remote'"
 
 fail_if_matches \
     "Architecture violation: single mode must not use localhost Feign loopback." \

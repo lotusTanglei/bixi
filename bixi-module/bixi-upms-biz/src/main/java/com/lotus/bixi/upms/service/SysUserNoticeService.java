@@ -16,6 +16,8 @@ public interface SysUserNoticeService extends IService<SysUserNotice> {
 
     IPage<UserNoticeVO> getUserNoticePage(Page page, UserNoticeVO userNoticeVO);
 
+    IPage<UserNoticeVO> getNoticeRecordPage(Page page, UserNoticeVO userNoticeVO);
+
     UserNoticeVO getUserNoticeById(Long id);
 
     boolean markRead(Long userNoticeId, Long userId);

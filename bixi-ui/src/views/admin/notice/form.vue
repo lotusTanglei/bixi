@@ -103,7 +103,7 @@
 import { addObj, getObj, putObj } from '/@/api/admin/notice';
 import { deptTree } from '/@/api/admin/dept';
 import { list as getRoleList } from '/@/api/admin/role';
-import { pageList as getUserList } from '/@/api/admin/user';
+import { userOptions } from '/@/api/admin/user';
 import { useMessage } from '/@/hooks/message';
 import { useI18n } from 'vue-i18n';
 
@@ -159,11 +159,11 @@ const getRoleData = async () => {
 // 获取用户数据
 const getUserData = async () => {
 	try {
-		// 获取前1000个用户，简单实现
-		const { data } = await getUserList({ size: 1000 });
-		userData.value = data.records;
+		const { data } = await userOptions();
+		userData.value = data;
 	} catch (err: any) {
-		// ignore
+		userData.value = [];
+		useMessage().error(err.msg || '加载用户选项失败');
 	}
 };
 

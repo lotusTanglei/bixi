@@ -30,6 +30,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.core.env.Environment;
 
 import java.util.HashMap;
 import java.util.List;
@@ -53,6 +54,7 @@ import java.util.stream.Collectors;
 public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> implements SysMenuService {
 
     private final SysRoleMenuMapper sysRoleMenuMapper;
+    private final Environment environment;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -88,9 +90,9 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
     }
 
     @Override
-    @Cacheable(value = CacheConstants.MENU_DETAILS, key = "#roleId", unless = "#result.isEmpty()")
+    @Cacheable(value = CacheConstants.MENU_DETAILS, key = "#roleId + ':' + @environment.getProperty('workflow.enabled', 'false')", unless = "#result.isEmpty()")
     public List<SysMenu> findMenuByRoleId(Long roleId) {
-        return baseMapper.listMenusByRoleId(roleId);
+        return baseMapper.listMenusByRoleId(roleId).stream().filter(this::isMenuAvailable).toList();
     }
 
     @Override
@@ -164,12 +166,23 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
     @Override
     public List<Tree<Long>> filterMenu(Set<SysMenu> all, String type, Long parentId) {
         List<TreeNode<Long>> collect = all.stream()
+                .filter(this::isMenuAvailable)
                 .filter(menuTypePredicate(type))
                 .map(getNodeFunction())
                 .collect(Collectors.toList());
 
         Long parent = parentId == null ? CommonConstants.MENU_TREE_ROOT_ID : parentId;
         return TreeUtil.build(collect, parent);
+    }
+
+    private boolean isMenuAvailable(SysMenu menu) {
+        if (environment.getProperty("workflow.enabled", Boolean.class, false)) return true;
+        String path = menu.getPath() == null ? "" : menu.getPath();
+        String permission = menu.getPermission() == null ? "" : menu.getPermission();
+        return !(path.equals("/workflow") || path.startsWith("/workflow/")
+                || path.equals("/demo/leave") || path.startsWith("/demo/leave/")
+                || permission.startsWith("workflow_") || permission.startsWith("wf_")
+                || permission.startsWith("demo_leave_"));
     }
 
     @NotNull

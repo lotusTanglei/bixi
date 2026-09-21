@@ -10,16 +10,22 @@ spring:
       password: ${NACOS_PASSWORD:}
       discovery:
         server-addr: ${NACOS_HOST:127.0.0.1}:${NACOS_PORT:8848}
-        namespace: @nacos.namespace@
+        namespace: ${NACOS_NAMESPACE:@nacos.namespace@}
       config:
         server-addr: ${spring.cloud.nacos.discovery.server-addr}
-        namespace: @nacos.namespace@
+        namespace: ${NACOS_NAMESPACE:@nacos.namespace@}
   config:
     import:
       - nacos:application-@profiles.active@.yml
       - nacos:${spring.application.name}-@profiles.active@.yml
       - optional:nacos:${spring.application.name}-dtp-@profiles.active@.yml
-  flowable:
-    async-executor-activate: true
-    database-schema-update: true
-    history-level: full
+
+bixi:
+  deployment:
+    mode: cloud
+
+workflow:
+  enabled: ${WORKFLOW_ENABLED:false}
+  database-schema-update: ${WORKFLOW_SCHEMA_UPDATE:false}
+  async-executor-activate: ${WORKFLOW_ASYNC_EXECUTOR_ACTIVATE:true}
+  history-level: full

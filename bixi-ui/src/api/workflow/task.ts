@@ -1,8 +1,11 @@
 import request from '/@/utils/request';
 
+export const resolve = (data: { taskId: string; comment: string; requestId: string }) =>
+	request({ url: '/admin/workflow/task/resolve', method: 'post', data });
+
 export const todoPageList = (params?: Object) => {
 	return request({
-		url: '/workflow/task/todo/page',
+		url: '/admin/workflow/task/todo/page',
 		method: 'get',
 		params,
 	});
@@ -10,7 +13,7 @@ export const todoPageList = (params?: Object) => {
 
 export const donePageList = (params?: Object) => {
 	return request({
-		url: '/workflow/task/done/page',
+		url: '/admin/workflow/task/done/page',
 		method: 'get',
 		params,
 	});
@@ -18,14 +21,14 @@ export const donePageList = (params?: Object) => {
 
 export const getObj = (id: String) => {
 	return request({
-		url: '/workflow/task/details/' + id,
+		url: '/admin/workflow/task/details/' + id,
 		method: 'get',
 	});
 };
 
 export const complete = (obj: Object) => {
 	return request({
-		url: '/workflow/task/complete',
+		url: '/admin/workflow/task/complete',
 		method: 'post',
 		data: obj,
 	});
@@ -33,7 +36,7 @@ export const complete = (obj: Object) => {
 
 export const reject = (obj: Object) => {
 	return request({
-		url: '/workflow/task/reject',
+		url: '/admin/workflow/task/reject',
 		method: 'post',
 		data: obj,
 	});
@@ -41,7 +44,7 @@ export const reject = (obj: Object) => {
 
 export const transfer = (obj: Object) => {
 	return request({
-		url: '/workflow/task/transfer',
+		url: '/admin/workflow/task/transfer',
 		method: 'post',
 		data: obj,
 	});
@@ -49,40 +52,41 @@ export const transfer = (obj: Object) => {
 
 export const delegate = (obj: Object) => {
 	return request({
-		url: '/workflow/task/delegate',
+		url: '/admin/workflow/task/delegate',
 		method: 'post',
 		data: obj,
 	});
 };
 
-export const claim = (taskId: String, userId: String) => {
+export const claim = (taskId: String, requestId: string) => {
 	return request({
-		url: '/workflow/task/claim',
+		url: '/admin/workflow/task/claim',
 		method: 'post',
 		params: {
 			taskId,
-			userId,
+			requestId,
 		},
 	});
 };
 
-export const unclaim = (taskId: String) => {
+export const unclaim = (taskId: String, requestId: string) => {
 	return request({
-		url: '/workflow/task/unclaim/' + taskId,
+		url: '/admin/workflow/task/unclaim/' + taskId,
 		method: 'post',
+		params: { requestId },
 	});
 };
 
 export const getCommentList = (taskId: String) => {
 	return request({
-		url: '/workflow/task/comment/' + taskId,
+		url: '/admin/workflow/task/comment/' + taskId,
 		method: 'get',
 	});
 };
 
 export const addComment = (obj: Object) => {
 	return request({
-		url: '/workflow/task/comment',
+		url: '/admin/workflow/task/comment',
 		method: 'post',
 		data: obj,
 	});

@@ -1,68 +1,17 @@
-
-
 package com.lotus.bixi.upms.service.impl;
 
-import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.RandomUtil;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.lotus.bixi.upms.api.entity.SysUser;
-import com.lotus.bixi.upms.mapper.SysUserMapper;
-import com.lotus.bixi.upms.service.SysMobileService;
-import com.lotus.bixi.common.core.constant.CacheConstants;
-import com.lotus.bixi.common.core.constant.SecurityConstants;
-import com.lotus.bixi.common.core.exception.ErrorCodes;
-import com.lotus.bixi.common.core.util.MsgUtils;
 import com.lotus.bixi.common.core.util.R;
-import com.lotus.bixi.common.core.util.RedisUtils;
-
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import com.lotus.bixi.upms.service.SysMobileService;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-/**
- * @author 唐磊
- * @date 2025-01-01
- * <p>
- * 手机登录相关业务实现
- */
-@Slf4j
+/** SMS delivery remains unavailable until a real provider is configured. */
 @Service
-@AllArgsConstructor
 public class SysMobileServiceImpl implements SysMobileService {
 
-    private final SysUserMapper userMapper;
-
-    /**
-     * 发送手机验证码 TODO: 调用短信网关发送验证码,测试返回前端
-     *
-     * @param mobile mobile
-     * @return code
-     */
     @Override
     public R<Boolean> sendSmsCode(String mobile) {
-        List<SysUser> userList = userMapper
-                .selectList(Wrappers.<SysUser>query().lambda().eq(SysUser::getPhone, mobile));
-
-        if (CollUtil.isEmpty(userList)) {
-            log.info("手机号未注册:{}", mobile);
-            return R.ok(Boolean.FALSE, MsgUtils.getMessage(ErrorCodes.SYS_APP_PHONE_UNREGISTERED, mobile));
-        }
-
-        Object codeObj = RedisUtils.get(CacheConstants.DEFAULT_CODE_KEY + mobile);
-
-        if (codeObj != null) {
-            log.info("手机号验证码未过期:{}，{}", mobile, codeObj);
-            return R.ok(Boolean.FALSE, MsgUtils.getMessage(ErrorCodes.SYS_APP_SMS_OFTEN));
-        }
-
-        String code = RandomUtil.randomNumbers(Integer.parseInt(SecurityConstants.CODE_SIZE));
-        log.debug("手机号生成验证码成功:{},{}", mobile, code);
-        RedisUtils
-                .set(CacheConstants.DEFAULT_CODE_KEY + mobile, code, SecurityConstants.CODE_TIME, TimeUnit.SECONDS);
-        return R.ok(Boolean.TRUE, code);
+        // Never generate a login credential that has not been delivered out of band.
+        // A future sender must store successfully delivered challenges under CacheConstants.SMS_CODE_KEY.
+        return R.failed("短信发送服务未配置，暂不支持短信登录");
     }
-
 }

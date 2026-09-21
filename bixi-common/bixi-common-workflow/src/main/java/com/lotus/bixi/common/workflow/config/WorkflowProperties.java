@@ -7,11 +7,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "workflow")
 public class WorkflowProperties {
 
-    private Boolean enabled = true;
+    private Boolean enabled = false;
 
     private Boolean asyncExecutorActivate = true;
 
-    private String databaseSchemaUpdate = "true";
+    private String databaseSchemaUpdate = "false";
 
     private String historyLevel = "full";
 

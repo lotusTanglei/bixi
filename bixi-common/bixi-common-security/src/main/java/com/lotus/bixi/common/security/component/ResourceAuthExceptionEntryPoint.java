@@ -13,6 +13,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.server.resource.InvalidBearerTokenException;
 import org.springframework.security.web.AuthenticationEntryPoint;
@@ -52,6 +53,12 @@ public class ResourceAuthExceptionEntryPoint implements AuthenticationEntryPoint
             response.setStatus(HttpStatus.FAILED_DEPENDENCY.value());
             result.setMsg(this.messageSource.getMessage("OAuth2ResourceOwnerBaseAuthenticationProvider.tokenExpired",
                     null, LocaleContextHolder.getLocale()));
+        }
+        if (authException instanceof AuthenticationServiceException) {
+            response.setStatus(HttpStatus.SERVICE_UNAVAILABLE.value());
+            response.setHeader("Retry-After", "5");
+            result.setMsg("认证服务暂时不可用，请稍后重试");
+            result.setData(null);
         }
         PrintWriter printWriter = response.getWriter();
         printWriter.append(objectMapper.writeValueAsString(result));

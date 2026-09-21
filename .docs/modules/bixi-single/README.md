@@ -1,6 +1,6 @@
 # bixi-single — 单体部署聚合模块
 
-单体模式部署聚合器，通过 Maven Profile `-Psingle` 激活，将 Auth、UPMS、Generator 和 Quartz 打包为单个 Spring Boot 应用。AI、Workflow 和 Monitor 当前保持独立运行。
+单体模式部署聚合器，通过 Maven Profile `-Psingle` 激活，将 Auth、UPMS、Generator 和 Quartz 打包为单个 Spring Boot 应用。同一 Workflow 业务模块也包含在制品中，默认关闭，通过 `workflow.enabled=true` 按需装配。AI 和 Monitor 当前保持独立运行。工作流基础审批已通过阶段一双模验收，可靠协作和恢复仍在实施，见 [交付清单](../../workflow/PROGRESS.md)。
 
 ## 核心职责
 

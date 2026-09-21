@@ -3,6 +3,7 @@ package com.lotus.bixi.upms.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lotus.bixi.common.core.util.R;
 import com.lotus.bixi.common.log.annotation.SysLog;
+import com.lotus.bixi.common.security.annotation.HasPermission;
 import com.lotus.bixi.common.security.util.SecurityUtils;
 import com.lotus.bixi.upms.api.entity.SysUserNotice;
 import com.lotus.bixi.upms.api.vo.UserNoticeVO;
@@ -54,8 +55,9 @@ public class SysUserNoticeController {
      */
     @Operation(summary = "分页查询通知发送记录", description = "分页查询通知发送记录")
     @GetMapping("/record/page")
+    @HasPermission("sys_notice_view")
     public R getNoticeRecordPage(Page page, UserNoticeVO userNoticeVO) {
-        return R.ok(sysUserNoticeService.getUserNoticePage(page, userNoticeVO));
+        return R.ok(sysUserNoticeService.getNoticeRecordPage(page, userNoticeVO));
     }
 
     /**
@@ -72,20 +74,6 @@ public class SysUserNoticeController {
             return R.failed("记录不存在");
         }
         return R.ok(entity);
-    }
-
-    /**
-     * 新增用户消息关联
-     * @param sysUserNotice 用户消息关联
-     * @return R
-     */
-    @Operation(summary = "新增用户消息关联", description = "新增用户消息关联")
-    @SysLog("新增用户消息关联")
-    @PostMapping
-    public R save(@RequestBody SysUserNotice sysUserNotice) {
-        Long userId = SecurityUtils.getUser().getId();
-        sysUserNotice.setUserId(userId);
-        return R.ok(sysUserNoticeService.save(sysUserNotice));
     }
 
     /**

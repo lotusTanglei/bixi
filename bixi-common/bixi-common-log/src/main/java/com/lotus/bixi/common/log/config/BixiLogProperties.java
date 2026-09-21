@@ -18,10 +18,13 @@ package com.lotus.bixi.common.log.config;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.Set;
 
 /**
  * 日志配置类
@@ -35,20 +38,35 @@ public class BixiLogProperties {
 
     public static final String PREFIX = "security.log";
 
+    private static final Set<String> SENSITIVE_FIELDS = Set.of(
+            "password", "newpassword", "oldpassword", "confirmpassword", "code", "smscode", "verifycode",
+            "clientsecret", "token", "accesstoken", "refreshtoken", "authorization", "mobile", "idcard", "phone");
+
     /**
      * 开启日志记录
      */
     private boolean enabled = true;
 
     /**
-     * 放行字段，password,mobile,idcard,phone
+     * 额外不记录的字段；凭证和个人敏感字段的基础保护不可通过配置取消。
      */
-    @Value("${security.log.exclude-fields:password,mobile,idcard,phone}")
-    private List<String> excludeFields;
+    private List<String> excludeFields = new ArrayList<>();
 
     /**
      * 请求报文最大存储长度
      */
     private Integer maxLength = 2000;
+
+    public boolean shouldExcludeField(String fieldName) {
+        String normalized = normalizeFieldName(fieldName);
+        return SENSITIVE_FIELDS.contains(normalized) || excludeFields != null && excludeFields.stream()
+                .filter(Objects::nonNull)
+                .map(BixiLogProperties::normalizeFieldName)
+                .anyMatch(normalized::equals);
+    }
+
+    private static String normalizeFieldName(String fieldName) {
+        return fieldName.replace("_", "").replace("-", "").trim().toLowerCase(Locale.ROOT);
+    }
 
 }

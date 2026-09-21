@@ -55,6 +55,7 @@ public class SysMenuController {
      * @return 树形菜单
      */
     @GetMapping(value = "/tree")
+    @HasPermission({"sys_menu_view", "sys_role_perm"})
     public R getTree(Long parentId, String name, String type) {
         return R.ok(sysMenuService.treeMenu(parentId, name, type));
     }
@@ -66,6 +67,7 @@ public class SysMenuController {
      * @return 属性集合
      */
     @GetMapping("/tree/{roleId}")
+    @HasPermission("sys_role_perm")
     public R getRoleTree(@PathVariable Long roleId) {
         return R
                 .ok(sysMenuService.findMenuByRoleId(roleId).stream().map(SysMenu::getId).collect(Collectors.toList()));
@@ -78,6 +80,7 @@ public class SysMenuController {
      * @return 菜单详细信息
      */
     @GetMapping("/{id}")
+    @HasPermission("sys_menu_view")
     public R getById(@PathVariable Long id) {
         return R.ok(sysMenuService.getById(id));
     }

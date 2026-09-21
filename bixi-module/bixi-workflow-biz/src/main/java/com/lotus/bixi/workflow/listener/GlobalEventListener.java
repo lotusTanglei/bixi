@@ -1,5 +1,7 @@
 package com.lotus.bixi.workflow.listener;
 
+import com.lotus.bixi.workflow.api.config.ConditionalOnWorkflowEnabled;
+
 import lombok.extern.slf4j.Slf4j;
 import org.flowable.common.engine.api.delegate.event.FlowableEntityEvent;
 import org.flowable.common.engine.api.delegate.event.FlowableEvent;
@@ -10,6 +12,7 @@ import org.flowable.task.service.impl.persistence.entity.TaskEntityImpl;
 import org.springframework.stereotype.Component;
 
 @Slf4j
+@ConditionalOnWorkflowEnabled
 @Component
 public class GlobalEventListener implements FlowableEventListener {
 

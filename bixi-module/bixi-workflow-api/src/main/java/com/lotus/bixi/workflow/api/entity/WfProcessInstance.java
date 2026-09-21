@@ -18,6 +18,8 @@ public class WfProcessInstance extends BaseEntity<WfProcessInstance> {
     @Schema(description = "Flowable流程实例ID")
     private String processInstanceId;
 
+    private String startRequestId;
+
     @Schema(description = "流程定义ID")
     private String processDefinitionId;
 
@@ -32,6 +34,9 @@ public class WfProcessInstance extends BaseEntity<WfProcessInstance> {
 
     @Schema(description = "业务ID")
     private Long businessId;
+
+    @Schema(description = "业务申请轮次，与可选的引擎历史记录无关")
+    private Integer businessRound;
 
     @Schema(description = "流程标题")
     private String title;

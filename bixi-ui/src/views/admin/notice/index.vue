@@ -21,10 +21,11 @@
 			</el-row>
 			<el-row>
 				<div class="mb8" style="width: 100%">
-					<el-button icon="folder-add" type="primary" @click="formRef.openDialog()">
+					<el-button v-auth="'sys_notice_add'" icon="folder-add" type="primary" @click="formRef.openDialog()">
 						{{ t('common.addBtn') }}
 					</el-button>
 					<el-button
+						v-auth="'sys_notice_del'"
 						plain
 						:disabled="multiple"
 						class="ml10"
@@ -77,16 +78,16 @@
 				<el-table-column :label="t('notice.createTime')" prop="createTime" show-overflow-tooltip width="180" />
 				<el-table-column :label="t('common.action')" width="280" fixed="right">
 					<template #default="scope">
-						<el-button v-if="scope.row.status === '0'" icon="promotion" text type="primary" @click="handleSend(scope.row.id)">
-							发送
+						<el-button v-auth="'sys_notice_send'" v-if="scope.row.status === '0' || scope.row.status === '1'" icon="promotion" text type="primary" @click="handleSend(scope.row.id, scope.row.status === '1')">
+							{{ scope.row.status === '1' ? '重发提醒' : '发送' }}
 						</el-button>
-						<el-button icon="list" text type="primary" @click="recordRef.openDialog(scope.row.id)">
+						<el-button v-auth="'sys_notice_view'" icon="list" text type="primary" @click="recordRef.openDialog(scope.row.id)">
 							发送记录
 						</el-button>
-						<el-button icon="edit-pen" text type="primary" @click="formRef.openDialog(scope.row.id)">
+						<el-button v-auth="'sys_notice_edit'" v-if="scope.row.status === '0'" icon="edit-pen" text type="primary" @click="formRef.openDialog(scope.row.id)">
 							{{ t('common.editBtn') }}
 						</el-button>
-						<el-button icon="delete" text type="primary" @click="handleDelete([scope.row.id])">
+						<el-button v-auth="'sys_notice_del'" icon="delete" text type="primary" @click="handleDelete([scope.row.id])">
 							{{ t('common.delBtn') }}
 						</el-button>
 					</template>
@@ -142,19 +143,20 @@ const handleSelectionChange = (objs: { id: string }[]) => {
 };
 
 // 发送通知
-const handleSend = async (id: string) => {
+const handleSend = async (id: string, reminder: boolean) => {
 	try {
-		await useMessageBox().confirm('确认发送该通知吗？');
+		await useMessageBox().confirm(reminder ? '确认向原收件人重发提醒吗？' : '确认发送该通知吗？');
 	} catch {
 		return;
 	}
 
 	try {
 		await sendNotice(id);
-		useMessage().success('发送成功');
+		useMessage().success(reminder ? '已请求重发提醒' : '通知已发布，已请求发送提醒');
 		getDataList();
 	} catch (err: any) {
 		useMessage().error(err.msg);
+		getDataList();
 	}
 };
 

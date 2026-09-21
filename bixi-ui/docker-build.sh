@@ -1,0 +1,9 @@
+#!/bin/sh
+set -eu
+
+export VITE_IS_MICRO="${PUBLIC_MICRO_MODE}"
+export VITE_OAUTH2_PASSWORD_CLIENT="${PUBLIC_WEB_CLIENT}"
+export VITE_OAUTH2_MOBILE_CLIENT="${PUBLIC_MOBILE_CLIENT}"
+export VITE_PWD_ENC_KEY="${PUBLIC_CIPHER_CONFIG}"
+
+exec npm run build:prod

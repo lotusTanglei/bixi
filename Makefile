@@ -5,7 +5,7 @@ JAVA_17_HOME := $(shell if [ -x /usr/libexec/java_home ]; then /usr/libexec/java
 JAVA_ENV := $(if $(JAVA_17_HOME),JAVA_HOME="$(JAVA_17_HOME)",)
 MVN := $(JAVA_ENV) mvn
 
-.PHONY: init-env doctor doctor-dev start-cloud start-single verify-cloud verify-single status diagnose logs stop reset credentials backend-dev backend-test backend-prod frontend-dev frontend-test frontend-prod architecture-check runtime-config-check backend-cloud-ci backend-single-ci backend-ci frontend-ci ci-gate
+.PHONY: init-env doctor doctor-dev start-cloud start-single verify-cloud verify-single status diagnose logs stop reset credentials backend-dev backend-test backend-prod frontend-dev frontend-test frontend-prod architecture-check runtime-config-check backend-cloud-ci backend-single-ci backend-ci frontend-ci ci-gate workflow-test
 
 init-env:
 	./scripts/bixi.sh init-env
@@ -27,6 +27,13 @@ verify-cloud:
 
 verify-single:
 	BIXI_MODE=single node ./scripts/acceptance.mjs
+
+.PHONY: verify-security-cloud verify-security-single
+verify-security-cloud:
+	BIXI_MODE=cloud node ./scripts/security-acceptance.mjs
+
+verify-security-single:
+	BIXI_MODE=single node ./scripts/security-acceptance.mjs
 
 status:
 	./scripts/bixi.sh status
@@ -77,6 +84,18 @@ backend-single-ci: architecture-check runtime-config-check
 	$(MVN) -Psingle -pl bixi-single -am clean verify
 
 backend-ci: backend-cloud-ci backend-single-ci
+
+workflow-test:
+	$(MVN) -Pcloud -pl bixi-module/bixi-workflow-biz,bixi-module/bixi-upms-biz,bixi-gateway -am -Dtest='Workflow*Test,Leave*Test' -Dsurefire.failIfNoSpecifiedTests=false test
+	$(MVN) -Psingle -pl bixi-single -am -Dtest='Workflow*Test,Leave*Test' -Dsurefire.failIfNoSpecifiedTests=false test
+
+.PHONY: workflow-mysql-test
+workflow-mysql-test:
+	bash scripts/test-workflow-mysql.sh both
+
+.PHONY: reliable-mysql-test
+reliable-mysql-test:
+	bash scripts/test-reliable-mysql.sh both
 
 frontend-ci:
 	cd $(FRONTEND_DIR) && npm ci && npm run lint:eslint && npm run build:prod

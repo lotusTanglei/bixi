@@ -3,12 +3,14 @@ package com.lotus.bixi.workflow.api.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 @Schema(description = "任务驳回传输对象")
-public class TaskRejectDTO implements Serializable {
+public class TaskRejectDTO extends WorkflowRequestDTO implements Serializable {
 
     @NotBlank(message = "任务ID不能为空")
     @Schema(description = "任务ID")

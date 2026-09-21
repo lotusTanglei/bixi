@@ -1,5 +1,8 @@
 package com.lotus.bixi.workflow.service.impl;
 
+import com.lotus.bixi.workflow.api.config.ConditionalOnWorkflowEnabled;
+import com.lotus.bixi.common.security.annotation.HasPermission;
+
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -28,6 +31,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
+@ConditionalOnWorkflowEnabled
 @Service
 @AllArgsConstructor
 public class ProcessDefinitionServiceImpl extends ServiceImpl<WfProcessDefinitionMapper, WfProcessDefinition> implements ProcessDefinitionService {
@@ -37,6 +41,18 @@ public class ProcessDefinitionServiceImpl extends ServiceImpl<WfProcessDefinitio
     private final org.flowable.engine.ProcessEngine processEngine;
 
     private final FormService formService;
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    @HasPermission("workflow_definition_edit")
+    public ProcessDefinitionVO deployDemo() {
+        var deployment = repositoryService.createDeployment().name("bixi-demo-leave")
+                .enableDuplicateFiltering()
+                .addClasspathResource("processes/demo_leave_approval.bpmn20.xml").deploy();
+        var definition = repositoryService.createProcessDefinitionQuery()
+                .deploymentId(deployment.getId()).processDefinitionKey("demo_leave_approval").singleResult();
+        return convertToVO(definition);
+    }
 
     @Override
     public List<ProcessDefinitionVO> listLatestVersions() {
@@ -68,6 +84,7 @@ public class ProcessDefinitionServiceImpl extends ServiceImpl<WfProcessDefinitio
     }
 
     @Override
+    @HasPermission("workflow_definition_view")
     public List<ProcessDefinitionVO> listDefinitions(ProcessQueryDTO query) {
         org.flowable.engine.repository.ProcessDefinitionQuery definitionQuery = repositoryService.createProcessDefinitionQuery()
                 .orderByProcessDefinitionVersion()
@@ -116,32 +133,24 @@ public class ProcessDefinitionServiceImpl extends ServiceImpl<WfProcessDefinitio
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @HasPermission("workflow_definition_edit")
     public boolean suspend(String processDefinitionId) {
-        try {
-            repositoryService.suspendProcessDefinitionById(processDefinitionId);
-            this.update(Wrappers.<WfProcessDefinition>lambdaUpdate()
-                    .set(WfProcessDefinition::getSuspensionState, WorkflowConstants.SUSPENSION_STATE_SUSPENDED)
-                    .eq(WfProcessDefinition::getProcessDefinitionId, processDefinitionId));
-            return true;
-        } catch (Exception e) {
-            log.error("Suspend process definition failed", e);
-            return false;
-        }
+        repositoryService.suspendProcessDefinitionById(processDefinitionId);
+        this.update(Wrappers.<WfProcessDefinition>lambdaUpdate()
+                .set(WfProcessDefinition::getSuspensionState, WorkflowConstants.SUSPENSION_STATE_SUSPENDED)
+                .eq(WfProcessDefinition::getProcessDefinitionId, processDefinitionId));
+        return true;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @HasPermission("workflow_definition_edit")
     public boolean activate(String processDefinitionId) {
-        try {
-            repositoryService.activateProcessDefinitionById(processDefinitionId);
-            this.update(Wrappers.<WfProcessDefinition>lambdaUpdate()
-                    .set(WfProcessDefinition::getSuspensionState, WorkflowConstants.SUSPENSION_STATE_ACTIVE)
-                    .eq(WfProcessDefinition::getProcessDefinitionId, processDefinitionId));
-            return true;
-        } catch (Exception e) {
-            log.error("Activate process definition failed", e);
-            return false;
-        }
+        repositoryService.activateProcessDefinitionById(processDefinitionId);
+        this.update(Wrappers.<WfProcessDefinition>lambdaUpdate()
+                .set(WfProcessDefinition::getSuspensionState, WorkflowConstants.SUSPENSION_STATE_ACTIVE)
+                .eq(WfProcessDefinition::getProcessDefinitionId, processDefinitionId));
+        return true;
     }
 
     @Override

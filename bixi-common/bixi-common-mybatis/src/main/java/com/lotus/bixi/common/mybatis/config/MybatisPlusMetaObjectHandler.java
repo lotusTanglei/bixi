@@ -33,8 +33,8 @@ public class MybatisPlusMetaObjectHandler implements MetaObjectHandler {
 
         // 删除标记自动填充
         fillValIfNullByName("delFlag", CommonConstants.STATUS_NORMAL, metaObject, true);
-        fillValIfNullByName("status", CommonConstants.STATUS_NORMAL, metaObject, true);
-        fillValIfNullByName("dataStatus", CommonConstants.STATUS_NORMAL, metaObject, true);
+        fillValIfNullByName("status", CommonConstants.STATUS_NORMAL, metaObject, false);
+        fillValIfNullByName("dataStatus", CommonConstants.STATUS_NORMAL, metaObject, false);
 
     }
 

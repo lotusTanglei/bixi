@@ -3,6 +3,7 @@ package com.lotus.bixi.upms.service.impl;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.lotus.bixi.common.security.util.SecurityUtils;
 import com.lotus.bixi.upms.api.constant.MQConstants;
 import com.lotus.bixi.upms.api.dto.NoticeMessageDTO;
 import com.lotus.bixi.upms.api.entity.SysNotice;
@@ -45,21 +46,56 @@ public class SysNoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean saveNotice(SysNoticeVO vo) {
-        boolean result = super.save(vo);
+        return saveWithStatus(vo, "0", SecurityUtils.getUser().getId());
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean savePublishedNotice(SysNoticeVO vo) {
+        return saveWithStatus(vo, "1", vo.getSenderId());
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean updateNotice(SysNoticeVO vo) {
+        if (vo.getId() == null) {
+            return false;
+        }
+        SysNotice update = editableFields(vo);
+        boolean result = super.update(update, Wrappers.<SysNotice>lambdaUpdate()
+                .eq(SysNotice::getId, vo.getId())
+                .eq(SysNotice::getStatus, "0"));
         if (result && StrUtil.isNotBlank(vo.getTargetType())) {
             resolveAndSaveRecipients(vo.getId(), vo.getTargetType(), vo.getTargetIds());
         }
         return result;
     }
 
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public boolean updateNotice(SysNoticeVO vo) {
-        boolean result = super.updateById(vo);
-        if (result && StrUtil.isNotBlank(vo.getTargetType())) {
-            resolveAndSaveRecipients(vo.getId(), vo.getTargetType(), vo.getTargetIds());
+    private boolean saveWithStatus(SysNoticeVO vo, String status, Long senderId) {
+        SysNotice notice = editableFields(vo);
+        notice.setStatus(status);
+        notice.setSenderId(senderId);
+        boolean result = super.save(notice);
+        if (result) {
+            vo.setId(notice.getId());
+            vo.setStatus(notice.getStatus());
+            vo.setSenderId(notice.getSenderId());
+            if (StrUtil.isNotBlank(vo.getTargetType())) {
+                resolveAndSaveRecipients(notice.getId(), vo.getTargetType(), vo.getTargetIds());
+            }
         }
         return result;
+    }
+
+    /** 发送人、发布状态、删除标记和审计字段不允许通过编辑改变。 */
+    private SysNotice editableFields(SysNoticeVO vo) {
+        SysNotice notice = new SysNotice();
+        notice.setTitle(vo.getTitle());
+        notice.setContent(vo.getContent());
+        notice.setType(vo.getType());
+        notice.setPriority(vo.getPriority());
+        notice.setRemark(vo.getRemark());
+        return notice;
     }
 
     /**
@@ -116,21 +152,22 @@ public class SysNoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice
     }
 
     /**
-     * 发布通知并发送消息到MQ
+     * 发布草稿或为已发布通知重发实时提醒，不重建通知及收件人。
      *
      * @param id 通知ID
      * @return 是否发送成功
      */
     @Override
     public boolean sendNotice(Long id) {
+        // 发布状态先持久化，消费者才能读取；提醒投递失败后可以对已发布通知重试。
+        this.update(Wrappers.<SysNotice>lambdaUpdate()
+                .set(SysNotice::getStatus, "1")
+                .eq(SysNotice::getId, id)
+                .eq(SysNotice::getStatus, "0"));
         SysNotice notice = this.getById(id);
-        if (notice == null) {
+        if (notice == null || !"1".equals(notice.getStatus())) {
             return false;
         }
-
-        // Update status to Published (1)
-        notice.setStatus("1");
-        this.updateById(notice);
 
         // Build DTO
         NoticeMessageDTO dto = new NoticeMessageDTO();

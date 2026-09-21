@@ -13,7 +13,7 @@ import com.lotus.bixi.upms.api.vo.SysNoticeVO;
 public interface SysNoticeService extends IService<SysNotice> {
 
     /**
-     * 发送通知
+     * 发布草稿或重发已发布通知的实时提醒
      * @param id 通知ID
      * @return boolean
      */
@@ -25,6 +25,9 @@ public interface SysNoticeService extends IService<SysNotice> {
      * @return boolean
      */
     boolean saveNotice(SysNoticeVO vo);
+
+    /** 仅供可信系统消息消费者创建已发布通知；不再投递 MQ，避免消息循环。 */
+    boolean savePublishedNotice(SysNoticeVO vo);
 
     /**
      * 更新通知（包含目标用户解析）

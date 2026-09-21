@@ -6,8 +6,8 @@
     <meta name="viewport"
           content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no"/>
     <title>Bixi 第三方授权</title>
-    <link rel="stylesheet" type="text/css" href="/static/css/bootstrap.min.css"/>
-    <link rel="stylesheet" type="text/css" href="/static/css/signin.css"/>
+    <link rel="stylesheet" type="text/css" href="../css/bootstrap.min.css"/>
+    <link rel="stylesheet" type="text/css" href="../css/signin.css"/>
 </head>
 
 <body>
@@ -31,7 +31,7 @@
     </div>
 </nav>
 <div style="padding-top: 80px;width: 300px; color: #555; margin:0px auto;">
-    <form id='confirmationForm' name='confirmationForm' action="/oauth2/authorize" method='post'>
+    <form id='confirmationForm' name='confirmationForm' action="../oauth2/authorize" method='post'>
         <input type="hidden" name="client_id" value="${clientId?html}">
         <input type="hidden" name="state" value="${state?html}">
 

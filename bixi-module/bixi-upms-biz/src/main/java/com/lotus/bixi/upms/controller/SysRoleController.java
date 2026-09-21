@@ -48,6 +48,7 @@ public class SysRoleController {
      * @return 角色信息
      */
     @GetMapping("/details/{id}")
+    @HasPermission("sys_role_view")
     public R getById(@PathVariable Long id) {
         return R.ok(sysRoleService.getById(id));
     }
@@ -59,6 +60,7 @@ public class SysRoleController {
      * @return 角色信息
      */
     @GetMapping("/details")
+    @HasPermission({"sys_role_view", "sys_role_add", "sys_role_edit"})
     public R getDetails(@ParameterObject SysRole query) {
         return R.ok(sysRoleService.getOne(Wrappers.query(query), false));
     }
@@ -111,6 +113,8 @@ public class SysRoleController {
      * @return 角色列表
      */
     @GetMapping("/list")
+    @HasPermission({"sys_role_view", "sys_user_add", "sys_user_edit", "sys_notice_add", "sys_notice_edit",
+            "wf_form_perm_view", "wf_form_perm_edit"})
     public R listRoles() {
         return R.ok(sysRoleService.list(Wrappers.emptyWrapper()));
     }
@@ -123,6 +127,7 @@ public class SysRoleController {
      * @return 分页对象
      */
     @GetMapping("/page")
+    @HasPermission("sys_role_view")
     public R getRolePage(Page page, SysRole role) {
         return R.ok(sysRoleService.page(page, Wrappers.<SysRole>lambdaQuery()
                 .like(StrUtil.isNotBlank(role.getName()), SysRole::getName, role.getName())));
@@ -148,6 +153,7 @@ public class SysRoleController {
      * @return
      */
     @PostMapping("/getRoleList")
+    @HasPermission("sys_role_view")
     public R getRoleList(@RequestBody List<Long> roleIdList) {
         return R.ok(sysRoleService.findRolesByRoleIds(roleIdList, CollUtil.join(roleIdList, StrUtil.UNDERLINE)));
     }
@@ -171,8 +177,9 @@ public class SysRoleController {
      * @param bindingResult 错误信息列表
      * @return ok fail
      */
+    @SysLog("导入角色")
     @PostMapping("/import")
-    @HasPermission("sys_role_export")
+    @HasPermission("sys_role_import")
     public R importRole(@RequestExcel List<RoleExcelVO> excelVOList, BindingResult bindingResult) {
         return sysRoleService.importRole(excelVOList, bindingResult);
     }

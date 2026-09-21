@@ -37,7 +37,7 @@ public class SsoLogoutSuccessHandler implements LogoutSuccessHandler {
     /**
      * 默认重定向地址
      */
-    private static final String DEFAULT_REDIRECT = "/token/login";
+    private static final String DEFAULT_REDIRECT = "token/login";
 
     @Override
     public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication)
@@ -62,7 +62,8 @@ public class SsoLogoutSuccessHandler implements LogoutSuccessHandler {
         }
 
         // 默认跳转到登录页
-        response.sendRedirect(DEFAULT_REDIRECT);
+        response.setStatus(HttpServletResponse.SC_FOUND);
+        response.setHeader(HttpHeaders.LOCATION, DEFAULT_REDIRECT);
     }
 
     /**

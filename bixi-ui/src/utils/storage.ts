@@ -1,5 +1,14 @@
 import Cookies from 'js-cookie';
 
+const workflowCommandOperations = new Set(['COMPLETE', 'REJECT', 'TRANSFER', 'DELEGATE', 'RESOLVE', 'CLAIM', 'UNCLAIM', 'COMMENT', 'TERMINATE', 'SUSPEND', 'ACTIVATE']);
+const isWorkflowCommandKey = (key: string) => {
+	const parts = key.split(':');
+	if (parts[0] !== 'workflow' || parts.some(part => !part)) return false;
+	if (parts[1] === 'command') return parts.length === 6 && workflowCommandOperations.has(parts[3]);
+	// START and older task/process commands already use actor/resource-scoped keys.
+	return parts.length === 4 && (parts[1] === 'START' || workflowCommandOperations.has(parts[1]));
+};
+
 /**
  * window.localStorage 浏览器永久缓存
  * @method set 设置永久缓存
@@ -37,7 +46,7 @@ export const Local = {
  * @method set 设置临时缓存
  * @method get 获取临时缓存
  * @method remove 移除临时缓存
- * @method clear 移除全部临时缓存
+ * @method clear 清除认证和临时缓存，保留账号隔离的待确认工作流命令
  */
 export const Session = {
 	// 设置临时缓存
@@ -58,12 +67,16 @@ export const Session = {
 		if (key === 'token' || key === 'refresh_token') return Cookies.remove(key);
 		window.sessionStorage.removeItem(key);
 	},
-	// 移除全部临时缓存
+	// 认证过期或注销后，原账号仍需查询/重试同一请求，不能丢失请求标识。
 	clear() {
 		Cookies.remove('token');
 		Cookies.remove('refresh_token');
 		Cookies.remove('tenantId');
-		window.sessionStorage.clear();
+		// Keep command bytes untouched, including damaged records that must block unsafe replacement.
+		for (let index = window.sessionStorage.length - 1; index >= 0; index--) {
+			const key = window.sessionStorage.key(index);
+			if (key !== null && !isWorkflowCommandKey(key)) window.sessionStorage.removeItem(key);
+		}
 	},
 	// 获取当前存储的 token
 	getToken() {

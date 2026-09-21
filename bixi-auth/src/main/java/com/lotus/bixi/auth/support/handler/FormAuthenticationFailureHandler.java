@@ -1,14 +1,15 @@
 package com.lotus.bixi.auth.support.handler;
 
-import cn.hutool.core.util.CharsetUtil;
-import cn.hutool.http.HttpUtil;
-import com.lotus.bixi.common.core.util.WebUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
+
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 /**
  * @author 唐磊
@@ -31,9 +32,10 @@ public class FormAuthenticationFailureHandler implements AuthenticationFailureHa
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
                                         AuthenticationException exception) {
         log.debug("表单登录失败:{}", exception.getLocalizedMessage());
-        String url = HttpUtil.encodeParams(String.format("/token/login?error=%s", exception.getMessage()),
-                CharsetUtil.CHARSET_UTF_8);
-        WebUtils.getResponse().sendRedirect(url);
+        String error = URLEncoder.encode(exception.getMessage(), StandardCharsets.UTF_8);
+        // Keep Location relative: servlet sendRedirect may expand it to an internal proxy path.
+        response.setStatus(HttpServletResponse.SC_FOUND);
+        response.setHeader(HttpHeaders.LOCATION, "login?error=" + error);
     }
 
 }

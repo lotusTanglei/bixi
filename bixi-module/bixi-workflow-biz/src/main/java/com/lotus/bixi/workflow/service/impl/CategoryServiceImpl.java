@@ -1,5 +1,7 @@
 package com.lotus.bixi.workflow.service.impl;
 
+import com.lotus.bixi.workflow.api.config.ConditionalOnWorkflowEnabled;
+
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -17,6 +19,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
+@ConditionalOnWorkflowEnabled
 @Service
 @AllArgsConstructor
 public class CategoryServiceImpl extends ServiceImpl<WfCategoryMapper, WfCategory> implements CategoryService {

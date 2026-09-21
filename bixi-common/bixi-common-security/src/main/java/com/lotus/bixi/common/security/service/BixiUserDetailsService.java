@@ -73,7 +73,8 @@ public interface BixiUserDetailsService extends UserDetailsService, Ordered {
 
         // 构造security用户
         return new BixiUser(user.getId(), user.getDeptId(), user.getUsername(),
-                SecurityConstants.BCRYPT + encodedPassword, user.getPhone(), true, true, true,
+                SecurityConstants.BCRYPT + encodedPassword, user.getPhone(),
+                StrUtil.equals(user.getStatus(), CommonConstants.STATUS_NORMAL), true, true,
                 StrUtil.equals(user.getLockFlag(), CommonConstants.STATUS_NORMAL), authorities);
     }
 

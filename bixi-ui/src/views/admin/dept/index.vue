@@ -18,13 +18,13 @@
 					<el-button icon="folder-add" type="primary" class="ml10" @click="deptDialogRef.openDialog('add')" v-auth="'sys_dept_add'">
 						{{ $t('common.addBtn') }}
 					</el-button>
-					<el-button plain icon="upload-filled" type="primary" class="ml10" @click="excelUploadRef.show()">
+					<el-button plain icon="upload-filled" type="primary" class="ml10" @click="excelUploadRef.show()" v-auth="'sys_dept_import'">
 						{{ $t('common.importBtn') }}
 					</el-button>
 					<el-button @click="handleExpand"> {{ $t('common.expandBtn') }} </el-button>
 					<right-toolbar
 						v-model:showSearch="showSearch"
-						:export="'sys_dept_add'"
+						:export="'sys_dept_export'"
 						@exportExcel="exportExcel"
 						class="ml10"
 						style="float: right; margin-right: 20px"

@@ -1,5 +1,7 @@
 package com.lotus.bixi.workflow.controller;
 
+import com.lotus.bixi.workflow.api.config.ConditionalOnWorkflowEnabled;
+
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lotus.bixi.common.core.util.R;
@@ -10,6 +12,7 @@ import com.lotus.bixi.workflow.api.dto.TaskCommentDTO;
 import com.lotus.bixi.workflow.api.dto.TaskCompleteDTO;
 import com.lotus.bixi.workflow.api.dto.TaskRejectDTO;
 import com.lotus.bixi.workflow.api.dto.TaskTransferDTO;
+import com.lotus.bixi.workflow.api.dto.TaskResolveDTO;
 import com.lotus.bixi.workflow.api.vo.TaskVO;
 import com.lotus.bixi.workflow.service.WfTaskService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -20,6 +23,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.*;
 
+@ConditionalOnWorkflowEnabled
 @RestController
 @AllArgsConstructor
 @RequestMapping("/workflow/task")
@@ -30,7 +34,7 @@ public class TaskController {
     private final WfTaskService wfTaskService;
 
     @GetMapping("/todo/page")
-    @HasPermission("wf_task_complete")
+    @HasPermission("workflow_task_view")
     @Operation(summary = "查询待办任务")
     public R<IPage<TaskVO>> todo(Page<TaskVO> page) {
         Long userId = SecurityUtils.getUser().getId();
@@ -38,7 +42,7 @@ public class TaskController {
     }
 
     @GetMapping("/done/page")
-    @HasPermission("wf_task_complete")
+    @HasPermission("workflow_task_view")
     @Operation(summary = "查询已办任务")
     public R<IPage<TaskVO>> done(Page<TaskVO> page) {
         Long userId = SecurityUtils.getUser().getId();
@@ -46,7 +50,7 @@ public class TaskController {
     }
 
     @GetMapping("/details/{taskId}")
-    @HasPermission("wf_task_complete")
+    @HasPermission("workflow_task_view")
     @Operation(summary = "查询任务详情")
     public R<TaskVO> getByTaskId(@PathVariable String taskId) {
         return R.ok(wfTaskService.getById(taskId));
@@ -54,7 +58,7 @@ public class TaskController {
 
     @PostMapping("/complete")
     @SysLog("完成任务")
-    @HasPermission("wf_task_complete")
+    @HasPermission("workflow_task_edit")
     @Operation(summary = "完成任务")
     public R<Void> complete(@Valid @RequestBody TaskCompleteDTO completeDTO) {
         wfTaskService.complete(completeDTO);
@@ -63,7 +67,7 @@ public class TaskController {
 
     @PostMapping("/reject")
     @SysLog("驳回任务")
-    @HasPermission("wf_task_complete")
+    @HasPermission("workflow_task_edit")
     @Operation(summary = "驳回任务")
     public R<Void> reject(@Valid @RequestBody TaskRejectDTO rejectDTO) {
         wfTaskService.reject(rejectDTO);
@@ -72,7 +76,7 @@ public class TaskController {
 
     @PostMapping("/transfer")
     @SysLog("转办任务")
-    @HasPermission("wf_task_complete")
+    @HasPermission("workflow_task_edit")
     @Operation(summary = "转办任务")
     public R<Void> transfer(@Valid @RequestBody TaskTransferDTO transferDTO) {
         wfTaskService.transfer(transferDTO);
@@ -81,7 +85,7 @@ public class TaskController {
     
     @PostMapping("/delegate")
     @SysLog("委派任务")
-    @HasPermission("wf_task_complete")
+    @HasPermission("workflow_task_edit")
     @Operation(summary = "委派任务")
     public R<Void> delegate(@Valid @RequestBody TaskTransferDTO delegateDTO) {
         wfTaskService.delegate(delegateDTO);
@@ -90,24 +94,34 @@ public class TaskController {
 
     @PostMapping("/claim")
     @SysLog("认领任务")
-    @HasPermission("wf_task_complete")
+    @HasPermission("workflow_task_edit")
     @Operation(summary = "认领任务")
-    public R<Void> claim(@RequestParam String taskId, @RequestParam Long userId) {
-        wfTaskService.claim(taskId, userId);
+    public R<Void> claim(@RequestParam String taskId, @RequestParam String requestId,
+                         @RequestParam(required = false) Long userId) {
+        wfTaskService.claim(taskId, userId == null ? SecurityUtils.getUser().getId() : userId, requestId);
+        return R.ok();
+    }
+
+    @PostMapping("/resolve")
+    @SysLog("解决委派任务")
+    @HasPermission("workflow_task_edit")
+    @Operation(summary = "完成委派协助并交回原办理人")
+    public R<Void> resolve(@Valid @RequestBody TaskResolveDTO dto) {
+        wfTaskService.resolve(dto);
         return R.ok();
     }
     
     @PostMapping("/unclaim/{taskId}")
     @SysLog("取消认领")
-    @HasPermission("wf_task_complete")
+    @HasPermission("workflow_task_edit")
     @Operation(summary = "取消认领")
-    public R<Void> unclaim(@PathVariable String taskId) {
-        wfTaskService.unclaim(taskId);
+    public R<Void> unclaim(@PathVariable String taskId, @RequestParam String requestId) {
+        wfTaskService.unclaim(taskId, requestId);
         return R.ok();
     }
     
     @GetMapping("/comment/{taskId}")
-    @HasPermission("wf_task_complete")
+    @HasPermission("workflow_task_view")
     @Operation(summary = "获取任务评论")
     public R<Object> getComments(@PathVariable String taskId) {
         return R.ok(wfTaskService.getComments(taskId));
@@ -115,7 +129,7 @@ public class TaskController {
     
     @PostMapping("/comment")
     @SysLog("添加评论")
-    @HasPermission("wf_task_complete")
+    @HasPermission("workflow_task_edit")
     @Operation(summary = "添加评论")
     public R<Void> addComment(@Valid @RequestBody TaskCommentDTO commentDTO) {
         wfTaskService.addComment(commentDTO);

@@ -24,9 +24,7 @@ public final class FormIdentityLoginConfigurer
                 })
                 .logout(logout -> logout.logoutSuccessHandler(new SsoLogoutSuccessHandler())
                         .deleteCookies("JSESSIONID")
-                        .invalidateHttpSession(true)) // SSO登出成功处理
-
-                .csrf(AbstractHttpConfigurer::disable);
+                        .invalidateHttpSession(true)); // Form sessions retain the default CSRF protection.
     }
 
 }

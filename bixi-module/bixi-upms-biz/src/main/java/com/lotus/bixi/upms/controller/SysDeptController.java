@@ -45,6 +45,7 @@ public class SysDeptController {
      * @return SysDept
      */
     @GetMapping("/{id}")
+    @HasPermission("sys_dept_view")
     public R getById(@PathVariable Long id) {
         return R.ok(sysDeptService.getById(id));
     }
@@ -53,6 +54,7 @@ public class SysDeptController {
      * 查询全部部门
      */
     @GetMapping("/list")
+    @HasPermission("sys_dept_view")
     public R list() {
         return R.ok(sysDeptService.list());
     }
@@ -64,6 +66,8 @@ public class SysDeptController {
      * @return 树形菜单
      */
     @GetMapping(value = "/tree")
+    @HasPermission({"sys_dept_view", "sys_user_view", "sys_user_add", "sys_user_edit", "sys_role_add", "sys_role_edit",
+            "sys_notice_add", "sys_notice_edit"})
     public R getTree(String deptName) {
         return R.ok(sysDeptService.selectTree(deptName));
     }
@@ -114,6 +118,7 @@ public class SysDeptController {
      * @return 返回子级
      */
     @GetMapping(value = "/getDescendantList/{deptId}")
+    @HasPermission("sys_dept_view")
     public R getDescendantList(@PathVariable Long deptId) {
         return R.ok(sysDeptService.listDescendant(deptId));
     }
@@ -125,6 +130,7 @@ public class SysDeptController {
      */
     @ResponseExcel
     @GetMapping("/export")
+    @HasPermission("sys_dept_export")
     public List<DeptExcelVo> export() {
         return sysDeptService.listExcelVo();
     }
@@ -136,7 +142,9 @@ public class SysDeptController {
      * @param bindingResult
      * @return
      */
+    @SysLog("导入部门")
     @PostMapping("import")
+    @HasPermission("sys_dept_import")
     public R importDept(@RequestExcel List<DeptExcelVo> excelVOList, BindingResult bindingResult) {
 
         return sysDeptService.importDept(excelVOList, bindingResult);

@@ -15,6 +15,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>com.lotus</groupId>
             <artifactId>bixi-workflow-api</artifactId>
         </dependency>
@@ -67,6 +72,7 @@
     <profiles>
         <profile>
             <id>cloud</id>
+            <properties><workflow.test.mode>cloud</workflow.test.mode></properties>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
@@ -81,10 +87,22 @@
         </profile>
         <profile>
             <id>single</id>
+            <properties><workflow.test.mode>single</workflow.test.mode></properties>
         </profile>
     </profiles>
 
     <build>
+        <testResources>
+            <testResource>
+                <directory>src/test/resources</directory>
+                <filtering>true</filtering>
+            </testResource>
+            <testResource>
+                <directory>${project.basedir}/../../bixi-project-documents/sql</directory>
+                <targetPath>sql</targetPath>
+                <includes><include>01_init_all_tables.sql</include></includes>
+            </testResource>
+        </testResources>
         <resources>
             <resource>
                 <directory>src/main/resources</directory>

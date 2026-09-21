@@ -1,11 +1,14 @@
 package com.lotus.bixi.workflow.listener;
 
+import com.lotus.bixi.workflow.api.config.ConditionalOnWorkflowEnabled;
+
 import com.lotus.bixi.common.workflow.listener.BaseTaskListener;
 import lombok.extern.slf4j.Slf4j;
 import org.flowable.task.service.delegate.DelegateTask;
 import org.springframework.stereotype.Component;
 
 @Slf4j
+@ConditionalOnWorkflowEnabled
 @Component
 public class TaskCreateListener extends BaseTaskListener {
 

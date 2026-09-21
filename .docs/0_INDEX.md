@@ -14,6 +14,9 @@
 | 5_CHANGELOG.md | 文档变更日志 | AI 全自动维护 |
 | 5_AI_DEVELOPMENT.md | AI 架构上下文、编码规则、命令和任务模板 | 人工维护，AI 辅助更新 |
 | 6_RELEASE_BASELINE.md | 第一阶段安全、启动、验收、升级回滚与已知限制 | 随发布基线更新 |
+| [7_MAIN_INTEGRATION.md](7_MAIN_INTEGRATION.md) | 本次 main 整合范围、验证、升级与未完成边界 | 随整合验收更新 |
+| [workflow/PROGRESS.md](workflow/PROGRESS.md) | Flowable 双模四阶段需求、差距、实施与验收证据 | 按实际测试结果更新 |
+| [security/PROGRESS.md](security/PROGRESS.md) | 第一阶段认证、权限、Token、审计连续开发与双模验收证据 | 按实际测试结果更新 |
 | users/@{{username}}/ | 个人空间 | 个人维护 |
 
 ## 外部资源链接

@@ -14,6 +14,15 @@
     <description>bixi 通用用户权限管理系统业务处理模块</description>
 
     <dependencies>
+        <dependency>
+            <groupId>com.lotus</groupId>
+            <artifactId>bixi-workflow-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
         <!--upms api、model 模块-->
         <dependency>
             <groupId>com.lotus</groupId>
@@ -116,6 +125,14 @@
     </profiles>
 
     <build>
+        <testResources>
+            <testResource><directory>src/test/resources</directory></testResource>
+            <testResource>
+                <directory>${project.basedir}/../../bixi-project-documents/sql</directory>
+                <targetPath>sql</targetPath>
+                <includes><include>01_init_all_tables.sql</include></includes>
+            </testResource>
+        </testResources>
         <resources>
             <resource>
                 <directory>src/main/resources</directory>

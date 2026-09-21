@@ -52,7 +52,7 @@ make verify-single
 
 ## 5. 已知限制
 
-- 单体当前只聚合 Auth、UPMS、Generator 和 Quartz；AI、Workflow、Monitor 仍是独立应用。
+- 单体聚合 Auth、UPMS、Generator 和 Quartz，另包含默认关闭的 Workflow；AI、Monitor 仍是独立应用。工作流基础审批及四组启停已通过阶段一验收，可靠协作尚未完成，见 [工作流清单](workflow/PROGRESS.md)。
 - Compose 默认闭环不启动 MinIO、AI、Workflow、Quartz 和 Monitor，第一阶段验收只覆盖认证、菜单、权限、UPMS 与示例任务。
 - Nacos 在从 cloud 切换到 single 后可能继续运行，但 single 不依赖其服务发现或配置中心。
 - 初始化 SQL 不是增量迁移工具；正式版本升级机制属于第二阶段工作。

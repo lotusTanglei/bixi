@@ -1,13 +1,12 @@
 package com.lotus.bixi.auth.support.handler;
 
 import com.lotus.bixi.common.core.util.SpringContextHolder;
-import com.lotus.bixi.common.core.util.WebUtils;
 import com.lotus.bixi.common.log.event.SysLogEvent;
 import com.lotus.bixi.common.log.util.SysLogUtils;
+import com.lotus.bixi.common.security.service.BixiUser;
 import com.lotus.bixi.upms.api.entity.SysLog;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationListener;
-import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.event.LogoutSuccessEvent;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
@@ -39,16 +38,16 @@ public class BixiLogoutSuccessEventHandler implements ApplicationListener<Logout
      * @param authentication 登录对象
      */
     public void handle(Authentication authentication) {
-        log.info("用户：{} 退出成功", authentication.getPrincipal());
+        log.info("用户：{} 退出成功", authentication.getName());
         SysLog logVo = SysLogUtils.getSysLog();
+        if (logVo.getCreateBy() == null && authentication.getPrincipal() instanceof BixiUser owner) {
+            logVo.setCreateBy(owner.getId());
+        }
         logVo.setTitle("退出成功");
         // 发送异步日志事件
         Long startTime = System.currentTimeMillis();
         Long endTime = System.currentTimeMillis();
         logVo.setTime(endTime - startTime);
-
-        // 设置对应的token
-        WebUtils.getRequest().ifPresent(request -> logVo.setParams(request.getHeader(HttpHeaders.AUTHORIZATION)));
 
         // 这边设置ServiceId
         if (authentication instanceof PreAuthenticatedAuthenticationToken) {

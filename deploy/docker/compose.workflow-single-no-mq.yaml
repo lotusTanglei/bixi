@@ -1,0 +1,9 @@
+# Use after the standard single build; start single with --no-deps so Compose
+# does not start RabbitMQ. These switches disable pre-existing Rabbit consumers
+# and its aggregate health probe, not workflow processing.
+services:
+  single:
+    environment:
+      MANAGEMENT_HEALTH_RABBIT_ENABLED: 'false'
+      SPRING_RABBITMQ_LISTENER_SIMPLE_AUTO_STARTUP: 'false'
+      SPRING_RABBITMQ_LISTENER_DIRECT_AUTO_STARTUP: 'false'

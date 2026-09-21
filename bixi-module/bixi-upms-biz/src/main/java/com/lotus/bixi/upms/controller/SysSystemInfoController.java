@@ -1,6 +1,7 @@
 package com.lotus.bixi.upms.controller;
 
 import com.lotus.bixi.common.core.util.R;
+import com.lotus.bixi.common.security.annotation.HasPermission;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,7 @@ public class SysSystemInfoController {
      * @return R<Object>
      */
     @GetMapping("/cache")
+    @HasPermission("sys_system_view")
     public R cache() {
         Properties info = (Properties) redisTemplate.execute((RedisCallback<Object>) RedisServerCommands::info);
         Properties commandStats = (Properties) redisTemplate

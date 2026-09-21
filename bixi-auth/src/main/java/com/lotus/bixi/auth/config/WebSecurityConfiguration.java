@@ -3,6 +3,8 @@ package com.lotus.bixi.auth.config;
 import com.lotus.bixi.auth.support.core.FormIdentityLoginConfigurer;
 import com.lotus.bixi.auth.support.core.BixiDaoAuthenticationProvider;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -18,6 +20,7 @@ import org.springframework.security.web.SecurityFilterChain;
  * @author 唐磊
  * @date 2025-01-01
  */
+@Configuration(proxyBeanMethods = false)
 @EnableWebSecurity
 public class WebSecurityConfiguration {
 
@@ -29,9 +32,12 @@ public class WebSecurityConfiguration {
      * @throws Exception
      */
     @Bean
+    @Order(Ordered.HIGHEST_PRECEDENCE)
     SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
-        http.authorizeHttpRequests(authorizeRequests -> authorizeRequests.requestMatchers("/token/*")
-                .permitAll()// 开放自定义的部分端点
+        // Disjoint from the OAuth endpoint chain; both precede the single-mode resource chain.
+        http.securityMatcher("/token/login", "/token/form", "/token/confirm_access", "/logout");
+        http.authorizeHttpRequests(authorizeRequests -> authorizeRequests.requestMatchers("/token/login", "/token/form")
+                .permitAll()
                 .anyRequest()
                 .authenticated()).headers(header -> header.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)// 避免iframe同源无法登录许iframe
         ).with(new FormIdentityLoginConfigurer(), Customizer.withDefaults()); // 表单登录个性化
@@ -50,9 +56,9 @@ public class WebSecurityConfiguration {
      * @throws Exception
      */
     @Bean
-    @Order(0)
+    @Order(Ordered.HIGHEST_PRECEDENCE)
     SecurityFilterChain resources(HttpSecurity http) throws Exception {
-        http.securityMatchers((matchers) -> matchers.requestMatchers("/actuator/**", "/css/**", "/error"))
+        http.securityMatchers((matchers) -> matchers.requestMatchers("/actuator/**", "/css/**", "/error", "/code/image"))
                 .authorizeHttpRequests((authorize) -> authorize.anyRequest().permitAll())
                 .requestCache(RequestCacheConfigurer::disable)
                 .securityContext(AbstractHttpConfigurer::disable)

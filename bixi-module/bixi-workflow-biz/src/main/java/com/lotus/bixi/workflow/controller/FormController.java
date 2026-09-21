@@ -1,5 +1,7 @@
 package com.lotus.bixi.workflow.controller;
 
+import com.lotus.bixi.workflow.api.config.ConditionalOnWorkflowEnabled;
+
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lotus.bixi.common.core.util.R;
@@ -18,6 +20,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.*;
 
+@ConditionalOnWorkflowEnabled
 @RestController
 @AllArgsConstructor
 @RequestMapping("/workflow/form")

@@ -104,6 +104,9 @@ local.properties
 # Logs
 logs/
 log/
+# Java log packages are source code, including new regression tests.
+!**/src/main/java/**/log/
+!**/src/test/java/**/log/
 
 # Env
 .env
@@ -117,6 +120,7 @@ help.md
 *.sh
 !scripts/
 !scripts/*.sh
+!bixi-ui/docker-build.sh
 !deploy/
 !deploy/**/*.sh
 
@@ -128,3 +132,7 @@ help.md
 .claude/
 docs/
 .docs/users/*/notepad.md
+
+# Python verification helpers
+__pycache__/
+*.py[cod]

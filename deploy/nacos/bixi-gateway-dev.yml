@@ -6,6 +6,8 @@ spring:
           uri: lb://bixi-auth
           predicates:
             - Path=/auth/**
+          filters:
+            - PreserveHostHeader
         - id: bixi-upms
           uri: lb://bixi-upms-biz
           predicates:

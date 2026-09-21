@@ -40,7 +40,7 @@
 							<el-button v-auth="'sys_user_add'" icon="folder-add" type="primary" @click="userDialogRef.openDialog()">
 								{{ $t('common.addBtn') }}
 							</el-button>
-							<el-button plain v-auth="'sys_user_add'" class="ml10" icon="upload-filled" type="primary" @click="excelUploadRef.show()">
+							<el-button plain v-auth="'sys_user_import'" class="ml10" icon="upload-filled" type="primary" @click="excelUploadRef.show()">
 								{{ $t('common.importBtn') }}
 							</el-button>
 

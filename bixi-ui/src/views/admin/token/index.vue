@@ -14,7 +14,7 @@
 			</el-row>
 			<el-row>
 				<div class="mb8" style="width: 100%">
-					<el-button :disabled="multiple" @click="handleDelete(selectObjs)" class="ml10" icon="Delete" type="primary" v-auth="'sys_user_del'">
+					<el-button :disabled="multiple" @click="handleDelete(selectObjs)" class="ml10" icon="Delete" type="primary" v-auth="'sys_token_del'">
 						{{ $t('systoken.offlineBtn') }}
 					</el-button>
 					<right-toolbar
@@ -49,7 +49,7 @@
 				<el-table-column :label="$t('systoken.expiresAt')" prop="expiresAt" show-overflow-tooltip></el-table-column>
 				<el-table-column :label="$t('common.action')" width="100">
 					<template #default="scope">
-						<el-button icon="delete" @click="handleDelete([scope.row.accessToken])" size="small" text type="primary" v-auth="'sys_user_del'">
+						<el-button icon="delete" @click="handleDelete([scope.row.accessToken])" size="small" text type="primary" v-auth="'sys_token_del'">
 							{{ $t('systoken.offlineBtn') }}
 						</el-button>
 					</template>

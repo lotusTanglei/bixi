@@ -1,7 +1,10 @@
 <template>
 	<div class="system-approve-dialog-container">
-		<el-dialog :close-on-click-modal="false" title="审批" draggable v-model="visible" width="600px">
-			<el-form :model="dataForm" :rules="dataRules" label-width="100px" ref="dataFormRef" v-loading="loading">
+		<el-dialog :close-on-click-modal="false" title="审批" draggable v-model="visible" width="min(600px, 94vw)"
+			:before-close="closeDialog" :close-on-press-escape="!loading" :show-close="!loading">
+			<el-alert v-if="pendingIntent" title="已恢复上次提交的原内容。可查询结果或按原内容重试；修改内容前请确认开始新操作。" type="warning" :closable="false" class="mb16" />
+			<el-alert v-if="error" :title="error" type="error" :closable="false" class="mb16" />
+			<el-form :model="dataForm" :rules="dataRules" :disabled="loading || !!pendingIntent || !storageReady" label-width="100px" ref="dataFormRef" v-loading="loading">
 				<el-form-item label="任务名称">
 					<el-input v-model="taskData.taskName" disabled></el-input>
 				</el-form-item>
@@ -11,7 +14,7 @@
 				<el-form-item label="审批结果" prop="result">
 					<el-radio-group v-model="dataForm.result">
 						<el-radio label="通过">通过</el-radio>
-						<el-radio label="驳回">驳回</el-radio>
+						<el-radio label="拒绝">拒绝并结束</el-radio>
 					</el-radio-group>
 				</el-form-item>
 				<el-form-item label="审批意见" prop="comment">
@@ -27,8 +30,10 @@
 			</el-form>
 			<template #footer>
 				<span class="dialog-footer">
-					<el-button @click="visible = false">取消</el-button>
-					<el-button @click="onSubmit" type="primary" :disabled="loading">确定</el-button>
+					<el-button :disabled="loading" @click="closeDialog()">取消</el-button>
+					<el-button v-if="pendingIntent" v-auth="'workflow_task_view'" :disabled="loading" @click="queryResult">查询结果</el-button>
+					<el-button v-if="pendingIntent" v-auth="'workflow_task_edit'" :disabled="loading" @click="newIntent">修改为新操作</el-button>
+					<el-button v-auth="'workflow_task_edit'" @click="onSubmit" type="primary" :disabled="loading || !storageReady">{{ pendingIntent ? '重试本次操作' : '确定' }}</el-button>
 				</span>
 			</template>
 		</el-dialog>
@@ -36,73 +41,31 @@
 </template>
 
 <script lang="ts" name="workflowApproveDialog" setup>
-import { complete, reject } from '/@/api/workflow/task';
-import { useMessage } from '/@/hooks/message';
-
+import { useWorkflowIntentDialog } from '/@/utils/workflow-intent-dialog';
 const emit = defineEmits(['refresh']);
-
 const dataFormRef = ref();
-const visible = ref(false);
-const loading = ref(false);
 const taskData = ref<any>({});
-
-const dataForm = reactive({
-	taskId: '',
-	result: '通过',
-	comment: '',
-});
-
+const dataForm = reactive({ taskId: '', result: '通过', comment: '' });
 const dataRules = ref({
 	result: [{ required: true, message: '请选择审批结果', trigger: 'change' }],
 	comment: [{ required: true, message: '请输入审批意见', trigger: 'blur' }],
 });
-
-const openDialog = (row: any) => {
-	visible.value = true;
-	taskData.value = row;
-	dataForm.taskId = row.id;
-	dataForm.result = '通过';
-	dataForm.comment = '';
-
-	nextTick(() => {
-		dataFormRef.value?.resetFields();
-	});
-};
-
-const onSubmit = async () => {
-	const valid = await dataFormRef.value.validate().catch(() => {});
-	if (!valid) return false;
-
-	loading.value = true;
-
-	try {
-		const params = {
-			taskId: dataForm.taskId,
-			comment: dataForm.comment,
-		};
-
-		let res;
-		if (dataForm.result === '通过') {
-			res = await complete(params);
-		} else {
-			res = await reject(params);
-		}
-
-		if (res.code === 0) {
-			useMessage().success('审批成功');
-			visible.value = false;
-			emit('refresh');
-		} else {
-			useMessage().error(res.msg || '审批失败');
-		}
-	} catch (err: any) {
-		useMessage().error(err.msg || '审批失败');
-	} finally {
-		loading.value = false;
-	}
-};
-
-defineExpose({
-	openDialog,
+const { visible, loading, error, storageReady, pendingIntent, closeDialog, openIntent, submitIntent, queryResult, newIntent } = useWorkflowIntentDialog({
+	operations: ['COMPLETE', 'REJECT'],
+	restore: intent => { dataForm.taskId = intent.resourceId; dataForm.result = intent.operation === 'COMPLETE' ? '通过' : '拒绝'; dataForm.comment = intent.request.approvalComment ?? intent.request.rejectReason; },
+	reset: () => { taskData.value = {}; Object.assign(dataForm, { taskId: '', result: '通过', comment: '' }); },
+	refresh: () => emit('refresh'),
 });
+const openDialog = (row: any) => {
+	if (loading.value) return;
+	taskData.value = { ...row };
+	Object.assign(dataForm, { taskId: row.taskId, result: '通过', comment: '' });
+	openIntent(row);
+	nextTick(() => dataFormRef.value?.clearValidate());
+};
+const onSubmit = () => submitIntent({
+	operation: dataForm.result === '通过' ? 'COMPLETE' : 'REJECT',
+	payload: dataForm.result === '通过' ? { approvalComment: dataForm.comment } : { rejectReason: dataForm.comment },
+}, () => dataFormRef.value.validate());
+defineExpose({ openDialog });
 </script>

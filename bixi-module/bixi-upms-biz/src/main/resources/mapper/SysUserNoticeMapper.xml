@@ -38,6 +38,12 @@
             LEFT JOIN sys_user u ON n.sender_id = u.id
             LEFT JOIN sys_user r ON un.user_id = r.id
         <where>
+            n.del_flag = '0'
+            AND un.del_flag = '0'
+            <if test="publishedOnly">
+                AND n.status = '1'
+                AND un.user_id = #{query.userId}
+            </if>
             <if test="query.userId != null">
                 AND un.user_id = #{query.userId}
             </if>
@@ -69,6 +75,9 @@
             LEFT JOIN sys_user u ON n.sender_id = u.id
         WHERE
             un.id = #{id}
+            AND n.status = '1'
+            AND n.del_flag = '0'
+            AND un.del_flag = '0'
     </select>
 
 </mapper>

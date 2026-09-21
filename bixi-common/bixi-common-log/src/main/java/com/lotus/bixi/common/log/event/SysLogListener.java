@@ -3,11 +3,8 @@
 package com.lotus.bixi.common.log.event;
 
 import cn.hutool.core.util.StrUtil;
-import com.fasterxml.jackson.annotation.JsonFilter;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ser.FilterProvider;
-import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
-import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.lotus.bixi.common.core.jackson.BixiJavaTimeModule;
 import com.lotus.bixi.common.log.config.BixiLogProperties;
 import com.lotus.bixi.upms.api.entity.SysLog;
@@ -31,7 +28,7 @@ import java.util.Objects;
 public class SysLogListener implements InitializingBean {
 
     // new 一个 避免日志脱敏策略影响全局ObjectMapper
-    private final static ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     private final OperationLogService operationLogService;
 
@@ -48,7 +45,10 @@ public class SysLogListener implements InitializingBean {
 
         // json 格式刷参数放在异步中处理，提升性能
         if (Objects.nonNull(source.getBody())) {
-            String params = objectMapper.writeValueAsString(source.getBody());
+            // 完整解析序列化副本，使 RawValue 和 @JsonRawValue 也经过字段过滤。
+            JsonNode body = objectMapper.readTree(objectMapper.writeValueAsBytes(source.getBody()));
+            removeExcludedFields(body);
+            String params = objectMapper.writeValueAsString(body);
             sysLog.setParams(StrUtil.subPre(params, logProperties.getMaxLength()));
         }
 
@@ -57,18 +57,23 @@ public class SysLogListener implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() {
-        objectMapper.addMixIn(Object.class, PropertyFilterMixIn.class);
-        String[] ignorableFieldNames = logProperties.getExcludeFields().toArray(new String[0]);
-
-        FilterProvider filters = new SimpleFilterProvider().addFilter("filter properties by name",
-                SimpleBeanPropertyFilter.serializeAllExcept(ignorableFieldNames));
-        objectMapper.setFilterProvider(filters);
         objectMapper.registerModule(new BixiJavaTimeModule());
     }
 
-    @JsonFilter("filter properties by name")
-    class PropertyFilterMixIn {
-
+    private void removeExcludedFields(JsonNode node) {
+        if (node.isObject()) {
+            var fields = node.fields();
+            while (fields.hasNext()) {
+                var field = fields.next();
+                if (logProperties.shouldExcludeField(field.getKey())) {
+                    fields.remove();
+                } else {
+                    removeExcludedFields(field.getValue());
+                }
+            }
+        } else if (node.isArray()) {
+            node.forEach(this::removeExcludedFields);
+        }
     }
 
 }

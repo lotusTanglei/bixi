@@ -18,6 +18,9 @@ public interface CacheConstants {
      */
     String DEFAULT_CODE_KEY = "DEFAULT_CODE_KEY:";
 
+    /** SMS login challenges must never share keys with public image captchas. */
+    String SMS_CODE_KEY = "SMS_CODE_KEY:";
+
     /**
      * 菜单信息缓存
      */

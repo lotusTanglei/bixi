@@ -92,7 +92,7 @@
 
 <script setup lang="ts" name="personal">
 import {useUserInfo} from '/@/stores/userInfo';
-import {editInfo, getObj, password, UnbindingUser} from '/@/api/admin/user';
+import {editInfo, getCurrentUser, password, UnbindingUser} from '/@/api/admin/user';
 import {useMessage} from '/@/hooks/message';
 import {rule} from '/@/utils/validate';
 import other from '/@/utils/other';
@@ -223,15 +223,13 @@ const handleSaveUser = () => {
 
 const open = () => {
   visible.value = true;
-  const data = useUserInfo().userInfos;
-  initUserInfo(data.user.id);
-  // Object.assign(formData, data.user);
+  initUserInfo();
 };
 
 const loading = ref(false);
-const initUserInfo = (id: any) => {
+const initUserInfo = () => {
   loading.value = true;
-  getObj(id)
+  getCurrentUser()
       .then((res) => {
         formData.value = res.data;
       })

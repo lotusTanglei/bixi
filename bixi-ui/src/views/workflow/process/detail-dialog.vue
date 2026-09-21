@@ -1,110 +1,61 @@
 <template>
-	<div class="system-process-detail-dialog-container">
-		<el-dialog :close-on-click-modal="false" title="流程实例详情" draggable v-model="visible" width="900px">
-			<el-descriptions :column="2" border>
-				<el-descriptions-item label="流程名称">{{ processData.processName }}</el-descriptions-item>
-				<el-descriptions-item label="流程实例ID">{{ processData.processInstanceId }}</el-descriptions-item>
-				<el-descriptions-item label="发起人">{{ processData.startUser }}</el-descriptions-item>
-				<el-descriptions-item label="流程状态">
-					<el-tag :type="getStatusType(processData.status)">
-						{{ getStatusText(processData.status) }}
-					</el-tag>
-				</el-descriptions-item>
-				<el-descriptions-item label="发起时间">{{ processData.startTime }}</el-descriptions-item>
-				<el-descriptions-item label="结束时间">{{ processData.endTime || '-' }}</el-descriptions-item>
+	<el-dialog v-model="visible" title="流程详情" width="min(840px, 94vw)">
+		<div v-loading="loading">
+			<el-alert v-if="error" :title="error" type="error" :closable="false" class="mb16" />
+			<el-descriptions v-if="processData.processInstanceId" :column="1" border>
+				<el-descriptions-item label="流程标题">{{ processData.title || processData.processKey }}</el-descriptions-item>
+				<el-descriptions-item label="流程实例">{{ processData.processInstanceId }}</el-descriptions-item>
+				<el-descriptions-item label="发起人">{{ processData.startUserName }}</el-descriptions-item>
+				<el-descriptions-item label="状态">{{ statusLabels[processData.status] || processData.status }}</el-descriptions-item>
+				<el-descriptions-item label="发起时间">{{ processData.createTime }}</el-descriptions-item>
+				<el-descriptions-item label="结束时间">{{ processData.endTime || '—' }}</el-descriptions-item>
 			</el-descriptions>
-
-			<el-divider content-position="left">表单数据</el-divider>
-			<el-descriptions v-if="processData.formData" :column="2" border>
-				<el-descriptions-item v-for="(value, key) in processData.formData" :key="key" :label="key">
-					{{ value }}
-				</el-descriptions-item>
+			<el-divider v-if="leave" content-position="left">请假申请</el-divider>
+			<el-descriptions v-if="leave" :column="1" border>
+				<el-descriptions-item label="请假日期">{{ leave.startDate }} 至 {{ leave.endDate }}</el-descriptions-item>
+				<el-descriptions-item label="请假原因"><span class="reason">{{ leave.reason }}</span></el-descriptions-item>
+				<el-descriptions-item label="申请状态">{{ leaveStatusLabels[leave.leaveStatus] }}</el-descriptions-item>
 			</el-descriptions>
-			<el-empty v-else description="暂无表单数据" />
-
-			<el-divider content-position="left">审批历史</el-divider>
-			<el-timeline v-if="historyList.length > 0">
-				<el-timeline-item
-					v-for="item in historyList"
-					:key="item.id"
-					:timestamp="item.endTime"
-					placement="top"
-					:type="getTimelineType(item.result)"
-				>
-					<el-card>
-						<h4>{{ item.taskName }}</h4>
-						<p>审批人：{{ item.assignee }}</p>
-						<p>审批结果：{{ item.result }}</p>
-						<p v-if="item.comment">审批意见：{{ item.comment }}</p>
-					</el-card>
-				</el-timeline-item>
-			</el-timeline>
-			<el-empty v-else description="暂无审批历史" />
-		</el-dialog>
-	</div>
+			<el-divider content-position="left">审批记录</el-divider>
+			<approval-history :records="records" />
+		</div>
+	</el-dialog>
 </template>
-
 <script lang="ts" name="workflowProcessDetailDialog" setup>
 import { getObj, getHistory } from '/@/api/workflow/process';
-import { useMessage } from '/@/hooks/message';
-
+import { getObj as getLeave, leaveStatusLabels } from '/@/api/demo/leave';
+import { auth } from '/@/utils/authFunction';
+import ApprovalHistory from '../components/approval-history.vue';
 const visible = ref(false);
+const loading = ref(false);
+const error = ref('');
 const processData = ref<any>({});
-const historyList = ref<any[]>([]);
-
-const getStatusType = (status: string) => {
-	const statusMap: Record<string, string> = {
-		running: 'warning',
-		finished: 'success',
-		canceled: 'info',
-	};
-	return statusMap[status] || 'info';
-};
-
-const getStatusText = (status: string) => {
-	const statusMap: Record<string, string> = {
-		running: '进行中',
-		finished: '已完成',
-		canceled: '已取消',
-	};
-	return statusMap[status] || status;
-};
-
-const getTimelineType = (result: string) => {
-	if (result === '通过') return 'success';
-	if (result === '驳回') return 'danger';
-	return 'primary';
-};
-
-const openDialog = async (row: any) => {
-	visible.value = true;
-	processData.value = {};
-	historyList.value = [];
-
+const leave = ref<any>();
+const records = ref<any[]>([]);
+let requestVersion = 0;
+watch(visible, isOpen => { if (!isOpen) requestVersion++; }, { flush: 'sync' });
+onBeforeUnmount(() => { requestVersion++; });
+const statusLabels: Record<string, string> = { running: '审批中', completed: '已完成', rejected: '已拒绝', terminated: '已取消', suspended: '已挂起' };
+const openDialog = async (row: { processInstanceId: string }) => {
+	const version = ++requestVersion;
+	visible.value = true; loading.value = true; error.value = ''; processData.value = {}; leave.value = undefined; records.value = [];
 	try {
-		const res = await getObj(row.processInstanceId || row.id);
-		if (res.code === 0) {
-			processData.value = res.data || {};
-		}
-
-		if (processData.value.processInstanceId) {
-			const historyRes = await getHistory(processData.value.processInstanceId);
-			if (historyRes.code === 0) {
-				historyList.value = historyRes.data || [];
-			}
+		const { data } = await getObj(row.processInstanceId);
+		if (version !== requestVersion) return;
+		processData.value = data;
+		const history = await getHistory(row.processInstanceId);
+		if (version !== requestVersion) return;
+		records.value = history.data || [];
+		if (data.businessTable === 'demo_leave_request' && data.businessId && auth('demo_leave_view')) {
+			const result = await getLeave(data.businessId);
+			if (version === requestVersion) leave.value = result.data;
 		}
 	} catch (err: any) {
-		useMessage().error(err.msg || '获取流程详情失败');
+		if (version === requestVersion) error.value = err?.msg || '加载流程详情失败';
+	} finally {
+		if (version === requestVersion) loading.value = false;
 	}
 };
-
-defineExpose({
-	openDialog,
-});
+defineExpose({ openDialog });
 </script>
-
-<style lang="scss" scoped>
-.el-timeline {
-	padding: 20px 0;
-}
-</style>
+<style scoped>.reason { white-space: pre-wrap; overflow-wrap: anywhere; }</style>

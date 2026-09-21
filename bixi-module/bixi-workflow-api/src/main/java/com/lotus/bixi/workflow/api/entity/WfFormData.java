@@ -16,8 +16,8 @@ public class WfFormData extends BaseEntity<WfFormData> {
     @Schema(description = "表单ID")
     private Long formId;
 
-    @Schema(description = "表单版本号")
-    private Integer formVersion;
+    @Schema(description = "表单版本ID")
+    private Long formVersionId;
 
     @Schema(description = "流程实例ID")
     private String processInstanceId;
@@ -29,6 +29,7 @@ public class WfFormData extends BaseEntity<WfFormData> {
     private String businessKey;
 
     @Schema(description = "表单数据JSON")
+    @TableField("data_json")
     private String formDataJson;
 
     @TableField(exist = false)

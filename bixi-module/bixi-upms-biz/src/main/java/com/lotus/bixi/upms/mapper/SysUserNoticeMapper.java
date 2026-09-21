@@ -23,7 +23,8 @@ public interface SysUserNoticeMapper extends BaseMapper<SysUserNotice> {
      * @param userNotice 查询条件
      * @return
      */
-    IPage<UserNoticeVO> selectUserNoticePage(Page page, @Param("query") UserNoticeVO userNotice);
+    IPage<UserNoticeVO> selectUserNoticePage(Page page, @Param("query") UserNoticeVO userNotice,
+            @Param("publishedOnly") boolean publishedOnly);
 
     /**
      * 通过ID查询用户通知

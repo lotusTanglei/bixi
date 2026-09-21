@@ -27,7 +27,7 @@
 - 国际化：vue-i18n
 - 路由：Vue Router 4
 
-项目支持双模部署：通过 Maven Profile 切换微服务模式（`-Pcloud`，默认）和单体模式（`-Psingle`）。微服务模式下使用 Nacos 作为注册中心和配置中心，Spring Cloud Gateway 作为 API 网关。当前单体模式聚合 Auth、UPMS、Generator 和 Quartz；AI、Workflow、Monitor 仍作为独立应用运行。
+项目支持双模部署：通过 Maven Profile 切换微服务模式（`-Pcloud`，默认）和单体模式（`-Psingle`）。微服务模式下使用 Nacos 作为注册中心和配置中心，Spring Cloud Gateway 作为 API 网关。当前单体模式聚合 Auth、UPMS、Generator 和 Quartz，并包含默认关闭、按 `workflow.enabled` 启用的同一 workflow-biz。AI、Monitor 仍作为独立应用运行。工作流完整交付状态见 [清单](workflow/PROGRESS.md)。
 
 ## 2. 分层架构
 
@@ -100,7 +100,7 @@
 | 基础设施层 | `bixi-common/bixi-common-ai/` | Spring AI Alibaba 公共配置 |
 | 基础设施层 | `bixi-common/bixi-common-workflow/` | Flowable 工作流公共配置和工具类 |
 | 基础设施层 | `bixi-common/bixi-common-bom/` | Maven BOM，统一管理所有第三方依赖版本 |
-| 单体部署 | `bixi-single/` | 单体模式聚合模块，通过 `-Psingle` Profile 激活；当前聚合 Auth、UPMS、Generator、Quartz，无需网关和注册中心 |
+| 单体部署 | `bixi-single/` | 单体模式聚合模块，通过 `-Psingle` Profile 激活；聚合 Auth、UPMS、Generator、Quartz 及默认关闭的 Workflow，无需网关和注册中心 |
 | 项目文档 | `bixi-project-documents/` | SQL 初始化脚本、数据字典文档、部署工具脚本 |
 
 ## 4. 双模边界与依赖规则
@@ -143,7 +143,7 @@
 
 **单体模式：**
 
-激活 `-Psingle` Profile 后，`bixi-single` 将 Auth、UPMS、Generator 和 Quartz 聚合为单个 Spring Boot 应用，无需网关和注册中心。AI、Workflow 和 Monitor 当前不在单体聚合范围内。
+激活 `-Psingle` Profile 后，`bixi-single` 将 Auth、UPMS、Generator 和 Quartz 聚合为单个 Spring Boot 应用，无需网关和注册中心。Workflow 复用同一业务模块按需装配（默认关闭），AI 和 Monitor 当前不在单体聚合范围内。工作流基础审批闭环及四组启停已通过阶段一验收；可靠协作和恢复仍在后续阶段。
 
 ## 6. 双模验证命令
 
@@ -164,4 +164,4 @@ GitLab CI 的 `accept_dual_mode` 作业按上述顺序验证两种模式。
 
 ## 7. ADR 快速索引
 
-暂无 ADR 记录，请在 [4_DECISIONS.md](4_DECISIONS.md) 中添加。
+ADR-WF-001 工作流双模可选装配与可靠协作，见 [4_DECISIONS.md](4_DECISIONS.md) 与 [详细设计](workflow/DESIGN.md)。

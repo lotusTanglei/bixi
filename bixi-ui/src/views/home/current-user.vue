@@ -16,8 +16,7 @@
 </template>
 
 <script setup lang="ts" name="currentUser">
-import { useUserInfo } from '/@/stores/userInfo';
-import { getObj } from '/@/api/admin/user';
+import { getCurrentUser } from '/@/api/admin/user';
 
 const { proxy } = getCurrentInstance();
 const date = ref(new Date());
@@ -37,20 +36,18 @@ setInterval(() => {
 }, 1000);
 
 onMounted(() => {
-	const data = useUserInfo().userInfos;
-	initUserInfo(data.user.id);
+	initUserInfo();
 });
 
 /**
- * 根据用户 ID 初始化用户信息。
- * @param {any} id - 要查询的用户 ID。
+ * 初始化当前登录用户的个人资料。
  * @returns {Promise<void>} - 初始化用户信息的 Promise 实例。
  */
-const initUserInfo = async (id: any): Promise<void> => {
+const initUserInfo = async (): Promise<void> => {
 	try {
 		loading.value = true; // 显示加载状态
 
-		const res = await getObj(id); // 执行查询操作
+		const res = await getCurrentUser(); // 执行查询操作
 		userData.value = res.data; // 将查询到的数据保存到 userData 变量中
 		userData.value.postName = res.data?.postList?.map((item: any) => item.name).join(',') || ''; // 将 postList 中的 postName 合并成字符串并保存到 userData 变量中
 		// 文件上传增加后端前缀

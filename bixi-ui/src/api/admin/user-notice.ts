@@ -16,14 +16,6 @@ export const recordPageList = (params?: Object) => {
 	});
 };
 
-export const addObj = (obj: Object) => {
-	return request({
-		url: '/admin/user-notice',
-		method: 'post',
-		data: obj,
-	});
-};
-
 export const getObj = (id: String) => {
 	return request({
 		url: '/admin/user-notice/' + id,

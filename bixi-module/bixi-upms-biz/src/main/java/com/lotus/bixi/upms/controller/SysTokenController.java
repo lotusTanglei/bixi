@@ -37,6 +37,7 @@ public class SysTokenController {
      * @return token集合
      */
     @RequestMapping("/page")
+    @HasPermission("sys_token_view")
     public R getTokenPage(@RequestBody Map<String, Object> params) {
         return tokenManagementService.getTokenPage(params);
     }

@@ -39,6 +39,40 @@ test_backend_single:
   script:
     - make backend-single-ci
 
+test_workflow_optional_engines:
+  stage: test
+  script:
+    - mvn -Pcloud,workflow-all-engines-test -pl bixi-common/bixi-common-workflow -am -Dtest=WorkflowEngineConfigurationTest -Dsurefire.failIfNoSpecifiedTests=false test
+  artifacts:
+    when: always
+    reports:
+      junit: bixi-common/bixi-common-workflow/target/surefire-reports/TEST-*.xml
+
+test_workflow_mysql:
+  stage: test
+  parallel:
+    matrix:
+      - WORKFLOW_TEST_PROFILE: [cloud, single]
+  services:
+    - name: mysql:8.0.45
+      alias: workflow-mysql
+  variables:
+    MYSQL_DATABASE: workflow_approval_test
+    MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    MYSQL_ROOT_HOST: "%"
+    WORKFLOW_TEST_JDBC_URL: "jdbc:mysql://workflow-mysql:3306/workflow_approval_test?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=Asia/Shanghai"
+    WORKFLOW_TEST_DB_USER: root
+    WORKFLOW_TEST_DB_PASSWORD: ""
+  before_script:
+    - apt-get update && apt-get install -y default-mysql-client
+    - timeout 120 bash -c 'until mysql -hworkflow-mysql -uroot -e "SELECT 1" >/dev/null 2>&1; do sleep 2; done'
+  script:
+    - mvn -P"$WORKFLOW_TEST_PROFILE" -pl bixi-module/bixi-workflow-biz -am -Dtest=WorkflowApprovalIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false test
+  artifacts:
+    when: always
+    reports:
+      junit: bixi-module/bixi-workflow-biz/target/surefire-reports/TEST-*.xml
+
 accept_dual_mode:
   image: docker:27.5-cli
   stage: acceptance

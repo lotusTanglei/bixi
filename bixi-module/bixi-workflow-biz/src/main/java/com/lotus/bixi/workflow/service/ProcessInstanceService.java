@@ -1,5 +1,7 @@
 package com.lotus.bixi.workflow.service;
 
+import com.lotus.bixi.workflow.api.vo.WorkflowCommandVO;
+
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -13,6 +15,8 @@ import java.util.List;
 
 public interface ProcessInstanceService extends IService<WfProcessInstance> {
 
+    WorkflowCommandVO getCommand(String requestId);
+
     ProcessInstanceVO start(ProcessStartDTO dto);
 
     ProcessInstanceVO getById(String processInstanceId);
@@ -23,9 +27,15 @@ public interface ProcessInstanceService extends IService<WfProcessInstance> {
 
     boolean terminate(String processInstanceId, String reason);
 
+    boolean terminate(String processInstanceId, String reason, String requestId);
+
     boolean suspend(String processInstanceId);
 
+    boolean suspend(String processInstanceId, String requestId);
+
     boolean activate(String processInstanceId);
+
+    boolean activate(String processInstanceId, String requestId);
 
     String getProcessDiagram(String processInstanceId);
 

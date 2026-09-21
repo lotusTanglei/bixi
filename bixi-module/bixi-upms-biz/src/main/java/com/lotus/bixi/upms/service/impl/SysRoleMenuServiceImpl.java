@@ -11,9 +11,10 @@ import com.lotus.bixi.upms.service.SysRoleMenuService;
 import com.lotus.bixi.common.core.constant.CacheConstants;
 import lombok.AllArgsConstructor;
 import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.Arrays;
 import java.util.List;
@@ -40,27 +41,30 @@ public class SysRoleMenuServiceImpl extends ServiceImpl<SysRoleMenuMapper, SysRo
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @CacheEvict(value = CacheConstants.MENU_DETAILS, key = "#id")
     public Boolean saveRoleMenus(Long roleId, String menuIds) {
         this.remove(Wrappers.<SysRoleMenu>query().lambda().eq(SysRoleMenu::getRoleId, roleId));
 
-        if (StrUtil.isBlank(menuIds)) {
-            return Boolean.TRUE;
+        if (StrUtil.isNotBlank(menuIds)) {
+            List<SysRoleMenu> roleMenuList = Arrays.stream(menuIds.split(StrUtil.COMMA)).map(menuId -> {
+                SysRoleMenu roleMenu = new SysRoleMenu();
+                roleMenu.setRoleId(roleId);
+                roleMenu.setMenuId(Long.valueOf(menuId));
+                return roleMenu;
+            }).collect(Collectors.toList());
+            this.saveBatch(roleMenuList);
         }
-        List<SysRoleMenu> roleMenuList = Arrays.stream(menuIds.split(StrUtil.COMMA)).map(menuId -> {
-            SysRoleMenu roleMenu = new SysRoleMenu();
-            roleMenu.setRoleId(roleId);
-            roleMenu.setMenuId(Long.valueOf(menuId));
-            return roleMenu;
-        }).collect(Collectors.toList());
 
-        // 清空userinfo
-        cacheManager.getCache(CacheConstants.USER_DETAILS).clear();
-        // 清空菜单
-        cacheManager.getCache(CacheConstants.MENU_DETAILS).clear();
-        //清空授权缓存
-        cacheManager.getCache(CacheConstants.ROLE_DETAILS).clear();
-        this.saveBatch(roleMenuList);
+        // 包括撤回全部菜单；成功提交后再失效，跟随调用方的外层事务。
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                // 菜单缓存含 roleId:workflow.enabled 等组合键，需要清理全部变体。
+                cacheManager.getCache(CacheConstants.MENU_DETAILS).clear();
+                cacheManager.getCache(CacheConstants.ROLE_DETAILS).clear();
+                // 用户权限依赖菜单缓存，最后失效以免在清理间隙从旧菜单重建用户授权。
+                cacheManager.getCache(CacheConstants.USER_DETAILS).clear();
+            }
+        });
         return Boolean.TRUE;
     }
 

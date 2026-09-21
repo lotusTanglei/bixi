@@ -2,6 +2,9 @@ name: bixi
 
 x-backend-environment: &backend-environment
   TZ: ${TIME_ZONE:-Asia/Shanghai}
+  WORKFLOW_ENABLED: ${WORKFLOW_ENABLED:-false}
+  WORKFLOW_SCHEMA_UPDATE: ${WORKFLOW_SCHEMA_UPDATE:-false}
+  WORKFLOW_ASYNC_EXECUTOR_ACTIVATE: ${WORKFLOW_ASYNC_EXECUTOR_ACTIVATE:-true}
   MYSQL_HOST: mysql
   MYSQL_PORT: 3306
   MYSQL_DATABASE: ${MYSQL_DATABASE}
@@ -227,6 +230,37 @@ services:
         condition: service_completed_successfully
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://127.0.0.1:4000/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 40
+      start_period: 40s
+    networks: [bixi]
+
+  workflow:
+    profiles: [workflow]
+    build:
+      <<: *backend-build
+      args:
+        REGISTRY_MIRROR: ${BIXI_REGISTRY_MIRROR:-}
+        MODULE: bixi-module/bixi-workflow-biz
+        MAVEN_PROFILE: cloud
+    restart: unless-stopped
+    environment:
+      <<: *backend-environment
+      BIXI_DEPLOYMENT_MODE: cloud
+      NACOS_HOST: nacos
+      NACOS_PORT: 8848
+      NACOS_NAMESPACE: ${NACOS_NAMESPACE:-bixi}
+      JAVA_OPTS: ${WORKFLOW_JAVA_OPTS:--Xms256m -Xmx512m}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nacos-config:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:5008/actuator/health"]
       interval: 10s
       timeout: 5s
       retries: 40

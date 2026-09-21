@@ -16,6 +16,9 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.expression.EvaluationContext;
+import org.springframework.validation.Errors;
+
+import java.util.Arrays;
 
 /**
  * 操作日志使用spring event异步入库
@@ -50,10 +53,14 @@ public class SysLogAspect {
         }
 
         SysLogEventSource logVo = SysLogUtils.getSysLog();
+        if ("LOCAL".equals(logVo.getMethod())) {
+            logVo.setRequestUri("local:" + strClassName + "#" + strMethodName);
+        }
         logVo.setTitle(value);
         // 获取请求body参数
         if (StrUtil.isBlank(logVo.getParams())) {
-            logVo.setBody(point.getArgs());
+            // BindingResult contains framework internals and a self-referencing model, not request data.
+            logVo.setBody(Arrays.stream(point.getArgs()).filter(argument -> !(argument instanceof Errors)).toArray());
         }
         // 发送异步日志事件
         Long startTime = System.currentTimeMillis();
