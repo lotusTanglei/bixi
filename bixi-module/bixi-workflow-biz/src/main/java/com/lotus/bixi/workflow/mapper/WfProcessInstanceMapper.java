@@ -14,4 +14,7 @@ public interface WfProcessInstanceMapper extends BaseMapper<WfProcessInstance> {
     @Select("SELECT * FROM wf_process_instance WHERE process_instance_id = #{processInstanceId} FOR UPDATE")
     WfProcessInstance selectForUpdate(String processInstanceId);
 
+    @Select("SELECT * FROM wf_process_instance WHERE process_instance_id = #{processInstanceId}")
+    WfProcessInstance selectByProcessInstanceId(String processInstanceId);
+
 }

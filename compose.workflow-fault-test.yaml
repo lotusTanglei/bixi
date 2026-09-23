@@ -1,0 +1,14 @@
+# Fault-injection-only overlay. Keep the killed test replica down so the
+# surviving Workflow owner can demonstrate Flowable lock expiry and takeover.
+services:
+  workflow-a:
+    extends:
+      file: compose.workflow-cluster.yaml
+      service: workflow-a
+    restart: "no"
+
+  workflow-b:
+    extends:
+      file: compose.workflow-cluster.yaml
+      service: workflow-b
+    restart: "no"

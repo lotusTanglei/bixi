@@ -1,11 +1,13 @@
 package com.lotus.bixi.workflow.service;
 
+import com.lotus.bixi.common.core.context.TenantContextHolder;
 import com.lotus.bixi.common.security.service.BixiUser;
 import com.lotus.bixi.workflow.api.dto.ProcessStartDTO;
 import com.lotus.bixi.workflow.api.dto.TaskCompleteDTO;
 import com.lotus.bixi.workflow.api.exception.WorkflowOperationConflictException;
 import org.flowable.engine.ProcessEngine;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -40,6 +42,12 @@ class WorkflowResultWithoutHistoryTest {
     @Autowired DataSource dataSource;
     @Autowired WorkflowApprovalIntegrationTest.ResultReceiver receiver;
     @Autowired WorkflowApprovalIntegrationTest.CommandBarrier commandBarrier;
+
+    @AfterEach
+    void cleanupTenant() {
+        SecurityContextHolder.clearContext();
+        TenantContextHolder.clear();
+    }
 
     @Test
     void businessResultDoesNotDependOnOptionalEngineHistory() throws Exception {
@@ -162,9 +170,10 @@ class WorkflowResultWithoutHistoryTest {
     }
 
     private void login(long id) {
+        TenantContextHolder.set(1L);
         var permissions = List.of("workflow_process_add", "workflow_process_view", "workflow_task_edit").stream()
                 .map(SimpleGrantedAuthority::new).toList();
-        var user = new BixiUser(id, 1L, "user-" + id, "unused", null, true, true, true, true, permissions);
+        var user = new BixiUser(id, 1L, 1L, "user-" + id, "unused", null, true, true, true, true, permissions);
         SecurityContextHolder.getContext().setAuthentication(UsernamePasswordAuthenticationToken.authenticated(user, null, permissions));
     }
 }

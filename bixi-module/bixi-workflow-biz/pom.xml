@@ -19,13 +19,28 @@
             <artifactId>h2</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- Cross-owner integration coverage only; production workflow code stays UPMS-agnostic. -->
+        <dependency>
+            <groupId>com.lotus</groupId>
+            <artifactId>bixi-upms-biz</artifactId>
+            <version>${revision}</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>com.lotus</groupId>
             <artifactId>bixi-workflow-api</artifactId>
         </dependency>
         <dependency>
             <groupId>com.lotus</groupId>
+            <artifactId>bixi-upms-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.lotus</groupId>
             <artifactId>bixi-common-workflow</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.lotus</groupId>
+            <artifactId>bixi-common-mq</artifactId>
         </dependency>
         <dependency>
             <groupId>com.lotus</groupId>

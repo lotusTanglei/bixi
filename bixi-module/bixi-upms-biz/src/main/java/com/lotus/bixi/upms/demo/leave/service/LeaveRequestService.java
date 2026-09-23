@@ -13,6 +13,7 @@ import com.lotus.bixi.upms.demo.leave.dto.LeaveRequestDTO;
 import com.lotus.bixi.upms.demo.leave.dto.LeaveApproverVO;
 import com.lotus.bixi.upms.demo.leave.entity.LeaveRequest;
 import com.lotus.bixi.upms.demo.leave.mapper.LeaveRequestMapper;
+import com.lotus.bixi.upms.demo.leave.event.LeaveWorkflowEventPublisher;
 import com.lotus.bixi.upms.service.SysUserService;
 import com.lotus.bixi.upms.api.entity.SysUser;
 import com.lotus.bixi.workflow.api.config.ConditionalOnWorkflowEnabled;
@@ -23,6 +24,7 @@ import com.lotus.bixi.workflow.api.vo.ApprovalRecordVO;
 import com.lotus.bixi.workflow.api.vo.ProcessInstanceVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
@@ -50,13 +52,16 @@ public class LeaveRequestService {
     private final LeaveRequestMapper mapper;
     private final WorkflowService workflows;
     private final SysUserService users;
+    private final ObjectProvider<LeaveWorkflowEventPublisher> reliablePublisher;
     private final TransactionTemplate transaction;
 
     public LeaveRequestService(LeaveRequestMapper mapper, WorkflowService workflows, SysUserService users,
-                               PlatformTransactionManager transactionManager) {
+                               PlatformTransactionManager transactionManager,
+                               ObjectProvider<LeaveWorkflowEventPublisher> reliablePublisher) {
         this.mapper = mapper;
         this.workflows = workflows;
         this.users = users;
+        this.reliablePublisher = reliablePublisher;
         this.transaction = new TransactionTemplate(transactionManager);
         this.transaction.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
     }
@@ -148,6 +153,24 @@ public class LeaveRequestService {
     @HasPermission("demo_leave_edit")
     public LeaveRequest submit(Long id) {
         Long applicant = caller();
+        LeaveWorkflowEventPublisher publisher = reliablePublisher.getIfAvailable();
+        if (publisher != null) {
+            var actor = SecurityUtils.getUser();
+            return transaction.execute(status -> {
+                LeaveRequest leave = ownedDraft(id, applicant);
+                validateApprover(leave.getApproverId(), applicant);
+                requireChanged(mapper.update(null, draftUpdate(leave, applicant)
+                        .set(LeaveRequest::getLeaveStatus, "SUBMITTING")
+                        .set(LeaveRequest::getSubmittedAt, LocalDateTime.now())));
+                LeaveRequest reserved = required(id);
+                LeaveWorkflowEventPublisher.Published published = publisher.publishStart(reserved, actor);
+                requireChanged(mapper.update(null, identityUpdate(reserved)
+                        .eq(LeaveRequest::getLeaveStatus, "SUBMITTING")
+                        .set(LeaveRequest::getStartCommandId, published.commandId())
+                        .set(LeaveRequest::getStartRequestHash, published.requestHash())));
+                return required(id);
+            });
+        }
         LeaveRequest reserved = transaction.execute(status -> {
             LeaveRequest leave = ownedDraft(id, applicant);
             validateApprover(leave.getApproverId(), applicant);

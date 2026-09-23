@@ -196,7 +196,7 @@ class UpmsManagementPermissionTest {
     }
 
     private void authenticate(String permission) {
-        var actor = new BixiUser(41L, 1L, "operator", "unused", null, true, true, true, true,
+        var actor = new BixiUser(41L, 1L, 1L, "operator", "unused", null, true, true, true, true,
                 AuthorityUtils.createAuthorityList(permission));
         SecurityContextHolder.getContext().setAuthentication(UsernamePasswordAuthenticationToken.authenticated(
                 actor, "unused", actor.getAuthorities()));

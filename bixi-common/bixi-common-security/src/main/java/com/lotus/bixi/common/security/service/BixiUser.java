@@ -47,12 +47,27 @@ public class BixiUser extends User implements OAuth2AuthenticatedPrincipal {
     @Getter
     private final String phone;
 
-    public BixiUser(Long id, Long deptId, String username, String password, String phone, boolean enabled,
+    /**
+     * 租户ID
+     */
+    @Getter
+    @JsonSerialize(using = ToStringSerializer.class)
+    private final Long tenantId;
+
+    @Getter
+    private String dataScope = "4";
+
+	public void setDataScope(String dataScope) {
+		if (dataScope != null) this.dataScope = dataScope;
+	}
+
+    public BixiUser(Long id, Long deptId, Long tenantId, String username, String password, String phone, boolean enabled,
                     boolean accountNonExpired, boolean credentialsNonExpired, boolean accountNonLocked,
                     Collection<? extends GrantedAuthority> authorities) {
         super(username, password, enabled, accountNonExpired, credentialsNonExpired, accountNonLocked, authorities);
         this.id = id;
         this.deptId = deptId;
+        this.tenantId = tenantId;
         this.phone = phone;
     }
 

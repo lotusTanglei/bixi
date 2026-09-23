@@ -117,6 +117,35 @@ class JdbcOutboxStoreTest extends MysqlOutboxTestSupport {
     }
 
     @Test
+    void concurrentDistinctWritersDoNotDeadlock() throws Exception {
+        var executor = Executors.newFixedThreadPool(2);
+        try {
+            for (int round = 0; round < 32; round++) {
+                var first = message("upms", round * 2);
+                var second = message("upms", round * 2 + 1);
+                var ready = new CountDownLatch(2);
+                var go = new CountDownLatch(1);
+                var futures = List.of(executor.submit(() -> {
+                    ready.countDown();
+                    await(go);
+                    enqueue(first, "distinct-" + first.eventId());
+                }), executor.submit(() -> {
+                    ready.countDown();
+                    await(go);
+                    enqueue(second, "distinct-" + second.eventId());
+                }));
+                assertThat(ready.await(5, TimeUnit.SECONDS)).isTrue();
+                go.countDown();
+                for (var future : futures) future.get(10, TimeUnit.SECONDS);
+            }
+            assertThat(count("reliable_outbox")).isEqualTo(64);
+        }
+        finally {
+            executor.shutdownNow();
+        }
+    }
+
+    @Test
     void independentClaimersReceiveDisjointLeasesAndSkipAnActuallyLockedRow() throws Exception {
         for (int i = 0; i < 20; i++) enqueue(message("upms", i), "key-" + i);
         var ready = new CountDownLatch(2);
@@ -226,6 +255,25 @@ class JdbcOutboxStoreTest extends MysqlOutboxTestSupport {
         assertThat(new JdbcOutboxStore(dataSource, manager, properties).claim("upms", 1)).isEmpty();
         assertThat(state(event)).isEqualTo("FAILED");
         assertThat(jdbc.queryForObject("SELECT attempts FROM reliable_outbox", Integer.class)).isEqualTo(12);
+    }
+
+    @Test
+    void operatorRetryUsesFailedStatusCasAndListsMetadataWithoutChangingPayload() {
+        var event = message("upms", 1);
+        enqueue(event, "key");
+        assertThat(store.retry("upms", event.eventId())).isFalse();
+        jdbc.update("UPDATE reliable_outbox SET status='FAILED', attempts=12, last_error='boom'");
+
+        var listed = store.list("upms", "FAILED", 20);
+        assertThat(listed).singleElement().satisfies(snapshot -> {
+            assertThat(snapshot.message()).isEqualTo(event);
+            assertThat(snapshot.status()).isEqualTo("FAILED");
+            assertThat(snapshot.attempts()).isEqualTo(12);
+        });
+        assertThat(store.retry("upms", event.eventId())).isTrue();
+        assertThat(state(event)).isEqualTo("PENDING");
+        assertThat(jdbc.queryForObject("SELECT last_error FROM reliable_outbox", String.class)).isNull();
+        assertThat(store.retry("upms", event.eventId())).isFalse();
     }
 
     @Test

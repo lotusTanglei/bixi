@@ -154,7 +154,7 @@ DEALLOCATE PREPARE workflow_add_column;
 
 SET @workflow_column_sql = IF(
     EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'sys_role_form_permission' AND column_name = 'tenant_id'),
-    'DO 0', 'ALTER TABLE `sys_role_form_permission` ADD COLUMN `tenant_id` VARCHAR(32) DEFAULT NULL COMMENT ''租户ID''');
+    'DO 0', 'ALTER TABLE `sys_role_form_permission` ADD COLUMN `tenant_id` BIGINT DEFAULT NULL COMMENT ''租户ID''');
 PREPARE workflow_add_column FROM @workflow_column_sql;
 EXECUTE workflow_add_column;
 DEALLOCATE PREPARE workflow_add_column;

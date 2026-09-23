@@ -41,6 +41,7 @@
         <flatten-maven-plugin.version>1.6.0</flatten-maven-plugin.version>
         <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
         <jsr305.version>3.0.2</jsr305.version>
+        <lombok.version>1.18.38</lombok.version>
     </properties>
 
     <!-- 以下依赖 全局所有的模块都会引入  -->
@@ -214,6 +215,7 @@
                         <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
                         </path>
                     </annotationProcessorPaths>
                 </configuration>

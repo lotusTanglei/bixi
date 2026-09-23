@@ -6,6 +6,7 @@ import com.lotus.bixi.common.mybatis.MybatisAutoConfiguration;
 import com.lotus.bixi.common.security.component.PermissionService;
 import com.lotus.bixi.common.security.service.BixiUser;
 import com.lotus.bixi.common.core.util.R;
+import com.lotus.bixi.common.core.context.TenantContextHolder;
 import com.lotus.bixi.upms.api.entity.SysUser;
 import com.lotus.bixi.upms.service.SysUserService;
 import com.lotus.bixi.upms.demo.leave.dto.LeaveRequestDTO;
@@ -65,6 +66,7 @@ class LeaveRequestIntegrationTest {
     JdbcTemplate jdbc;
 
     @BeforeEach void setup() throws Exception {
+        TenantContextHolder.set(1L);
         reset(workflows, users);
         innerRequest.removeHeader(com.lotus.bixi.common.core.constant.SecurityConstants.FROM);
         jdbc = new JdbcTemplate(source);
@@ -74,7 +76,10 @@ class LeaveRequestIntegrationTest {
         when(users.getById(22L)).thenReturn(user);
         login(11L);
     }
-    @AfterEach void cleanup() { SecurityContextHolder.clearContext(); }
+    @AfterEach void cleanup() {
+        SecurityContextHolder.clearContext();
+        TenantContextHolder.clear();
+    }
 
     @Test void configuredDatabaseUsesRequestedEngineAndMysqlDefaultIsolation() throws Exception {
         try (var connection = source.getConnection()) {
@@ -93,8 +98,8 @@ class LeaveRequestIntegrationTest {
     @Test void approverLookupFiltersActiveUsersAndReturnsOnlySafeProjection() throws Exception {
         recreateTable("sys_user");
         for (long id : List.of(11L, 22L, 33L, 44L, 55L)) {
-            jdbc.update("INSERT INTO sys_user(id,username,name,password,lock_flag,status,del_flag) VALUES (?,?,?,?,?,?,?)",
-                    id, "user-" + id, "审批人" + id, "never-expose", id == 33 ? "9" : "0", id == 44 ? "1" : "0", id == 55 ? "1" : "0");
+            jdbc.update("INSERT INTO sys_user(id,tenant_id,username,name,password,lock_flag,status,del_flag) VALUES (?,?,?,?,?,?,?,?)",
+                    id, 1L, "user-" + id, "审批人" + id, "never-expose", id == 33 ? "9" : "0", id == 44 ? "1" : "0", id == 55 ? "1" : "0");
         }
         doAnswer(call -> userMapper.selectPage(call.getArgument(0), call.getArgument(1)))
                 .when(users).page(any(Page.class), any(com.baomidou.mybatisplus.core.conditions.Wrapper.class));
@@ -473,7 +478,7 @@ class LeaveRequestIntegrationTest {
     private static void login(long id) { login(id, List.of("demo_leave_view", "demo_leave_add", "demo_leave_edit", "demo_leave_del")); }
     private static void login(long id, List<String> permissions) {
         var authorities = permissions.stream().map(SimpleGrantedAuthority::new).toList();
-        var user = new BixiUser(id, 1L, "user-" + id, "unused", null, true, true, true, true, authorities);
+        var user = new BixiUser(id, 1L, 1L, "user-" + id, "unused", null, true, true, true, true, authorities);
         SecurityContextHolder.getContext().setAuthentication(UsernamePasswordAuthenticationToken.authenticated(user, null, authorities));
     }
     @Configuration(proxyBeanMethods = false)

@@ -1,5 +1,7 @@
 package com.lotus.bixi.common.core.constant;
 
+import com.lotus.bixi.common.core.context.TenantContextHolder;
+
 /**
  * @author 唐磊
  * @date 2025-01-01
@@ -7,6 +9,21 @@ package com.lotus.bixi.common.core.constant;
  * 缓存的key 常量
  */
 public interface CacheConstants {
+
+	/**
+	 * Build a tenant-scoped cache namespace. Access tokens remain unscoped because
+	 * the token value itself is globally unique.
+	 */
+	static String tenantKey(String prefix, Long tenantId) {
+		Long effectiveTenantId = tenantId == null ? SecurityConstants.DEFAULT_TENANT_ID : tenantId;
+		String normalized = prefix.endsWith(":") ? prefix.substring(0, prefix.length() - 1) : prefix;
+		return normalized + ":TENANT:" + effectiveTenantId + ":";
+	}
+
+	/** Returns the current tenant namespace for Spring Cache SpEL expressions. */
+	static String currentTenantKey(String prefix) {
+		return tenantKey(prefix, TenantContextHolder.get());
+	}
 
     /**
      * oauth 缓存前缀
@@ -50,6 +67,16 @@ public interface CacheConstants {
      * 参数缓存
      */
     String PARAMS_DETAILS = "params_details";
+
+    /**
+     * 登录失败计数前缀
+     */
+    String LOGIN_FAIL_KEY = "LOGIN_FAIL_KEY:";
+
+    /**
+     * 短信发送频率限制前缀
+     */
+    String SMS_RATE_LIMIT_KEY = "SMS_RATE_LIMIT_KEY:";
 
     /**
      * 默认过期时间，单位：秒（12小时）

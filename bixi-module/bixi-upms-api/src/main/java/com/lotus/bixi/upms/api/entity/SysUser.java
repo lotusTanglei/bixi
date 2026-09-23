@@ -5,6 +5,8 @@ package com.lotus.bixi.upms.api.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.lotus.bixi.common.core.annotation.Sensitive;
+import com.lotus.bixi.common.core.annotation.SensitiveType;
 import com.lotus.bixi.common.mybatis.base.BaseEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -56,6 +58,7 @@ public class SysUser extends BaseEntity<SysUser> {
      * 手机号
      */
     @Schema(description = "手机号")
+    @Sensitive(SensitiveType.PHONE)
     private String phone;
 
     /**
@@ -110,12 +113,14 @@ public class SysUser extends BaseEntity<SysUser> {
      * 姓名
      */
     @Schema(description = "姓名")
+    @Sensitive(SensitiveType.NAME)
     private String name;
 
     /**
      * 邮箱
      */
     @Schema(description = "邮箱")
+    @Sensitive(SensitiveType.EMAIL)
     private String email;
 
 }

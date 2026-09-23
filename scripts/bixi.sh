@@ -52,6 +52,17 @@ upgrade_env() {
     append_env_if_missing MINIO_ENDPOINT http://127.0.0.1:9800
     append_env_if_missing MINIO_ACCESS_KEY "$(random_hex 24)"
     append_env_if_missing MINIO_SECRET_KEY "$(random_hex 24)"
+    append_env_if_missing WORKFLOW_CLUSTER_ENABLED false
+    append_env_if_missing WORKFLOW_ASYNC_JOB_LOCK_TIME PT30S
+    append_env_if_missing WORKFLOW_TIMER_LOCK_TIME PT30S
+    append_env_if_missing WORKFLOW_RESET_EXPIRED_JOBS_INTERVAL PT5S
+    append_env_if_missing WORKFLOW_DEFAULT_ASYNC_JOB_ACQUIRE_WAIT_TIME PT1S
+    append_env_if_missing WORKFLOW_DEFAULT_TIMER_JOB_ACQUIRE_WAIT_TIME PT1S
+    append_env_if_missing WORKFLOW_MAX_ASYNC_JOBS_DUE_PER_ACQUISITION 4
+    append_env_if_missing WORKFLOW_MAX_TIMER_JOBS_PER_ACQUISITION 4
+    append_env_if_missing WORKFLOW_RESET_EXPIRED_JOBS_PAGE_SIZE 100
+    append_env_if_missing WORKFLOW_RESET_EXPIRED_JOB_ENABLED true
+    append_env_if_missing WORKFLOW_UNLOCK_OWNED_JOBS true
 }
 
 init_env() {
@@ -171,7 +182,12 @@ prepare_admin_hash() {
 }
 
 compose() {
-    docker compose --env-file "${ENV_FILE}" -f "${COMPOSE_FILE}" "$@"
+    if [ "${WORKFLOW_CLUSTER_ENABLED:-false}" = 'true' ]; then
+        docker compose --env-file "${ENV_FILE}" -f "${COMPOSE_FILE}" \
+            -f "${ROOT}/compose.workflow-cluster.yaml" "$@"
+    else
+        docker compose --env-file "${ENV_FILE}" -f "${COMPOSE_FILE}" "$@"
+    fi
 }
 
 compose_owns_port() {
@@ -298,19 +314,27 @@ start_cloud() {
     select_registry
     prepare_images cloud
     compose --profile single stop frontend-single single >/dev/null 2>&1 || true
-    workflow_service=""
+    workflow_services=""
+    workflow_profiles="--profile workflow"
     if [ "${WORKFLOW_ENABLED:-false}" = "true" ]; then
-        workflow_service="workflow"
+        if [ "${WORKFLOW_CLUSTER_ENABLED:-false}" = "true" ]; then
+            workflow_services="workflow-a workflow-b"
+            workflow_profiles="--profile workflow-cluster"
+            info 'starting two Workflow replicas with distinct lock owners'
+        else
+            workflow_services="workflow"
+        fi
     else
-        compose --profile cloud --profile workflow stop workflow >/dev/null 2>&1 || true
+        compose --profile cloud --profile workflow --profile workflow-cluster \
+            stop workflow workflow-a workflow-b >/dev/null 2>&1 || true
     fi
-    for service in gateway upms auth frontend-cloud ${workflow_service}; do
+    for service in gateway upms auth frontend-cloud ${workflow_services}; do
         compose --profile cloud build "${service}"
     done
     compose --profile cloud up --detach --no-build \
-        mysql redis rabbitmq nacos nacos-config gateway upms auth frontend-cloud ${workflow_service}
-    if [ -n "${workflow_service}" ]; then
-        compose --profile cloud --profile workflow up --detach --no-build --wait workflow
+        mysql redis rabbitmq nacos nacos-config gateway upms auth frontend-cloud
+    if [ -n "${workflow_services}" ]; then
+        compose --profile cloud ${workflow_profiles} up --detach --no-build --wait ${workflow_services}
     fi
     wait_for_url gateway "http://localhost:${GATEWAY_PORT}/actuator/health"
     wait_for_url auth "http://localhost:${GATEWAY_PORT}/auth/actuator/health"
@@ -326,7 +350,8 @@ start_single() {
     load_env
     select_registry
     prepare_images single
-    compose --profile cloud --profile workflow stop frontend-cloud auth upms gateway workflow nacos nacos-config >/dev/null 2>&1 || true
+    compose --profile cloud --profile workflow --profile workflow-cluster \
+        stop frontend-cloud auth upms gateway workflow workflow-a workflow-b nacos nacos-config >/dev/null 2>&1 || true
     for service in single frontend-single; do
         compose --profile single build "${service}"
     done

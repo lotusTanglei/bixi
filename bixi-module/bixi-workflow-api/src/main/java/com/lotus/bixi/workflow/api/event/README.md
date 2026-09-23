@@ -15,6 +15,10 @@ unknown event types, or unknown schema versions are rejected.
 | `WORKFLOW_STARTED` | `workflow` -> `upms` | required | 1 | requestHash |
 | `WORKFLOW_START_REJECTED` | `workflow` -> `upms` | null | 1 | requestHash, errorCode |
 | `WORKFLOW_COMPLETED` | `workflow` -> `upms` | required | >1 | requestHash, outcome, endedAt |
+| `WORKFLOW_BUSINESS_TASK_REQUESTED` | `workflow` -> `upms` | required | >1 | requestHash, operationId, executionId, activityId, activityOccurrence, deadline |
+| `WORKFLOW_BUSINESS_TASK_RESULT` | `upms` -> `workflow` | required | >1 | requestHash, operationId, success, bookingReference/errorCode, completedAt |
+| `WORKFLOW_COMPENSATION_REQUESTED` | `workflow` -> `upms` | required | >1 | requestHash, operationId, compensationId |
+| `WORKFLOW_COMPENSATION_RESULT` | `upms` -> `workflow` | required | >1 | requestHash, operationId, compensationId, success, errorCode, completedAt |
 
 Every event is scoped to tenant `default`, model `demo_leave_approval`, table
 `demo_leave_request`, a positive businessId and round, and an immutable businessKey.
@@ -40,4 +44,7 @@ retains the validated leave form and submission command locally; the workflow
 consumer must not accept arbitrary process variables from this event. StartRejected
 uses the fixed codes `INVALID_START`, `DEFINITION_UNAVAILABLE`,
 `APPROVER_UNAVAILABLE`, and `START_FAILED`. Completion outcomes are limited to
-`APPROVED`, `REJECTED`, and `CANCELED`; later automatic-task events are outside 2B.
+`APPROVED`, `REJECTED`, and `CANCELED`. Automatic-task events use fixed UUID
+operation/compensation identifiers and do not carry callback URLs or arbitrary
+process variables. The 2E event contract is implemented, but its Flowable v2
+producer/consumer chain remains a later slice.

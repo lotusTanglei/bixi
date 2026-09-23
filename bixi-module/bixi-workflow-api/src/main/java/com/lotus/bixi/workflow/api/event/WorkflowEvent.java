@@ -54,10 +54,38 @@ public record WorkflowEvent(String eventId, WorkflowEventType type, int schemaVe
                     throw new IllegalArgumentException("流程完成关联无效");
                 }
             }
+            case WORKFLOW_BUSINESS_TASK_REQUESTED -> {
+                if (!workflowToUpms(sourceOwner, targetOwner) || processInstanceId == null
+                        || aggregateSequence <= 1 || !(payload instanceof WorkflowBusinessTaskRequested)) {
+                    throw new IllegalArgumentException("自动任务请求关联无效");
+                }
+            }
+            case WORKFLOW_BUSINESS_TASK_RESULT -> {
+                if (!upmsToWorkflow(sourceOwner, targetOwner) || processInstanceId == null
+                        || aggregateSequence <= 1 || !(payload instanceof WorkflowBusinessTaskResult)) {
+                    throw new IllegalArgumentException("自动任务结果关联无效");
+                }
+            }
+            case WORKFLOW_COMPENSATION_REQUESTED -> {
+                if (!workflowToUpms(sourceOwner, targetOwner) || processInstanceId == null
+                        || aggregateSequence <= 1 || !(payload instanceof WorkflowCompensationRequested)) {
+                    throw new IllegalArgumentException("补偿请求关联无效");
+                }
+            }
+            case WORKFLOW_COMPENSATION_RESULT -> {
+                if (!upmsToWorkflow(sourceOwner, targetOwner) || processInstanceId == null
+                        || aggregateSequence <= 1 || !(payload instanceof WorkflowCompensationResult)) {
+                    throw new IllegalArgumentException("补偿结果关联无效");
+                }
+            }
         }
     }
 
     private static boolean workflowToUpms(String source, String target) {
         return "workflow".equals(source) && "upms".equals(target);
+    }
+
+    private static boolean upmsToWorkflow(String source, String target) {
+        return "upms".equals(source) && "workflow".equals(target);
     }
 }

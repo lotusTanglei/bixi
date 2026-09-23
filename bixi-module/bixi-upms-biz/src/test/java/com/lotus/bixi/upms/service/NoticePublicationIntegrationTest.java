@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.autoconfigure.MybatisPlusAutoConfiguration;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lotus.bixi.common.mybatis.MybatisAutoConfiguration;
+import com.lotus.bixi.common.core.context.TenantContextHolder;
 import com.lotus.bixi.common.security.component.PermissionService;
 import com.lotus.bixi.common.security.service.BixiUser;
 import com.lotus.bixi.upms.api.constant.MQConstants;
@@ -76,6 +77,7 @@ class NoticePublicationIntegrationTest {
 
     @BeforeEach
     void setup() throws Exception {
+        TenantContextHolder.set(1L);
         jdbc = new JdbcTemplate(source);
         for (String table : new String[]{"sys_notice", "sys_user_notice", "sys_user"}) {
             recreateCanonicalTable(table);
@@ -88,6 +90,7 @@ class NoticePublicationIntegrationTest {
     @AfterEach
     void cleanup() {
         SecurityContextHolder.clearContext();
+        TenantContextHolder.clear();
     }
 
     @Test
@@ -337,7 +340,7 @@ class NoticePublicationIntegrationTest {
 
     private static void login(long id, String... permissions) {
         var authorities = Arrays.stream(permissions).map(SimpleGrantedAuthority::new).toList();
-        var user = new BixiUser(id, 1L, "user-" + id, "unused", null, true, true, true, true, authorities);
+        var user = new BixiUser(id, 1L, 1L, "user-" + id, "unused", null, true, true, true, true, authorities);
         SecurityContextHolder.getContext().setAuthentication(UsernamePasswordAuthenticationToken.authenticated(user, null, authorities));
     }
 

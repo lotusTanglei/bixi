@@ -75,6 +75,38 @@ public final class WorkflowEventCodec {
                 payload.put("outcome", value.outcome().name());
                 payload.put("endedAt", value.endedAt().toString());
             }
+            case WORKFLOW_BUSINESS_TASK_REQUESTED -> {
+                var value = (WorkflowBusinessTaskRequested) event.payload();
+                payload.put("operationId", value.operationId());
+                payload.put("executionId", value.executionId());
+                payload.put("activityId", value.activityId());
+                payload.put("activityOccurrence", value.activityOccurrence());
+                payload.put("deadline", value.deadline().toString());
+            }
+            case WORKFLOW_BUSINESS_TASK_RESULT -> {
+                var value = (WorkflowBusinessTaskResult) event.payload();
+                payload.put("operationId", value.operationId());
+                payload.put("success", value.success());
+                if (value.bookingReference() == null) payload.putNull("bookingReference");
+                else payload.put("bookingReference", value.bookingReference());
+                if (value.errorCode() == null) payload.putNull("errorCode");
+                else payload.put("errorCode", value.errorCode());
+                payload.put("completedAt", value.completedAt().toString());
+            }
+            case WORKFLOW_COMPENSATION_REQUESTED -> {
+                var value = (WorkflowCompensationRequested) event.payload();
+                payload.put("operationId", value.operationId());
+                payload.put("compensationId", value.compensationId());
+            }
+            case WORKFLOW_COMPENSATION_RESULT -> {
+                var value = (WorkflowCompensationResult) event.payload();
+                payload.put("operationId", value.operationId());
+                payload.put("compensationId", value.compensationId());
+                payload.put("success", value.success());
+                if (value.errorCode() == null) payload.putNull("errorCode");
+                else payload.put("errorCode", value.errorCode());
+                payload.put("completedAt", value.completedAt().toString());
+            }
         }
         try {
             byte[] bytes = json.writeValueAsBytes(root);
@@ -136,6 +168,32 @@ public final class WorkflowEventCodec {
                 yield new WorkflowCompleted(string(fields, "requestHash"),
                         WorkflowOutcome.valueOf(string(fields, "outcome")), instant(fields, "endedAt"));
             }
+            case WORKFLOW_BUSINESS_TASK_REQUESTED -> {
+                ObjectNode fields = object(node, Set.of("requestHash", "operationId", "executionId",
+                        "activityId", "activityOccurrence", "deadline"));
+                yield new WorkflowBusinessTaskRequested(string(fields, "requestHash"), string(fields, "operationId"),
+                        string(fields, "executionId"), string(fields, "activityId"),
+                        exactInt(fields, "activityOccurrence"), instant(fields, "deadline"));
+            }
+            case WORKFLOW_BUSINESS_TASK_RESULT -> {
+                ObjectNode fields = object(node, Set.of("requestHash", "operationId", "success",
+                        "bookingReference", "errorCode", "completedAt"));
+                yield new WorkflowBusinessTaskResult(string(fields, "requestHash"), string(fields, "operationId"),
+                        bool(fields, "success"), nullableString(fields, "bookingReference"),
+                        nullableString(fields, "errorCode"), instant(fields, "completedAt"));
+            }
+            case WORKFLOW_COMPENSATION_REQUESTED -> {
+                ObjectNode fields = object(node, Set.of("requestHash", "operationId", "compensationId"));
+                yield new WorkflowCompensationRequested(string(fields, "requestHash"), string(fields, "operationId"),
+                        string(fields, "compensationId"));
+            }
+            case WORKFLOW_COMPENSATION_RESULT -> {
+                ObjectNode fields = object(node, Set.of("requestHash", "operationId", "compensationId",
+                        "success", "errorCode", "completedAt"));
+                yield new WorkflowCompensationResult(string(fields, "requestHash"), string(fields, "operationId"),
+                        string(fields, "compensationId"), bool(fields, "success"),
+                        nullableString(fields, "errorCode"), instant(fields, "completedAt"));
+            }
         };
     }
 
@@ -156,6 +214,12 @@ public final class WorkflowEventCodec {
     private static String nullableString(ObjectNode value, String name) {
         if (value.get(name).isNull()) return null;
         return string(value, name);
+    }
+
+    private static boolean bool(ObjectNode value, String name) {
+        JsonNode node = value.get(name);
+        if (node == null || !node.isBoolean()) throw new IllegalArgumentException(name + "必须是布尔值");
+        return node.booleanValue();
     }
 
     private static long integer(ObjectNode value, String name) {

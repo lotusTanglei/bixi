@@ -62,7 +62,9 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
      * @return
      */
     @Override
-    @Cacheable(value = CacheConstants.ROLE_DETAILS, key = "#key", unless = "#result.isEmpty()")
+    @Cacheable(value = CacheConstants.ROLE_DETAILS,
+            key = "T(com.lotus.bixi.common.core.constant.CacheConstants).currentTenantKey('role_details') + #key",
+            unless = "#result.isEmpty()")
     public List<SysRole> findRolesByRoleIds(List<Long> roleIdList, String key) {
         return baseMapper.selectBatchIds(roleIdList);
     }

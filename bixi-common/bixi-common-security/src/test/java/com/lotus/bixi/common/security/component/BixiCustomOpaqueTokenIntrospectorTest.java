@@ -169,7 +169,7 @@ class BixiCustomOpaqueTokenIntrospectorTest {
     }
 
     private static BixiUser user(Long id, String state) {
-        return new BixiUser(id, 1L, "alice", "encoded", "13800000000", !state.equals("disabled"),
+        return new BixiUser(id, 1L, 1L, "alice", "encoded", "13800000000", !state.equals("disabled"),
                 !state.equals("accountExpired"), !state.equals("credentialsExpired"), !state.equals("locked"),
                 AuthorityUtils.createAuthorityList("current_permission"));
     }
@@ -178,7 +178,7 @@ class BixiCustomOpaqueTokenIntrospectorTest {
         var client = RegisteredClient.withId("bixi").clientId("bixi")
                 .authorizationGrantType(new AuthorizationGrantType(grant))
                 .redirectUri("https://example.invalid/callback").build();
-        var original = new BixiUser(41L, 1L, "alice", "encoded", "13800000000", true, true, true, true,
+        var original = new BixiUser(41L, 1L, 1L, "alice", "encoded", "13800000000", true, true, true, true,
                 AuthorityUtils.createAuthorityList("previous_permission"));
         var builder = OAuth2Authorization.withRegisteredClient(client).principalName("alice")
                 .authorizationGrantType(new AuthorizationGrantType(grant)).authorizedScopes(Set.of("server"))

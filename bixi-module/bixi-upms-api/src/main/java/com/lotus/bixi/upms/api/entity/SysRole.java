@@ -43,6 +43,12 @@ public class SysRole extends BaseEntity<SysRole> {
     @Schema(description = "排序值")
     private Integer sn;
 
+    /**
+     * 数据权限（1全部 2本部门及下级 3本部门 4本人）
+     */
+    @Schema(description = "数据权限")
+    private String dataScope;
+
 
 
 }

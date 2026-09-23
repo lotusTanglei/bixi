@@ -14,6 +14,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lotus.bixi.common.security.service.BixiUser;
+import com.lotus.bixi.common.core.constant.SecurityConstants;
 import com.lotus.bixi.common.security.annotation.HasPermission;
 import com.lotus.bixi.workflow.api.constant.WorkflowConstants;
 import com.lotus.bixi.workflow.api.dto.ProcessQueryDTO;
@@ -22,6 +23,9 @@ import com.lotus.bixi.workflow.api.dto.FormDataDTO;
 import com.lotus.bixi.workflow.api.entity.WfProcessInstance;
 import com.lotus.bixi.workflow.api.vo.ApprovalRecordVO;
 import com.lotus.bixi.workflow.api.vo.ProcessInstanceVO;
+import com.lotus.bixi.workflow.api.event.WorkflowEvent;
+import com.lotus.bixi.workflow.api.event.WorkflowStartRequested;
+import com.lotus.bixi.workflow.api.event.WorkflowOutcome;
 import com.lotus.bixi.workflow.mapper.WfProcessInstanceMapper;
 import com.lotus.bixi.workflow.service.ApprovalRecordService;
 import com.lotus.bixi.workflow.service.FormDataService;
@@ -39,6 +43,7 @@ import org.flowable.engine.runtime.ProcessInstance;
 import org.flowable.image.ProcessDiagramGenerator;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -70,7 +75,7 @@ public class ProcessInstanceServiceImpl extends ServiceImpl<WfProcessInstanceMap
     private final FormDataService formDataService;
 
     private final WorkflowAccessService access;
-    private final WorkflowResultNotifier results;
+    private final WorkflowTerminalEventPublisher terminalEvents;
     private final WorkflowCommandExecutor commands;
     private final WorkflowRequestHasher hasher;
 
@@ -104,6 +109,43 @@ public class ProcessInstanceServiceImpl extends ServiceImpl<WfProcessInstanceMap
         return commands.getCommand(requestId);
     }
 
+    /**
+     * Trusted internal entry used by the durable workflow inbox. It deliberately bypasses
+     * the HTTP command executor: the command identity, actor and business association were
+     * authenticated and persisted by UPMS before this event was created.
+     */
+    @Transactional
+    public ProcessInstanceVO startTrusted(WorkflowEvent event) {
+        if (event == null || !(event.payload() instanceof WorkflowStartRequested requested)) {
+            throw new IllegalArgumentException("启动事件无效");
+        }
+        ProcessStartDTO dto = new ProcessStartDTO();
+        dto.setRequestId(event.commandId());
+        dto.setProcessKey(event.processKey());
+        dto.setBusinessTable(event.businessTable());
+        dto.setBusinessId(event.businessId());
+        dto.setBusinessKey(event.businessKey());
+        dto.setTitle(requested.title());
+        Map<String, Object> trustedVariables = new HashMap<>();
+        trustedVariables.put("approverId", Long.toString(requested.approverId()));
+        trustedVariables.put("businessRound", event.round());
+        trustedVariables.put("businessId", event.businessId());
+        trustedVariables.put("businessKey", event.businessKey());
+        trustedVariables.put("businessTable", event.businessTable());
+        trustedVariables.put("startRequestId", event.commandId());
+        trustedVariables.put("startRequestHash", event.payload().requestHash());
+        trustedVariables.put("applicant", Long.toString(event.actor().userId()));
+        trustedVariables.put("initiator", Long.toString(event.actor().userId()));
+        trustedVariables.put("startUserId", Long.toString(event.actor().userId()));
+        trustedVariables.put("startUserName", event.actor().username());
+        dto.setVariables(trustedVariables);
+        BixiUser actor = new BixiUser(event.actor().userId(), null, SecurityConstants.DEFAULT_TENANT_ID,
+                event.actor().username(), "", null,
+                true, true, true, true, List.of());
+        ProcessStartDTO normalized = normalizeStart(dto, actor);
+        return startOnce(normalized, actor, false, event.payload().requestHash());
+    }
+
     private ProcessStartDTO normalizeStart(ProcessStartDTO dto, BixiUser user) {
         ProcessStartDTO normalized = new ProcessStartDTO();
         BeanUtils.copyProperties(dto, normalized);
@@ -129,6 +171,14 @@ public class ProcessInstanceServiceImpl extends ServiceImpl<WfProcessInstanceMap
     }
 
     private ProcessInstanceVO startOnce(ProcessStartDTO dto, BixiUser user) {
+        return startOnce(dto, user, true, null);
+    }
+
+    private ProcessInstanceVO startOnce(ProcessStartDTO dto, BixiUser user, boolean notify) {
+        return startOnce(dto, user, notify, null);
+    }
+
+    private ProcessInstanceVO startOnce(ProcessStartDTO dto, BixiUser user, boolean notify, String requestHash) {
         Map<String, Object> variables = dto.getVariables();
         Integer businessRound = variables.containsKey("businessRound")
                 ? ((Number) variables.get("businessRound")).intValue() : null;
@@ -136,9 +186,31 @@ public class ProcessInstanceServiceImpl extends ServiceImpl<WfProcessInstanceMap
         ProcessInstance processInstance;
         try {
             Authentication.setAuthenticatedUserId(user.getId().toString());
-            processInstance = runtimeService.createProcessInstanceBuilder()
+            var builder = runtimeService.createProcessInstanceBuilder()
                     .processDefinitionKey(dto.getProcessKey()).businessKey(dto.getBusinessKey())
-                    .name(dto.getTitle()).variables(variables).start();
+                    .name(dto.getTitle()).variables(variables);
+            if (user.getTenantId() != null && user.getTenantId() > 0) {
+                String tenantId = user.getTenantId().toString();
+                boolean tenantDefinitionExists = repositoryService.createProcessDefinitionQuery()
+                        .processDefinitionKey(dto.getProcessKey())
+                        .processDefinitionTenantId(tenantId).latestVersion().count() > 0;
+                if (tenantDefinitionExists) {
+                    processInstance = builder.tenantId(tenantId).start();
+                } else if (repositoryService.createProcessDefinitionQuery()
+                        .processDefinitionKey(dto.getProcessKey())
+                        .processDefinitionWithoutTenantId().latestVersion().count() > 0) {
+                    log.warn("workflow_legacy_definition_fallback processKey={} tenantId={} requestId={} "
+                                    + "candidate tasks will fail closed until the definition is migrated",
+                            dto.getProcessKey(), tenantId, dto.getRequestId());
+                    processInstance = runtimeService.createProcessInstanceBuilder()
+                            .processDefinitionKey(dto.getProcessKey()).businessKey(dto.getBusinessKey())
+                            .name(dto.getTitle()).variables(variables).start();
+                } else {
+                    processInstance = builder.tenantId(tenantId).start();
+                }
+            } else {
+                processInstance = builder.start();
+            }
         } finally {
             Authentication.setAuthenticatedUserId(previousUser);
         }
@@ -146,6 +218,7 @@ public class ProcessInstanceServiceImpl extends ServiceImpl<WfProcessInstanceMap
         WfProcessInstance wfProcessInstance = new WfProcessInstance();
         wfProcessInstance.setProcessInstanceId(processInstance.getId());
         wfProcessInstance.setStartRequestId(dto.getRequestId());
+        wfProcessInstance.setStartRequestHash(requestHash);
         wfProcessInstance.setProcessDefinitionId(processInstance.getProcessDefinitionId());
         wfProcessInstance.setProcessKey(dto.getProcessKey());
         wfProcessInstance.setBusinessKey(dto.getBusinessKey());
@@ -161,7 +234,10 @@ public class ProcessInstanceServiceImpl extends ServiceImpl<WfProcessInstanceMap
             wfProcessInstance.setEndTime(LocalDateTime.now());
         }
         this.save(wfProcessInstance);
-        if (ended) results.afterCommit(processInstance.getId());
+        if (ended && notify) {
+            terminalEvents.publish(wfProcessInstance, WorkflowOutcome.APPROVED,
+                    user.getId(), user.getUsername(), dto.getRequestId());
+        }
 
         if (dto.getFormId() != null && StrUtil.isNotBlank(dto.getFormDataJson())) {
             FormDataDTO formDataDTO = new FormDataDTO();
@@ -175,7 +251,13 @@ public class ProcessInstanceServiceImpl extends ServiceImpl<WfProcessInstanceMap
             formDataService.saveFormData(formDataDTO);
         }
 
-        return getById(processInstance.getId());
+        return notify ? getById(processInstance.getId()) : toView(wfProcessInstance);
+    }
+
+    private static ProcessInstanceVO toView(WfProcessInstance instance) {
+        ProcessInstanceVO view = new ProcessInstanceVO();
+        BeanUtils.copyProperties(instance, view);
+        return view;
     }
 
     @Override
@@ -251,19 +333,24 @@ public class ProcessInstanceServiceImpl extends ServiceImpl<WfProcessInstanceMap
                     WfProcessInstance locked = baseMapper.selectForUpdate(processInstanceId);
                     if (locked == null) throw new IllegalArgumentException("流程实例不存在");
                     requireStarterLocked(locked, user);
-                    return terminateOnce(locked, processInstanceId, reason);
+                    return terminateOnce(locked, processInstanceId, reason, user, requestId);
                 });
     }
 
-    private boolean terminateOnce(WfProcessInstance instance, String processInstanceId, String reason) {
+    private boolean terminateOnce(WfProcessInstance instance, String processInstanceId, String reason,
+            BixiUser user, String requestId) {
         requireStatus(instance, WorkflowConstants.STATUS_RUNNING);
         runtimeService.deleteProcessInstance(processInstanceId, reason);
+        LocalDateTime endedAt = LocalDateTime.now();
         boolean updated = this.update(Wrappers.<WfProcessInstance>lambdaUpdate()
                 .set(WfProcessInstance::getStatus, WorkflowConstants.STATUS_TERMINATED)
-                .set(WfProcessInstance::getEndTime, LocalDateTime.now())
+                .set(WfProcessInstance::getEndTime, endedAt)
                 .eq(WfProcessInstance::getProcessInstanceId, processInstanceId));
         if (!updated) throw new IllegalStateException("流程状态已变更");
-        results.afterCommit(processInstanceId);
+        instance.setStatus(WorkflowConstants.STATUS_TERMINATED);
+        instance.setEndTime(endedAt);
+        terminalEvents.publish(instance, WorkflowOutcome.CANCELED,
+                user.getId(), user.getUsername(), requestId);
         return true;
     }
 

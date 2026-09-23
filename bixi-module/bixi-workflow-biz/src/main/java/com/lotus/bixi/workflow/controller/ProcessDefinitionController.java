@@ -36,6 +36,14 @@ public class ProcessDefinitionController {
         return R.ok(processDefinitionService.deployDemo());
     }
 
+    @PostMapping("/deploy-demo/v3")
+    @HasPermission("workflow_definition_edit")
+    @SysLog("部署请假流程示例 v3")
+    @Operation(summary = "显式部署请假流程 v3")
+    public R<ProcessDefinitionVO> deployDemoV3() {
+        return R.ok(processDefinitionService.deployDemoV3());
+    }
+
     @GetMapping("/list")
     @HasPermission("workflow_definition_view")
     @Operation(summary = "查询流程定义列表")

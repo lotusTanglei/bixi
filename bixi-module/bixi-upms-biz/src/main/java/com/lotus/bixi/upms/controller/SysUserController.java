@@ -226,6 +226,18 @@ public class SysUserController {
         return R.ok(userService.lockUser(username));
     }
 
+    /**
+     * 解锁用户
+     *
+     * @param username 用户名
+     * @return R
+     */
+    @Inner
+    @PutMapping("/unlock/{username}")
+    public R unlockUser(@PathVariable String username) {
+        return R.ok(userService.unlockUser(username));
+    }
+
     @PutMapping("/password")
     public R password(@RequestBody UserDTO userDto) {
         String username = SecurityUtils.getUser().getUsername();

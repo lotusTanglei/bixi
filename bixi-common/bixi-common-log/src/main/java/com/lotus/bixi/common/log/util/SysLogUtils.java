@@ -7,6 +7,7 @@ import cn.hutool.extra.servlet.JakartaServletUtil;
 import cn.hutool.extra.spring.SpringUtil;
 import cn.hutool.http.HttpUtil;
 import com.lotus.bixi.common.core.util.SpringContextHolder;
+import com.lotus.bixi.common.core.context.TenantContextHolder;
 import com.lotus.bixi.common.log.config.BixiLogProperties;
 import com.lotus.bixi.common.log.event.SysLogEventSource;
 import jakarta.servlet.http.HttpServletRequest;
@@ -40,6 +41,8 @@ public class SysLogUtils {
         sysLog.setType(LogTypeEnum.NORMAL.getType());
         // Capture the trusted actor before the event moves to the async listener.
         sysLog.setCreateBy(currentActorId());
+        // Async persistence runs after request cleanup; carry the trusted tenant explicitly.
+        sysLog.setTenantId(TenantContextHolder.get());
         sysLog.setServiceId(SpringUtil.getProperty("spring.application.name"));
         if (!(RequestContextHolder.getRequestAttributes() instanceof ServletRequestAttributes attributes)) {
             sysLog.setMethod("LOCAL");

@@ -26,6 +26,20 @@ python3 scripts/test-security-menu-migration.py
 
 ## 工作流表结构
 
+### Flowable 7.1.0 引擎表
+
+受控 Workflow 迁移还必须按以下顺序执行三个由项目锁定的 Flowable 7.1.0 MySQL schema 资源：
+
+1. `20260922_flowable_common_7_1_0.sql`：Flowable common/runtime 基础表、作业表、任务表及通用索引。
+2. `20260922_flowable_engine_7_1_0.sql`：流程定义、执行实例、活动实例及引擎外键/版本属性。
+3. `20260922_flowable_history_7_1_0.sql`：流程、活动、变量、评论和附件历史表及索引。
+4. `20260922_flowable_runtime_properties.sql`：在维护窗口幂等预置 Flowable 7.1.0 默认的执行、任务关系计数属性，避免两个首启副本同时向 `ACT_GE_PROPERTY` 插入同一主键。
+
+资源来自 `org.flowable:flowable-engine-common:7.1.0` 与
+`org.flowable:flowable-engine:7.1.0` 的 `org/flowable/**/db/create/flowable.mysql.*.sql`，文件头保留 SHA-256 校验值。`scripts/migrate-workflow-schema.sh` 会按文件名排序自动执行它们，并在每个文件成功后写入 `bixi_schema_migration`；已记录的文件会跳过。不要手工改写这些上游 SQL，也不要打开 `WORKFLOW_SCHEMA_UPDATE` 让应用启动时创建表。
+
+前三段上游脚本是一次性的空库初始化资源，第四段是可用于既有库的 Bixi 补充迁移；它保留已经存在的属性值，运行配置仍固定使用 Flowable 7.1.0 默认值 `true`。这些脚本必须在没有 Workflow 副本连接数据库的维护窗口执行。若任一段在执行中失败，先保留并检查已经创建的 `ACT_*` 表和 `bixi_schema_migration` 记录，修复原因后再重试，不要并发启动 Workflow。
+
 `20260921_workflow_base_entity_columns.sql` 用于已有 MySQL 8.0+ 数据库，补齐九张工作流、表单及表单权限表继承的 `BaseEntity` 字段。新建数据库使用更新后的 `01_init_all_tables.sql`。
 
 升级时选中业务数据库并执行增量脚本：
@@ -43,7 +57,7 @@ MySQL DDL 会自动提交。应用回退时保留这些兼容的新增字段即�
 
 1. `20260921_workflow_business_round.sql`：增加独立业务轮次，通知不依赖 Flowable 历史配置。旧流程保持 NULL，不自动猜测或回填轮次；旧实例不会被当成新请假业务回调。
 2. `20260921_demo_leave_request.sql`：新建请假表及查询索引，保留已有表和数据。
-3. `20260921_workflow_menus.sql`：添加请假及工作流入口，授予管理员角色。菜单保留在数据库，启停由服务端开关过滤。实际使用菜单 ID 为 5010–5014、6000–6004、6011–6012、6021–6023、6031–6032，并依赖已有的示例业务目录 5000。
+3. `20260921_workflow_menus.sql`：添加请假及工作流入口，授予管理员角色。菜单保留在数据库，启停由服务端开关过滤。实际使用菜单 ID 为 5010–5014、6000–6005、6011–6012、6021–6023、6031–6032、6041–6042，并依赖已有的示例业务目录 5000。
 
 这些脚本可以重复执行。新增库直接运行规范初始化文件，不需要再执行上述增量迁移。
 
@@ -73,6 +87,10 @@ WORKFLOW_TEST_MYSQL_IMAGE=public.ecr.aws/docker/library/mysql:8.4.3 \
 脚本先输出重复 `process_instance_id` 清单并拒绝迁移，也拒绝同名却非唯一、不同列或前缀列的 `uk_wf_process_instance_id`。这些预检通过前不修改业务表，即使 `mysql --force` 继续处理错误也不绕过保护；保留原数据供人工协调，不自动删重。成功后可重复执行，保留实例和已提交命令。MySQL DDL 自动提交，非预检的运行失败仍需核对已执行的 DDL；修复失败原因后重跑完整脚本。
 
 这个批次只保证同一操作者、同一 requestId 的 START 幂等。不同 requestId 仍可关联相同业务，业务轮次唯一约束须等 2C 可信启动入口切换后再加入。`wf_command` 不使用逻辑删除，也不自动清理；删除命令会丢失对应请求的去重与结果恢复能力。流程写请求在升级后必须传标准小写 UUID，升级浏览器和服务调用方应与后端同步。
+
+## 可靠投递恢复审计迁移
+
+启用 Workflow 或 UPMS owner 的恢复查询和人工重试前，已有数据库还需执行 `20260922_workflow_recovery_audit.sql`。该脚本只新增 `wf_recovery_audit`，不修改 Outbox/Inbox/隔离区历史记录；重复执行安全。两个 owner 的失败重试均使用状态 CAS，审计记录独立事务保存操作者、owner、事件 ID、原因和是否实际变更，不保存消息正文；共享恢复页通过 owner 切换访问两个入口。
 
 迁移安全回归使用独立临时 MySQL 容器，不运行 Maven：
 

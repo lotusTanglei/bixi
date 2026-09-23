@@ -6,6 +6,8 @@ import { dirname, resolve } from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
+import { generateStrongPassword } from './acceptance-password.mjs';
+
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const mode = process.env.BIXI_MODE || 'cloud';
 
@@ -155,6 +157,7 @@ try {
 
 async function verifyWorkflow(menu, currentUser) {
 	const enabled = env.WORKFLOW_ENABLED === 'true';
+	const reliable = env.BIXI_RELIABLE_ENABLED === 'true';
 	for (const path of ['/demo/leave/index', '/workflow/task/todo', '/workflow/task/done', '/workflow/process/instance']) {
 		assert(containsMenuPath(menu, path) === enabled, `workflow menu visibility does not match enabled=${enabled}: ${path}`);
 	}
@@ -230,7 +233,14 @@ async function verifyWorkflow(menu, currentUser) {
 			assertDenied(await actor(outsider, `/admin/demo/leave/${draft.id}`, { method: 'PUT', body: payload }), 'outsider edit draft');
 			assertApi(await authorized(`/admin/demo/leave/${draft.id}`, { method: 'PUT', body: { ...payload, reason: `${reason}-edited` } }), 'edit leave draft');
 			auditExpected.push({ title: '新增请假申请', marker: reason }, { title: '修改请假申请', marker: String(draft.id) });
-			const submitted = assertApi(await authorized(`/admin/demo/leave/${draft.id}/submit`, { method: 'POST' }), 'submit leave');
+			const submittedResponse = assertApi(await authorized(`/admin/demo/leave/${draft.id}/submit`, { method: 'POST' }), 'submit leave');
+			const submitted = reliable
+				? await poll(
+					async () => assertApi(await authorized(`/admin/demo/leave/details/${draft.id}`), 'read reliable leave binding'),
+					value => value.leaveStatus === 'IN_REVIEW' && value.processInstanceId,
+					'reliable leave workflow binding'
+				)
+				: submittedResponse;
 			assert(submitted.leaveStatus === 'IN_REVIEW' && submitted.processInstanceId, 'leave not bound to running process', submitted);
 			processIds.push(submitted.processInstanceId);
 			assertDenied(await authorized(`/admin/demo/leave/${draft.id}/submit`, { method: 'POST' }), 'repeat submitted leave');
@@ -316,6 +326,13 @@ async function verifyWorkflow(menu, currentUser) {
 			const final = await poll(async () => assertApi(await authorized(`/admin/demo/leave/details/${draft.id}`), 'read final leave'), value => value.leaveStatus === expected, 'automatic business writeback');
 			assert(final.endedAt, 'business terminal time missing', final);
 			assertApi(await authorized(`/admin/demo/leave/${draft.id}/refresh`, { method: 'POST' }), 'reconcile final state');
+			if (reliable) {
+				const recoveryRows = assertApi(await authorized('/admin/upms/recovery/reconcile?limit=100'), 'query UPMS recovery reconciliation');
+				const currentRecovery = recoveryRows.find(row => String(row.businessId) === String(draft.id));
+				assert(currentRecovery, 'UPMS recovery reconciliation did not return the submitted leave', recoveryRows);
+				assert(['MATCHED', 'PENDING_DELIVERY', 'FAILED_DELIVERY'].includes(currentRecovery.classification),
+					'UPMS recovery reconciliation returned an unknown classification', currentRecovery);
+			}
 			auditExpected.push({ title: '提交请假申请', marker: String(draft.id) });
 		}
 		const disposable = assertApi(await authorized('/admin/demo/leave', { method: 'POST', body: { approverId: reviewer.id, startDate: '2026-10-01', endDate: '2026-10-01', reason: `delete-${suffix}` } }), 'create disposable draft');
@@ -333,7 +350,7 @@ async function verifyWorkflow(menu, currentUser) {
 	}
 
 	async function createActor(actorUsername) {
-		const actorPassword = randomBytes(18).toString('base64url');
+		const actorPassword = generateStrongPassword();
 		assertApi(await authorized('/admin/user', { method: 'POST', body: { username: actorUsername, name: actorUsername, password: actorPassword, role: [1], post: [], deptId: currentUser.deptId || 1, lockFlag: '0' } }), 'create acceptance actor');
 		const users = assertApi(await authorized(`/admin/user/page?current=1&size=20&username=${encodeURIComponent(actorUsername)}`), 'find acceptance actor');
 		const user = users.records.find(user => user.username === actorUsername);

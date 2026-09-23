@@ -2,6 +2,7 @@ package com.lotus.bixi.common.security.component;
 
 import cn.hutool.extra.spring.SpringUtil;
 import com.lotus.bixi.common.core.constant.SecurityConstants;
+import com.lotus.bixi.common.core.context.TenantContextHolder;
 import com.lotus.bixi.common.security.service.BixiUser;
 import com.lotus.bixi.common.security.service.BixiUserDetailsService;
 import lombok.RequiredArgsConstructor;
@@ -94,13 +95,16 @@ public class BixiCustomOpaqueTokenIntrospector implements OpaqueTokenIntrospecto
         }
 
         // Cached identities are shared across requests; client context belongs to this request only.
-        var principalUser = new BixiUser(currentUser.getId(), currentUser.getDeptId(), currentUser.getUsername(),
+        var principalUser = new BixiUser(currentUser.getId(), currentUser.getDeptId(), currentUser.getTenantId(),
+                currentUser.getUsername(),
                 currentUser.getPassword() == null ? "" : currentUser.getPassword(), currentUser.getPhone(),
                 currentUser.isEnabled(), currentUser.isAccountNonExpired(), currentUser.isCredentialsNonExpired(),
                 currentUser.isAccountNonLocked(), currentUser.getAuthorities());
-        principalUser.getAttributes().putAll(currentUser.getAttributes());
-        principalUser.getAttributes().put(SecurityConstants.CLIENT_ID, authorization.getRegisteredClientId());
-        return principalUser;
+		principalUser.getAttributes().putAll(currentUser.getAttributes());
+		principalUser.setDataScope(currentUser.getDataScope());
+		principalUser.getAttributes().put(SecurityConstants.CLIENT_ID, authorization.getRegisteredClientId());
+		TenantContextHolder.set(currentUser.getTenantId());
+		return principalUser;
     }
 
     private InvalidBearerTokenException invalidToken() {

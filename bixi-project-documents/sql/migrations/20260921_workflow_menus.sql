@@ -30,13 +30,16 @@ BEGIN
         (6002, '我的已办', 'done', NULL, '/workflow/task/done', 6000, 'ele-Finished', '1', 2, '0', '0', '0', CURRENT_TIMESTAMP),
         (6003, '我发起的流程', 'instance', NULL, '/workflow/process/instance', 6000, 'ele-List', '1', 3, '0', '0', '0', CURRENT_TIMESTAMP),
         (6004, '流程定义', 'definition', NULL, '/workflow/definition/index', 6000, 'ele-SetUp', '1', 4, '0', '0', '0', CURRENT_TIMESTAMP),
+        (6005, '可靠投递', 'recovery', NULL, '/workflow/recovery/index', 6000, 'ele-Refresh', '1', 5, '0', '0', '0', CURRENT_TIMESTAMP),
         (6011, '查看任务', NULL, 'workflow_task_view', NULL, 6001, NULL, '0', 1, '1', '0', '0', CURRENT_TIMESTAMP),
         (6012, '办理任务', NULL, 'workflow_task_edit', NULL, 6001, NULL, '0', 2, '1', '0', '0', CURRENT_TIMESTAMP),
         (6021, '查看流程', NULL, 'workflow_process_view', NULL, 6003, NULL, '0', 1, '1', '0', '0', CURRENT_TIMESTAMP),
         (6022, '发起流程', NULL, 'workflow_process_add', NULL, 6003, NULL, '0', 2, '1', '0', '0', CURRENT_TIMESTAMP),
         (6023, '管理本人流程', NULL, 'workflow_process_edit', NULL, 6003, NULL, '0', 3, '1', '0', '0', CURRENT_TIMESTAMP),
         (6031, '查看流程定义', NULL, 'workflow_definition_view', NULL, 6004, NULL, '0', 1, '1', '0', '0', CURRENT_TIMESTAMP),
-        (6032, '部署及管理流程定义', NULL, 'workflow_definition_edit', NULL, 6004, NULL, '0', 2, '1', '0', '0', CURRENT_TIMESTAMP);
+        (6032, '部署及管理流程定义', NULL, 'workflow_definition_edit', NULL, 6004, NULL, '0', 2, '1', '0', '0', CURRENT_TIMESTAMP),
+        (6041, '查看可靠投递', NULL, 'workflow_recovery_view', NULL, 6005, NULL, '0', 1, '1', '0', '0', CURRENT_TIMESTAMP),
+        (6042, '恢复可靠投递', NULL, 'workflow_recovery_edit', NULL, 6005, NULL, '0', 2, '1', '0', '0', CURRENT_TIMESTAMP);
 
     -- The existing demo directory is a required parent; validate it without adding/granting it.
     INSERT INTO bixi_workflow_menu_expected_20260921 (id, path, parent_id, type)

@@ -1,1 +1,2 @@
 com.lotus.bixi.common.mq.config.RabbitMQAutoConfiguration
+com.lotus.bixi.common.mq.config.IdempotencyAutoConfiguration

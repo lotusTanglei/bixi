@@ -5,6 +5,8 @@ ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
 
 required_files="
 compose.yaml
+compose.workflow-cluster.yaml
+compose.workflow-fault-test.yaml
 .env.example
 deploy/docker/backend.Dockerfile
 deploy/docker/frontend.Dockerfile
@@ -17,6 +19,14 @@ deploy/nacos/bixi-common-oss-dev.yml
 deploy/nacos/bixi-common-mq-dev.yml
 deploy/mysql/05_runtime_secrets.sh
 scripts/acceptance.mjs
+scripts/verify-workflow-cluster-config.sh
+scripts/test-workflow-process-restart.sh
+scripts/test-workflow-cluster-failover.sh
+scripts/workflow-cluster-failover.mjs
+scripts/workflow-cluster-failover.test.mjs
+scripts/workflow-performance-metrics.mjs
+scripts/workflow-performance-metrics.test.mjs
+scripts/migrate-workflow-schema.sh
 AGENTS.md
 .docs/1_ARCHITECTURE.md
 .docs/5_AI_DEVELOPMENT.md
@@ -40,6 +50,28 @@ done
 grep -F 'GENERATE_ON_FIRST_RUN' "${ROOT}/.env.example" >/dev/null
 grep -F '127.0.0.1:${BIXI_HTTP_PORT:-8080}:8080' "${ROOT}/compose.yaml" >/dev/null
 grep -F 'service_completed_successfully' "${ROOT}/compose.yaml" >/dev/null
+grep -F 'WORKFLOW_CLUSTER_ENABLED=false' "${ROOT}/.env.example" >/dev/null
+grep -F 'workflow-a:' "${ROOT}/compose.workflow-cluster.yaml" >/dev/null
+grep -F 'workflow-b:' "${ROOT}/compose.workflow-cluster.yaml" >/dev/null
+grep -F 'restart: "no"' "${ROOT}/compose.workflow-fault-test.yaml" >/dev/null
+grep -F 'logs --no-color --tail=160 workflow-a workflow-b upms auth gateway' "${ROOT}/scripts/test-workflow-cluster-failover.sh" >/dev/null
+grep -F 'const apiBase = `http://127.0.0.1:${gatewayPort}`;' "${ROOT}/scripts/workflow-cluster-failover.mjs" >/dev/null
+
+for performance_default in \
+    'WORKFLOW_PERF_SAMPLE_SIZE:-12' \
+    'WORKFLOW_PERF_CONCURRENCY:-4' \
+    'WORKFLOW_PERF_WARMUP:-2' \
+    'WORKFLOW_PERF_BACKLOG_SAMPLE_INTERVAL_MS:-250'; do
+    grep -F "${performance_default}" "${ROOT}/scripts/test-workflow-cluster-failover.sh" >/dev/null \
+        || { echo "Missing Workflow performance default: ${performance_default}" >&2; exit 1; }
+done
+
+for workflow_config in \
+    bixi-module/bixi-workflow-biz/src/main/resources/application.yml \
+    bixi-single/src/main/resources/application.yml; do
+    grep -F 'check-process-definitions: false' "${ROOT}/${workflow_config}" >/dev/null \
+        || { echo "Workflow runtime must disable classpath auto-deployment: ${workflow_config}" >&2; exit 1; }
+done
 
 for contract in biz_demo_task demo_task_view demo_task_add demo_task_edit demo_task_del; do
     grep -F "${contract}" "${ROOT}/bixi-project-documents/sql/01_init_all_tables.sql" \

@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.Objects;
 
 /** Explicit source/type/schema registry for one target; reception and recovery execute the same handlers. */
-public final class InboxExecutor {
+public class InboxExecutor {
     private final JdbcInboxStore store;
     private final String targetOwner;
     private final Map<Route, DurableMessageHandler> handlers;

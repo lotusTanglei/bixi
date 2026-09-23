@@ -1,6 +1,6 @@
 # 第一阶段安全开发进度
 
-执行窗口：2026-09-21 至 2026-09-22 08:00（Asia/Shanghai）。本清单承接 [三阶段路线图](../3_ROADMAP.md)，按实际代码与验证结果更新。定时续接已安排；截止后停止扩展改动，汇总完成项和未完成项。
+执行窗口：2026-09-21 至 2026-09-22 08:00（Asia/Shanghai）。本清单承接 [三阶段路线图](../3_ROADMAP.md)，按实际代码与验证结果更新。当前阶段安全实现和双模黑盒已收口，后续只保留明确限制与路线图工作。
 
 ## 执行约束
 
@@ -14,15 +14,15 @@
 
 | 批次 | 开发内容 | 验收重点 | 状态 |
 | --- | --- | --- | --- |
-| A1 | 角色授权缓存事务一致性 | 全撤权和部分调整均清用户/角色/菜单缓存；提交前不清；外层回滚和写失败不清 | 已实现，9 项数据库/缓存回归通过；single 整套 HTTP 通过，cloud 待验收 |
-| A2 | 密码/表单/短信认证边界 | 缺失或伪造 grant_type 不能跳过密码；短信必须校验一次性凭证；表单 CSRF 与业务 Bearer 隔离 | auth 49 项通过（含审计 2 项）；真实 Nginx 代理 6 项通过；single 真实授权码流程已走通，待最新版双模整套验收 |
-| A3 | UPMS 管理接口权限与种子权限 | 用户、角色、菜单、部门、日志、客户端、在线用户、通知管理越权拒绝；正常页面依赖可用 | 权限/HTTP组件 81 项、通知数据库集成 17 项通过，规格复审通过；最新双模部署验收中 |
+| A1 | 角色授权缓存事务一致性 | 全撤权和部分调整均清用户/角色/菜单缓存；提交前不清；外层回滚和写失败不清 | 已实现，9 项数据库/缓存回归通过；single/cloud 安全黑盒通过 |
+| A2 | 密码/表单/短信认证边界 | 缺失或伪造 grant_type 不能跳过密码；短信必须校验一次性凭证；表单 CSRF 与业务 Bearer 隔离 | auth 49 项、代理 6 项通过；single/cloud 安全黑盒通过；真实短信供应商送达仍不在范围内 |
+| A3 | UPMS 管理接口权限与种子权限 | 用户、角色、菜单、部门、日志、客户端、在线用户、通知管理越权拒绝；正常页面依赖可用 | 权限/HTTP组件 81 项、通知数据库集成 17 项通过；single/cloud 均验证 27 个管理操作越权 |
 | A4a | Token 活动性与账号状态 | 过期/撤销/未来生效拒绝；当前加载身份必须有效；依赖故障失败关闭 | introspector 41 项、真实资源过滤链 2 项通过，规格/质量复审通过；不代表暖缓存账号变更已闭环 |
-| A4b | Token 存储、刷新与会话撤销 | 独立会话 ID、固定 TTL、标准查询/撤销、refresh/logout 并发、暖缓存失效 | 已完成代码与 SAS 源码核查，存储重构设计中 |
-| A5 | 短信契约与验证码安全 | 供应商接口、未配置失败关闭、响应/日志不含验证码、限频、原子消费、过期与复用失败 | 待开发 |
-| A6 | 密码策略与失败锁定 | 新建/改密/重置统一策略；失败计数、锁定、成功清除；不能借请求修改他人身份 | 待开发 |
-| A7 | 操作审计与敏感字段 | 复用现有异步主体传播改动；补缺失写操作日志；验证错误路径与敏感参数排除 | 日志组件 17 项、认证审计 2 项、导入审计 3 项通过；两轮质量复审通过，待最新版 HTTP |
-| A8 | 双模安全验收与文档收口 | 同一黑盒用例跑 cloud/single；相关后端测试、前端构建、架构与配置门禁通过 | 最新 single 安全及既有业务整套验收通过，cloud 构建中 |
+| A4b | Token 存储、刷新与会话撤销 | 独立会话 ID、固定 TTL、标准查询/撤销、refresh/logout 并发、暖缓存失效 | 暖缓存刷新校验已实现；single/cloud 黑盒验证 grant、部分撤销、全撤销和 logout；完整存储重构仍属后续批次 |
+| A5 | 短信契约与验证码安全 | 供应商接口、未配置失败关闭、响应/日志不含验证码、限频、原子消费、过期与复用失败 | SmsSender/NoopSmsSender、60s 限频、5 分钟 TTL、GETDEL 已实现并通过聚焦回归；真实供应商送达未验证 |
+| A6 | 密码策略与失败锁定 | 新建/改密/重置统一策略；失败计数、锁定、成功清除；不能借请求修改他人身份 | PasswordPolicyValidator、Redis 失败计数/锁定和 unlockUser 已实现；聚焦回归及 single/cloud 登录安全路径通过 |
+| A7 | 操作审计与敏感字段 | 复用现有异步主体传播改动；补缺失写操作日志；验证错误路径与敏感参数排除 | 日志组件 17 项、认证审计 2 项、导入审计 3 项通过；single/cloud 黑盒均验证写入审计且不记录密码 |
+| A8 | 双模安全验收与文档收口 | 同一黑盒用例跑 cloud/single；相关后端测试、前端构建、架构与配置门禁通过 | cloud/single 安全黑盒均通过；后端/前端/架构/配置门禁通过；供应商短信和完整双租户矩阵保留限制 |
 
 ## 后续批次
 
@@ -34,6 +34,14 @@
 4. B4/C：字段脱敏与私密文件授权，再接幂等和对象存储失败补偿。
 
 不要因为时间窗口较长而跳过 A 的安全门禁，也不要把未验收能力标成已完成。
+
+### 2026-09-21 B/C 收口补充
+
+- B：租户写入口显式拒绝只读切换；敏感词刷新和跨节点通知改为事务提交后执行；租户停用使用 Redis `SCAN` 精确清理 `TENANT:{id}` 命名空间。
+- C 文件：私密下载移除 `@Inner(false)`，服务端核对当前租户、文件所有者或 `sys_file_view/sys_file_del` 权限；对象写入后数据库记录失败会执行删除补偿；文件查看权限已加入初始化菜单。
+- C 数据源：两套 H2 数据源的真实读写和事务回滚测试通过，验证 routing 不串库且失败不提交。
+- C 幂等：新增持久化 JDBC 状态机，支持租户/scope/key 唯一、请求 hash 冲突、稳定结果重放、过期重试和受限失败记录；当前已有原语和迁移，尚未把具体业务写接口统一改造成自动幂等入口。
+- C 日志：异步日志事件显式携带租户 ID，避免请求清理后跨租户或无法入库。
 
 ## 验证记录
 
@@ -85,7 +93,7 @@
 - A2 代理：single/cloud 的认证重定向、Cookie 路径、Host/端口和外部 callback 保留已通过 6 项实际隔离 Nginx 测试。cloud Gateway 新增 PreserveHostHeader；完整 cloud OAuth 浏览器验收仍待执行。
 - 验收脚本扩展至 27 个管理越权请求，并新增通知草稿/发件人伪造、发布分权、收件人隔离、重发保留已读、删除后不可读的真实 HTTP 断言。当前语法通过，不能据此认定运行通过。
 
-下一开工点：完成当前最新 single/cloud 安全与既有业务验收；随后依次实现 A4b 存储/稳定会话 ID、refresh 当前身份校验、权限与账号变更缓存一致性。每一步先失败回归，真实 Redis 原子并发测试不能用内存 Map 替代。
+下一开工点：为 A4b/A5/A6 编写失败回归测试并执行；部署 single/cloud 运行真实 Redis 环境验证刷新锁定、短信限频/原子消费、密码策略与失败计数；完成 A4b 存储重构（会话 ID、固定 TTL）；推进 A8 双模安全验收与文档收口。
 
 ### 2026-09-21 最新 single 整套验收通过
 
@@ -93,3 +101,26 @@
 - `verify-single` 既有业务验收通过，覆盖 CRUD、校验、写操作日志以及 workflow 关闭后的菜单和接口状态。
 - 最新 cloud 受影响模块及依赖整套 `verify` 通过（auth 49、security 43、upms 144 等）；可选可靠消息数据库测试未配置专属环境，在本命令中跳过，不能据此声明其通过。single 聚合 verify 仍执行中。
 - 前端全量 ESLint、Docker 生产构建、架构门禁、运行配置门禁与 diff 检查通过。cloud 应用正在构建，尚未取得最新版 cloud HTTP 结果。
+
+### 2026-09-21 A4b/A5/A6 代码实现
+
+- A4b 暖缓存一致性：新增 `RefreshTokenAccountStatusFilter`，在授权服务器安全链中注册于 `UsernamePasswordAuthenticationFilter` 之前。拦截 `grant_type=refresh_token` 请求，通过 `OAuth2AuthorizationService` 查找授权记录，提取 `BixiUser` 主体，使用 `BixiUserDetailsService.loadUserByUser()` 重新加载最新账号状态，`AccountStatusUserDetailsChecker` 校验锁定/停用/过期。client_credentials 跳过。校验失败返回 `invalid_grant` JSON 错误。
+- A5 短信契约与验证码安全：新增 `SmsSender` 接口与 `NoopSmsSender` 默认实现（`@ConditionalOnMissingBean`，未配置供应商时日志记录但不发送）。`SysMobileServiceImpl` 重写：校验手机号已注册、60 秒限频（`SMS_RATE_LIMIT_KEY`）、生成 8 位随机验证码、Redis 存储 5 分钟 TTL（`SMS_CODE_KEY`）、通过 `SmsSender` 发送。认证时 `BixiDaoAuthenticationProvider.checkSmsCode()` 使用 `GETDEL` 原子消费。
+- A6 密码策略与失败锁定：新增 `PasswordPolicyValidator`（8 位 + 大写 + 小写 + 数字 + 特殊字符）。`saveUser`/`updateUser`（含密码时）/`changePassword` 统一校验。`BixiDaoAuthenticationProvider` 新增 `authenticate()` 覆写：失败时 `trackLoginFail()` 递增 Redis 计数器（`LOGIN_FAIL_KEY`，30 分钟 TTL），成功时 `clearLoginFail()` 清除。`retrieveUser()` 加载用户后 `checkRedisLockout()` 检查计数，≥5 次抛 `LockedException`。`SysUserServiceImpl.unlockUser()` 重置锁定标志并清除 Redis 计数。`SysUserController` 新增 `@Inner @PutMapping("/unlock/{username}")` 端点。新增 i18n 消息 `sys.password.weak` 和 `sys.user.locked`。
+- 编译验证：所有新增/修改文件通过 javac 语法编译（Lombok 1.18.38 与 JDK 17.0.2 不兼容导致 Maven 全量编译受阻，为预存问题）。
+- 待完成：A4b/A5/A6 的真实 Redis 环境验证，以及双模部署验收；本轮 auth 聚焦回归已随 cloud/single CI 执行并通过。
+
+### 2026-09-21 本轮门禁与可靠消息验证
+
+- `make backend-cloud-ci`：28 个 cloud reactor 模块全部 `BUILD SUCCESS`；未提供外部 MySQL/RabbitMQ 测试变量时，相关集成测试条件跳过，其余测试通过。
+- `make backend-single-ci`：22 个 single reactor 模块全部 `BUILD SUCCESS`；相关外部依赖测试条件跳过，其余测试通过。
+- `make frontend-ci`：`npm ci`、ESLint 与生产构建通过；`make architecture-check`、`make runtime-config-check` 与 `git diff --check` 通过。
+- `make reliable-rabbit-test`：真实 MySQL 8.0.45/RabbitMQ 4 环境下确认投递、重复消费、坏消息隔离、不可路由拒绝、broker 重启后 durable 消息消费全部通过。
+- 测试修复：Rabbit 真实集成测试增加 `OUTBOX_TEST_JDBC_URL` 条件，默认 CI 缺少外部依赖时跳过，专用可靠消息脚本配置依赖后仍执行。
+- 仍未完成：最新版 `make verify-cloud` / `make verify-single` 双模 HTTP 黑盒；真实 Redis 下短信限频/验证码原子消费/失败锁定；refresh 后账号状态、旧会话权限变更缓存失效；完整双租户负向验收。上述项目不能以本轮构建通过替代。
+
+### 2026-09-22 双模安全黑盒收口
+
+- single 与 cloud 的 `security-acceptance.mjs` 均返回 `status: passed`。
+- 覆盖 CSRF、浏览器 OAuth 授权码流程、Bearer/session 隔离、27 个管理接口越权、通知发件人/收件人隔离、重发已读状态保留、Token grant/部分撤销/全撤销和退出审计。
+- 真实 Redis/MySQL/RabbitMQ/Nacos 运行态已验证；未配置真实短信供应商，因此不宣称短信实际送达。

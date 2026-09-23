@@ -8,15 +8,17 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.sql.DataSource;
+import java.time.Instant;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
 /** Explicit local JDBC inbox; reception, leasing and handler transactions have distinct commit boundaries. */
-public final class JdbcInboxStore {
+public class JdbcInboxStore {
     private final DataSource dataSource;
     private final JdbcTemplate jdbc;
     private final TransactionTemplate independent;
@@ -67,6 +69,32 @@ public final class JdbcInboxStore {
                     (row, index) -> readSnapshot(row), targetOwner, eventId);
             return rows.isEmpty() ? null : rows.get(0);
         });
+    }
+
+    /** Read bounded operator metadata without exposing payload contents to management APIs. */
+    public List<AdminSnapshot> list(String targetOwner, String status, int limit) {
+        DurableMessage.requireOwner(targetOwner);
+        requireStatus(status);
+        requireLimit(limit);
+        return independent.execute(transaction -> {
+            String sql = status == null
+                    ? "SELECT * FROM reliable_inbox WHERE target_owner = ? ORDER BY received_at DESC LIMIT ?"
+                    : "SELECT * FROM reliable_inbox WHERE target_owner = ? AND status = ? "
+                            + "ORDER BY received_at DESC LIMIT ?";
+            Object[] args = status == null ? new Object[] {targetOwner, limit}
+                    : new Object[] {targetOwner, status, limit};
+            return List.copyOf(jdbc.query(sql, (row, index) -> readAdminSnapshot(row), args));
+        });
+    }
+
+    /** Move one failed receipt back to the normal due queue; the status predicate is the CAS fence. */
+    public boolean retry(String targetOwner, String eventId) {
+        requireIdentity(targetOwner, eventId);
+        return Boolean.TRUE.equals(independent.execute(transaction -> jdbc.update("""
+                UPDATE reliable_inbox SET status = 'RECEIVED', next_attempt_at = UTC_TIMESTAMP(6),
+                    lease_token = NULL, lease_until = NULL, last_error = NULL
+                WHERE target_owner = ? AND event_id = ? AND status = 'FAILED'
+                """, targetOwner, eventId) == 1));
     }
 
     /** Claim at most immediately usable capacity. Independent workers skip held processing locks. */
@@ -210,6 +238,29 @@ public final class JdbcInboxStore {
         return new Snapshot(readMessage(row), State.valueOf(row.getString("status")), row.getInt("attempts"));
     }
 
+    private static AdminSnapshot readAdminSnapshot(ResultSet row) throws SQLException {
+        return new AdminSnapshot(readMessage(row), row.getString("status"), row.getInt("attempts"),
+                instant(row, "next_attempt_at"), instant(row, "lease_until"), row.getString("last_error"),
+                instant(row, "received_at"), instant(row, "processed_at"));
+    }
+
+    private static Instant instant(ResultSet row, String column) throws SQLException {
+        Timestamp value = row.getTimestamp(column);
+        return value == null ? null : value.toInstant();
+    }
+
+    private static void requireStatus(String status) {
+        if (status != null && !status.matches("RECEIVED|IN_FLIGHT|PROCESSED|IGNORED|FAILED")) {
+            throw new IllegalArgumentException("Invalid inbox status");
+        }
+    }
+
+    private static void requireLimit(int limit) {
+        if (limit < 1 || limit > 200) {
+            throw new IllegalArgumentException("Limit must be between 1 and 200");
+        }
+    }
+
     private static DurableMessage readMessage(ResultSet row) throws SQLException {
         return new DurableMessage(row.getString("source_owner"), row.getString("target_owner"), row.getString("event_id"),
                 row.getString("type"), row.getInt("schema_version"), row.getString("payload_json"), row.getString("payload_hash"));
@@ -227,6 +278,10 @@ public final class JdbcInboxStore {
     public enum State { RECEIVED, IN_FLIGHT, PROCESSED, IGNORED, FAILED }
 
     public record Snapshot(DurableMessage message, State state, int attempts) { }
+
+    public record AdminSnapshot(DurableMessage message, String status, int attempts,
+            Instant nextAttemptAt, Instant leaseUntil, String lastError,
+            Instant receivedAt, Instant processedAt) { }
 
     public record Lease(DurableMessage message, String leaseToken, int attempt) { }
 }

@@ -5,6 +5,7 @@ import com.lotus.bixi.auth.support.core.CustomeOAuth2TokenCustomizer;
 import com.lotus.bixi.auth.support.core.FormIdentityLoginConfigurer;
 import com.lotus.bixi.auth.support.core.BixiDaoAuthenticationProvider;
 import com.lotus.bixi.auth.support.filter.PasswordDecoderFilter;
+import com.lotus.bixi.auth.support.filter.RefreshTokenAccountStatusFilter;
 import com.lotus.bixi.auth.support.filter.ValidateCodeFilter;
 import com.lotus.bixi.auth.support.handler.BixiAuthenticationFailureEventHandler;
 import com.lotus.bixi.auth.support.handler.BixiAuthenticationSuccessEventHandler;
@@ -13,6 +14,7 @@ import com.lotus.bixi.auth.support.password.OAuth2ResourceOwnerPasswordAuthentic
 import com.lotus.bixi.auth.support.sms.OAuth2ResourceOwnerSmsAuthenticationConverter;
 import com.lotus.bixi.auth.support.sms.OAuth2ResourceOwnerSmsAuthenticationProvider;
 import com.lotus.bixi.common.core.constant.SecurityConstants;
+import com.lotus.bixi.common.security.component.TenantContextFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -33,6 +35,7 @@ import org.springframework.security.web.DefaultSecurityFilterChain;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationConverter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import java.util.Arrays;
@@ -62,10 +65,16 @@ public class AuthorizationServerConfiguration {
         // 仅让授权服务器链处理 OAuth2 端点，避免与单体资源服务器链冲突
         http.securityMatcher(authorizationServerConfigurer.getEndpointsMatcher());
 
+        // OAuth2 client and user lookups are tenant-scoped even before authentication succeeds.
+        http.addFilterBefore(new TenantContextFilter(), SecurityContextHolderFilter.class);
+
         // 增加验证码过滤器
         http.addFilterBefore(validateCodeFilter, UsernamePasswordAuthenticationFilter.class);
         // 增加密码解密过滤器
         http.addFilterBefore(passwordDecoderFilter, UsernamePasswordAuthenticationFilter.class);
+        // 刷新令牌时校验账号状态
+        http.addFilterBefore(new RefreshTokenAccountStatusFilter(authorizationService),
+                UsernamePasswordAuthenticationFilter.class);
 
         http.with(authorizationServerConfigurer.tokenEndpoint((tokenEndpoint) -> {// 个性化认证授权端点
                     tokenEndpoint.accessTokenRequestConverter(accessTokenRequestConverter()) // 注入自定义的授权认证Converter

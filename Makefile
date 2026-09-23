@@ -5,7 +5,7 @@ JAVA_17_HOME := $(shell if [ -x /usr/libexec/java_home ]; then /usr/libexec/java
 JAVA_ENV := $(if $(JAVA_17_HOME),JAVA_HOME="$(JAVA_17_HOME)",)
 MVN := $(JAVA_ENV) mvn
 
-.PHONY: init-env doctor doctor-dev start-cloud start-single verify-cloud verify-single status diagnose logs stop reset credentials backend-dev backend-test backend-prod frontend-dev frontend-test frontend-prod architecture-check runtime-config-check backend-cloud-ci backend-single-ci backend-ci frontend-ci ci-gate workflow-test
+.PHONY: init-env doctor doctor-dev start-cloud start-single verify-cloud verify-single status diagnose logs stop reset credentials backend-dev backend-test backend-prod frontend-dev frontend-test frontend-prod architecture-check runtime-config-check backend-cloud-ci backend-single-ci backend-ci frontend-ci ci-gate workflow-test workflow-cluster-config workflow-process-restart-test workflow-cluster-static-test workflow-cluster-failover-test workflow-schema-migrate reliable-rabbit-test
 
 init-env:
 	./scripts/bixi.sh init-env
@@ -89,6 +89,24 @@ workflow-test:
 	$(MVN) -Pcloud -pl bixi-module/bixi-workflow-biz,bixi-module/bixi-upms-biz,bixi-gateway -am -Dtest='Workflow*Test,Leave*Test' -Dsurefire.failIfNoSpecifiedTests=false test
 	$(MVN) -Psingle -pl bixi-single -am -Dtest='Workflow*Test,Leave*Test' -Dsurefire.failIfNoSpecifiedTests=false test
 
+workflow-cluster-config:
+	bash scripts/verify-workflow-cluster-config.sh
+
+workflow-process-restart-test:
+	bash scripts/test-workflow-process-restart.sh
+
+workflow-cluster-static-test:
+	node --test scripts/workflow-cluster-failover.test.mjs scripts/workflow-performance-metrics.test.mjs
+	node --check scripts/workflow-cluster-failover.mjs
+	node --check scripts/workflow-performance-metrics.mjs
+	bash -n scripts/test-workflow-cluster-failover.sh scripts/migrate-workflow-schema.sh
+
+workflow-cluster-failover-test: workflow-cluster-static-test
+	bash scripts/test-workflow-cluster-failover.sh
+
+workflow-schema-migrate:
+	bash scripts/migrate-workflow-schema.sh
+
 .PHONY: workflow-mysql-test
 workflow-mysql-test:
 	bash scripts/test-workflow-mysql.sh both
@@ -96,6 +114,9 @@ workflow-mysql-test:
 .PHONY: reliable-mysql-test
 reliable-mysql-test:
 	bash scripts/test-reliable-mysql.sh both
+
+reliable-rabbit-test:
+	bash scripts/test-reliable-rabbit.sh
 
 frontend-ci:
 	cd $(FRONTEND_DIR) && npm ci && npm run lint:eslint && npm run build:prod

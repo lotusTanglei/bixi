@@ -4,6 +4,7 @@ import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import com.lotus.bixi.common.core.constant.CommonConstants;
 import com.lotus.bixi.common.core.constant.SecurityConstants;
+import com.lotus.bixi.common.core.context.TenantContextHolder;
 import com.lotus.bixi.common.core.util.R;
 import com.lotus.bixi.common.core.util.RetOps;
 import com.lotus.bixi.upms.api.dto.UserInfo;
@@ -72,10 +73,12 @@ public interface BixiUserDetailsService extends UserDetailsService, Ordered {
                 ? info.getEncodedPassword() : user.getPassword();
 
         // 构造security用户
-        return new BixiUser(user.getId(), user.getDeptId(), user.getUsername(),
+        BixiUser principal = new BixiUser(user.getId(), user.getDeptId(), user.getTenantId(), user.getUsername(),
                 SecurityConstants.BCRYPT + encodedPassword, user.getPhone(),
                 StrUtil.equals(user.getStatus(), CommonConstants.STATUS_NORMAL), true, true,
                 StrUtil.equals(user.getLockFlag(), CommonConstants.STATUS_NORMAL), authorities);
+		principal.setDataScope(info.getDataScope());
+		return principal;
     }
 
     /**
@@ -85,7 +88,14 @@ public interface BixiUserDetailsService extends UserDetailsService, Ordered {
      * @return
      */
     default UserDetails loadUserByUser(BixiUser bixiUser) {
-        return this.loadUserByUsername(bixiUser.getUsername());
+        Long previous = TenantContextHolder.get();
+        try {
+            TenantContextHolder.set(bixiUser.getTenantId());
+            return this.loadUserByUsername(bixiUser.getUsername());
+        }
+        finally {
+            if (previous == null) TenantContextHolder.clear(); else TenantContextHolder.set(previous);
+        }
     }
 
 }

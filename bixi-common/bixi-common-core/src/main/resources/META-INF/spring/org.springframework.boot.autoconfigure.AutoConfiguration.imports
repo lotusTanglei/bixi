@@ -2,5 +2,7 @@ com.lotus.bixi.common.core.config.DynamicTpConfiguration
 com.lotus.bixi.common.core.config.JacksonConfiguration
 com.lotus.bixi.common.core.config.RedisTemplateConfiguration
 com.lotus.bixi.common.core.config.RestTemplateConfiguration
+com.lotus.bixi.common.core.config.SensitiveWordAutoConfiguration
+com.lotus.bixi.common.core.config.TenantCacheAutoConfiguration
 com.lotus.bixi.common.core.util.SpringContextHolder
 com.lotus.bixi.common.core.config.WebMvcConfiguration

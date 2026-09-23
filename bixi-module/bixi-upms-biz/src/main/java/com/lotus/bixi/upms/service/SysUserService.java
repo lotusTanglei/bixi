@@ -109,6 +109,13 @@ public interface SysUserService extends IService<SysUser> {
     Boolean lockUser(String username);
 
     /**
+     * 解锁用户
+     * @param username 用户名
+     * @return Boolean
+     */
+    Boolean unlockUser(String username);
+
+    /**
      * 修改密码
      *
      * @param userDto 用户信息

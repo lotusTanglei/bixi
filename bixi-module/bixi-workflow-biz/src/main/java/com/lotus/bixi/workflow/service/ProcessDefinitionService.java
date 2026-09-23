@@ -12,6 +12,9 @@ public interface ProcessDefinitionService extends IService<WfProcessDefinition> 
 
     ProcessDefinitionVO deployDemo();
 
+    /** Explicitly deploys the next demo definition version; existing instances are untouched. */
+    ProcessDefinitionVO deployDemoV3();
+
     List<ProcessDefinitionVO> listDefinitions(ProcessQueryDTO query);
 
     List<ProcessDefinitionVO> listLatestVersions();

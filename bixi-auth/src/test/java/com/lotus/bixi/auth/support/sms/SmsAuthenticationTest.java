@@ -3,6 +3,7 @@ package com.lotus.bixi.auth.support.sms;
 import cn.hutool.extra.spring.SpringUtil;
 import com.lotus.bixi.auth.support.core.BixiDaoAuthenticationProvider;
 import com.lotus.bixi.common.security.service.BixiUserDetailsService;
+import com.lotus.bixi.common.core.constant.CacheConstants;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.*;
@@ -68,7 +69,7 @@ class SmsAuthenticationTest {
     @NullAndEmptySource
     @ValueSource(strings = {" ", "wrong"})
     void missingOrWrongCodeCannotAuthenticate(String code) {
-        when(values.getAndDelete("SMS_CODE_KEY:13800138000")).thenReturn("123456");
+        when(values.getAndDelete(CacheConstants.tenantKey(CacheConstants.SMS_CODE_KEY, 1L) + "13800138000")).thenReturn("123456");
         var parameters = new java.util.HashMap<String, Object>();
         parameters.put("mobile", "13800138000");
         parameters.put("code", code);
@@ -85,13 +86,13 @@ class SmsAuthenticationTest {
 
     @Test
     void correctSmsCodeIsConsumedAtomicallyAndCannotBeReplayed() {
-        when(values.getAndDelete("SMS_CODE_KEY:13800138000")).thenReturn("123456", null);
+        when(values.getAndDelete(CacheConstants.tenantKey(CacheConstants.SMS_CODE_KEY, 1L) + "13800138000")).thenReturn("123456", null);
         assertThat(users.authenticate(sms.buildToken(Map.of("mobile", "13800138000", "code", "123456")))
                 .isAuthenticated()).isTrue();
         assertThatThrownBy(() -> users.authenticate(sms.buildToken(
                 Map.of("mobile", "13800138000", "code", "123456"))))
                 .isInstanceOf(BadCredentialsException.class);
-        verify(values, times(2)).getAndDelete("SMS_CODE_KEY:13800138000");
+        verify(values, times(2)).getAndDelete(CacheConstants.tenantKey(CacheConstants.SMS_CODE_KEY, 1L) + "13800138000");
         verify(values, never()).get(any());
     }
 

@@ -18,12 +18,15 @@ import com.lotus.bixi.upms.api.vo.UserVO;
 import com.lotus.bixi.upms.mapper.SysUserMapper;
 import com.lotus.bixi.upms.mapper.SysUserPostMapper;
 import com.lotus.bixi.upms.mapper.SysUserRoleMapper;
+import com.lotus.bixi.upms.mapper.SysTenantMapper;
 import com.lotus.bixi.upms.service.*;
 import com.lotus.bixi.common.core.constant.CacheConstants;
 import com.lotus.bixi.common.core.constant.CommonConstants;
+import com.lotus.bixi.common.core.context.TenantContextHolder;
 import com.lotus.bixi.common.core.exception.ErrorCodes;
 import com.lotus.bixi.common.core.util.MsgUtils;
 import com.lotus.bixi.common.core.util.R;
+import com.lotus.bixi.common.security.util.PasswordPolicyValidator;
 import com.lotus.bixi.common.security.util.SecurityUtils;
 import com.pig4cloud.plugin.excel.vo.ErrorMessage;
 import lombok.AllArgsConstructor;
@@ -32,6 +35,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -65,7 +69,11 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
     private final SysUserPostMapper sysUserPostMapper;
 
+    private final SysTenantMapper sysTenantMapper;
+
     private final CacheManager cacheManager;
+
+    private final RedisTemplate<String, Object> redisTemplate;
 
     /**
      * 保存用户信息
@@ -76,6 +84,21 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Boolean saveUser(UserDTO userDto) {
+        Long tenantId = TenantContextHolder.get();
+        if (tenantId == null) {
+            throw new IllegalStateException("tenant_not_set");
+        }
+        var tenant = sysTenantMapper.selectById(tenantId);
+        if (tenant == null || "1".equals(tenant.getStatus())) {
+            throw new IllegalStateException("tenant_disabled");
+        }
+        if (tenant.getMaxUserCount() != null && tenant.getMaxUserCount() >= 0
+                && baseMapper.selectCount(Wrappers.<SysUser>lambdaQuery()) >= tenant.getMaxUserCount()) {
+            throw new IllegalStateException("tenant_user_limit");
+        }
+        if (!PasswordPolicyValidator.isStrong(userDto.getPassword())) {
+            throw new RuntimeException(MsgUtils.getMessage(ErrorCodes.SYS_PASSWORD_WEAK));
+        }
         SysUser sysUser = new SysUser();
         BeanUtils.copyProperties(userDto, sysUser);
         sysUser.setDelFlag(CommonConstants.STATUS_NORMAL);
@@ -127,6 +150,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
                 .map(SysRole::getId)
                 .collect(Collectors.toList());
         userInfo.setRoles(ArrayUtil.toArray(roleIds, Long.class));
+		userInfo.setDataScope(roleIds.stream().map(sysRoleService::getById)
+				.filter(Objects::nonNull).map(SysRole::getDataScope).filter(Objects::nonNull)
+				.min(Comparator.naturalOrder()).orElse("4"));
 
         // 设置权限列表（menu.permission）
         Set<String> permissions = new HashSet<>();
@@ -179,7 +205,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         Cache cache = cacheManager.getCache(CacheConstants.USER_DETAILS);
         for (SysUser sysUser : userList) {
             // 立即删除
-            cache.evictIfPresent(sysUser.getUsername());
+            cache.evictIfPresent(CacheConstants.tenantKey(CacheConstants.USER_DETAILS, TenantContextHolder.get())
+                    + sysUser.getUsername());
         }
 
         sysUserRoleMapper.delete(Wrappers.<SysUserRole>lambdaQuery().in(SysUserRole::getUserId, CollUtil.toList(ids)));
@@ -188,7 +215,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     }
 
     @Override
-    @CacheEvict(value = CacheConstants.USER_DETAILS, key = "#userDto.username")
+    @CacheEvict(value = CacheConstants.USER_DETAILS,
+            key = "T(com.lotus.bixi.common.core.constant.CacheConstants).currentTenantKey('user_details') + #userDto.username")
     public Boolean updateUserInfo(UserDTO userDto) {
         SysUser sysUser = new SysUser();
         sysUser.setPhone(userDto.getPhone());
@@ -202,13 +230,17 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @CacheEvict(value = CacheConstants.USER_DETAILS, key = "#userDto.username")
+    @CacheEvict(value = CacheConstants.USER_DETAILS,
+            key = "T(com.lotus.bixi.common.core.constant.CacheConstants).currentTenantKey('user_details') + #userDto.username")
     public Boolean updateUser(UserDTO userDto) {
         // 更新用户表信息
         SysUser sysUser = new SysUser();
         BeanUtils.copyProperties(userDto, sysUser);
         sysUser.setUpdateTime(LocalDateTime.now());
         if (StrUtil.isNotBlank(userDto.getPassword())) {
+            if (!PasswordPolicyValidator.isStrong(userDto.getPassword())) {
+                throw new RuntimeException(MsgUtils.getMessage(ErrorCodes.SYS_PASSWORD_WEAK));
+            }
             sysUser.setPassword(ENCODER.encode(userDto.getPassword()));
         }
         this.updateById(sysUser);
@@ -391,7 +423,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
      * @return
      */
     @Override
-    @CacheEvict(value = CacheConstants.USER_DETAILS, key = "#username")
+    @CacheEvict(value = CacheConstants.USER_DETAILS,
+            key = "T(com.lotus.bixi.common.core.constant.CacheConstants).currentTenantKey('user_details') + #username")
     public Boolean lockUser(String username) {
         SysUser sysUser = baseMapper.selectOne(Wrappers.<SysUser>lambdaQuery().eq(SysUser::getUsername, username));
 
@@ -403,7 +436,22 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     }
 
     @Override
-    @CacheEvict(value = CacheConstants.USER_DETAILS, key = "#userDto.username")
+    @CacheEvict(value = CacheConstants.USER_DETAILS,
+            key = "T(com.lotus.bixi.common.core.constant.CacheConstants).currentTenantKey('user_details') + #username")
+    public Boolean unlockUser(String username) {
+        SysUser sysUser = baseMapper.selectOne(Wrappers.<SysUser>lambdaQuery().eq(SysUser::getUsername, username));
+
+        if (Objects.nonNull(sysUser)) {
+            sysUser.setLockFlag(CommonConstants.STATUS_NORMAL);
+            redisTemplate.delete(CacheConstants.tenantKey(CacheConstants.LOGIN_FAIL_KEY, TenantContextHolder.get()) + username);
+            return baseMapper.updateById(sysUser) > 0;
+        }
+        return false;
+    }
+
+    @Override
+    @CacheEvict(value = CacheConstants.USER_DETAILS,
+            key = "T(com.lotus.bixi.common.core.constant.CacheConstants).currentTenantKey('user_details') + #userDto.username")
     public R changePassword(UserDTO userDto) {
         SysUser sysUser = baseMapper.selectById(SecurityUtils.getUser().getId());
         if (Objects.isNull(sysUser)) {
@@ -421,6 +469,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
         if (StrUtil.isEmpty(userDto.getNewpassword())) {
             return R.failed("新密码不能为空");
+        }
+        if (!PasswordPolicyValidator.isStrong(userDto.getNewpassword())) {
+            return R.failed(MsgUtils.getMessage(ErrorCodes.SYS_PASSWORD_WEAK));
         }
         String password = ENCODER.encode(userDto.getNewpassword());
 

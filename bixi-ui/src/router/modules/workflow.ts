@@ -21,6 +21,12 @@ const workflowRoutes: Array<RouteRecordRaw> = [
 				},
 			},
 			{
+				path: '/workflow/recovery',
+				name: 'workflowRecovery',
+				component: () => import('/@/views/workflow/recovery/index.vue'),
+				meta: { title: '可靠投递', icon: 'iconfont icon-shuaxin', isKeepAlive: true },
+			},
+			{
 				path: '/workflow/task',
 				name: 'workflowTask',
 				redirect: '/workflow/task/todo',

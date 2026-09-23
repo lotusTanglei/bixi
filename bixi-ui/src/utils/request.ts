@@ -31,6 +31,11 @@ service.interceptors.request.use(
 		if (token && !config.headers?.skipToken) {
 			config.headers![CommonHeaderEnum.AUTHORIZATION] = `Bearer ${token}`;
 		}
+		const tenant = Session.getTenant();
+		if (tenant) {
+			config.headers![CommonHeaderEnum.TENANT_ID] = tenant;
+			config.headers![CommonHeaderEnum.X_TENANT_ID] = tenant;
+		}
 
 		// 请求报文加密
 		if (config.headers![CommonHeaderEnum.ENC_FLAG]) {
@@ -92,6 +97,7 @@ service.interceptors.response.use(handleResponse, (error) => {
 // 常用header
 export enum CommonHeaderEnum {
 	'TENANT_ID' = 'TENANT-ID',
+	'X_TENANT_ID' = 'X-Tenant-Id',
 	'ENC_FLAG' = 'Enc-Flag',
 	'AUTHORIZATION' = 'Authorization',
 }

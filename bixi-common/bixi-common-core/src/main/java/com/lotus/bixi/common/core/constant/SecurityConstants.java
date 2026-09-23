@@ -111,4 +111,17 @@ public interface SecurityConstants {
      */
     Long ROLE_ADMIN_ID = 1L;
 
+    /**
+     * 默认租户ID
+     */
+    Long DEFAULT_TENANT_ID = 1L;
+
+    /**
+     * 租户请求头
+     */
+    String TENANT_HEADER = "X-Tenant-Id";
+
+    /** Explicit platform-admin read scope; ordinary tenant users cannot request it. */
+    String TENANT_SCOPE_HEADER = "X-Tenant-Scope";
+
 }

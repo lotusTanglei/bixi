@@ -5,11 +5,14 @@
     <resultMap id="baseResultMap" type="com.lotus.bixi.workflow.api.entity.WfProcessInstance">
         <id column="id" property="id"/>
         <result column="process_instance_id" property="processInstanceId"/>
+        <result column="start_request_id" property="startRequestId"/>
+        <result column="start_request_hash" property="startRequestHash"/>
         <result column="process_definition_id" property="processDefinitionId"/>
         <result column="process_key" property="processKey"/>
         <result column="business_key" property="businessKey"/>
         <result column="business_table" property="businessTable"/>
         <result column="business_id" property="businessId"/>
+        <result column="business_round" property="businessRound"/>
         <result column="title" property="title"/>
         <result column="start_user_id" property="startUserId"/>
         <result column="start_user_name" property="startUserName"/>

@@ -23,9 +23,16 @@ spring:
 bixi:
   deployment:
     mode: cloud
+  reliable:
+    enabled: ${BIXI_RELIABLE_ENABLED:false}
+    rabbit:
+      enabled: ${BIXI_RELIABLE_RABBIT_ENABLED:false}
 
 workflow:
   enabled: ${WORKFLOW_ENABLED:false}
   database-schema-update: ${WORKFLOW_SCHEMA_UPDATE:false}
   async-executor-activate: ${WORKFLOW_ASYNC_EXECUTOR_ACTIVATE:true}
   history-level: full
+
+flowable:
+  check-process-definitions: false

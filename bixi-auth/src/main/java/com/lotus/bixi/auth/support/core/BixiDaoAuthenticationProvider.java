@@ -4,13 +4,13 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.spring.SpringUtil;
 import com.lotus.bixi.auth.support.sms.SmsAuthenticationToken;
 import com.lotus.bixi.common.core.constant.CacheConstants;
+import com.lotus.bixi.common.core.context.TenantContextHolder;
 import com.lotus.bixi.common.core.constant.SecurityConstants;
 import com.lotus.bixi.common.security.service.BixiUserDetailsService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.InternalAuthenticationServiceException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authentication.*;
 import org.springframework.security.authentication.dao.AbstractUserDetailsAuthenticationProvider;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -26,11 +26,13 @@ import org.springframework.util.Assert;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author 唐磊
  * @date 2025-01-01
  */
+@Slf4j
 public class BixiDaoAuthenticationProvider extends AbstractUserDetailsAuthenticationProvider {
 
     /**
@@ -38,6 +40,10 @@ public class BixiDaoAuthenticationProvider extends AbstractUserDetailsAuthentica
      * String)} on when the user is not found to avoid SEC-2056.
      */
     private static final String USER_NOT_FOUND_PASSWORD = "userNotFoundPassword";
+
+    private static final int MAX_LOGIN_FAIL = 5;
+
+    private static final long FAIL_TTL_MINUTES = 30;
 
     private PasswordEncoder passwordEncoder;
 
@@ -56,6 +62,64 @@ public class BixiDaoAuthenticationProvider extends AbstractUserDetailsAuthentica
     public BixiDaoAuthenticationProvider() {
         setMessageSource(SpringUtil.getBean("securityMessageSource"));
         setPasswordEncoder(PasswordEncoderFactories.createDelegatingPasswordEncoder());
+    }
+
+    @Override
+    public Authentication authenticate(Authentication authentication) throws AuthenticationException {
+        String username = authentication.getName();
+        boolean trackFail = !(authentication instanceof SmsAuthenticationToken);
+        try {
+            Authentication result = super.authenticate(authentication);
+            if (trackFail) {
+                clearLoginFail(username);
+            }
+            return result;
+        } catch (AuthenticationServiceException ex) {
+            throw ex;
+        } catch (AuthenticationException ex) {
+            if (trackFail) {
+                trackLoginFail(username);
+            }
+            throw ex;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void trackLoginFail(String username) {
+        try {
+            RedisTemplate<String, Object> redis = SpringUtil.getBean(RedisTemplate.class);
+            String key = CacheConstants.tenantKey(CacheConstants.LOGIN_FAIL_KEY, TenantContextHolder.get()) + username;
+            Long count = redis.opsForValue().increment(key);
+            if (count != null && count == 1L) {
+                redis.expire(key, FAIL_TTL_MINUTES, TimeUnit.MINUTES);
+            }
+        } catch (Exception ex) {
+            log.warn("Failed to track login failure for {}", username, ex);
+        }
+    }
+
+    private void clearLoginFail(String username) {
+        try {
+            RedisTemplate<String, Object> redis = SpringUtil.getBean(RedisTemplate.class);
+            redis.delete(CacheConstants.tenantKey(CacheConstants.LOGIN_FAIL_KEY, TenantContextHolder.get()) + username);
+        } catch (Exception ex) {
+            log.warn("Failed to clear login failure for {}", username, ex);
+        }
+    }
+
+    private void checkRedisLockout(String username) {
+        try {
+            RedisTemplate<String, Object> redis = SpringUtil.getBean(RedisTemplate.class);
+            String key = CacheConstants.tenantKey(CacheConstants.LOGIN_FAIL_KEY, TenantContextHolder.get()) + username;
+            Object countStr = redis.opsForValue().get(key);
+            if (countStr != null && Long.parseLong(countStr.toString()) >= MAX_LOGIN_FAIL) {
+                throw new LockedException("账户因多次登录失败已被锁定");
+            }
+        } catch (LockedException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            log.warn("Failed to check login failure count for {}", username, ex);
+        }
     }
 
     @Override
@@ -88,7 +152,8 @@ public class BixiDaoAuthenticationProvider extends AbstractUserDetailsAuthentica
         }
         RedisTemplate<String, Object> redis = SpringUtil.getBean(RedisTemplate.class);
         // GETDEL makes the challenge single-use even when concurrent requests arrive.
-        Object saved = redis.opsForValue().getAndDelete(CacheConstants.SMS_CODE_KEY + authentication.getName());
+        Object saved = redis.opsForValue().getAndDelete(
+                CacheConstants.tenantKey(CacheConstants.SMS_CODE_KEY, TenantContextHolder.get()) + authentication.getName());
         if (saved == null || !code.equals(saved.toString())) {
             throw new BadCredentialsException("短信验证码不合法");
         }
@@ -121,9 +186,14 @@ public class BixiDaoAuthenticationProvider extends AbstractUserDetailsAuthentica
                 throw new InternalAuthenticationServiceException(
                         "UserDetailsService returned null, which is an interface contract violation");
             }
+            if (!(authentication instanceof SmsAuthenticationToken)) {
+                checkRedisLockout(username);
+            }
             return loadedUser;
         } catch (UsernameNotFoundException ex) {
             mitigateAgainstTimingAttack(authentication);
+            throw ex;
+        } catch (LockedException ex) {
             throw ex;
         } catch (InternalAuthenticationServiceException ex) {
             throw ex;

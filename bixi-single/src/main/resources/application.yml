@@ -24,11 +24,23 @@ spring:
 bixi:
   deployment:
     mode: single
+  reliable:
+    enabled: ${BIXI_RELIABLE_ENABLED:false}
+    rabbit:
+      enabled: ${BIXI_RELIABLE_RABBIT_ENABLED:false}
+      host: ${BIXI_RELIABLE_RABBIT_HOST:${RABBITMQ_HOST:127.0.0.1}}
+      port: ${BIXI_RELIABLE_RABBIT_PORT:${RABBITMQ_PORT:5672}}
+      username: ${BIXI_RELIABLE_RABBIT_USERNAME:${RABBITMQ_USERNAME:bixi}}
+      password: ${BIXI_RELIABLE_RABBIT_PASSWORD:${RABBITMQ_PASSWORD:}}
+      virtual-host: ${BIXI_RELIABLE_RABBIT_VIRTUAL_HOST:${RABBITMQ_VIRTUAL_HOST:/}}
 
 workflow:
   enabled: ${WORKFLOW_ENABLED:false}
   database-schema-update: ${WORKFLOW_SCHEMA_UPDATE:false}
   async-executor-activate: ${WORKFLOW_ASYNC_EXECUTOR_ACTIVATE:true}
+
+flowable:
+  check-process-definitions: false
 
 
 # mybatis-plus 配置

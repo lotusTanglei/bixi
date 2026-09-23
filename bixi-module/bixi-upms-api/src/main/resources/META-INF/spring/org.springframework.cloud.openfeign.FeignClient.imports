@@ -4,3 +4,4 @@ com.lotus.bixi.upms.api.feign.RemoteLogService
 com.lotus.bixi.upms.api.feign.RemoteParamService
 com.lotus.bixi.upms.api.feign.RemoteTokenService
 com.lotus.bixi.upms.api.feign.RemoteUserService
+com.lotus.bixi.upms.api.feign.RemoteTenantStatusService

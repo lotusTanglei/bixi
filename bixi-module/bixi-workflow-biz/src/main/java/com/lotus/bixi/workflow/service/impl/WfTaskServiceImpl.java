@@ -17,6 +17,7 @@ import com.lotus.bixi.workflow.api.dto.TaskTransferDTO;
 import com.lotus.bixi.workflow.api.dto.TaskResolveDTO;
 import com.lotus.bixi.workflow.api.dto.FormDataDTO;
 import com.lotus.bixi.workflow.api.dto.WorkflowRequestDTO;
+import com.lotus.bixi.workflow.api.event.WorkflowOutcome;
 import com.lotus.bixi.workflow.api.entity.WfApprovalRecord;
 import com.lotus.bixi.workflow.api.entity.WfProcessInstance;
 import com.lotus.bixi.workflow.mapper.WfProcessInstanceMapper;
@@ -32,6 +33,9 @@ import org.flowable.engine.HistoryService;
 import org.flowable.engine.RuntimeService;
 import org.flowable.engine.history.HistoricProcessInstance;
 import org.flowable.task.api.Task;
+import org.flowable.task.api.TaskInfo;
+import org.flowable.task.api.TaskQuery;
+import org.flowable.identitylink.api.IdentityLinkInfo;
 import org.flowable.task.api.history.HistoricTaskInstance;
 import org.springframework.stereotype.Service;
 import org.springframework.security.access.AccessDeniedException;
@@ -46,6 +50,8 @@ import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.LinkedHashMap;
+import java.util.Collection;
 
 import org.flowable.engine.task.Comment;
 import java.util.stream.Collectors;
@@ -69,9 +75,10 @@ public class WfTaskServiceImpl implements WfTaskService {
     private final WorkflowAccessService access;
 
     private final WfProcessInstanceMapper instances;
-    private final WorkflowResultNotifier results;
+    private final WorkflowTerminalEventPublisher terminalEvents;
     private final WorkflowCommandExecutor commands;
     private final WorkflowRequestHasher hasher;
+    private final WorkflowCandidateResolver candidates;
 
     private static final Set<String> IDENTITY_VARIABLES = Set.of("applicant", "initiator", "startUserId",
             "approverId", "tenantId", "businessKey", "businessId", "businessTable", "round", "businessRound", "requestId");
@@ -81,23 +88,25 @@ public class WfTaskServiceImpl implements WfTaskService {
     public IPage<TaskVO> todoPage(Page page, Long userId) {
         access.requireCurrentUser(userId);
         access.validatePage(page);
-        long total = taskService.createTaskQuery()
-                .taskCandidateOrAssigned(String.valueOf(userId))
-                .active()
-                .count();
-
-        List<Task> tasks = taskService.createTaskQuery()
-                .taskCandidateOrAssigned(String.valueOf(userId))
-                .active()
-                .orderByTaskCreateTime()
-                .desc()
-                .listPage((int) ((page.getCurrent() - 1) * page.getSize()), (int) page.getSize());
-
-        List<TaskVO> records = new ArrayList<>();
-        for (Task task : tasks) {
-            TaskVO vo = convertToVO(task);
-            records.add(vo);
+        BixiUser viewer = access.currentUser();
+        TaskQuery pendingQuery = taskService.createTaskQuery().active().or()
+                .taskAssignee(String.valueOf(userId))
+                .taskCandidateUser(String.valueOf(userId));
+        Set<String> groups = candidates.effectiveGroups(viewer);
+        if (!groups.isEmpty()) {
+            pendingQuery.taskCandidateGroupIn(groups);
         }
+        List<Task> visible = pendingQuery.endOr()
+                .orderByTaskCreateTime().desc().list().stream()
+                .filter(task -> candidates.isVisible(task, viewer, taskService.getIdentityLinksForTask(task.getId())))
+                .collect(Collectors.collectingAndThen(Collectors.toMap(Task::getId, task -> task,
+                        (first, ignored) -> first, LinkedHashMap::new), map -> new ArrayList<>(map.values())));
+
+        long total = visible.size();
+        long offset = (page.getCurrent() - 1) * page.getSize();
+        int from = offset >= visible.size() ? visible.size() : (int) offset;
+        int to = Math.min(visible.size(), from + (int) page.getSize());
+        List<TaskVO> records = visible.subList(from, to).stream().map(this::convertToVO).toList();
 
         IPage<TaskVO> resultPage = new Page<>(page.getCurrent(), page.getSize(), total);
         resultPage.setRecords(records);
@@ -202,11 +211,12 @@ public class WfTaskServiceImpl implements WfTaskService {
             throw new IllegalArgumentException("委派任务须先解决委派");
         }
         runtimeService.deleteProcessInstance(task.getProcessInstanceId(), dto.getRejectReason());
+        LocalDateTime endedAt = LocalDateTime.now();
         int updated = instances.update(null, Wrappers.<WfProcessInstance>lambdaUpdate()
                 .eq(WfProcessInstance::getProcessInstanceId, task.getProcessInstanceId())
                 .eq(WfProcessInstance::getStatus, WorkflowConstants.STATUS_RUNNING)
                 .set(WfProcessInstance::getStatus, WorkflowConstants.STATUS_REJECTED)
-                .set(WfProcessInstance::getEndTime, LocalDateTime.now()));
+                .set(WfProcessInstance::getEndTime, endedAt));
         if (updated != 1) {
             throw new IllegalStateException("流程状态已变更");
         }
@@ -222,7 +232,12 @@ public class WfTaskServiceImpl implements WfTaskService {
         record.setApprovalComment(dto.getRejectReason());
         record.setApprovalTime(LocalDateTime.now());
         approvalRecordService.saveRecord(record);
-        results.afterCommit(task.getProcessInstanceId());
+        WfProcessInstance instance = instances.selectByProcessInstanceId(task.getProcessInstanceId());
+        if (instance == null) throw new IllegalStateException("流程实例不存在");
+        instance.setStatus(WorkflowConstants.STATUS_REJECTED);
+        instance.setEndTime(endedAt);
+        terminalEvents.publish(instance, WorkflowOutcome.REJECTED,
+                user.getId(), user.getUsername(), dto.getRequestId());
     }
 
     @Override
@@ -348,8 +363,9 @@ public class WfTaskServiceImpl implements WfTaskService {
         if (task == null) {
             throw new IllegalArgumentException("任务不存在或已挂起");
         }
-        if (task.getAssignee() != null || taskService.getIdentityLinksForTask(taskId).stream()
-                .noneMatch(link -> "candidate".equals(link.getType()) && userId.toString().equals(link.getUserId()))) {
+        BixiUser user = access.currentUser();
+        if (!userId.equals(user.getId())
+                || !candidates.isCandidate(task, user, taskService.getIdentityLinksForTask(taskId))) {
             throw new AccessDeniedException("只有任务候选人可认领未分配的任务");
         }
         taskService.claim(taskId, userId.toString());
@@ -508,6 +524,7 @@ public class WfTaskServiceImpl implements WfTaskService {
         vo.setDueDate(convertToLocalDateTime(task.getDueDate()));
         vo.setPriority(task.getPriority());
         vo.setFormKey(task.getFormKey());
+        applyCandidateMetadata(task, vo, true);
 
         HistoricProcessInstance processInstance = historyService.createHistoricProcessInstanceQuery()
                 .processInstanceId(task.getProcessInstanceId())
@@ -535,6 +552,7 @@ public class WfTaskServiceImpl implements WfTaskService {
         vo.setDueDate(convertToLocalDateTime(task.getDueDate()));
         vo.setPriority(task.getPriority());
         vo.setFormKey(task.getFormKey());
+        applyCandidateMetadata(task, vo, false);
 
         HistoricProcessInstance processInstance = historyService.createHistoricProcessInstanceQuery()
                 .processInstanceId(task.getProcessInstanceId())
@@ -546,6 +564,33 @@ public class WfTaskServiceImpl implements WfTaskService {
         }
 
         return vo;
+    }
+
+    private void applyCandidateMetadata(TaskInfo task, TaskVO vo, boolean claimable) {
+        List<String> users = new ArrayList<>();
+        List<String> groups = new ArrayList<>();
+        Collection<? extends IdentityLinkInfo> links = task instanceof Task runtimeTask
+                ? taskService.getIdentityLinksForTask(runtimeTask.getId()) : List.of();
+        if (links != null) {
+            for (IdentityLinkInfo link : links) {
+                if (link == null) continue;
+                if (link.getUserId() != null) users.add(link.getUserId());
+                if (link.getGroupId() != null) groups.add(link.getGroupId());
+            }
+        }
+        WorkflowCandidateResolver.SanitizedCandidates sanitized = candidates.sanitize(users, groups);
+        vo.setCandidateUsers(sanitized.candidateUsers());
+        vo.setCandidateGroups(sanitized.candidateGroups());
+        if (claimable && task instanceof Task runtimeTask) {
+            try {
+                vo.setClaimable(candidates.isCandidate(runtimeTask, access.currentUser(),
+                        taskService.getIdentityLinksForTask(runtimeTask.getId())));
+            } catch (AccessDeniedException ignored) {
+                vo.setClaimable(false);
+            }
+        } else {
+            vo.setClaimable(false);
+        }
     }
 
     private LocalDateTime convertToLocalDateTime(Date date) {

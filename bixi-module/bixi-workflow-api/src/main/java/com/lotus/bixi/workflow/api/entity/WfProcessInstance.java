@@ -20,6 +20,8 @@ public class WfProcessInstance extends BaseEntity<WfProcessInstance> {
 
     private String startRequestId;
 
+    private String startRequestHash;
+
     @Schema(description = "流程定义ID")
     private String processDefinitionId;
 

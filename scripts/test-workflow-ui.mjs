@@ -25,6 +25,15 @@ const memoryStorage = () => {
 	return { getItem: key => values.get(key) ?? null, setItem: (key, value) => values.set(key, value), removeItem: key => values.delete(key), clear: () => values.clear(), key: index => [...values.keys()][index] ?? null, get length() { return values.size; } };
 };
 
+test('recovery reconciliation renders the complete redacted correlation contract', () => {
+	const recoveryView = readFileSync(new URL('../bixi-ui/src/views/workflow/recovery/index.vue', import.meta.url), 'utf8');
+	const recoveryApi = readFileSync(new URL('../bixi-ui/src/api/workflow/recovery.ts', import.meta.url), 'utf8');
+	for (const field of ['requestId', 'commandStatus', 'operationId', 'businessTaskStatus', 'compensationId', 'quarantineEvidenceId']) {
+		assert.match(recoveryApi, new RegExp(`\\b${field}\\?\\s*:`), `${field} must remain in the typed API contract`);
+		assert.match(recoveryView, new RegExp(`prop=["']${field}["']`), `${field} must remain visible in reconciliation`);
+	}
+});
+
 function setup(path, apis = {}) {
 	const { descriptor } = parse(readFileSync(new URL(path, root), 'utf8'));
 	const source = ts.createSourceFile(path, descriptor.scriptSetup.content, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
@@ -539,6 +548,23 @@ const tableApis = {
 	todoPageList: async () => ({}), donePageList: async () => ({}), myProcessPageList: async () => ({}), useI18n: () => ({ t: value => value }),
 	useTable: () => ({ getDataList() {}, currentChangeHandle() {}, sizeChangeHandle() {}, tableStyle: {} }),
 };
+test('task list renders server candidate metadata and gates claim on claimable', async t => {
+	const ui = setup('workflow/task/list.vue', { ...tableApis });
+	t.after(ui.destroy);
+	assert.match(ui.template, /row\.claimable/);
+	assert.match(ui.template, /candidateUsers/);
+	assert.match(ui.template, /candidateGroups/);
+	assert.match(ui.template, /候选用户|候选角色/);
+	assert.doesNotMatch(ui.template, /v-if="!row\.assignee"/);
+	assert.match(ui.template, /v-else-if="row\.assignee"/);
+
+	await ui.bindings.claimTask({ taskId: 'A', candidateGroups: ['role:7'], candidateUsers: ['11'], claimable: true });
+	const intent = ui.context.listWorkflowIntents('task')[0];
+	assert.equal(intent.request.taskId, 'A');
+	assert.equal(Object.keys(intent.request).length, 2);
+	assert.equal(intent.request.candidateGroups, undefined);
+	assert.equal(intent.request.candidateUsers, undefined);
+});
 test('task list locks the resolve prompt and keeps unresolved original comment visible in the pending panel', async t => {
 	const prompt = deferred(), sent = []; let prompts = 0;
 	const ui = setup('workflow/task/list.vue', { ...tableApis,

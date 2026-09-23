@@ -59,6 +59,21 @@ class InboxExecutorTest extends MysqlInboxTestSupport {
     }
 
     @Test
+    void operatorRetryReopensOnlyFailedInboxRows() {
+        var event = message("upms", 1);
+        jdbc.update("INSERT INTO reliable_inbox(target_owner,event_id,source_owner,type,schema_version,payload_json,payload_hash) "
+                + "VALUES (?,?,?,?,?,?,?)", event.targetOwner(), event.eventId(), event.sourceOwner(), event.type(),
+                event.schemaVersion(), event.payloadJson(), event.payloadHash());
+        assertThat(inbox.retry("workflow", event.eventId())).isFalse();
+        jdbc.update("UPDATE reliable_inbox SET status='FAILED', attempts=12, last_error='boom'");
+        assertThat(inbox.list("workflow", "FAILED", 20)).singleElement()
+                .extracting(JdbcInboxStore.AdminSnapshot::status).isEqualTo("FAILED");
+        assertThat(inbox.retry("workflow", event.eventId())).isTrue();
+        assertThat(inboxState(event)).isEqualTo("RECEIVED");
+        assertThat(inbox.retry("workflow", event.eventId())).isFalse();
+    }
+
+    @Test
     void permanentFailureAndIgnoredAreDistinctCommittedOutcomes() {
         var event = message("upms", 1);
         var permanent = executor(message -> { effect(message); throw new InboxDeliveryException(InboxDeliveryException.Kind.PERMANENT, "invalid command"); });

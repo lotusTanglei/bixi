@@ -20,6 +20,8 @@ public class LeaveRequest extends BaseEntity<LeaveRequest> {
     private String businessKey;
     private Integer round;
     private String processInstanceId;
+    private String startCommandId;
+    private String startRequestHash;
     private LocalDateTime submittedAt;
     private LocalDateTime endedAt;
 }

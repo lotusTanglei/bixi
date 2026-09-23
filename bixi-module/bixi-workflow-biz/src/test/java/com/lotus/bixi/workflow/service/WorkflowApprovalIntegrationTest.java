@@ -3,8 +3,13 @@ package com.lotus.bixi.workflow.service;
 import com.baomidou.mybatisplus.autoconfigure.MybatisPlusAutoConfiguration;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lotus.bixi.common.mybatis.MybatisAutoConfiguration;
+import com.lotus.bixi.common.core.context.TenantContextHolder;
 import com.lotus.bixi.common.security.component.PermissionService;
 import com.lotus.bixi.common.security.service.BixiUser;
+import com.lotus.bixi.upms.api.dto.CandidateIdentity;
+import com.lotus.bixi.upms.api.dto.CandidateRole;
+import com.lotus.bixi.upms.api.service.CandidateIdentityQueryService;
+import com.lotus.bixi.upms.api.service.CandidateRoleQueryService;
 import com.lotus.bixi.common.workflow.config.WorkflowAutoConfiguration;
 import com.lotus.bixi.workflow.api.dto.ProcessQueryDTO;
 import com.lotus.bixi.workflow.api.dto.ProcessStartDTO;
@@ -99,7 +104,7 @@ class WorkflowApprovalIntegrationTest {
         commandBarrier.processBarrier = null;
         commandBarrier.clearReplayMiss();
         WorkflowTestSchema.create(jdbc, "wf_command", "wf_process_instance", "wf_approval_record", "wf_process_definition");
-        engine.getRepositoryService().createDeployment()
+        engine.getRepositoryService().createDeployment().tenantId("1")
                 .addString("approval.bpmn20.xml", model("approval", true))
                 .addString("plain.bpmn20.xml", model("plain", true).replaceAll("(?s)<extensionElements>.*?</extensionElements>", ""))
                 .addString("candidate.bpmn20.xml", model("candidate", true)
@@ -111,6 +116,7 @@ class WorkflowApprovalIntegrationTest {
     @AfterEach
     void cleanup() {
         SecurityContextHolder.clearContext();
+        TenantContextHolder.clear();
         engine.getRepositoryService().createDeploymentQuery().list()
                 .forEach(d -> engine.getRepositoryService().deleteDeployment(d.getId(), true));
     }
@@ -302,6 +308,22 @@ class WorkflowApprovalIntegrationTest {
     }
 
     @Test
+    void changingTerminalOperationWithSameRequestIdIsARequestConflict() {
+        var started = start("approval", "cross-operation-conflict");
+        String task = taskId(started);
+        login(22L);
+        String requestId = UUID.randomUUID().toString();
+        tasks.complete(approveWithRequestId(task, "原始意见", requestId));
+
+        var changedOperation = new TaskRejectDTO();
+        changedOperation.setTaskId(task);
+        changedOperation.setRejectReason("改为拒绝");
+        changedOperation.setRequestId(requestId);
+        assertThatThrownBy(() -> tasks.reject(changedOperation))
+                .isInstanceOf(WorkflowRequestConflictException.class);
+    }
+
+    @Test
     void differentTerminalRequestsHaveOneWinnerAndNoPartialLoserAudit() throws Exception {
         var started = start("approval", "idempotent-race");
         String task = taskId(started);
@@ -429,7 +451,7 @@ class WorkflowApprovalIntegrationTest {
         var started = start("terminate", "terminate-end");
         login(22L);
         tasks.complete(approve(taskId(started), "完成"));
-        assertThat(processes.getById(started.getProcessInstanceId()).getStatus()).isEqualTo("completed");
+        assertThat(processes.getById(started.getProcessInstanceId()).getStatus()).isEqualTo("terminated");
     }
 
     @Test
@@ -973,8 +995,9 @@ class WorkflowApprovalIntegrationTest {
     }
 
     static void login(long id, List<String> permissions) {
+        TenantContextHolder.set(1L);
         var authorities = permissions.stream().map(SimpleGrantedAuthority::new).toList();
-        var user = new BixiUser(id, 1L, "user-" + id, "unused", null, true, true, true, true, authorities);
+        var user = new BixiUser(id, 1L, 1L, "user-" + id, "unused", null, true, true, true, true, authorities);
         SecurityContextHolder.getContext().setAuthentication(UsernamePasswordAuthenticationToken.authenticated(user, null, authorities));
     }
 
@@ -1087,6 +1110,12 @@ class WorkflowApprovalIntegrationTest {
         @Bean DataSourceTransactionManager transactionManager(DataSource source) { return new DataSourceTransactionManager(source); }
         @Bean ResultReceiver resultReceiver(DataSource source) { return new ResultReceiver(source); }
         @Bean CommandBarrier commandBarrier() { return new CommandBarrier(); }
+        @Bean CandidateIdentityQueryService candidateIdentityQueryService() {
+            return userId -> userId == null || userId <= 0 ? null : new CandidateIdentity(userId, true, false, 1L);
+        }
+        @Bean CandidateRoleQueryService candidateRoleQueryService() {
+            return roleId -> roleId == null || roleId <= 0 ? null : new CandidateRole(roleId, true, 1L);
+        }
         @Bean("pms") PermissionService permissionService() { return new PermissionService(); }
         @Bean static PrePostTemplateDefaults prePostTemplateDefaults() { return new PrePostTemplateDefaults(); }
     }

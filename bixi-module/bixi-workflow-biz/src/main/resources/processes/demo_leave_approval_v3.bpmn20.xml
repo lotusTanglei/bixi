@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:flowable="http://flowable.org/bpmn"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             targetNamespace="https://bixi.example/workflow">
+    <process id="demo_leave_approval" name="请假申请审批 v3" isExecutable="true">
+        <documentation>v3 keeps the v2 contract and makes external-operation delegates explicit asynchronous boundaries.</documentation>
+        <startEvent id="start" name="提交申请"/>
+        <sequenceFlow id="toReview" sourceRef="start" targetRef="review"/>
+        <userTask id="review" name="请假审批" flowable:assignee="${approverId}">
+            <extensionElements>
+                <flowable:taskListener event="create" delegateExpression="${taskCreateListener}"/>
+            </extensionElements>
+        </userTask>
+        <sequenceFlow id="toRequest" sourceRef="review" targetRef="requestBusiness"/>
+        <serviceTask id="requestBusiness" name="请求请假登记"
+                     flowable:async="true" flowable:exclusive="true"
+                     flowable:delegateExpression="${leaveBusinessTaskRequestDelegate}"/>
+        <sequenceFlow id="toBusinessWait" sourceRef="requestBusiness" targetRef="waitBusinessResult"/>
+        <receiveTask id="waitBusinessResult" name="等待请假登记结果"/>
+        <boundaryEvent id="businessTimeout" name="登记超时" attachedToRef="waitBusinessResult" cancelActivity="true">
+            <timerEventDefinition><timeDuration>PT5M</timeDuration></timerEventDefinition>
+        </boundaryEvent>
+        <sequenceFlow id="timeoutToCompensate" sourceRef="businessTimeout" targetRef="requestCompensation"/>
+        <sequenceFlow id="toBusinessGateway" sourceRef="waitBusinessResult" targetRef="businessGateway"/>
+        <exclusiveGateway id="businessGateway" name="登记是否成功"/>
+        <sequenceFlow id="businessSuccess" sourceRef="businessGateway" targetRef="endApproved">
+            <conditionExpression xsi:type="tFormalExpression"><![CDATA[${businessTaskSuccess == true}]]></conditionExpression>
+        </sequenceFlow>
+        <sequenceFlow id="businessFailure" sourceRef="businessGateway" targetRef="requestCompensation">
+            <conditionExpression xsi:type="tFormalExpression"><![CDATA[${businessTaskSuccess != true}]]></conditionExpression>
+        </sequenceFlow>
+        <serviceTask id="requestCompensation" name="请求请假补偿"
+                     flowable:async="true" flowable:exclusive="true"
+                     flowable:delegateExpression="${leaveCompensationRequestDelegate}"/>
+        <sequenceFlow id="toCompensationWait" sourceRef="requestCompensation" targetRef="waitCompensationResult"/>
+        <receiveTask id="waitCompensationResult" name="等待请假补偿结果"/>
+        <sequenceFlow id="toCanceled" sourceRef="waitCompensationResult" targetRef="endCanceled"/>
+        <endEvent id="endApproved" name="登记完成"/>
+        <endEvent id="endCanceled" name="登记补偿">
+            <terminateEventDefinition/>
+        </endEvent>
+    </process>
+</definitions>

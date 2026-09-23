@@ -12,7 +12,6 @@ import com.lotus.bixi.upms.service.SysFileService;
 import com.lotus.bixi.common.core.util.R;
 import com.lotus.bixi.common.log.annotation.SysLog;
 import com.lotus.bixi.common.security.annotation.HasPermission;
-import com.lotus.bixi.common.security.annotation.Inner;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -49,6 +48,7 @@ public class SysFileController {
      */
     @Operation(summary = "分页查询", description = "分页查询")
     @GetMapping("/page")
+    @HasPermission("sys_file_view")
     public R getSysFilePage(@ParameterObject Page page, @ParameterObject SysFile sysFile) {
         LambdaQueryWrapper<SysFile> wrapper = Wrappers.<SysFile>lambdaQuery()
                 .like(StrUtil.isNotBlank(sysFile.getOriginal()), SysFile::getOriginal, sysFile.getOriginal());
@@ -91,7 +91,6 @@ public class SysFileController {
      * @param response
      * @return
      */
-    @Inner(false)
     @GetMapping("/{bucket}/{fileName}")
     public void file(@PathVariable String bucket, @PathVariable String fileName, HttpServletResponse response) {
         sysFileService.getFile(bucket, fileName, response);

@@ -58,7 +58,7 @@ class UpmsImportAuditTest {
     @ParameterizedTest
     @ValueSource(strings = {"user", "role", "dept"})
     void importsRecordTheAuthenticatedActorAndOperation(String resource) {
-        var actor = new BixiUser(41L, 1L, "importer", "unused", null, true, true, true, true,
+        var actor = new BixiUser(41L, 1L, 1L, "importer", "unused", null, true, true, true, true,
                 AuthorityUtils.createAuthorityList("sys_" + resource + "_import"));
         SecurityContextHolder.getContext().setAuthentication(
                 UsernamePasswordAuthenticationToken.authenticated(actor, "", actor.getAuthorities()));

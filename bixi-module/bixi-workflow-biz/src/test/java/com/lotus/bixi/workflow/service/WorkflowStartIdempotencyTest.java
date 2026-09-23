@@ -1,6 +1,7 @@
 package com.lotus.bixi.workflow.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.lotus.bixi.common.core.context.TenantContextHolder;
 import com.lotus.bixi.workflow.api.dto.ProcessStartDTO;
 import com.lotus.bixi.workflow.api.dto.TaskCompleteDTO;
 import com.lotus.bixi.workflow.api.exception.WorkflowRequestConflictException;
@@ -68,6 +69,7 @@ class WorkflowStartIdempotencyTest {
     @AfterEach void cleanup() {
         reservation.barrier = null;
         SecurityContextHolder.clearContext();
+        TenantContextHolder.clear();
         engine.getRepositoryService().createDeploymentQuery().list()
                 .forEach(d -> engine.getRepositoryService().deleteDeployment(d.getId(), true));
     }

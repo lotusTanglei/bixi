@@ -14,6 +14,9 @@ CREATE INDEX idx_demo_task_status_due ON biz_demo_task(task_status, due_date, de
 CREATE INDEX idx_demo_task_assignee ON biz_demo_task(assignee, del_flag);
 CREATE INDEX idx_demo_task_create_time ON biz_demo_task(create_time);
 
+-- 请假审批自动任务登记索引
+CREATE INDEX idx_leave_booking_operation_state ON demo_leave_booking(operation_id, booking_state);
+
 -- 用户表索引优化
 CREATE INDEX idx_user_phone ON sys_user(phone);
 CREATE INDEX idx_user_email ON sys_user(email);
@@ -213,3 +216,17 @@ CREATE INDEX idx_reliable_outbox_lease ON reliable_outbox(source_owner, status, 
 -- Bounded, index-ordered Inbox claims; these names are used by FORCE INDEX.
 CREATE INDEX idx_reliable_inbox_due ON reliable_inbox(target_owner, status, next_attempt_at, received_at);
 CREATE INDEX idx_reliable_inbox_lease ON reliable_inbox(target_owner, status, lease_until);
+CREATE INDEX idx_wf_recovery_audit_created ON wf_recovery_audit(created_at, id);
+
+-- Tenant predicates are appended to business queries; keep tenant_id as the
+-- leading column for the high-volume lookup paths.
+CREATE INDEX idx_user_tenant_username ON sys_user(tenant_id, username, del_flag);
+CREATE INDEX idx_user_tenant_phone ON sys_user(tenant_id, phone, del_flag);
+CREATE INDEX idx_role_tenant_code ON sys_role(tenant_id, code, del_flag);
+CREATE INDEX idx_dept_tenant_parent ON sys_dept(tenant_id, parent_id, del_flag);
+CREATE INDEX idx_menu_tenant_parent ON sys_menu(tenant_id, parent_id, del_flag);
+CREATE INDEX idx_dict_tenant_type ON sys_dict(tenant_id, type, del_flag);
+CREATE INDEX idx_dict_item_tenant_type ON sys_dict_item(tenant_id, dict_type, del_flag);
+CREATE INDEX idx_notice_tenant_receiver ON sys_notice(tenant_id, create_time, del_flag);
+CREATE INDEX idx_sensitive_word_tenant_status ON sys_sensitive_word(tenant_id, status, del_flag);
+CREATE INDEX idx_dept_relation_descendant ON sys_dept_relation(descendant, ancestor);

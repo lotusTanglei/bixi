@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lotus.bixi.upms.api.dto.UserDTO;
 import com.lotus.bixi.upms.api.entity.SysUser;
 import com.lotus.bixi.upms.api.vo.UserVO;
+import com.lotus.bixi.common.mybatis.annotation.DataScope;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -30,6 +31,7 @@ public interface SysUserMapper extends BaseMapper<SysUser> {
      * @param username 用户名
      * @return userVo
      */
+    @DataScope(userAlias = "u", deptAlias = "d")
     UserVO getUserVoByUsername(String username);
 
     /**
@@ -40,6 +42,7 @@ public interface SysUserMapper extends BaseMapper<SysUser> {
      * @param dataScope
      * @return list
      */
+    @DataScope(userAlias = "u", deptAlias = "d")
     IPage<UserVO> getUserVosPage(Page page, @Param("query") UserDTO userDTO);
 
     /**
@@ -48,6 +51,7 @@ public interface SysUserMapper extends BaseMapper<SysUser> {
      * @param id 用户ID
      * @return userVo
      */
+    @DataScope(userAlias = "u", deptAlias = "d")
     UserVO getUserVoById(Long id);
 
     /**
@@ -56,6 +60,7 @@ public interface SysUserMapper extends BaseMapper<SysUser> {
      * @param userDTO   查询条件
      * @return
      */
+    @DataScope(userAlias = "u", deptAlias = "d")
     List<UserVO> selectVoList(@Param("query") UserDTO userDTO);
 
 }

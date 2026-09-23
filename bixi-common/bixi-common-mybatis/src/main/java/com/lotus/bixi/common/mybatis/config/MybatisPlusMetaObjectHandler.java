@@ -3,6 +3,7 @@ package com.lotus.bixi.common.mybatis.config;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
 import com.lotus.bixi.common.core.constant.CommonConstants;
+import com.lotus.bixi.common.core.context.TenantContextHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.reflection.MetaObject;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -27,9 +28,11 @@ public class MybatisPlusMetaObjectHandler implements MetaObjectHandler {
     @Override
     public void insertFill(MetaObject metaObject) {
         log.debug("mybatis plus start insert fill ....");
+        TenantContextHolder.assertWritable();
 
         fillValIfNullByName("createTime",  LocalDateTime.now(), metaObject, true);
         fillValIfNullByName("createBy", getUserID(), metaObject, true);
+        fillValIfNullByName("tenantId", TenantContextHolder.get(), metaObject, true);
 
         // 删除标记自动填充
         fillValIfNullByName("delFlag", CommonConstants.STATUS_NORMAL, metaObject, true);
@@ -41,6 +44,7 @@ public class MybatisPlusMetaObjectHandler implements MetaObjectHandler {
     @Override
     public void updateFill(MetaObject metaObject) {
         log.debug("mybatis plus start update fill ....");
+        TenantContextHolder.assertWritable();
         fillValIfNullByName("updateTime", LocalDateTime.now(), metaObject, true);
         fillValIfNullByName("updateBy", getUserID(), metaObject, true);
     }

@@ -131,7 +131,7 @@ class WorkflowLocalAdapterTest {
 
     static void authenticate(Long id, String... permissions) {
         var authorities = AuthorityUtils.createAuthorityList(permissions);
-        var user = new BixiUser(id, 1L, "user-" + id, "password", null,
+        var user = new BixiUser(id, 1L, 1L, "user-" + id, "password", null,
                 true, true, true, true, authorities);
         SecurityContextHolder.getContext().setAuthentication(
                 UsernamePasswordAuthenticationToken.authenticated(user, "", authorities));

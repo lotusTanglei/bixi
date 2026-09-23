@@ -7,8 +7,10 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.sql.DataSource;
+import java.time.Instant;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -19,7 +21,7 @@ import java.util.UUID;
  * The transaction manager must manage this exact DataSource, including any routing wrapper.
  * No component scanning, scheduler, or transport is installed by this class.
  */
-public final class JdbcOutboxStore {
+public class JdbcOutboxStore {
 
     private final JdbcTemplate jdbc;
     private final TransactionTemplate mandatory;
@@ -68,14 +70,17 @@ public final class JdbcOutboxStore {
                     ON DUPLICATE KEY UPDATE event_id = reliable_outbox.event_id
                     """, message.sourceOwner(), message.eventId(), dedupKey, message.targetOwner(), message.type(),
                     message.schemaVersion(), message.payloadJson(), message.payloadHash(), aggregateKey, aggregateSequence);
+            // The upsert has already serialized an insert or either unique-key conflict. Read
+            // only by the primary key: a missing row therefore means the dedup key belongs to a
+            // different event. Combining both indexes with OR here deadlocks independent writers.
             List<Boolean> matches = jdbc.query("""
                     SELECT * FROM reliable_outbox
-                    WHERE source_owner = ? AND (event_id = ? OR dedup_key = ?) FOR UPDATE
+                    WHERE source_owner = ? AND event_id = ? FOR UPDATE
                     """, (row, index) -> message.equals(readMessage(row))
                             && dedupKey.equals(row.getString("dedup_key"))
                             && Objects.equals(aggregateKey, row.getString("aggregate_key"))
                             && Objects.equals(aggregateSequence, row.getObject("aggregate_sequence", Long.class)),
-                    message.sourceOwner(), message.eventId(), dedupKey);
+                    message.sourceOwner(), message.eventId());
             if (matches.size() != 1 || !matches.get(0)) {
                 throw new OutboxConflictException();
             }
@@ -128,6 +133,33 @@ public final class JdbcOutboxStore {
         });
     }
 
+    /** Read bounded operator metadata without exposing payload contents to management APIs. */
+    public List<AdminSnapshot> list(String sourceOwner, String status, int limit) {
+        DurableMessage.requireOwner(sourceOwner);
+        requireStatus(status);
+        requireLimit(limit);
+        return independent.execute(transaction -> {
+            String sql = status == null
+                    ? "SELECT * FROM reliable_outbox WHERE source_owner = ? ORDER BY created_at DESC LIMIT ?"
+                    : "SELECT * FROM reliable_outbox WHERE source_owner = ? AND status = ? "
+                            + "ORDER BY created_at DESC LIMIT ?";
+            Object[] args = status == null ? new Object[] {sourceOwner, limit}
+                    : new Object[] {sourceOwner, status, limit};
+            return List.copyOf(jdbc.query(sql, (row, index) -> readAdminSnapshot(row), args));
+        });
+    }
+
+    /** Move one failed event back to the normal due queue; the status predicate is the CAS fence. */
+    public boolean retry(String sourceOwner, String eventId) {
+        DurableMessage.requireOwner(sourceOwner);
+        requireEventId(eventId);
+        return Boolean.TRUE.equals(independent.execute(transaction -> jdbc.update("""
+                UPDATE reliable_outbox SET status = 'PENDING', next_attempt_at = UTC_TIMESTAMP(6),
+                    lease_token = NULL, lease_until = NULL, last_error = NULL
+                WHERE source_owner = ? AND event_id = ? AND status = 'FAILED'
+                """, sourceOwner, eventId) == 1));
+    }
+
     /** False means another worker owns this message, or its state already changed. */
     public boolean markDelivered(Lease lease) {
         Objects.requireNonNull(lease, "Lease is required");
@@ -159,6 +191,36 @@ public final class JdbcOutboxStore {
                 row.getString("type"), row.getInt("schema_version"), row.getString("payload_json"), row.getString("payload_hash"));
     }
 
+    private static AdminSnapshot readAdminSnapshot(ResultSet row) throws SQLException {
+        return new AdminSnapshot(readMessage(row), row.getString("dedup_key"), row.getString("aggregate_key"),
+                row.getObject("aggregate_sequence", Long.class), row.getString("status"), row.getInt("attempts"),
+                instant(row, "next_attempt_at"), instant(row, "lease_until"), row.getString("last_error"),
+                instant(row, "created_at"), instant(row, "delivered_at"));
+    }
+
+    private static Instant instant(ResultSet row, String column) throws SQLException {
+        Timestamp value = row.getTimestamp(column);
+        return value == null ? null : value.toInstant();
+    }
+
+    private static void requireStatus(String status) {
+        if (status != null && !status.matches("PENDING|IN_FLIGHT|DELIVERED|FAILED")) {
+            throw new IllegalArgumentException("Invalid outbox status");
+        }
+    }
+
+    private static void requireLimit(int limit) {
+        if (limit < 1 || limit > 200) {
+            throw new IllegalArgumentException("Limit must be between 1 and 200");
+        }
+    }
+
+    private static void requireEventId(String eventId) {
+        if (eventId == null || !UUID.fromString(eventId).toString().equals(eventId)) {
+            throw new IllegalArgumentException("eventId must be a canonical lowercase UUID");
+        }
+    }
+
     private static void requireKey(String key, String name) {
         if (key == null || !key.matches("[!-~]{1,191}")) {
             throw new IllegalArgumentException(name + " must be 1 to 191 printable ASCII characters without spaces");
@@ -166,6 +228,11 @@ public final class JdbcOutboxStore {
     }
 
     public record Lease(DurableMessage message, String leaseToken, int attempt) { }
+
+    public record AdminSnapshot(DurableMessage message, String dedupKey, String aggregateKey,
+            Long aggregateSequence, String status, int attempts, java.time.Instant nextAttemptAt,
+            java.time.Instant leaseUntil, String lastError, java.time.Instant createdAt,
+            java.time.Instant deliveredAt) { }
 
     private record Candidate(DurableMessage message, int attempts) { }
 }

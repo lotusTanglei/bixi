@@ -35,6 +35,9 @@ public class UserInfo implements Serializable {
     @Schema(description = "角色标识集合")
     private Long[] roles;
 
+    /** Maximum role data scope: 1 all, 2 department tree, 3 department, 4 self. */
+    private String dataScope;
+
 	/**
 	 * 仅供内部认证链路传输的密码哈希。
 	 */

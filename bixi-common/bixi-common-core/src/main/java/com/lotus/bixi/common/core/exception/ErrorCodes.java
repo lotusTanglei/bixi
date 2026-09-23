@@ -99,4 +99,14 @@ public interface ErrorCodes {
      */
     String SYS_APP_PHONE_UNREGISTERED = "sys.app.phone.unregistered";
 
+    /**
+     * 密码强度不足（至少8位，含大小写字母、数字和特殊字符）
+     */
+    String SYS_PASSWORD_WEAK = "sys.password.weak";
+
+    /**
+     * 账户因多次登录失败已被锁定
+     */
+    String SYS_USER_LOCKED = "sys.user.locked";
+
 }

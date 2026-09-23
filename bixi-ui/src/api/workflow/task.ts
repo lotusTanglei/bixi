@@ -1,5 +1,19 @@
 import request from '/@/utils/request';
 
+export interface WorkflowTaskRow {
+	taskId: string;
+	taskName?: string;
+	processName?: string;
+	processInstanceId?: string;
+	createTime?: string;
+	endTime?: string;
+	assignee?: string | null;
+	delegationState?: string | null;
+	candidateUsers?: string[];
+	candidateGroups?: string[];
+	claimable?: boolean;
+}
+
 export const resolve = (data: { taskId: string; comment: string; requestId: string }) =>
 	request({ url: '/admin/workflow/task/resolve', method: 'post', data });
 

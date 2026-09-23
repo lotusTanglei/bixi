@@ -19,7 +19,7 @@ CREATE TABLE `biz_demo_task` (
   `del_flag` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '0' COMMENT '删除标志',
   `status` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '0' COMMENT '数据状态（0正常 1停用）',
   `data_status` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '0' COMMENT '数据库状态',
-  `tenant_id` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '租户ID',
+  `tenant_id` bigint DEFAULT NULL COMMENT '租户ID',
   `remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='示例任务业务表';
@@ -39,6 +39,8 @@ CREATE TABLE `demo_leave_request` (
   `business_key` varchar(255) NOT NULL,
   `round` int NOT NULL DEFAULT 1,
   `process_instance_id` varchar(64) DEFAULT NULL,
+  `start_command_id` char(36) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL,
+  `start_request_hash` char(64) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL,
   `submitted_at` datetime DEFAULT NULL,
   `ended_at` datetime DEFAULT NULL,
   `create_by` bigint DEFAULT NULL,
@@ -48,12 +50,33 @@ CREATE TABLE `demo_leave_request` (
   `del_flag` char(1) DEFAULT '0',
   `status` char(1) DEFAULT '0',
   `data_status` char(1) DEFAULT '0',
-  `tenant_id` varchar(64) DEFAULT NULL,
+  `tenant_id` bigint DEFAULT NULL,
   `remark` varchar(500) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_leave_business_key` (`business_key`),
   UNIQUE KEY `uk_leave_process_instance` (`process_instance_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='工作流请假示例';
+
+-- ----------------------------
+-- Table structure for demo_leave_booking
+-- ----------------------------
+DROP TABLE IF EXISTS `demo_leave_booking`;
+CREATE TABLE `demo_leave_booking` (
+  `operation_id` char(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL COMMENT '自动任务操作ID',
+  `leave_id` bigint NOT NULL COMMENT '请假ID',
+  `round` int NOT NULL COMMENT '业务申请轮次',
+  `request_hash` char(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL COMMENT '请求摘要',
+  `booking_state` varchar(16) NOT NULL COMMENT '登记状态：BOOKED/CANCELED',
+  `booking_reference` varchar(128) DEFAULT NULL COMMENT '登记引用号',
+  `compensation_id` char(36) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL COMMENT '稳定补偿ID',
+  `tenant_id` bigint NOT NULL DEFAULT '1' COMMENT '租户ID',
+  `created_at` datetime(6) NOT NULL COMMENT '创建时间',
+  `updated_at` datetime(6) NOT NULL COMMENT '更新时间',
+  PRIMARY KEY (`operation_id`),
+  UNIQUE KEY `uk_leave_booking_round` (`tenant_id`,`leave_id`,`round`),
+  UNIQUE KEY `uk_leave_booking_compensation` (`compensation_id`),
+  KEY `idx_leave_booking_state_updated` (`tenant_id`,`booking_state`,`updated_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='请假审批后的幂等登记与补偿记录';
 
 -- ----------------------------
 -- Table structure for sys_dept
@@ -77,6 +100,18 @@ CREATE TABLE `sys_dept` (
   `remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='组织机构表';
+
+-- ----------------------------
+-- Table structure for sys_dept_relation
+-- ----------------------------
+DROP TABLE IF EXISTS `sys_dept_relation`;
+CREATE TABLE `sys_dept_relation` (
+  `ancestor` bigint NOT NULL COMMENT '祖先部门ID',
+  `descendant` bigint NOT NULL COMMENT '后代部门ID',
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`ancestor`, `descendant`)
+  -- The composite tenant/query index is created by 03_add_indexes.sql.
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='部门闭包关系表';
 
 -- ----------------------------
 -- Table structure for sys_dict
@@ -308,6 +343,7 @@ CREATE TABLE `sys_role` (
   `status` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '0' COMMENT '状态（0正常 1停用）',
   `data_status` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '0' COMMENT '数据状态（用来标识数据状态，可用于割接，特殊数据处理）',
   `tenant_id` bigint DEFAULT NULL COMMENT '租户id',
+  `data_scope` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '4' COMMENT '数据权限（1全部 2本部门及下级 3本部门 4本人）',
   `remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`id`) USING BTREE,
   KEY `idx_role_code` (`code`) USING BTREE
@@ -446,7 +482,7 @@ CREATE TABLE `ai_session` (
     `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `del_flag` CHAR(1) DEFAULT '0' COMMENT '删除标记：0-正常，1-删除',
-    `tenant_id` VARCHAR(32) DEFAULT NULL COMMENT '租户ID',
+    `tenant_id` bigint DEFAULT NULL COMMENT '租户ID',
     PRIMARY KEY (`id`),
     KEY `idx_user_id` (`user_id`),
     KEY `idx_create_time` (`create_time`)
@@ -465,7 +501,7 @@ CREATE TABLE `ai_message` (
     `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `del_flag` CHAR(1) DEFAULT '0' COMMENT '删除标记：0-正常，1-删除',
-    `tenant_id` VARCHAR(32) DEFAULT NULL COMMENT '租户ID',
+    `tenant_id` bigint DEFAULT NULL COMMENT '租户ID',
     PRIMARY KEY (`id`),
     KEY `idx_session_id` (`session_id`),
     KEY `idx_create_time` (`create_time`)
@@ -486,7 +522,7 @@ CREATE TABLE `ai_conversation` (
     `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `del_flag` CHAR(1) DEFAULT '0' COMMENT '删除标记：0-正常，1-删除',
-    `tenant_id` VARCHAR(32) DEFAULT NULL COMMENT '租户ID',
+    `tenant_id` bigint DEFAULT NULL COMMENT '租户ID',
     PRIMARY KEY (`id`),
     KEY `idx_session_id` (`session_id`),
     KEY `idx_user_id` (`user_id`),
@@ -507,7 +543,7 @@ CREATE TABLE `ai_document` (
     `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `del_flag` CHAR(1) DEFAULT '0' COMMENT '删除标记：0-正常，1-删除',
-    `tenant_id` VARCHAR(32) DEFAULT NULL COMMENT '租户ID',
+    `tenant_id` bigint DEFAULT NULL COMMENT '租户ID',
     PRIMARY KEY (`id`),
     KEY `idx_user_id` (`user_id`),
     KEY `idx_vector_status` (`vector_status`),
@@ -528,7 +564,7 @@ CREATE TABLE `ai_embedding` (
     `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `del_flag` CHAR(1) DEFAULT '0' COMMENT '删除标记：0-正常，1-删除',
-    `tenant_id` VARCHAR(32) DEFAULT NULL COMMENT '租户ID',
+    `tenant_id` bigint DEFAULT NULL COMMENT '租户ID',
     PRIMARY KEY (`id`),
     KEY `idx_document_id` (`document_id`),
     KEY `idx_vector_id` (`vector_id`)
@@ -556,7 +592,7 @@ CREATE TABLE `wf_process_definition` (
     `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `del_flag` CHAR(1) DEFAULT '0' COMMENT '删除标记：0-正常，1-删除',
-    `tenant_id` VARCHAR(32) DEFAULT NULL COMMENT '租户ID',
+    `tenant_id` bigint DEFAULT NULL COMMENT '租户ID',
     `remark` VARCHAR(500) DEFAULT NULL COMMENT '备注',
     `status` CHAR(1) DEFAULT '0' COMMENT '数据状态（业务）：0-正常',
     `data_status` CHAR(1) DEFAULT '0' COMMENT '数据状态（数据库）：0-正常',
@@ -570,6 +606,7 @@ CREATE TABLE `wf_process_instance` (
     `id` BIGINT NOT NULL COMMENT '主键ID',
     `process_instance_id` VARCHAR(64) NOT NULL COMMENT 'Flowable流程实例ID',
     `start_request_id` CHAR(36) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL,
+    `start_request_hash` CHAR(64) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL,
     `process_definition_id` VARCHAR(64) DEFAULT NULL COMMENT '流程定义ID',
     `process_key` VARCHAR(64) DEFAULT NULL COMMENT '流程标识',
     `business_key` VARCHAR(255) DEFAULT NULL COMMENT '业务Key',
@@ -587,7 +624,7 @@ CREATE TABLE `wf_process_instance` (
     `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `del_flag` CHAR(1) DEFAULT '0' COMMENT '删除标记：0-正常，1-删除',
-    `tenant_id` VARCHAR(32) DEFAULT NULL COMMENT '租户ID',
+    `tenant_id` bigint DEFAULT NULL COMMENT '租户ID',
     `remark` VARCHAR(500) DEFAULT NULL COMMENT '备注',
     `data_status` CHAR(1) DEFAULT '0' COMMENT '数据状态（数据库）：0-正常',
     PRIMARY KEY (`id`),
@@ -640,7 +677,7 @@ CREATE TABLE `wf_approval_record` (
     `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `del_flag` CHAR(1) DEFAULT '0' COMMENT '删除标记：0-正常，1-删除',
-    `tenant_id` VARCHAR(32) DEFAULT NULL COMMENT '租户ID',
+    `tenant_id` bigint DEFAULT NULL COMMENT '租户ID',
     `remark` VARCHAR(500) DEFAULT NULL COMMENT '备注',
     `status` CHAR(1) DEFAULT '0' COMMENT '数据状态（业务）：0-正常',
     `data_status` CHAR(1) DEFAULT '0' COMMENT '数据状态（数据库）：0-正常',
@@ -661,7 +698,7 @@ CREATE TABLE `wf_category` (
     `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `del_flag` CHAR(1) DEFAULT '0' COMMENT '删除标记：0-正常，1-删除',
-    `tenant_id` VARCHAR(32) DEFAULT NULL COMMENT '租户ID',
+    `tenant_id` bigint DEFAULT NULL COMMENT '租户ID',
     `remark` VARCHAR(500) DEFAULT NULL COMMENT '备注',
     `status` CHAR(1) DEFAULT '0' COMMENT '数据状态（业务）：0-正常',
     `data_status` CHAR(1) DEFAULT '0' COMMENT '数据状态（数据库）：0-正常',
@@ -690,7 +727,7 @@ CREATE TABLE `wf_form` (
     `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `del_flag` CHAR(1) DEFAULT '0' COMMENT '删除标记',
-    `tenant_id` VARCHAR(32) COMMENT '租户ID',
+    `tenant_id` bigint COMMENT '租户ID',
     `remark` VARCHAR(500) COMMENT '备注',
     `data_status` CHAR(1) DEFAULT '0' COMMENT '数据状态（数据库）：0-正常',
     PRIMARY KEY (`id`),
@@ -712,7 +749,7 @@ CREATE TABLE `wf_form_version` (
     `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `del_flag` CHAR(1) DEFAULT '0' COMMENT '删除标记',
-    `tenant_id` VARCHAR(32) COMMENT '租户ID',
+    `tenant_id` bigint COMMENT '租户ID',
     `remark` VARCHAR(500) COMMENT '备注',
     `status` CHAR(1) DEFAULT '0' COMMENT '数据状态（业务）：0-正常',
     `data_status` CHAR(1) DEFAULT '0' COMMENT '数据状态（数据库）：0-正常',
@@ -738,7 +775,7 @@ CREATE TABLE `wf_form_data` (
     `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `del_flag` CHAR(1) DEFAULT '0' COMMENT '删除标记',
-    `tenant_id` VARCHAR(32) COMMENT '租户ID',
+    `tenant_id` bigint COMMENT '租户ID',
     `remark` VARCHAR(500) COMMENT '备注',
     `status` CHAR(1) DEFAULT '0' COMMENT '数据状态（业务）：0-正常',
     `data_status` CHAR(1) DEFAULT '0' COMMENT '数据状态（数据库）：0-正常',
@@ -762,7 +799,7 @@ CREATE TABLE `sys_form_permission` (
     `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `del_flag` CHAR(1) DEFAULT '0' COMMENT '删除标记',
-    `tenant_id` VARCHAR(32) COMMENT '租户ID',
+    `tenant_id` bigint COMMENT '租户ID',
     `remark` VARCHAR(500) COMMENT '备注',
     `status` CHAR(1) DEFAULT '0' COMMENT '数据状态（业务）：0-正常',
     `data_status` CHAR(1) DEFAULT '0' COMMENT '数据状态（数据库）：0-正常',
@@ -783,7 +820,7 @@ CREATE TABLE `sys_role_form_permission` (
     `del_flag` CHAR(1) DEFAULT '0' COMMENT '删除标记：0-正常，1-删除',
     `status` CHAR(1) DEFAULT '0' COMMENT '数据状态（业务）：0-正常',
     `data_status` CHAR(1) DEFAULT '0' COMMENT '数据状态（数据库）：0-正常',
-    `tenant_id` VARCHAR(32) DEFAULT NULL COMMENT '租户ID',
+    `tenant_id` bigint DEFAULT NULL COMMENT '租户ID',
     `remark` VARCHAR(500) DEFAULT NULL COMMENT '备注',
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_role_perm` (`role_id`, `form_perm_id`),
@@ -1262,5 +1299,71 @@ CREATE TABLE reliable_inbox (
     CONSTRAINT chk_reliable_inbox_attempts CHECK (attempts >= 0),
     CONSTRAINT chk_reliable_inbox_schema CHECK (schema_version > 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+
+-- Rejected wire messages are retained for diagnosis and explicit operator replay.
+DROP TABLE IF EXISTS reliable_quarantine;
+CREATE TABLE reliable_quarantine (
+    evidence_id VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    body_json LONGTEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL,
+    reason VARCHAR(256) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    quarantined_at DATETIME(6) NOT NULL DEFAULT (UTC_TIMESTAMP(6)),
+    PRIMARY KEY (evidence_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+
+-- Operator recovery actions are retained independently from delivery state changes.
+DROP TABLE IF EXISTS wf_recovery_audit;
+CREATE TABLE wf_recovery_audit (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    actor_id BIGINT NOT NULL,
+    action VARCHAR(32) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    owner VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    event_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NULL,
+    evidence_id VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NULL,
+    changed TINYINT(1) NOT NULL,
+    reason VARCHAR(256) NOT NULL,
+    created_at DATETIME(6) NOT NULL DEFAULT (UTC_TIMESTAMP(6)),
+    PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='可靠投递人工恢复审计';
+
+-- ----------------------------
+-- Table structure for sys_tenant
+-- ----------------------------
+DROP TABLE IF EXISTS `sys_tenant`;
+CREATE TABLE `sys_tenant` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '租户ID',
+  `name` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '租户名称',
+  `code` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '租户编码',
+  `status` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '0' COMMENT '状态（0正常 1停用）',
+  `contact` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '联系人',
+  `contact_phone` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '联系电话',
+  `domain` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '绑定域名',
+  `expire_time` datetime DEFAULT NULL COMMENT '过期时间（NULL=永不过期）',
+  `max_user_count` int DEFAULT '-1' COMMENT '最大用户数（-1=不限）',
+  `remark` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '备注',
+  `create_by` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '创建人',
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_by` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '修改人',
+  `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
+  `del_flag` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '0' COMMENT '删除标记（0正常 1已删）',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_sys_tenant_code` (`code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='租户表';
+
+-- ----------------------------
+-- Table structure for sys_sensitive_word
+-- ----------------------------
+DROP TABLE IF EXISTS `sys_sensitive_word`;
+CREATE TABLE `sys_sensitive_word` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'ID',
+  `word` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '敏感词',
+  `category` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '分类',
+  `status` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '0' COMMENT '状态（0启用 1停用）',
+  `tenant_id` bigint NOT NULL COMMENT '租户ID',
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
+  `del_flag` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '0' COMMENT '删除标记',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_sensitive_word` (`word`, `tenant_id`, `del_flag`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='敏感词表';
 
 SET FOREIGN_KEY_CHECKS = 1;

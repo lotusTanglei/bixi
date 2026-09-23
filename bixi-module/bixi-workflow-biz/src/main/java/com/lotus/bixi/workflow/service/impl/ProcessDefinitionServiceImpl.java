@@ -15,6 +15,7 @@ import com.lotus.bixi.workflow.api.vo.ProcessDefinitionVO;
 import com.lotus.bixi.workflow.mapper.WfProcessDefinitionMapper;
 import com.lotus.bixi.workflow.service.FormService;
 import com.lotus.bixi.workflow.service.ProcessDefinitionService;
+import com.lotus.bixi.common.security.service.BixiUser;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.flowable.bpmn.model.BpmnModel;
@@ -42,21 +43,44 @@ public class ProcessDefinitionServiceImpl extends ServiceImpl<WfProcessDefinitio
 
     private final FormService formService;
 
+    private final WorkflowDefinitionCandidateValidator candidateValidator;
+
+    private final WorkflowAccessService access;
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     @HasPermission("workflow_definition_edit")
     public ProcessDefinitionVO deployDemo() {
+        Long tenantId = candidateValidator.validateClasspathResource("processes/demo_leave_approval_v2.bpmn20.xml");
         var deployment = repositoryService.createDeployment().name("bixi-demo-leave")
                 .enableDuplicateFiltering()
-                .addClasspathResource("processes/demo_leave_approval.bpmn20.xml").deploy();
+                .tenantId(String.valueOf(tenantId))
+                .addClasspathResource("processes/demo_leave_approval_v2.bpmn20.xml").deploy();
         var definition = repositoryService.createProcessDefinitionQuery()
-                .deploymentId(deployment.getId()).processDefinitionKey("demo_leave_approval").singleResult();
+                .deploymentId(deployment.getId()).processDefinitionTenantId(String.valueOf(tenantId))
+                .processDefinitionKey("demo_leave_approval").singleResult();
+        return convertToVO(definition);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    @HasPermission("workflow_definition_edit")
+    public ProcessDefinitionVO deployDemoV3() {
+        Long tenantId = candidateValidator.validateClasspathResource("processes/demo_leave_approval_v3.bpmn20.xml");
+        var deployment = repositoryService.createDeployment().name("bixi-demo-leave-v3")
+                .enableDuplicateFiltering()
+                .tenantId(String.valueOf(tenantId))
+                .addClasspathResource("processes/demo_leave_approval_v3.bpmn20.xml").deploy();
+        var definition = repositoryService.createProcessDefinitionQuery()
+                .deploymentId(deployment.getId()).processDefinitionTenantId(String.valueOf(tenantId))
+                .processDefinitionKey("demo_leave_approval").singleResult();
         return convertToVO(definition);
     }
 
     @Override
     public List<ProcessDefinitionVO> listLatestVersions() {
         List<org.flowable.engine.repository.ProcessDefinition> flowableDefinitions = repositoryService.createProcessDefinitionQuery()
+                .processDefinitionTenantId(currentTenantId())
                 .orderByProcessDefinitionVersion()
                 .desc()
                 .list();
@@ -72,7 +96,8 @@ public class ProcessDefinitionServiceImpl extends ServiceImpl<WfProcessDefinitio
         for (org.flowable.engine.repository.ProcessDefinition definition : latestVersions.values()) {
             ProcessDefinitionVO vo = convertToVO(definition);
             WfProcessDefinition wfDefinition = this.getOne(Wrappers.<WfProcessDefinition>lambdaQuery()
-                    .eq(WfProcessDefinition::getProcessDefinitionId, definition.getId()));
+                    .eq(WfProcessDefinition::getProcessDefinitionId, definition.getId())
+                    .eq(WfProcessDefinition::getTenantId, Long.valueOf(currentTenantId())));
             if (wfDefinition != null) {
                 vo.setId(wfDefinition.getId());
                 vo.setCreateTime(wfDefinition.getCreateTime());
@@ -87,6 +112,7 @@ public class ProcessDefinitionServiceImpl extends ServiceImpl<WfProcessDefinitio
     @HasPermission("workflow_definition_view")
     public List<ProcessDefinitionVO> listDefinitions(ProcessQueryDTO query) {
         org.flowable.engine.repository.ProcessDefinitionQuery definitionQuery = repositoryService.createProcessDefinitionQuery()
+                .processDefinitionTenantId(currentTenantId())
                 .orderByProcessDefinitionVersion()
                 .desc();
 
@@ -112,6 +138,7 @@ public class ProcessDefinitionServiceImpl extends ServiceImpl<WfProcessDefinitio
     @Override
     public ProcessDefinitionVO getByProcessKey(String processKey) {
         org.flowable.engine.repository.ProcessDefinition definition = repositoryService.createProcessDefinitionQuery()
+                .processDefinitionTenantId(currentTenantId())
                 .processDefinitionKey(processKey)
                 .latestVersion()
                 .singleResult();
@@ -122,7 +149,8 @@ public class ProcessDefinitionServiceImpl extends ServiceImpl<WfProcessDefinitio
 
         ProcessDefinitionVO vo = convertToVO(definition);
         WfProcessDefinition wfDefinition = this.getOne(Wrappers.<WfProcessDefinition>lambdaQuery()
-                .eq(WfProcessDefinition::getProcessDefinitionId, definition.getId()));
+                .eq(WfProcessDefinition::getProcessDefinitionId, definition.getId())
+                .eq(WfProcessDefinition::getTenantId, Long.valueOf(currentTenantId())));
         if (wfDefinition != null) {
             vo.setId(wfDefinition.getId());
             vo.setCreateTime(wfDefinition.getCreateTime());
@@ -135,6 +163,7 @@ public class ProcessDefinitionServiceImpl extends ServiceImpl<WfProcessDefinitio
     @Transactional(rollbackFor = Exception.class)
     @HasPermission("workflow_definition_edit")
     public boolean suspend(String processDefinitionId) {
+        requireDefinition(processDefinitionId);
         repositoryService.suspendProcessDefinitionById(processDefinitionId);
         this.update(Wrappers.<WfProcessDefinition>lambdaUpdate()
                 .set(WfProcessDefinition::getSuspensionState, WorkflowConstants.SUSPENSION_STATE_SUSPENDED)
@@ -146,6 +175,7 @@ public class ProcessDefinitionServiceImpl extends ServiceImpl<WfProcessDefinitio
     @Transactional(rollbackFor = Exception.class)
     @HasPermission("workflow_definition_edit")
     public boolean activate(String processDefinitionId) {
+        requireDefinition(processDefinitionId);
         repositoryService.activateProcessDefinitionById(processDefinitionId);
         this.update(Wrappers.<WfProcessDefinition>lambdaUpdate()
                 .set(WfProcessDefinition::getSuspensionState, WorkflowConstants.SUSPENSION_STATE_ACTIVE)
@@ -157,6 +187,7 @@ public class ProcessDefinitionServiceImpl extends ServiceImpl<WfProcessDefinitio
     public byte[] getDiagram(String processDefinitionId) {
         try {
             org.flowable.engine.repository.ProcessDefinition processDefinition = repositoryService.createProcessDefinitionQuery()
+                    .processDefinitionTenantId(currentTenantId())
                     .processDefinitionId(processDefinitionId)
                     .singleResult();
 
@@ -211,7 +242,8 @@ public class ProcessDefinitionServiceImpl extends ServiceImpl<WfProcessDefinitio
     @Override
     public FormRenderVO getFormByProcessKey(String processKey) {
         WfProcessDefinition wfDefinition = this.getOne(Wrappers.<WfProcessDefinition>lambdaQuery()
-                .eq(WfProcessDefinition::getProcessKey, processKey));
+                .eq(WfProcessDefinition::getProcessKey, processKey)
+                .eq(WfProcessDefinition::getTenantId, Long.valueOf(currentTenantId())));
 
         if (wfDefinition == null || StrUtil.isBlank(wfDefinition.getFormKey())) {
             return null;
@@ -223,6 +255,7 @@ public class ProcessDefinitionServiceImpl extends ServiceImpl<WfProcessDefinitio
     @Override
     public FormRenderVO getFormByDefinitionId(String processDefinitionId) {
         org.flowable.engine.repository.ProcessDefinition definition = repositoryService.createProcessDefinitionQuery()
+                .processDefinitionTenantId(currentTenantId())
                 .processDefinitionId(processDefinitionId)
                 .singleResult();
         
@@ -231,6 +264,24 @@ public class ProcessDefinitionServiceImpl extends ServiceImpl<WfProcessDefinitio
         }
         
         return getFormByProcessKey(definition.getKey());
+    }
+
+    private String currentTenantId() {
+        BixiUser user = access.currentUser();
+        if (user.getTenantId() == null || user.getTenantId() <= 0) {
+            throw new IllegalArgumentException("当前用户租户无效");
+        }
+        return String.valueOf(user.getTenantId());
+    }
+
+    private void requireDefinition(String processDefinitionId) {
+        org.flowable.engine.repository.ProcessDefinition definition = repositoryService.createProcessDefinitionQuery()
+                .processDefinitionId(processDefinitionId)
+                .processDefinitionTenantId(currentTenantId())
+                .singleResult();
+        if (definition == null) {
+            throw new IllegalArgumentException("流程定义不存在或租户不匹配");
+        }
     }
 
 }

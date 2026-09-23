@@ -64,7 +64,8 @@ public class SysDictServiceImpl extends ServiceImpl<SysDictMapper, SysDict> impl
      * @return
      */
     @Override
-    @CacheEvict(value = CacheConstants.DICT_DETAILS, key = "#dict.type")
+    @CacheEvict(value = CacheConstants.DICT_DETAILS,
+            key = "T(com.lotus.bixi.common.core.constant.CacheConstants).currentTenantKey('dict_details') + #dict.type")
     public R updateDict(SysDict dict) {
         SysDict sysDict = this.getById(dict.getId());
         // 系统内置

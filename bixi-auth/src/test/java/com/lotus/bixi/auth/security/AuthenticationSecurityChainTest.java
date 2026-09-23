@@ -9,6 +9,9 @@ import com.lotus.bixi.upms.api.service.TokenManagementService;
 import com.lotus.bixi.upms.api.entity.SysOauthClientDetails;
 import com.lotus.bixi.common.core.util.R;
 import com.lotus.bixi.common.core.util.SpringContextHolder;
+import com.lotus.bixi.common.core.constant.CacheConstants;
+import com.lotus.bixi.common.core.constant.SecurityConstants;
+import com.lotus.bixi.common.core.context.TenantContextHolder;
 import com.lotus.bixi.common.log.config.BixiLogProperties;
 import com.lotus.bixi.common.security.component.*;
 import com.lotus.bixi.common.security.service.*;
@@ -40,6 +43,7 @@ import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerViewResolver;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -84,6 +88,18 @@ class AuthenticationSecurityChainTest {
         }
     }
 
+    @Test
+    void authorizationServerSetsDefaultTenantBeforeClientLookup() throws Exception {
+        try (var context = context(false)) {
+            mvc(context).perform(post("/oauth2/token").servletPath("/oauth2/token")
+                            .header("Authorization", basic()).param("grant_type", "password")
+                            .param("username", "alice").param("password", "correct-password"))
+                    .andExpect(status().isOk());
+            assertThat(context.getBean(ClientLookupProbe.class).tenantId.get())
+                    .isEqualTo(SecurityConstants.DEFAULT_TENANT_ID);
+        }
+    }
+
     @ParameterizedTest(name = "ignored client still verifies SMS, resource server = {0}")
     @ValueSource(booleans = {false, true})
     void ignoredClientCannotBypassSmsProof(boolean single) throws Exception {
@@ -100,7 +116,8 @@ class AuthenticationSecurityChainTest {
             // A non-exempt client uses the same mandatory SMS verifier; image captcha must not consume its code.
             context.getBean(AuthSecurityConfigProperties.class).setIgnoreClients(List.of());
             RedisTemplate<String, Object> redis = context.getBean(RedisTemplate.class);
-            when(redis.opsForValue().getAndDelete("SMS_CODE_KEY:13800138000")).thenReturn("123456", null);
+            when(redis.opsForValue().getAndDelete(CacheConstants.tenantKey(CacheConstants.SMS_CODE_KEY, 1L)
+                    + "13800138000")).thenReturn("123456", null);
             mvc.perform(post("/oauth2/token").servletPath("/oauth2/token")
                             .header("Authorization", basic()).param("grant_type", "mobile")
                             .param("mobile", "13800138000").param("code", "123456"))
@@ -287,7 +304,7 @@ class AuthenticationSecurityChainTest {
             return properties;
         }
         @Bean BixiUserDetailsService users() {
-            return name -> new BixiUser(1L, 1L, name, "{noop}correct-password", "13800138000", true,
+            return name -> new BixiUser(1L, 1L, 1L, name, "{noop}correct-password", "13800138000", true,
                     true, true, true, AuthorityUtils.createAuthorityList("demo_task_view"));
         }
         @Bean AuthSecurityConfigProperties authProperties() {
@@ -303,8 +320,9 @@ class AuthenticationSecurityChainTest {
             return redis;
         }
         @Bean OAuth2AuthorizationService authorizationService() { return new InMemoryOAuth2AuthorizationService(); }
-        @Bean RegisteredClientRepository clients() {
-            return new InMemoryRegisteredClientRepository(RegisteredClient.withId("client-id")
+        @Bean ClientLookupProbe clientLookupProbe() { return new ClientLookupProbe(); }
+        @Bean RegisteredClientRepository clients(ClientLookupProbe probe) {
+            var delegate = new InMemoryRegisteredClientRepository(RegisteredClient.withId("client-id")
                     .clientId("ignored-client").clientSecret("{noop}secret")
                     .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                     .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
@@ -315,6 +333,19 @@ class AuthenticationSecurityChainTest {
                     .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
                     .tokenSettings(TokenSettings.builder().accessTokenFormat(OAuth2TokenFormat.REFERENCE).build())
                     .scope("server").build());
+            return new RegisteredClientRepository() {
+                @Override
+                public void save(RegisteredClient registeredClient) { delegate.save(registeredClient); }
+
+                @Override
+                public RegisteredClient findById(String id) { return delegate.findById(id); }
+
+                @Override
+                public RegisteredClient findByClientId(String clientId) {
+                    probe.tenantId.set(TenantContextHolder.get());
+                    return delegate.findByClientId(clientId);
+                }
+            };
         }
         @Bean PermitAllUrlProperties permitAllUrlProperties() { return new PermitAllUrlProperties(); }
         @Bean BixiBearerTokenExtractor bearerTokenExtractor(PermitAllUrlProperties urls) { return new BixiBearerTokenExtractor(urls); }
@@ -343,6 +374,10 @@ class AuthenticationSecurityChainTest {
             resolver.setContentType("text/html;charset=UTF-8");
             return resolver;
         }
+    }
+
+    static class ClientLookupProbe {
+        private final AtomicReference<Long> tenantId = new AtomicReference<>();
     }
 
     @RestController

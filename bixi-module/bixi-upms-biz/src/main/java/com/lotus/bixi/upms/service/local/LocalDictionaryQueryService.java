@@ -21,7 +21,9 @@ public class LocalDictionaryQueryService implements DictionaryQueryService {
     private final SysDictItemService dictItemService;
 
     @Override
-    @Cacheable(value = CacheConstants.DICT_DETAILS, key = "#type", unless = "#result.data.isEmpty()")
+    @Cacheable(value = CacheConstants.DICT_DETAILS,
+            key = "T(com.lotus.bixi.common.core.constant.CacheConstants).currentTenantKey('dict_details') + #type",
+            unless = "#result.data.isEmpty()")
     public R<List<SysDictItem>> getDictByType(String type) {
         return R.ok(dictItemService.list(Wrappers.<SysDictItem>lambdaQuery()
                 .eq(SysDictItem::getDictType, type)));

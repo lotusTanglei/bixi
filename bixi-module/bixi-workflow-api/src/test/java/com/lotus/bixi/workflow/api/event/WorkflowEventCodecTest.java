@@ -35,6 +35,34 @@ class WorkflowEventCodecTest {
         }
     }
 
+    @Test void automaticTaskAndCompensationEventsRoundTripWithStableIdentifiers() {
+        var requested = automaticEvent(WorkflowEventType.WORKFLOW_BUSINESS_TASK_REQUESTED,
+                new WorkflowBusinessTaskRequested(requestHash, UUID.randomUUID().toString(),
+                        "execution-42", "registerLeave", 1, now.plusSeconds(300)));
+        var result = automaticEvent(WorkflowEventType.WORKFLOW_BUSINESS_TASK_RESULT,
+                new WorkflowBusinessTaskResult(requestHash, requested.payload() instanceof WorkflowBusinessTaskRequested task
+                        ? task.operationId() : UUID.randomUUID().toString(), true,
+                        "booking-42", null, now));
+        var compensationRequested = automaticEvent(WorkflowEventType.WORKFLOW_COMPENSATION_REQUESTED,
+                new WorkflowCompensationRequested(requestHash,
+                        ((WorkflowBusinessTaskRequested) requested.payload()).operationId(), UUID.randomUUID().toString()));
+        var compensationResult = automaticEvent(WorkflowEventType.WORKFLOW_COMPENSATION_RESULT,
+                new WorkflowCompensationResult(requestHash,
+                        ((WorkflowCompensationRequested) compensationRequested.payload()).operationId(),
+                        ((WorkflowCompensationRequested) compensationRequested.payload()).compensationId(),
+                        true, null, now));
+
+        for (WorkflowEvent value : List.of(requested, result, compensationRequested, compensationResult)) {
+            assertThat(codec.decode(codec.encode(value))).isEqualTo(value);
+        }
+    }
+
+    @Test void compensationEventsRequireStableCompensationIdentifiers() {
+        assertThatThrownBy(() -> new WorkflowCompensationRequested(requestHash,
+                UUID.randomUUID().toString(), ""))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
     @Test void rejectsInvalidAssociationIdentitySequenceAndOutcome() {
         assertThatThrownBy(() -> event(WorkflowEventType.WORKFLOW_STARTED, null, 1, new WorkflowStarted(requestHash)))
                 .isInstanceOf(IllegalArgumentException.class);
@@ -144,5 +172,15 @@ class WorkflowEventCodecTest {
                 "default", processId, "demo_leave_approval", "demo_leave_request", Long.MAX_VALUE,
                 "leave:42:1", 1, UUID.randomUUID().toString(), sequence, now, UUID.randomUUID().toString(),
                 null, actor, payload);
+    }
+
+    private WorkflowEvent automaticEvent(WorkflowEventType type, WorkflowPayload payload) {
+        boolean workflowToUpms = type == WorkflowEventType.WORKFLOW_BUSINESS_TASK_REQUESTED
+                || type == WorkflowEventType.WORKFLOW_COMPENSATION_REQUESTED;
+        return new WorkflowEvent(UUID.randomUUID().toString(), type, 1,
+                workflowToUpms ? "workflow" : "upms", workflowToUpms ? "upms" : "workflow",
+                "default", "process-42", "demo_leave_approval", "demo_leave_request", 42L,
+                "leave:42:1", 1, UUID.randomUUID().toString(), 2, now, UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(), actor, payload);
     }
 }

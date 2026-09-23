@@ -90,7 +90,9 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
     }
 
     @Override
-    @Cacheable(value = CacheConstants.MENU_DETAILS, key = "#roleId + ':' + @environment.getProperty('workflow.enabled', 'false')", unless = "#result.isEmpty()")
+    @Cacheable(value = CacheConstants.MENU_DETAILS,
+            key = "T(com.lotus.bixi.common.core.constant.CacheConstants).currentTenantKey('menu_details') + #roleId + ':' + @environment.getProperty('workflow.enabled', 'false')",
+            unless = "#result.isEmpty()")
     public List<SysMenu> findMenuByRoleId(Long roleId) {
         return baseMapper.listMenusByRoleId(roleId).stream().filter(this::isMenuAvailable).toList();
     }

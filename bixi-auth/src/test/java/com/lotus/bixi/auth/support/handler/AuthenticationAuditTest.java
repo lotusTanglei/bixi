@@ -101,7 +101,7 @@ class AuthenticationAuditTest {
         request.addHeader(HttpHeaders.AUTHORIZATION, "Bearer " + token);
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
         SecurityContextHolder.clearContext();
-        var owner = new BixiUser(7L, 1L, "owner", "unused", null,
+        var owner = new BixiUser(7L, 1L, 1L, "owner", "unused", null,
                 true, true, true, true, AuthorityUtils.NO_AUTHORITIES);
         var identity = UsernamePasswordAuthenticationToken.authenticated(owner, "unused", owner.getAuthorities());
         var client = RegisteredClient.withId("browser-client").clientId("browser-client")

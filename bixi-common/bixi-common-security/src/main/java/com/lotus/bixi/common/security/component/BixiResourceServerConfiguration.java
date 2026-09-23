@@ -6,6 +6,7 @@ import jakarta.servlet.DispatcherType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -20,6 +21,7 @@ import org.springframework.security.oauth2.server.resource.web.authentication.Be
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationEntryPointFailureHandler;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import com.lotus.bixi.common.security.filter.EncryptionFilter;
 
 /**
  * @author 唐磊
@@ -30,7 +32,6 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 @Slf4j
 @EnableWebSecurity
 @EnableMethodSecurity
-@RequiredArgsConstructor
 public class BixiResourceServerConfiguration {
 
     protected final ResourceAuthExceptionEntryPoint resourceAuthExceptionEntryPoint;
@@ -40,6 +41,20 @@ public class BixiResourceServerConfiguration {
     private final BixiBearerTokenExtractor bixiBearerTokenExtractor;
 
     private final OpaqueTokenIntrospector customOpaqueTokenIntrospector;
+
+    private final ObjectProvider<EncryptionFilter> encryptionFilterProvider;
+
+    public BixiResourceServerConfiguration(ResourceAuthExceptionEntryPoint resourceAuthExceptionEntryPoint,
+                                           PermitAllUrlProperties permitAllUrl,
+                                           BixiBearerTokenExtractor bixiBearerTokenExtractor,
+                                           OpaqueTokenIntrospector customOpaqueTokenIntrospector,
+                                           ObjectProvider<EncryptionFilter> encryptionFilterProvider) {
+        this.resourceAuthExceptionEntryPoint = resourceAuthExceptionEntryPoint;
+        this.permitAllUrl = permitAllUrl;
+        this.bixiBearerTokenExtractor = bixiBearerTokenExtractor;
+        this.customOpaqueTokenIntrospector = customOpaqueTokenIntrospector;
+        this.encryptionFilterProvider = encryptionFilterProvider;
+    }
 
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE + 1)
@@ -72,7 +87,13 @@ public class BixiResourceServerConfiguration {
                                     }
                                 }))
                 .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
-                .csrf(AbstractHttpConfigurer::disable);
+                .csrf(AbstractHttpConfigurer::disable)
+                .addFilterAfter(new TenantContextFilter(), BearerTokenAuthenticationFilter.class);
+
+        EncryptionFilter encryptionFilter = encryptionFilterProvider.getIfAvailable();
+        if (encryptionFilter != null) {
+            http.addFilterAfter(encryptionFilter, TenantContextFilter.class);
+        }
 
         return http.build();
     }

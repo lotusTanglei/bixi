@@ -9,12 +9,14 @@ import org.flowable.common.engine.impl.history.HistoryLevel;
 import org.flowable.engine.ProcessEngine;
 import org.flowable.job.service.impl.asyncexecutor.AsyncExecutor;
 import org.flowable.spring.SpringProcessEngineConfiguration;
+import org.flowable.spring.boot.EngineConfigurationConfigurer;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.assertj.AssertableApplicationContext;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.TransactionAwareDataSourceProxy;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -155,6 +157,89 @@ class WorkflowEngineConfigurationTest {
     }
 
     @Test
+    void clusterLockAndRecoverySettingsAreBoundToTheRunningEngine() {
+        enabledRunner().withPropertyValues(
+                        "workflow.lock-owner=workflow-test-a",
+                        "workflow.async-job-lock-time=PT7S",
+                        "workflow.timer-lock-time=PT9S",
+                        "workflow.reset-expired-jobs-interval=PT11S",
+                        "workflow.default-async-job-acquire-wait-time=PT13S",
+                        "workflow.default-timer-job-acquire-wait-time=PT17S",
+                        "workflow.max-async-jobs-due-per-acquisition=3",
+                        "workflow.max-timer-jobs-per-acquisition=4",
+                        "workflow.reset-expired-jobs-page-size=25",
+                        "workflow.reset-expired-job-enabled=true",
+                        "workflow.unlock-owned-jobs=true")
+                .run(context -> {
+                    assertThat(context).hasNotFailed().hasSingleBean(ProcessEngine.class);
+                    SpringProcessEngineConfiguration configuration =
+                            context.getBean(SpringProcessEngineConfiguration.class);
+                    assertThat(configuration.getAsyncExecutorLockOwner()).isEqualTo("workflow-test-a");
+                    assertThat(configuration.getAsyncExecutorAsyncJobLockTimeInMillis()).isEqualTo(7_000);
+                    assertThat(configuration.getAsyncExecutorTimerLockTimeInMillis()).isEqualTo(9_000);
+                    assertThat(configuration.getAsyncExecutorResetExpiredJobsInterval()).isEqualTo(11_000);
+                    assertThat(configuration.getAsyncExecutorDefaultAsyncJobAcquireWaitTime()).isEqualTo(13_000);
+                    assertThat(configuration.getAsyncExecutorDefaultTimerJobAcquireWaitTime()).isEqualTo(17_000);
+                    assertThat(configuration.getAsyncExecutorMaxAsyncJobsDuePerAcquisition()).isEqualTo(3);
+                    assertThat(configuration.getAsyncExecutorMaxTimerJobsPerAcquisition()).isEqualTo(4);
+                    assertThat(configuration.getAsyncExecutorResetExpiredJobsPageSize()).isEqualTo(25);
+                    assertThat(configuration.isAsyncExecutorResetExpiredJobsEnabled()).isTrue();
+                    assertThat(configuration.isAsyncExecutorUnlockOwnedJobs()).isTrue();
+                    AsyncExecutor runtimeExecutor = configuration.getAsyncExecutor();
+                    assertThat(runtimeExecutor.getLockOwner()).isEqualTo("workflow-test-a");
+                    assertThat(runtimeExecutor.getAsyncJobLockTimeInMillis()).isEqualTo(7_000);
+                    assertThat(runtimeExecutor.getTimerLockTimeInMillis()).isEqualTo(9_000);
+                    assertThat(runtimeExecutor.getResetExpiredJobsInterval()).isEqualTo(11_000);
+                    assertThat(runtimeExecutor.getDefaultAsyncJobAcquireWaitTimeInMillis()).isEqualTo(13_000);
+                    assertThat(runtimeExecutor.getDefaultTimerJobAcquireWaitTimeInMillis()).isEqualTo(17_000);
+                    assertThat(runtimeExecutor.getMaxAsyncJobsDuePerAcquisition()).isEqualTo(3);
+                    assertThat(runtimeExecutor.getMaxTimerJobsPerAcquisition()).isEqualTo(4);
+                    assertThat(runtimeExecutor.getResetExpiredJobsPageSize()).isEqualTo(25);
+                });
+    }
+
+    @Test
+    void bixiSettingsStillApplyWhenFlowableProvidesItsOwnConfigurer() {
+        enabledRunner().withUserConfiguration(ExistingFlowableConfigurer.class)
+                .withPropertyValues("workflow.lock-owner=workflow-test-existing-configurer")
+                .run(context -> {
+                    assertThat(context).hasNotFailed().hasSingleBean(ProcessEngine.class);
+                    SpringProcessEngineConfiguration configuration =
+                            context.getBean(SpringProcessEngineConfiguration.class);
+                    assertThat(configuration.getAsyncExecutorLockOwner())
+                            .isEqualTo("workflow-test-existing-configurer");
+                });
+    }
+
+    @Test
+    void bixiSettingsApplyWhenFlowableAppEngineIsDisabled() {
+        enabledRunner().withPropertyValues(
+                        "flowable.app.enabled=false",
+                        "flowable.cmmn.enabled=false",
+                        "flowable.dmn.enabled=false",
+                        "flowable.idm.enabled=false",
+                        "flowable.eventregistry.enabled=false",
+                        "workflow.lock-owner=workflow-test-process-only",
+                        "workflow.async-job-lock-time=PT7S",
+                        "workflow.timer-lock-time=PT9S")
+                .run(context -> {
+                    assertThat(context).hasNotFailed().hasSingleBean(ProcessEngine.class);
+                    SpringProcessEngineConfiguration configuration =
+                            context.getBean(SpringProcessEngineConfiguration.class);
+                    assertThat(configuration.getAsyncExecutorLockOwner()).isEqualTo("workflow-test-process-only");
+                    assertThat(configuration.getAsyncExecutorAsyncJobLockTimeInMillis()).isEqualTo(7_000);
+                    assertThat(configuration.getAsyncExecutorTimerLockTimeInMillis()).isEqualTo(9_000);
+                });
+    }
+
+    @Test
+    void workflowRegistersAProcessEngineConfigurationPostProcessor() {
+        enabledRunner().run(context ->
+                assertThat(context).hasNotFailed()
+                        .hasBean("bixiWorkflowProcessEngineConfigurationPostProcessor"));
+    }
+
+    @Test
     void historyCanBeExplicitlyDisabled() {
         enabledRunner().withPropertyValues("workflow.history-level=none", "workflow.async-executor-activate=false")
                 .run(context -> {
@@ -223,5 +308,15 @@ class WorkflowEngineConfigurationTest {
             "com.lotus.bixi.common.core.config.WebMvcConfiguration"
     })
     static class TestApplication {
+    }
+
+    @Configuration(proxyBeanMethods = false)
+    static class ExistingFlowableConfigurer {
+        @Bean
+        EngineConfigurationConfigurer<SpringProcessEngineConfiguration> processEngineConfigurationConfigurer() {
+            return configuration -> {
+                // Simulates the configurer supplied by Flowable's starter.
+            };
+        }
     }
 }

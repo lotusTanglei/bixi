@@ -2,6 +2,9 @@ package com.lotus.bixi.auth.config;
 
 import com.lotus.bixi.auth.support.core.FormIdentityLoginConfigurer;
 import com.lotus.bixi.auth.support.core.BixiDaoAuthenticationProvider;
+import com.lotus.bixi.common.security.component.TenantContextFilter;
+import com.lotus.bixi.common.security.filter.EncryptionFilter;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
@@ -33,7 +36,7 @@ public class WebSecurityConfiguration {
      */
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)
-    SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http, ObjectProvider<EncryptionFilter> encryptionFilterProvider) throws Exception {
         // Disjoint from the OAuth endpoint chain; both precede the single-mode resource chain.
         http.securityMatcher("/token/login", "/token/form", "/token/confirm_access", "/logout");
         http.authorizeHttpRequests(authorizeRequests -> authorizeRequests.requestMatchers("/token/login", "/token/form")
@@ -43,6 +46,11 @@ public class WebSecurityConfiguration {
         ).with(new FormIdentityLoginConfigurer(), Customizer.withDefaults()); // 表单登录个性化
         // 处理 UsernamePasswordAuthenticationToken
         http.authenticationProvider(new BixiDaoAuthenticationProvider());
+        http.addFilterBefore(new TenantContextFilter(), org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
+        EncryptionFilter encryptionFilter = encryptionFilterProvider.getIfAvailable();
+        if (encryptionFilter != null) {
+            http.addFilterAfter(encryptionFilter, TenantContextFilter.class);
+        }
         return http.build();
     }
 

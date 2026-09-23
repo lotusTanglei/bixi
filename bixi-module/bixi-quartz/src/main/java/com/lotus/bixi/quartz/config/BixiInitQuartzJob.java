@@ -1,5 +1,7 @@
 package com.lotus.bixi.quartz.config;
 
+import com.lotus.bixi.common.core.constant.SecurityConstants;
+import com.lotus.bixi.common.core.context.TenantContextHolder;
 import com.lotus.bixi.quartz.constants.BixiQuartzEnum;
 import com.lotus.bixi.quartz.service.SysJobService;
 import com.lotus.bixi.quartz.util.TaskUtil;
@@ -27,20 +29,34 @@ public class BixiInitQuartzJob implements InitializingBean {
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		sysJobService.list().forEach(sysjob -> {
-			if (BixiQuartzEnum.JOB_STATUS_RELEASE.getType().equals(sysjob.getStatus())) {
-				taskUtil.removeJob(sysjob, scheduler);
-			}
-			else if (BixiQuartzEnum.JOB_STATUS_RUNNING.getType().equals(sysjob.getStatus())) {
-				taskUtil.resumeJob(sysjob, scheduler);
-			}
-			else if (BixiQuartzEnum.JOB_STATUS_NOT_RUNNING.getType().equals(sysjob.getStatus())) {
-				taskUtil.pauseJob(sysjob, scheduler);
+		Long previousTenantId = TenantContextHolder.get();
+		boolean previousReadOnly = TenantContextHolder.isReadOnlySwitch();
+		TenantContextHolder.set(SecurityConstants.DEFAULT_TENANT_ID);
+		try {
+			sysJobService.list().forEach(sysjob -> {
+				if (BixiQuartzEnum.JOB_STATUS_RELEASE.getType().equals(sysjob.getStatus())) {
+					taskUtil.removeJob(sysjob, scheduler);
+				}
+				else if (BixiQuartzEnum.JOB_STATUS_RUNNING.getType().equals(sysjob.getStatus())) {
+					taskUtil.resumeJob(sysjob, scheduler);
+				}
+				else if (BixiQuartzEnum.JOB_STATUS_NOT_RUNNING.getType().equals(sysjob.getStatus())) {
+					taskUtil.pauseJob(sysjob, scheduler);
+				}
+				else {
+					taskUtil.removeJob(sysjob, scheduler);
+				}
+			});
+		}
+		finally {
+			if (previousTenantId == null) {
+				TenantContextHolder.clear();
 			}
 			else {
-				taskUtil.removeJob(sysjob, scheduler);
+				TenantContextHolder.set(previousTenantId);
+				TenantContextHolder.setReadOnlySwitch(previousReadOnly);
 			}
-		});
+		}
 	}
 
 }

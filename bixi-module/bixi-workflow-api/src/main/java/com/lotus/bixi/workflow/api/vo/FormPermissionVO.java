@@ -41,7 +41,7 @@ public class FormPermissionVO implements Serializable {
     private LocalDateTime updateTime;
 
     @Schema(description = "租户ID")
-    private String tenantId;
+    private Long tenantId;
 
     @Schema(description = "备注")
     private String remark;

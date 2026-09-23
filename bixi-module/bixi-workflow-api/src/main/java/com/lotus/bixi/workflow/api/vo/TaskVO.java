@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Schema(description = "任务展示对象")
@@ -60,6 +61,15 @@ public class TaskVO implements Serializable {
 
     @Schema(description = "表单Key")
     private String formKey;
+
+    @Schema(description = "候选用户ID")
+    private List<String> candidateUsers = List.of();
+
+    @Schema(description = "候选角色组")
+    private List<String> candidateGroups = List.of();
+
+    @Schema(description = "当前用户是否可以认领")
+    private boolean claimable;
 
     private static final long serialVersionUID = 1L;
 }
