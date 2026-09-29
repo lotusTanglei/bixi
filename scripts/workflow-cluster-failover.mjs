@@ -150,7 +150,7 @@ try {
 		},
 	});
 	const maintenanceLeaveId = String(maintenanceDraft.id);
-	const maintenanceSubmitted = await api(`/admin/demo/leave/${maintenanceLeaveId}/submit`, { method: 'POST' });
+	const maintenanceSubmitted = await api(`/admin/demo/leave/${maintenanceLeaveId}/submit?requestId=${randomUUID()}`, { method: 'POST' });
 	const maintenanceBound = await pollApi(
 		() => api(`/admin/demo/leave/details/${maintenanceLeaveId}`),
 		value => value.leaveStatus === 'IN_REVIEW' && value.processInstanceId,
@@ -330,7 +330,7 @@ try {
 		},
 	});
 	const leaveId = String(draft.id);
-	const submitted = await api(`/admin/demo/leave/${leaveId}/submit`, { method: 'POST' });
+	const submitted = await api(`/admin/demo/leave/${leaveId}/submit?requestId=${randomUUID()}`, { method: 'POST' });
 	const bound = await pollApi(
 		() => api(`/admin/demo/leave/details/${leaveId}`),
 		value => value.leaveStatus === 'IN_REVIEW' && value.processInstanceId,
@@ -642,7 +642,7 @@ async function runPerformanceFlow({ kind, index, adminToken: flowAdminToken, act
 		result.leaveId = String(draft.id);
 		failureStage = 'submit-request';
 		const submitted = await apiWithToken(flowAdminToken,
-			`/admin/demo/leave/${result.leaveId}/submit`, { method: 'POST' });
+			`/admin/demo/leave/${result.leaveId}/submit?requestId=${randomUUID()}`, { method: 'POST' });
 		const submitFinishedAt = Date.now();
 		result.durations.submitRequestMillis = submitFinishedAt - createFinishedAt;
 		result.durations.createSubmitMillis = submitFinishedAt - createStartedAt;
@@ -936,7 +936,7 @@ async function runGracefulDrainProbe({ adminToken: flowAdminToken, actorToken, a
 		},
 	});
 	const leaveId = String(draft.id);
-	await apiWithToken(flowAdminToken, `/admin/demo/leave/${leaveId}/submit`, { method: 'POST' });
+	await apiWithToken(flowAdminToken, `/admin/demo/leave/${leaveId}/submit?requestId=${randomUUID()}`, { method: 'POST' });
 	const bound = await pollApi(
 		() => apiWithToken(flowAdminToken, `/admin/demo/leave/details/${leaveId}`),
 		value => value.leaveStatus === 'IN_REVIEW' && value.processInstanceId,
@@ -1016,7 +1016,7 @@ async function runGracefulDrainProbe({ adminToken: flowAdminToken, actorToken, a
 		},
 	});
 	const survivorLeaveId = String(survivorDraft.id);
-	await apiWithToken(flowAdminToken, `/admin/demo/leave/${survivorLeaveId}/submit`, { method: 'POST' });
+	await apiWithToken(flowAdminToken, `/admin/demo/leave/${survivorLeaveId}/submit?requestId=${randomUUID()}`, { method: 'POST' });
 	const survivorBound = await pollApi(
 		() => apiWithToken(flowAdminToken, `/admin/demo/leave/details/${survivorLeaveId}`),
 		value => value.leaveStatus === 'IN_REVIEW' && value.processInstanceId,

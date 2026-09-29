@@ -1,7 +1,10 @@
 package com.lotus.bixi.generator.entity;
 
+import com.alibaba.excel.annotation.ExcelIgnore;
 import com.baomidou.mybatisplus.annotation.*;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.lotus.bixi.common.mybatis.base.BaseEntity;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -64,6 +67,9 @@ public class GenDatasourceConfig extends BaseEntity<GenDatasourceConfig> {
 	/**
 	 * 密码
 	 */
+	@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+	@ExcelIgnore
+	@Schema(description = "密码", accessMode = Schema.AccessMode.WRITE_ONLY)
 	private String password;
 
 }

@@ -35,19 +35,12 @@ public class RateLimitExceptionHandler implements ErrorWebExceptionHandler {
 	public Mono<Void> handle(ServerWebExchange exchange, Throwable ex) {
 		ServerHttpResponse response = exchange.getResponse();
 
-		if (ex instanceof ResponseStatusException rse) {
-			if (rse.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS) {
-				return handleRateLimitExceeded(response, exchange);
-			}
+		if (ex instanceof ResponseStatusException rse
+				&& rse.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS) {
+			return handleRateLimitExceeded(response, exchange);
 		}
 
-		// 其他异常类型处理
-		if (response.isCommitted()) {
-			return Mono.error(ex);
-		}
-
-		response.setStatusCode(HttpStatus.TOO_MANY_REQUESTS);
-		return handleRateLimitExceeded(response, exchange);
+		return Mono.error(ex);
 	}
 
 	/**

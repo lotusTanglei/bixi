@@ -32,6 +32,7 @@ workflow:
   enabled: ${WORKFLOW_ENABLED:false}
   database-schema-update: ${WORKFLOW_SCHEMA_UPDATE:false}
   async-executor-activate: ${WORKFLOW_ASYNC_EXECUTOR_ACTIVATE:true}
+  public-start-models: ${WORKFLOW_PUBLIC_START_MODELS:}
   history-level: full
 
 flowable:

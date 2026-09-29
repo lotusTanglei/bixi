@@ -11,6 +11,7 @@
         <result column="version" property="version"/>
         <result column="description" property="description"/>
         <result column="form_key" property="formKey"/>
+        <result column="form_version_id" property="formVersionId"/>
         <result column="diagram_resource_name" property="diagramResourceName"/>
         <result column="suspension_state" property="suspensionState"/>
         <result column="create_by" property="createBy"/>

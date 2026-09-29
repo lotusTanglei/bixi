@@ -35,6 +35,11 @@
             <groupId>com.lotus</groupId>
             <artifactId>bixi-common-feign</artifactId>
         </dependency>
+        <!--固定 DNS 解析结果并限制 REST 响应读取-->
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+        </dependency>
         <!-- Druid -->
         <dependency>
             <groupId>com.alibaba</groupId>

@@ -8,6 +8,7 @@ import com.lotus.bixi.workflow.api.dto.TaskRejectDTO;
 import com.lotus.bixi.workflow.api.dto.TaskTransferDTO;
 import com.lotus.bixi.workflow.api.dto.TaskResolveDTO;
 import com.lotus.bixi.workflow.api.vo.TaskVO;
+import com.lotus.bixi.workflow.api.vo.FormRenderVO;
 
 public interface WfTaskService {
 
@@ -26,6 +27,8 @@ public interface WfTaskService {
     void resolve(TaskResolveDTO dto);
 
     TaskVO getById(String taskId);
+
+    FormRenderVO getForm(String taskId);
 
     void claim(String taskId, Long userId);
 

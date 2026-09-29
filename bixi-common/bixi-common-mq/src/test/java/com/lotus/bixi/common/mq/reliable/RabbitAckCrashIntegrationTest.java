@@ -91,7 +91,7 @@ class RabbitAckCrashIntegrationTest {
                 }));
         CachingConnectionFactory connection = springRabbitFactory();
         SimpleMessageListenerContainer container = container(connection,
-                new RabbitInboxListener(executor, inbox, new JdbcQuarantineStore(dataSource, manager),
+                new RabbitInboxListener(executor, inbox, new JdbcQuarantineStore(dataSource, manager, "upms"),
                         inboundRoute(), this::holdBeforeAck));
         try {
             container.start();
@@ -121,7 +121,7 @@ class RabbitAckCrashIntegrationTest {
                 }));
         CachingConnectionFactory connection = springRabbitFactory();
         SimpleMessageListenerContainer container = container(connection,
-                new RabbitInboxListener(executor, inbox, new JdbcQuarantineStore(dataSource, manager),
+                new RabbitInboxListener(executor, inbox, new JdbcQuarantineStore(dataSource, manager, "upms"),
                         inboundRoute()));
         boolean stopped = false;
         try {

@@ -4,6 +4,7 @@ package com.lotus.bixi.upms.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.toolkit.Constants;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lotus.bixi.upms.api.dto.UserDTO;
 import com.lotus.bixi.upms.api.entity.SysUser;
@@ -24,6 +25,17 @@ import java.util.List;
  */
 @Mapper
 public interface SysUserMapper extends BaseMapper<SysUser> {
+
+    /**
+     * Keep direct user writes inside the authenticated organization scope.
+     */
+    @Override
+    @DataScope(userAlias = "")
+    int updateById(@Param(Constants.ENTITY) SysUser entity);
+
+    @Override
+    @DataScope(userAlias = "")
+    int deleteById(java.io.Serializable id);
 
     /**
      * 通过用户名查询用户信息（含有角色信息）

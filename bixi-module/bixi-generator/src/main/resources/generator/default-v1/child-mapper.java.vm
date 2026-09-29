@@ -1,0 +1,13 @@
+package ${package}.${moduleName}.mapper;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.lotus.bixi.common.mybatis.annotation.DataScope;
+import ${package}.${moduleName}.api.entity.${ChildClassName};
+import org.apache.ibatis.annotations.Mapper;
+import org.springframework.stereotype.Repository;
+
+@Mapper
+@Repository("${moduleName}${ChildClassName}Mapper")
+@DataScope(userAlias = "", userColumn = "create_by", creatorScope = true)
+public interface ${ChildClassName}Mapper extends BaseMapper<${ChildClassName}> {
+}

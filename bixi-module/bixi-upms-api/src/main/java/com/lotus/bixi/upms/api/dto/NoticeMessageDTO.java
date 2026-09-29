@@ -31,6 +31,15 @@ public class NoticeMessageDTO implements Serializable {
     @Schema(description = "通知ID（已有通知ID）")
     private Long noticeId;
 
+    @Schema(description = "租户ID")
+    private Long tenantId;
+
+    /**
+     * External delivery channel. Missing values preserve the in-app SSE path.
+     */
+    @Schema(description = "投递渠道（IN_APP、EMAIL、SMS、WECHAT、WEBHOOK）")
+    private String deliveryChannel;
+
     @Schema(description = "通告对象类型（0全体成员 1部门 2角色 3指定用户）")
     private String targetType;
 

@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 /**
@@ -19,7 +18,6 @@ public class SysJobRecordListener {
 
 	private final SysJobRecordService sysJobRecordService;
 
-	@Async
 	@Order
 	@EventListener(SysJobRecordEvent.class)
 	public void saveSysJobRecord(SysJobRecordEvent event) {

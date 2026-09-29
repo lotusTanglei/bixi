@@ -5,6 +5,7 @@ package com.lotus.bixi.common.log.event;
 import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.lotus.bixi.common.core.context.TenantContextHolder;
 import com.lotus.bixi.common.core.jackson.BixiJavaTimeModule;
 import com.lotus.bixi.common.log.config.BixiLogProperties;
 import com.lotus.bixi.upms.api.entity.SysLog;
@@ -52,7 +53,33 @@ public class SysLogListener implements InitializingBean {
             sysLog.setParams(StrUtil.subPre(params, logProperties.getMaxLength()));
         }
 
-        operationLogService.saveLog(sysLog);
+        saveWithTenantContext(sysLog);
+    }
+
+    /**
+     * Async listeners run on pooled threads whose inherited tenant may belong to
+     * an earlier request. Scope persistence to the tenant captured in the event,
+     * then restore every thread-local flag before the worker is reused.
+     */
+    private void saveWithTenantContext(SysLog sysLog) {
+        Long previousTenant = TenantContextHolder.get();
+        boolean previousReadOnly = TenantContextHolder.isReadOnlySwitch();
+        boolean previousAllTenantsReadOnly = TenantContextHolder.isAllTenantsReadOnly();
+        try {
+            TenantContextHolder.clear();
+            if (sysLog.getTenantId() != null && sysLog.getTenantId() > 0) {
+                TenantContextHolder.set(sysLog.getTenantId());
+            }
+            operationLogService.saveLog(sysLog);
+        }
+        finally {
+            TenantContextHolder.clear();
+            if (previousTenant != null) {
+                TenantContextHolder.set(previousTenant);
+            }
+            TenantContextHolder.setReadOnlySwitch(previousReadOnly);
+            TenantContextHolder.setAllTenantsReadOnly(previousAllTenantsReadOnly);
+        }
     }
 
     @Override

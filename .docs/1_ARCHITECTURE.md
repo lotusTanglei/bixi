@@ -27,7 +27,7 @@
 - 国际化：vue-i18n
 - 路由：Vue Router 4
 
-项目支持双模部署：通过 Maven Profile 切换微服务模式（`-Pcloud`，默认）和单体模式（`-Psingle`）。微服务模式下使用 Nacos 作为注册中心和配置中心，Spring Cloud Gateway 作为 API 网关。当前单体模式聚合 Auth、UPMS、Generator 和 Quartz，并包含默认关闭、按 `workflow.enabled` 启用的同一 workflow-biz。AI、Monitor 仍作为独立应用运行。工作流完整交付状态见 [清单](workflow/PROGRESS.md)。
+项目支持双模部署：通过 Maven Profile 切换微服务模式（`-Pcloud`，默认）和单体模式（`-Psingle`）。微服务模式下使用 Nacos 作为注册中心和配置中心，Spring Cloud Gateway 作为 API 网关。当前单体模式聚合 Auth、UPMS、Generator 和 Quartz，并包含默认关闭、按 `workflow.enabled` 启用的同一 workflow-biz；`bixi-ai-biz` 也复用同一业务实现，默认按 `AI_ENABLED=false` 关闭，设置为 `true` 后在 single 中装配。cloud 中 AI 作为独立服务运行，Monitor 始终作为独立应用运行。工作流完整交付状态见 [清单](workflow/PROGRESS.md)。
 
 ## 2. 分层架构
 
@@ -37,7 +37,7 @@
 ├─────────────────────────────────────────────────────┤
 │                  bixi-gateway (网关)                  │  网关层
 ├──────────┬──────────┬───────────┬───────────────────┤
-│ bixi-auth│bixi-upms │ bixi-ai   │ bixi-workflow     │  业务服务层
+│ bixi-auth│bixi-upms │ bixi-ai-biz│ bixi-workflow     │  业务服务层
 │ (认证)   │ (用户权限)│ (AI 对话) │ (工作流)          │
 ├──────────┴──────────┴───────────┴───────────────────┤
 │ bixi-module (业务模块聚合)                            │
@@ -143,7 +143,7 @@
 
 **单体模式：**
 
-激活 `-Psingle` Profile 后，`bixi-single` 将 Auth、UPMS、Generator 和 Quartz 聚合为单个 Spring Boot 应用，无需网关和注册中心。Workflow 复用同一业务模块按需装配（默认关闭），AI 和 Monitor 当前不在单体聚合范围内。工作流基础审批闭环及四组启停已通过阶段一验收；可靠协作和恢复仍在后续阶段。
+激活 `-Psingle` Profile 后，`bixi-single` 将 Auth、UPMS、Generator 和 Quartz 聚合为单个 Spring Boot 应用，无需网关和注册中心。Workflow 复用同一业务模块按需装配（默认关闭）；AI 复用 `bixi-ai-biz`，由 `AI_ENABLED` 控制且默认关闭。Monitor 继续作为独立应用运行。工作流基础审批闭环及四组启停已通过阶段一验收；可靠协作和恢复仍在后续阶段。
 
 ## 6. 双模验证命令
 

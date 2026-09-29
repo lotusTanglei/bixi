@@ -5,8 +5,7 @@
     <resultMap id="baseResultMap" type="com.lotus.bixi.workflow.api.entity.SysRoleFormPermission">
         <id column="id" property="id"/>
         <result column="role_id" property="roleId"/>
-        <result column="form_id" property="formId"/>
-        <result column="perm_type" property="permType"/>
+        <result column="form_perm_id" property="formPermId"/>
         <result column="create_by" property="createBy"/>
         <result column="update_by" property="updateBy"/>
         <result column="create_time" property="createTime"/>

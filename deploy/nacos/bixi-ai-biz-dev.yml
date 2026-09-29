@@ -1,0 +1,93 @@
+server:
+  port: 5000
+
+spring:
+  datasource:
+    dynamic:
+      primary: master
+      strict: true
+      datasource:
+        master:
+          type: com.alibaba.druid.pool.DruidDataSource
+          driver-class-name: com.mysql.cj.jdbc.Driver
+          username: ${MYSQL_USERNAME}
+          password: ${MYSQL_PASSWORD}
+          url: jdbc:mysql://${MYSQL_HOST:127.0.0.1}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:bixi}?characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowMultiQueries=true&serverTimezone=Asia/Shanghai&nullCatalogMeansCurrent=true&allowPublicKeyRetrieval=true
+    druid:
+      initial-size: 2
+      min-idle: 2
+      max-active: 20
+      validation-query: SELECT 1
+      test-while-idle: true
+      stat-view-servlet:
+        enabled: false
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DATABASE:0}
+  ai:
+    dashscope:
+        # The key is resolved only from the container environment. Never put a
+        # provider key in this checked-in Nacos document.
+        api-key: ${DASHSCOPE_API_KEY:}
+        chat:
+          enabled: ${AI_CHAT_ENABLED:${AI_ENABLED:false}}
+          options:
+            model: ${AI_CHAT_MODEL:qwen-plus}
+            temperature: ${AI_CHAT_TEMPERATURE:0.7}
+        embedding:
+          enabled: ${AI_EMBEDDING_ENABLED:${AI_ENABLED:false}}
+          options:
+            model: ${AI_EMBEDDING_MODEL:text-embedding-v2}
+
+ai:
+  # AI business beans and the provider client are opt-in in both deployments.
+  enabled: ${AI_ENABLED:false}
+
+security:
+  micro: true
+  encode-key: ${BIXI_ENCODE_KEY}
+  ignore-clients:
+    - bixi
+    - test
+  oauth2:
+    ignore:
+      urls:
+        - /actuator/health
+        - /actuator/health/**
+        - /error
+
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/*Mapper.xml
+  global-config:
+    banner: false
+    db-config:
+      id-type: auto
+      where-strategy: not_empty
+      insert-strategy: not_empty
+      update-strategy: not_null
+  type-handlers-package: com.lotus.bixi.common.mybatis.handler
+  configuration:
+    jdbc-type-for-null: 'null'
+    call-setters-on-nulls: true
+    shrink-whitespaces-in-sql: true
+
+springdoc:
+  api-docs:
+    enabled: ${AI_ENABLED:false}
+    path: /ai/v3/api-docs
+  swagger-ui:
+    enabled: ${AI_ENABLED:false}
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+  endpoints:
+    web:
+      exposure:
+        include: health

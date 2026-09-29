@@ -165,7 +165,9 @@ public class SysFileServiceImpl extends ServiceImpl<SysFileMapper, SysFile> impl
         sysFile.setSize(file.getSize());
         sysFile.setType(FileUtil.extName(file.getOriginalFilename()));
         sysFile.setBucket(properties.getBucket());
-        this.save(sysFile);
+        if (!this.save(sysFile)) {
+            throw new IllegalStateException("file_log_save_failed");
+        }
     }
 
 }

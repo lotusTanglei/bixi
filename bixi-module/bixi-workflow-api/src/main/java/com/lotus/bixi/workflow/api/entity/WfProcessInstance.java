@@ -28,8 +28,19 @@ public class WfProcessInstance extends BaseEntity<WfProcessInstance> {
     @Schema(description = "流程标识")
     private String processKey;
 
+    @TableField("form_id")
+    @Schema(description = "发起时固定的表单ID")
+    private Long formId;
+
+    @TableField("form_version_id")
+    @Schema(description = "发起时固定的表单版本ID")
+    private Long formVersionId;
+
     @Schema(description = "业务Key")
     private String businessKey;
+
+    @Schema(description = "可信业务来源owner")
+    private String businessOwner;
 
     @Schema(description = "业务表名")
     private String businessTable;

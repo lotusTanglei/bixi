@@ -40,19 +40,23 @@ public final class LeaveWorkflowEventPublisher {
         String commandId = UUID.nameUUIDFromBytes(("leave:start:" + leave.getId() + ":" + leave.getRound())
                 .getBytes(StandardCharsets.UTF_8)).toString();
         String requestHash = requestHash(leave);
+        publishStart(leave, actor, commandId, requestHash);
+        return new Published(commandId, requestHash);
+    }
+
+    public void publishStart(LeaveRequest leave, BixiUser actor, String commandId, String requestHash) {
         WorkflowEvent event = new WorkflowEvent(
                 UUID.nameUUIDFromBytes(("leave:event:" + leave.getId() + ":" + leave.getRound() + ":start")
                         .getBytes(StandardCharsets.UTF_8)).toString(),
-                WorkflowEventType.WORKFLOW_START_REQUESTED, 1, "upms", "workflow", "default", null,
+                WorkflowEventType.WORKFLOW_START_REQUESTED, 1, "upms", "workflow", tenantScope(actor), null,
                 "demo_leave_approval", "demo_leave_request", leave.getId(), leave.getBusinessKey(),
                 leave.getRound(), commandId, 0, Instant.now(), commandId, null,
-                new WorkflowActorSnapshot(actor.getId(), actor.getUsername(), "default", "upms", Instant.now()),
+                new WorkflowActorSnapshot(actor.getId(), actor.getUsername(), tenantScope(actor), "upms", Instant.now()),
                 new WorkflowStartRequested("请假申请 " + leave.getStartDate() + " 至 " + leave.getEndDate(),
                         leave.getApproverId(), requestHash));
         String payload = new String(codec.encode(event), StandardCharsets.UTF_8);
         outbox.enqueue(DurableMessage.create("upms", "workflow", event.eventId(), event.type().name(), 1, payload),
                 "leave:" + leave.getId() + ":" + leave.getRound() + ":start", leave.getBusinessKey(), 0L);
-        return new Published(commandId, requestHash);
     }
 
     private static String requestHash(LeaveRequest leave) {
@@ -66,6 +70,13 @@ public final class LeaveWorkflowEventPublisher {
         catch (NoSuchAlgorithmException impossible) {
             throw new IllegalStateException("SHA-256 is unavailable", impossible);
         }
+    }
+
+    private static String tenantScope(BixiUser actor) {
+        if (actor.getTenantId() == null || actor.getTenantId() <= 0) {
+            throw new IllegalArgumentException("租户上下文缺失");
+        }
+        return actor.getTenantId().toString();
     }
 
     public record Published(String commandId, String requestHash) { }

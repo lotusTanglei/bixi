@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * 对话展示对象
@@ -29,6 +30,9 @@ public class ChatVO implements Serializable {
 
     @Schema(description = "是否完成")
     private Boolean finished;
+
+    @Schema(description = "RAG引用来源")
+    private List<SourceVO> sources;
 
     private static final long serialVersionUID = 1L;
 }

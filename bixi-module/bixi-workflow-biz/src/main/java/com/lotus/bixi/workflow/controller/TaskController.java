@@ -14,6 +14,7 @@ import com.lotus.bixi.workflow.api.dto.TaskRejectDTO;
 import com.lotus.bixi.workflow.api.dto.TaskTransferDTO;
 import com.lotus.bixi.workflow.api.dto.TaskResolveDTO;
 import com.lotus.bixi.workflow.api.vo.TaskVO;
+import com.lotus.bixi.workflow.api.vo.FormRenderVO;
 import com.lotus.bixi.workflow.service.WfTaskService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -54,6 +55,13 @@ public class TaskController {
     @Operation(summary = "查询任务详情")
     public R<TaskVO> getByTaskId(@PathVariable String taskId) {
         return R.ok(wfTaskService.getById(taskId));
+    }
+
+    @GetMapping("/form/{taskId}")
+    @HasPermission("workflow_task_view")
+    @Operation(summary = "查询当前待办任务的冻结表单")
+    public R<FormRenderVO> getForm(@PathVariable String taskId) {
+        return R.ok(wfTaskService.getForm(taskId));
     }
 
     @PostMapping("/complete")

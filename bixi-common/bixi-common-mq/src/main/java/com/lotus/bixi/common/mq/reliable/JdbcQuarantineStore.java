@@ -23,14 +23,18 @@ import java.util.Objects;
 public class JdbcQuarantineStore {
     private final JdbcTemplate jdbc;
     private final TransactionTemplate independent;
+    private final String targetOwner;
 
-    public JdbcQuarantineStore(DataSource dataSource, PlatformTransactionManager transactionManager) {
+    public JdbcQuarantineStore(DataSource dataSource, PlatformTransactionManager transactionManager,
+            String targetOwner) {
         Objects.requireNonNull(dataSource, "DataSource is required");
         if (!(transactionManager instanceof DataSourceTransactionManager local)
                 || local.getDataSource() != dataSource) {
             throw new IllegalArgumentException("A local JDBC transaction manager for the same DataSource is required");
         }
+        DurableMessage.requireOwner(targetOwner);
         this.jdbc = new JdbcTemplate(dataSource);
+        this.targetOwner = targetOwner;
         this.independent = new TransactionTemplate(transactionManager);
         this.independent.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
         this.independent.setIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED);
@@ -47,22 +51,30 @@ public class JdbcQuarantineStore {
         String safeBody = bodyJson == null ? "" : bodyJson;
         independent.executeWithoutResult(status -> {
             jdbc.update("""
-                    INSERT INTO reliable_quarantine (evidence_id, body_json, reason, quarantined_at)
-                    VALUES (?, ?, ?, UTC_TIMESTAMP(6))
+                    INSERT INTO reliable_quarantine
+                        (target_owner, evidence_id, body_json, reason, quarantined_at)
+                    VALUES (?, ?, ?, ?, UTC_TIMESTAMP(6))
                     ON DUPLICATE KEY UPDATE reason = VALUES(reason)
-                    """, evidenceId, safeBody, reason);
+                    """, targetOwner, evidenceId, safeBody, reason);
         });
     }
 
     /** Return bounded quarantine evidence for an authenticated operator. */
     public List<Snapshot> list(int limit) {
+        return listPage(limit, 0);
+    }
+
+    /** Read one page so callers can safely filter decoded envelopes without starving later rows. */
+    public List<Snapshot> listPage(int limit, long offset) {
         if (limit < 1 || limit > 200) {
             throw new IllegalArgumentException("Limit must be between 1 and 200");
         }
+        if (offset < 0) throw new IllegalArgumentException("Offset must not be negative");
         return independent.execute(transaction -> List.copyOf(jdbc.query("""
                 SELECT evidence_id, body_json, reason, quarantined_at
-                FROM reliable_quarantine ORDER BY quarantined_at DESC LIMIT ?
-                """, (row, index) -> readSnapshot(row), limit)));
+                FROM reliable_quarantine WHERE target_owner = ?
+                ORDER BY quarantined_at DESC, evidence_id DESC LIMIT ? OFFSET ?
+                """, (row, index) -> readSnapshot(row), targetOwner, limit, offset)));
     }
 
     /** Read one evidence item for an explicit replay workflow. */
@@ -70,8 +82,9 @@ public class JdbcQuarantineStore {
         requireEvidence(evidenceId);
         return independent.execute(transaction -> jdbc.query("""
                 SELECT evidence_id, body_json, reason, quarantined_at
-                FROM reliable_quarantine WHERE evidence_id = ?
-                """, (row, index) -> readSnapshot(row), evidenceId).stream().findFirst().orElse(null));
+                FROM reliable_quarantine WHERE target_owner = ? AND evidence_id = ?
+                """, (row, index) -> readSnapshot(row), targetOwner, evidenceId)
+                .stream().findFirst().orElse(null));
     }
 
     private static Snapshot readSnapshot(ResultSet row) throws SQLException {

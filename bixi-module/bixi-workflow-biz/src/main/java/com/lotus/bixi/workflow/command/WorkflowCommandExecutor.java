@@ -36,6 +36,26 @@ public class WorkflowCommandExecutor {
         return executeNew(input, resultType, work);
     }
 
+    /** Executes an already-authorized durable command in the caller's inbox transaction. */
+    public <T> T executeTrusted(CommandInput input, Class<T> resultType, Supplier<T> work) {
+        return executeTrusted(input, resultType, () -> { }, work);
+    }
+
+    /** Executes a trusted command after replay lookup and a guard that only applies to new commands. */
+    public <T> T executeTrusted(CommandInput input, Class<T> resultType, Runnable newCommandGuard, Supplier<T> work) {
+        WorkflowRequestDTO.requireRequestId(input.requestId());
+        if (input.actorId() == null || input.actorId() <= 0 || input.tenantScope() == null
+                || !input.tenantScope().matches("[1-9][0-9]{0,18}")
+                || input.sourceOwner() == null || !input.sourceOwner().matches("[a-z][a-z0-9_-]{0,31}")) {
+            throw new IllegalArgumentException("可信流程命令身份无效");
+        }
+        var saved = transactions.find(input.tenantScope(), input.actorId(), input.requestId());
+        if (saved != null) return replay(input, saved, resultType);
+        newCommandGuard.run();
+        // A request-key race aborts the whole inbox attempt. Its durable retry observes the committed winner.
+        return transactions.executeJoined(input, resultType, work);
+    }
+
     /** Resolves mutable engine identity after replay lookup and before opening the write transaction. */
     public <T> T executeWithProcessLookup(CommandInput input, Class<T> resultType,
             Supplier<String> processLookup, Function<String, T> work) {
@@ -79,7 +99,11 @@ public class WorkflowCommandExecutor {
     @HasPermission({"workflow_process_view", "workflow_task_view"})
     public WorkflowCommandVO getCommand(String requestId) {
         WorkflowRequestDTO.requireRequestId(requestId);
-        var saved = transactions.find(TENANT_SCOPE, access.currentUser().getId(), requestId);
+        var user = access.currentUser();
+        if (user.getTenantId() == null || user.getTenantId() <= 0) {
+            throw new IllegalArgumentException("租户上下文缺失");
+        }
+        var saved = transactions.find(user.getTenantId().toString(), user.getId(), requestId);
         if (saved == null) throw new WorkflowCommandNotFoundException(requestId);
         requireSuccess(saved);
         return saved.result();

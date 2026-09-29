@@ -13,9 +13,16 @@ import java.util.UUID;
 @ConditionalOnWorkflowEnabled
 public final class LeaveCompensationRequestDelegate implements JavaDelegate {
     private final WorkflowBusinessTaskEventPublisher publisher;
+    private final WorkflowBusinessTaskStore tasks;
 
     public LeaveCompensationRequestDelegate(WorkflowBusinessTaskEventPublisher publisher) {
+        this(publisher, null);
+    }
+
+    public LeaveCompensationRequestDelegate(WorkflowBusinessTaskEventPublisher publisher,
+            WorkflowBusinessTaskStore tasks) {
         this.publisher = publisher;
+        this.tasks = tasks;
     }
 
     @Override
@@ -32,14 +39,23 @@ public final class LeaveCompensationRequestDelegate implements JavaDelegate {
         long actorId = number(execution.getVariable("startUserId"), "startUserId");
         String actorName = execution.getVariable("startUserName") == null
                 ? Long.toString(actorId) : text(execution.getVariable("startUserName"), "startUserName");
-        String compensationId = UUID.nameUUIDFromBytes((operationId + ":compensation:1")
+        String tenantScope = text(execution.getVariable("tenantScope"), "tenantScope");
+        String activityId = execution.getVariable(LeaveBusinessTaskRequestDelegate.ACTIVITY_ID_VARIABLE)
+                instanceof String savedActivityId && !savedActivityId.isBlank()
+                ? savedActivityId : "requestBusiness";
+        int activityOccurrence = occurrence(execution.getVariable(
+                LeaveBusinessTaskRequestDelegate.ACTIVITY_OCCURRENCE_VARIABLE));
+        String compensationId = UUID.nameUUIDFromBytes((operationId + ":compensation:" + activityOccurrence)
                 .getBytes(StandardCharsets.UTF_8)).toString();
         execution.setVariable("businessCompensationId", compensationId);
-        publisher.publishCompensation(new WorkflowBusinessTaskEventPublisher.Context(
+        WorkflowBusinessTaskEventPublisher.Context context = new WorkflowBusinessTaskEventPublisher.Context(
                 execution.getProcessInstanceId(), "demo_leave_approval", businessId, businessKey, round,
                 commandId, requestHash, commandId, null,
-                new WorkflowActorSnapshot(actorId, actorName, "default", "upms", Instant.now()),
-                execution.getId(), operationId, "compensateLeave", 1, Instant.now().plusSeconds(300)), compensationId);
+                new WorkflowActorSnapshot(actorId, actorName, tenantScope, "upms", Instant.now()),
+                execution.getId(), operationId, activityId, activityOccurrence, Instant.now().plusSeconds(300));
+        boolean timedOut = execution.getVariable("businessTaskSuccess") == null;
+        if (tasks != null) tasks.markCompensating(context, compensationId, timedOut);
+        publisher.publishCompensation(context, compensationId);
     }
 
     private static String text(Object value, String name) {
@@ -54,5 +70,16 @@ public final class LeaveCompensationRequestDelegate implements JavaDelegate {
             catch (NumberFormatException ignored) { }
         }
         throw new IllegalStateException(name + " is required");
+    }
+
+    private static int occurrence(Object value) {
+        if (value == null) return 1;
+        if (value instanceof Number number && number.longValue() > 0 && number.longValue() <= Integer.MAX_VALUE) {
+            return Math.toIntExact(number.longValue());
+        }
+        if (value instanceof String text && text.matches("[1-9][0-9]{0,8}")) {
+            return Integer.parseInt(text);
+        }
+        throw new IllegalStateException("businessTaskActivityOccurrence is invalid");
     }
 }

@@ -7,8 +7,7 @@
 			</div>
 			<div class="header-right">
 				<el-button icon="View" @click="handlePreview">预览</el-button>
-				<el-button icon="DocumentChecked" @click="handleSaveVersion" :loading="saving">保存为新版本</el-button>
-				<el-button type="primary" icon="Check" @click="handleSave" :loading="saving">保存</el-button>
+				<el-button type="primary" icon="DocumentChecked" @click="handleSaveVersion" :loading="saving">保存新版本</el-button>
 			</div>
 		</div>
 		<div class="designer-content">
@@ -27,12 +26,9 @@
 		</el-dialog>
 
 		<el-dialog v-model="versionDialogVisible" title="保存新版本" width="500px">
-			<el-form :model="versionForm" :rules="versionRules" ref="versionFormRef" label-width="100px">
-				<el-form-item label="版本号" prop="version">
-					<el-input v-model="versionForm.version" placeholder="请输入版本号，如 1.0.0" />
-				</el-form-item>
-				<el-form-item label="版本说明" prop="remark">
-					<el-input v-model="versionForm.remark" type="textarea" rows="3" placeholder="请输入版本说明" />
+			<el-form :model="versionForm" label-width="100px">
+				<el-form-item label="变更说明" prop="changeLog">
+					<el-input v-model="versionForm.changeLog" type="textarea" rows="3" maxlength="500" show-word-limit placeholder="请输入本次变更说明" />
 				</el-form-item>
 			</el-form>
 			<template #footer>
@@ -45,7 +41,7 @@
 
 <script lang="ts" name="workflowFormDesigner" setup>
 import { useMessage } from '/@/hooks/message';
-import { getFormByKey, updateForm, createVersion } from '/@/api/workflow/form';
+import { createVersion, getFormRender } from '/@/api/workflow/form';
 import { useRoute, useRouter } from 'vue-router';
 
 const FormRenderer = defineAsyncComponent(() => import('/@/components/form/FormRenderer.vue'));
@@ -55,7 +51,6 @@ const router = useRouter();
 
 const vFormDesignerRef = ref();
 const formRendererRef = ref();
-const versionFormRef = ref();
 
 const formId = ref('');
 const formKey = ref('');
@@ -75,16 +70,8 @@ const designerConfig = reactive({
 });
 
 const versionForm = reactive({
-	version: '',
-	remark: '',
+	changeLog: '',
 });
-
-const versionRules = {
-	version: [
-		{ required: true, message: '请输入版本号', trigger: 'blur' },
-		{ pattern: /^\d+\.\d+\.\d+$/, message: '版本号格式不正确，如 1.0.0', trigger: 'blur' },
-	],
-};
 
 onMounted(async () => {
 	formId.value = route.query.formId as string;
@@ -98,9 +85,9 @@ onMounted(async () => {
 
 const loadFormData = async () => {
 	try {
-		const res = await getFormByKey(formKey.value);
-		if (res.data && res.data.schemaContent) {
-			const schema = JSON.parse(res.data.schemaContent);
+		const res = await getFormRender(formKey.value);
+		if (res.data?.schemaJson) {
+			const schema = JSON.parse(res.data.schemaJson);
 			vFormDesignerRef.value?.setFormJson(schema);
 			formName.value = res.data.formName;
 		}
@@ -110,7 +97,7 @@ const loadFormData = async () => {
 };
 
 const handleBack = () => {
-	router.push('/workflow/form');
+	router.push('/workflow/form/index');
 };
 
 const handlePreview = () => {
@@ -128,37 +115,12 @@ const handleGetData = () => {
 	});
 };
 
-const handleSave = async () => {
-	try {
-		const json = vFormDesignerRef.value?.getFormJson();
-		if (!json) {
-			useMessage().warning('表单内容为空');
-			return;
-		}
-
-		saving.value = true;
-		await updateForm({
-			id: formId.value,
-			schemaContent: JSON.stringify(json),
-		});
-		useMessage().success('保存成功');
-	} catch (err: any) {
-		useMessage().error(err.msg || '保存失败');
-	} finally {
-		saving.value = false;
-	}
-};
-
 const handleSaveVersion = () => {
 	versionDialogVisible.value = true;
-	versionForm.version = '';
-	versionForm.remark = '';
+	versionForm.changeLog = '';
 };
 
 const submitVersion = async () => {
-	const valid = await versionFormRef.value?.validate().catch(() => {});
-	if (!valid) return;
-
 	try {
 		const json = vFormDesignerRef.value?.getFormJson();
 		if (!json) {
@@ -169,12 +131,15 @@ const submitVersion = async () => {
 		saving.value = true;
 		await createVersion({
 			formId: formId.value,
-			version: versionForm.version,
-			remark: versionForm.remark,
-			schemaContent: JSON.stringify(json),
+			schemaJson: JSON.stringify(json),
+			changeLog: versionForm.changeLog,
 		});
 		useMessage().success('版本保存成功');
 		versionDialogVisible.value = false;
+		await router.push({
+			path: '/workflow/form/version',
+			query: { formId: formId.value, formKey: formKey.value, formName: formName.value },
+		});
 	} catch (err: any) {
 		useMessage().error(err.msg || '版本保存失败');
 	} finally {

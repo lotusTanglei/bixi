@@ -16,19 +16,19 @@ import org.springframework.context.annotation.Bean;
  */
 @AutoConfiguration
 @EnableConfigurationProperties(AiProperties.class)
-@ConditionalOnProperty(prefix = "spring.ai.alibaba.dashscope", name = "api-key")
+@ConditionalOnProperty(prefix = "ai", name = "enabled", havingValue = "true")
 public class AiAutoConfiguration {
 
     /**
      * Create ChatClient bean.
-     * Only created if 'spring.ai.alibaba.dashscope.chat.enabled' is true (default is true).
+     * Only created if 'spring.ai.dashscope.chat.enabled' is true (default is true).
      *
      * @param builder ChatClient.Builder provided by Spring AI
      * @return ChatClient instance
      */
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnProperty(prefix = "spring.ai.alibaba.dashscope.chat", name = "enabled", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnProperty(prefix = "spring.ai.dashscope.chat", name = "enabled", havingValue = "true", matchIfMissing = true)
     public ChatClient chatClient(ChatClient.Builder builder) {
         return builder.build();
     }

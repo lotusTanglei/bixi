@@ -1,0 +1,35 @@
+package ${package}.${moduleName}.api.dto;
+
+import com.alibaba.excel.annotation.ExcelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
+#if($hasRequiredImportFields)
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+#end
+import jakarta.validation.constraints.Size;
+import lombok.Data;
+#foreach($import in $importList)
+import ${import};
+#end
+
+@Data
+@Schema(description = "导入${tableComment}")
+public class ${ClassName}ImportDTO {
+
+#foreach($field in $importFieldList)
+#if($field.formRequired == '1')
+#if($field.attrType == 'String')
+	@NotBlank(message = "$!field.fieldComment不能为空")
+#else
+	@NotNull(message = "$!field.fieldComment不能为空")
+#end
+#end
+#if($field.attrType == 'String')
+	@Size(max = 512, message = "$!field.fieldComment长度不能超过512")
+#end
+	@ExcelProperty("$!field.fieldComment")
+	@Schema(description = "$!field.fieldComment")
+	private ${field.attrType} ${field.attrName};
+
+#end
+}

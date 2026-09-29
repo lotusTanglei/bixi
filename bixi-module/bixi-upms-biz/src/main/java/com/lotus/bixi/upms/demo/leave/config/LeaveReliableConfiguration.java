@@ -15,8 +15,16 @@ import com.lotus.bixi.common.mq.reliable.ReliableRabbitProperties;
 import com.lotus.bixi.upms.demo.leave.event.LeaveWorkflowEventHandler;
 import com.lotus.bixi.upms.demo.leave.event.LeaveBusinessTaskEventHandler;
 import com.lotus.bixi.upms.demo.leave.service.LeaveBookingService;
+import com.lotus.bixi.upms.api.service.CandidateIdentityQueryService;
+import com.lotus.bixi.upms.api.service.CandidateRoleQueryService;
+import com.lotus.bixi.upms.mq.PublishedNoticeNotifier;
+import com.lotus.bixi.upms.service.SysNoticeService;
+import com.lotus.bixi.upms.service.SysUserRoleService;
+import com.lotus.bixi.upms.workflow.WorkflowTaskNotificationHandler;
 import com.lotus.bixi.workflow.api.config.ConditionalOnWorkflowEnabled;
 import com.lotus.bixi.workflow.api.event.WorkflowEventCodec;
+import com.lotus.bixi.workflow.api.event.WorkflowTaskNotification;
+import com.lotus.bixi.workflow.api.event.WorkflowTaskNotificationCodec;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -44,6 +52,12 @@ public class LeaveReliableConfiguration {
     @ConditionalOnMissingBean(name = "leaveWorkflowEventCodec")
     WorkflowEventCodec leaveWorkflowEventCodec() { return new WorkflowEventCodec(); }
 
+    @Bean("upmsWorkflowTaskNotificationCodec")
+    @ConditionalOnMissingBean(name = "upmsWorkflowTaskNotificationCodec")
+    WorkflowTaskNotificationCodec upmsWorkflowTaskNotificationCodec() {
+        return new WorkflowTaskNotificationCodec();
+    }
+
     @Bean("leaveReliableDeliveryProperties")
     @ConditionalOnMissingBean(name = "leaveReliableDeliveryProperties")
     ReliableDeliveryProperties leaveReliableDeliveryProperties(
@@ -69,25 +83,27 @@ public class LeaveReliableConfiguration {
 
     @Bean("upmsQuarantineStore")
     JdbcQuarantineStore upmsQuarantineStore(DataSource dataSource, PlatformTransactionManager transactionManager) {
-        return new JdbcQuarantineStore(dataSource, transactionManager);
+        return new JdbcQuarantineStore(dataSource, transactionManager, "upms");
     }
 
     @Bean(name = "upmsInboxExecutor")
     InboxExecutor upmsInboxExecutor(JdbcInboxStore upmsInboxStore, LeaveWorkflowEventHandler handler,
-            LeaveBusinessTaskEventHandler businessHandler) {
+            LeaveBusinessTaskEventHandler businessHandler, WorkflowTaskNotificationHandler notificationHandler) {
         return new InboxExecutor(upmsInboxStore, "upms", Map.of(
                 new InboxExecutor.Route("workflow", "WORKFLOW_STARTED", 1), handler,
                 new InboxExecutor.Route("workflow", "WORKFLOW_START_REJECTED", 1), handler,
                 new InboxExecutor.Route("workflow", "WORKFLOW_COMPLETED", 1), handler,
                 new InboxExecutor.Route("workflow", "WORKFLOW_BUSINESS_TASK_REQUESTED", 1), businessHandler,
-                new InboxExecutor.Route("workflow", "WORKFLOW_COMPENSATION_REQUESTED", 1), businessHandler));
+                new InboxExecutor.Route("workflow", "WORKFLOW_COMPENSATION_REQUESTED", 1), businessHandler,
+                new InboxExecutor.Route("workflow", WorkflowTaskNotification.TYPE, 1), notificationHandler,
+                new InboxExecutor.Route("workflow", WorkflowTaskNotification.TYPE, 2), notificationHandler));
     }
 
     @Bean
     LeaveWorkflowEventHandler leaveWorkflowEventHandler(
             com.lotus.bixi.upms.demo.leave.mapper.LeaveRequestMapper leaves,
-            @Qualifier("leaveWorkflowEventCodec") WorkflowEventCodec codec) {
-        return new LeaveWorkflowEventHandler(leaves, codec);
+            @Qualifier("leaveWorkflowEventCodec") WorkflowEventCodec codec, DataSource dataSource) {
+        return new LeaveWorkflowEventHandler(leaves, codec, dataSource);
     }
 
     @Bean
@@ -97,6 +113,15 @@ public class LeaveReliableConfiguration {
             @Qualifier("upmsOutboxStore") JdbcOutboxStore outbox,
             @Qualifier("leaveWorkflowEventCodec") WorkflowEventCodec codec) {
         return new LeaveBusinessTaskEventHandler(leaves, bookings, outbox, codec);
+    }
+
+    @Bean
+    WorkflowTaskNotificationHandler workflowTaskNotificationHandler(
+            @Qualifier("upmsWorkflowTaskNotificationCodec") WorkflowTaskNotificationCodec codec,
+            CandidateIdentityQueryService identities, CandidateRoleQueryService roles,
+            SysUserRoleService userRoles, SysNoticeService notices,
+            PublishedNoticeNotifier notifier) {
+        return new WorkflowTaskNotificationHandler(codec, identities, roles, userRoles, notices, notifier);
     }
 
     @Bean(name = "upmsTransport")

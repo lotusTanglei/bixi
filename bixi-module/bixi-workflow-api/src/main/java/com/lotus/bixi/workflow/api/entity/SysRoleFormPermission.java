@@ -16,11 +16,9 @@ public class SysRoleFormPermission extends BaseEntity<SysRoleFormPermission> {
     @Schema(description = "角色ID")
     private Long roleId;
 
-    @Schema(description = "表单ID")
-    private Long formId;
-
-    @Schema(description = "权限类型 read:只读 write:可写 hide:隐藏")
-    private String permType;
+    @TableField("form_perm_id")
+    @Schema(description = "表单权限ID")
+    private Long formPermId;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

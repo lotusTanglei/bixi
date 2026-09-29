@@ -1,0 +1,20 @@
+package ${package}.${moduleName}.api.vo;
+
+import com.alibaba.excel.annotation.ExcelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+#foreach($import in $importList)
+import ${import};
+#end
+
+@Data
+@Schema(description = "导出${tableComment}")
+public class ${ClassName}ExportVO {
+
+#foreach($field in $exportFieldList)
+	@ExcelProperty("$!field.fieldComment")
+	@Schema(description = "$!field.fieldComment")
+	private ${field.attrType} ${field.attrName};
+
+#end
+}

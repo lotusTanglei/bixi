@@ -5,8 +5,30 @@ x-backend-environment: &backend-environment
   WORKFLOW_ENABLED: ${WORKFLOW_ENABLED:-false}
   WORKFLOW_SCHEMA_UPDATE: ${WORKFLOW_SCHEMA_UPDATE:-false}
   WORKFLOW_ASYNC_EXECUTOR_ACTIVATE: ${WORKFLOW_ASYNC_EXECUTOR_ACTIVATE:-true}
+  WORKFLOW_PUBLIC_START_MODELS: ${WORKFLOW_PUBLIC_START_MODELS:-}
+  AI_ENABLED: ${AI_ENABLED:-false}
+  NOTICE_DEFAULT_CHANNEL: ${NOTICE_DEFAULT_CHANNEL:-IN_APP}
+  NOTICE_RECEIPT_ENABLED: ${NOTICE_RECEIPT_ENABLED:-false}
+  NOTICE_RECEIPT_SECRET: ${NOTICE_RECEIPT_SECRET:-}
+  NOTICE_RECEIPT_SIGNATURE_HEADER: ${NOTICE_RECEIPT_SIGNATURE_HEADER:-X-Bixi-Notice-Signature}
+  NOTICE_WEBHOOK_ENABLED: ${NOTICE_WEBHOOK_ENABLED:-false}
+  NOTICE_WEBHOOK_ENDPOINT: ${NOTICE_WEBHOOK_ENDPOINT:-}
+  NOTICE_WEBHOOK_BEARER_TOKEN: ${NOTICE_WEBHOOK_BEARER_TOKEN:-}
+  NOTICE_EMAIL_ENABLED: ${NOTICE_EMAIL_ENABLED:-false}
+  NOTICE_EMAIL_ENDPOINT: ${NOTICE_EMAIL_ENDPOINT:-}
+  NOTICE_EMAIL_API_KEY: ${NOTICE_EMAIL_API_KEY:-}
+  NOTICE_EMAIL_FROM: ${NOTICE_EMAIL_FROM:-}
+  NOTICE_SMS_ENABLED: ${NOTICE_SMS_ENABLED:-false}
+  NOTICE_SMS_ENDPOINT: ${NOTICE_SMS_ENDPOINT:-}
+  NOTICE_WECHAT_ENABLED: ${NOTICE_WECHAT_ENABLED:-false}
+  NOTICE_WECHAT_ENDPOINT: ${NOTICE_WECHAT_ENDPOINT:-}
   BIXI_RELIABLE_ENABLED: ${BIXI_RELIABLE_ENABLED:-false}
   BIXI_RELIABLE_RABBIT_ENABLED: ${BIXI_RELIABLE_RABBIT_ENABLED:-false}
+  BIXI_SBA_CLIENT_ENABLED: ${BIXI_SBA_CLIENT_ENABLED:-false}
+  BIXI_SBA_CLIENT_URL: ${BIXI_SBA_CLIENT_URL:-http://monitor:5001}
+  BIXI_SBA_CLIENT_USERNAME: ${BIXI_SBA_CLIENT_USERNAME:-monitor}
+  BIXI_SBA_CLIENT_PASSWORD: ${BIXI_SBA_CLIENT_PASSWORD}
+  MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: ${BIXI_MANAGEMENT_ENDPOINTS:-health,info,metrics,loggers,logfile,dynamictp}
   MYSQL_HOST: mysql
   MYSQL_PORT: 3306
   MYSQL_DATABASE: ${MYSQL_DATABASE}
@@ -18,8 +40,8 @@ x-backend-environment: &backend-environment
   REDIS_DATABASE: ${REDIS_DATABASE:-0}
   RABBITMQ_HOST: rabbitmq
   RABBITMQ_PORT: 5672
-  RABBITMQ_USERNAME: ${RABBITMQ_USERNAME}
-  RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+  RABBITMQ_USERNAME: ${RABBITMQ_APP_USERNAME}
+  RABBITMQ_PASSWORD: ${RABBITMQ_APP_PASSWORD}
   RABBITMQ_VIRTUAL_HOST: /
   BIXI_ENCODE_KEY: ${BIXI_ENCODE_KEY}
   SECURITY_ENCODE_KEY: ${BIXI_ENCODE_KEY}
@@ -101,6 +123,27 @@ services:
       retries: 30
     networks: [bixi]
 
+  rabbitmq-config:
+    image: ${BIXI_REGISTRY_MIRROR:-}library/rabbitmq:4.0.5-management-alpine
+    restart: "no"
+    environment:
+      RABBITMQ_ADMIN_USERNAME: ${RABBITMQ_USERNAME}
+      RABBITMQ_ADMIN_PASSWORD: ${RABBITMQ_PASSWORD}
+      RABBITMQ_APP_USERNAME: ${RABBITMQ_APP_USERNAME}
+      RABBITMQ_APP_PASSWORD: ${RABBITMQ_APP_PASSWORD}
+      RABBITMQ_UPMS_USERNAME: ${RABBITMQ_UPMS_USERNAME}
+      RABBITMQ_UPMS_PASSWORD: ${RABBITMQ_UPMS_PASSWORD}
+      RABBITMQ_WORKFLOW_USERNAME: ${RABBITMQ_WORKFLOW_USERNAME}
+      RABBITMQ_WORKFLOW_PASSWORD: ${RABBITMQ_WORKFLOW_PASSWORD}
+      RABBITMQ_WORKFLOW_VHOST: ${RABBITMQ_WORKFLOW_VHOST}
+    volumes:
+      - ./deploy/rabbitmq/configure-access.sh:/config/configure-access.sh:ro
+    entrypoint: ["/bin/sh", "/config/configure-access.sh"]
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks: [bixi]
+
   nacos:
     image: ${BIXI_THIRD_PARTY_REGISTRY_MIRROR:-}nacos/nacos-server:v2.4.3
     profiles: [cloud]
@@ -141,6 +184,39 @@ services:
         condition: service_healthy
     networks: [bixi]
 
+  monitor:
+    profiles: [cloud]
+    build:
+      <<: *backend-build
+      args:
+        REGISTRY_MIRROR: ${BIXI_REGISTRY_MIRROR:-}
+        MODULE: bixi-module/bixi-monitor
+        MAVEN_PROFILE: cloud
+    restart: unless-stopped
+    environment:
+      <<: *backend-environment
+      BIXI_DEPLOYMENT_MODE: cloud
+      BIXI_SBA_CLIENT_ENABLED: "false"
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,metrics
+      NACOS_HOST: nacos
+      NACOS_PORT: 8848
+      NACOS_NAMESPACE: ${NACOS_NAMESPACE:-bixi}
+      SPRING_SECURITY_USER_NAME: ${BIXI_SBA_CLIENT_USERNAME:-monitor}
+      SPRING_SECURITY_USER_PASSWORD: ${BIXI_SBA_CLIENT_PASSWORD}
+      JAVA_OPTS: ${MONITOR_JAVA_OPTS:--Xms192m -Xmx384m}
+    ports:
+      - "127.0.0.1:${MONITOR_PORT:-5001}:5001"
+    depends_on:
+      nacos-config:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:5001/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 40
+      start_period: 30s
+    networks: [bixi]
+
   gateway:
     profiles: [cloud]
     build:
@@ -153,9 +229,19 @@ services:
     environment:
       <<: *backend-environment
       BIXI_DEPLOYMENT_MODE: cloud
+      AI_ENABLED: ${AI_ENABLED:-false}
+      # The optional `ai` profile is activated by scripts/bixi.sh only when
+      # AI_ENABLED=true. It also controls the profile-gated gateway route.
+      SPRING_PROFILES_ACTIVE: ${BIXI_GATEWAY_PROFILES_ACTIVE:-}
+      # Gateway uses the reactive bearer chain; keep its management surface to
+      # the unauthenticated health probe until a reactive SBA Basic chain exists.
+      BIXI_SBA_CLIENT_ENABLED: "false"
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health
       NACOS_HOST: nacos
       NACOS_PORT: 8848
       NACOS_NAMESPACE: ${NACOS_NAMESPACE:-bixi}
+      BIXI_GATEWAY_SECURITY_INTROSPECTION_URI: ${BIXI_GATEWAY_SECURITY_INTROSPECTION_URI:-http://auth:3000/token/check_token}
+      BIXI_GATEWAY_SECURITY_REQUEST_TIMEOUT: ${BIXI_GATEWAY_SECURITY_REQUEST_TIMEOUT:-3s}
       JAVA_OPTS: ${GATEWAY_JAVA_OPTS:--Xms192m -Xmx384m}
     ports:
       - "127.0.0.1:${GATEWAY_PORT:-9999}:9999"
@@ -215,9 +301,13 @@ services:
     environment:
       <<: *backend-environment
       BIXI_DEPLOYMENT_MODE: cloud
+      GENERATOR_ENABLED: ${GENERATOR_ENABLED:-true}
       NACOS_HOST: nacos
       NACOS_PORT: 8848
       NACOS_NAMESPACE: ${NACOS_NAMESPACE:-bixi}
+      BIXI_RELIABLE_RABBIT_USERNAME: ${RABBITMQ_UPMS_USERNAME}
+      BIXI_RELIABLE_RABBIT_PASSWORD: ${RABBITMQ_UPMS_PASSWORD}
+      BIXI_RELIABLE_RABBIT_VIRTUAL_HOST: ${RABBITMQ_WORKFLOW_VHOST}
       JAVA_OPTS: ${UPMS_JAVA_OPTS:--Xms256m -Xmx512m}
     volumes:
       - upms-files:/data/files
@@ -228,10 +318,118 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      rabbitmq-config:
+        condition: service_completed_successfully
       nacos-config:
         condition: service_completed_successfully
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://127.0.0.1:4000/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 40
+      start_period: 40s
+    networks: [bixi]
+
+  generator:
+    profiles: [cloud]
+    build:
+      <<: *backend-build
+      args:
+        REGISTRY_MIRROR: ${BIXI_REGISTRY_MIRROR:-}
+        MODULE: bixi-module/bixi-generator
+        MAVEN_PROFILE: cloud
+    restart: unless-stopped
+    environment:
+      <<: *backend-environment
+      BIXI_DEPLOYMENT_MODE: cloud
+      GENERATOR_ENABLED: ${GENERATOR_ENABLED:-true}
+      NACOS_HOST: nacos
+      NACOS_PORT: 8848
+      NACOS_NAMESPACE: ${NACOS_NAMESPACE:-bixi}
+      GENERATOR_PROJECT_ROOT: /data/generator-output
+      JAVA_OPTS: ${GENERATOR_JAVA_OPTS:--Xms192m -Xmx384m}
+    volumes:
+      - ${GENERATOR_OUTPUT_PATH:-generator-output}:/data/generator-output
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nacos-config:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:5002/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 40
+      start_period: 40s
+    networks: [bixi]
+
+  quartz:
+    profiles: [cloud]
+    build:
+      <<: *backend-build
+      args:
+        REGISTRY_MIRROR: ${BIXI_REGISTRY_MIRROR:-}
+        MODULE: bixi-module/bixi-quartz
+        MAVEN_PROFILE: cloud
+    restart: unless-stopped
+    environment:
+      <<: *backend-environment
+      BIXI_DEPLOYMENT_MODE: cloud
+      BIXI_MANAGEMENT_ENDPOINTS: ${BIXI_MANAGEMENT_ENDPOINTS:-health,info,metrics}
+      NACOS_HOST: nacos
+      NACOS_PORT: 8848
+      NACOS_NAMESPACE: ${NACOS_NAMESPACE:-bixi}
+      JAVA_OPTS: ${QUARTZ_JAVA_OPTS:--Xms192m -Xmx384m}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nacos-config:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:5007/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 40
+      start_period: 40s
+    networks: [bixi]
+
+  ai:
+    # Keep AI opt-in separate from the base cloud profile. `start-cloud` adds
+    # --profile ai only after validating the provider key.
+    profiles: [ai]
+    build:
+      <<: *backend-build
+      args:
+        REGISTRY_MIRROR: ${BIXI_REGISTRY_MIRROR:-}
+        MODULE: bixi-module/bixi-ai-biz
+        MAVEN_PROFILE: cloud
+    restart: unless-stopped
+    environment:
+      <<: *backend-environment
+      BIXI_DEPLOYMENT_MODE: cloud
+      AI_ENABLED: ${AI_ENABLED:-false}
+      AI_CHAT_ENABLED: ${AI_CHAT_ENABLED:-true}
+      AI_EMBEDDING_ENABLED: ${AI_EMBEDDING_ENABLED:-true}
+      DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY:-}
+      NACOS_HOST: nacos
+      NACOS_PORT: 8848
+      NACOS_NAMESPACE: ${NACOS_NAMESPACE:-bixi}
+      JAVA_OPTS: ${AI_JAVA_OPTS:--Xms256m -Xmx512m}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nacos-config:
+        condition: service_completed_successfully
+    ports:
+      - "127.0.0.1:${AI_PORT:-5000}:5000"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:5000/actuator/health"]
       interval: 10s
       timeout: 5s
       retries: 40
@@ -253,12 +451,17 @@ services:
       NACOS_HOST: nacos
       NACOS_PORT: 8848
       NACOS_NAMESPACE: ${NACOS_NAMESPACE:-bixi}
+      BIXI_RELIABLE_RABBIT_USERNAME: ${RABBITMQ_WORKFLOW_USERNAME}
+      BIXI_RELIABLE_RABBIT_PASSWORD: ${RABBITMQ_WORKFLOW_PASSWORD}
+      BIXI_RELIABLE_RABBIT_VIRTUAL_HOST: ${RABBITMQ_WORKFLOW_VHOST}
       JAVA_OPTS: ${WORKFLOW_JAVA_OPTS:--Xms256m -Xmx512m}
     depends_on:
       mysql:
         condition: service_healthy
       redis:
         condition: service_healthy
+      rabbitmq-config:
+        condition: service_completed_successfully
       nacos-config:
         condition: service_completed_successfully
     healthcheck:
@@ -291,6 +494,8 @@ services:
         condition: service_healthy
       upms:
         condition: service_healthy
+      generator:
+        condition: service_healthy
     networks: [bixi]
 
   single:
@@ -305,17 +510,20 @@ services:
     environment:
       <<: *backend-environment
       BIXI_DEPLOYMENT_MODE: single
+      BIXI_SBA_CLIENT_ENABLED: "false"
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health
+      GENERATOR_ENABLED: ${GENERATOR_ENABLED:-true}
+      GENERATOR_PROJECT_ROOT: /data/generator-output
       JAVA_OPTS: ${SINGLE_JAVA_OPTS:--Xms384m -Xmx768m}
     volumes:
       - upms-files:/data/files
+      - ${GENERATOR_OUTPUT_PATH:-generator-output}:/data/generator-output
     ports:
       - "127.0.0.1:${SINGLE_PORT:-9998}:9999"
     depends_on:
       mysql:
         condition: service_healthy
       redis:
-        condition: service_healthy
-      rabbitmq:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://127.0.0.1:9999/admin/actuator/health"]
@@ -355,3 +563,4 @@ volumes:
   rabbitmq-data:
   nacos-data:
   upms-files:
+  generator-output:

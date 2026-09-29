@@ -172,6 +172,11 @@ INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visi
 INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, keep_alive, embedded, type, create_by, update_by, create_time, update_time, del_flag, status, data_status, tenant_id, remark) VALUES (2212, '参数删除', NULL, 'sys_syspublicparam_del', NULL, 2210, NULL, '1', 1, '0', NULL, '1', NULL, NULL, '2019-04-29 22:17:55', '2020-03-24 08:57:12', '0', '0', '0', NULL, NULL);
 INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, keep_alive, embedded, type, create_by, update_by, create_time, update_time, del_flag, status, data_status, tenant_id, remark) VALUES (2213, '参数编辑', NULL, 'sys_syspublicparam_edit', NULL, 2210, NULL, '1', 1, '0', NULL, '1', NULL, NULL, '2019-04-29 22:18:14', '2020-03-24 08:57:13', '0', '0', '0', NULL, NULL);
 INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, keep_alive, embedded, type, create_by, update_by, create_time, update_time, del_flag, status, data_status, tenant_id, remark) VALUES (2300, '代码生成', 'code', NULL, '/gen/table/index', 9000, 'iconfont icon-zhongduancanshu', '1', 1, '0', '0', '0', NULL, NULL, '2018-01-20 13:17:19', '2023-02-20 13:54:35', '0', '0', '0', NULL, NULL);
+INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, keep_alive, embedded, type, create_by, update_by, create_time, update_time, del_flag, status, data_status, tenant_id, remark) VALUES (2301, '查看生成配置', NULL, 'codegen_table_view', NULL, 2300, NULL, '0', 1, '0', '0', '1', NULL, NULL, '2026-09-24 00:00:00', NULL, '0', '0', '0', NULL, NULL);
+INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, keep_alive, embedded, type, create_by, update_by, create_time, update_time, del_flag, status, data_status, tenant_id, remark) VALUES (2302, '同步表结构', NULL, 'codegen_table_sync', NULL, 2300, NULL, '0', 2, '0', '0', '1', NULL, NULL, '2026-09-24 00:00:00', NULL, '0', '0', '0', NULL, NULL);
+INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, keep_alive, embedded, type, create_by, update_by, create_time, update_time, del_flag, status, data_status, tenant_id, remark) VALUES (2303, '编辑生成配置', NULL, 'codegen_table_edit', NULL, 2300, NULL, '0', 3, '0', '0', '1', NULL, NULL, '2026-09-24 00:00:00', NULL, '0', '0', '0', NULL, NULL);
+INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, keep_alive, embedded, type, create_by, update_by, create_time, update_time, del_flag, status, data_status, tenant_id, remark) VALUES (2304, '生成代码', NULL, 'codegen_table_generate', NULL, 2300, NULL, '0', 4, '0', '0', '1', NULL, NULL, '2026-09-24 00:00:00', NULL, '0', '0', '0', NULL, NULL);
+INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, keep_alive, embedded, type, create_by, update_by, create_time, update_time, del_flag, status, data_status, tenant_id, remark) VALUES (2305, '导出生成配置', NULL, 'codegen_table_export', NULL, 2300, NULL, '0', 5, '0', '0', '1', NULL, NULL, '2026-09-24 00:00:00', NULL, '0', '0', '0', NULL, NULL);
 INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, keep_alive, embedded, type, create_by, update_by, create_time, update_time, del_flag, status, data_status, tenant_id, remark) VALUES (2400, '终端管理', 'client', NULL, '/admin/client/index', 2000, 'iconfont icon-gongju', '1', 9, '1', NULL, '0', NULL, NULL, '2018-01-20 13:17:19', '2023-02-16 15:25:28', '0', '0', '0', NULL, NULL);
 INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, keep_alive, embedded, type, create_by, update_by, create_time, update_time, del_flag, status, data_status, tenant_id, remark) VALUES (2401, '客户端新增', NULL, 'sys_client_add', NULL, 2400, '1', '1', 1, '0', NULL, '1', NULL, NULL, '2018-05-15 21:35:18', '2021-05-25 03:12:55', '0', '0', '0', NULL, NULL);
 INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, keep_alive, embedded, type, create_by, update_by, create_time, update_time, del_flag, status, data_status, tenant_id, remark) VALUES (2402, '客户端修改', NULL, 'sys_client_edit', NULL, 2400, NULL, '1', 1, '0', NULL, '1', NULL, NULL, '2018-05-15 21:37:06', '2021-05-25 03:12:55', '0', '0', '0', NULL, NULL);
@@ -187,9 +192,13 @@ INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visi
 INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, keep_alive, embedded, type, create_by, update_by, create_time, update_time, del_flag, status, data_status, tenant_id, remark) VALUES (2860, '任务刷新', NULL, 'job_sys_job_refresh_job', NULL, 2800, '1', '1', 0, '0', NULL, '1', NULL, NULL, '2018-05-15 21:35:18', '2020-03-24 08:57:30', '0', '0', '0', NULL, NULL);
 INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, keep_alive, embedded, type, create_by, update_by, create_time, update_time, del_flag, status, data_status, tenant_id, remark) VALUES (2870, '执行任务', NULL, 'job_sys_job_run_job', NULL, 2800, '1', '1', 0, '0', NULL, '1', NULL, NULL, '2019-08-08 15:35:18', '2020-03-24 08:57:31', '0', '0', '0', NULL, NULL);
 INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, keep_alive, embedded, type, create_by, update_by, create_time, update_time, del_flag, status, data_status, tenant_id, remark) VALUES (2871, '导出', NULL, 'job_sys_job_export', NULL, 2800, NULL, '1', 0, '0', '0', '1', NULL, NULL, '2023-03-06 15:26:13', NULL, '0', '0', '0', NULL, NULL);
+INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, keep_alive, embedded, type, create_by, update_by, create_time, update_time, del_flag, status, data_status, tenant_id, remark) VALUES (2872, '查看任务', NULL, 'job_sys_job_view', NULL, 2800, NULL, '0', 8, '0', '0', '1', NULL, NULL, '2026-09-24 00:00:00', NULL, '0', '0', '0', NULL, NULL);
+INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, keep_alive, embedded, type, create_by, update_by, create_time, update_time, del_flag, status, data_status, tenant_id, remark) VALUES (2873, '查看执行记录', NULL, 'job_sys_job_record_view', NULL, 2800, NULL, '0', 9, '0', '0', '1', NULL, NULL, '2026-09-24 00:00:00', NULL, '0', '0', '0', NULL, NULL);
+INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, keep_alive, embedded, type, create_by, update_by, create_time, update_time, del_flag, status, data_status, tenant_id, remark) VALUES (2874, '删除执行记录', NULL, 'job_sys_job_record_del', NULL, 2800, NULL, '0', 10, '0', '0', '1', NULL, NULL, '2026-09-24 00:00:00', NULL, '0', '0', '0', NULL, NULL);
 INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, keep_alive, embedded, type, create_by, update_by, create_time, update_time, del_flag, status, data_status, tenant_id, remark) VALUES (2906, '文件管理', 'file', NULL, '/admin/file/index', 2000, 'ele-Files', '1', 6, '0', NULL, '0', NULL, NULL, '2019-06-25 12:44:46', '2023-02-16 15:24:42', '0', '0', '0', NULL, NULL);
 INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, keep_alive, embedded, type, create_by, update_by, create_time, update_time, del_flag, status, data_status, tenant_id, remark) VALUES (2907, '删除文件', NULL, 'sys_file_del', NULL, 2906, NULL, '1', 1, '0', NULL, '1', NULL, NULL, '2019-06-25 13:41:41', '2020-03-24 08:58:42', '0', '0', '0', NULL, NULL);
 INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, keep_alive, embedded, type, create_by, update_by, create_time, update_time, del_flag, status, data_status, tenant_id, remark) VALUES (2908, '查看文件', NULL, 'sys_file_view', NULL, 2906, NULL, '1', 0, '0', NULL, '1', NULL, NULL, '2026-09-21 00:00:00', NULL, '0', '0', '0', NULL, NULL);
+INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, keep_alive, embedded, type, create_by, update_by, create_time, update_time, del_flag, status, data_status, tenant_id, remark) VALUES (2909, '上传文件', NULL, 'sys_file_add', NULL, 2906, NULL, '1', 2, '0', NULL, '1', NULL, NULL, '2026-09-23 00:00:00', NULL, '0', '0', '0', NULL, NULL);
 INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, keep_alive, embedded, type, create_by, update_by, create_time, update_time, del_flag, status, data_status, tenant_id, remark) VALUES (4000, '系统监控', 'monitor', NULL, '/daemon', -1, 'iconfont icon-shuju', '1', 3, '0', '0', '0', NULL, NULL, '2023-02-06 20:20:47', '2023-02-23 20:01:07', '0', '0', '0', NULL, NULL);
 INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, keep_alive, embedded, type, create_by, update_by, create_time, update_time, del_flag, status, data_status, tenant_id, remark) VALUES (4001, '文档扩展', 'doc', NULL, '/api/swagger-ui.html', 4000, 'iconfont icon-biaodan', '1', 2, '0', '1', '0', NULL, 1, '2018-06-26 10:50:32', '2024-12-26 14:23:54', '0', '0', '0', NULL, NULL);
 INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, keep_alive, embedded, type, create_by, update_by, create_time, update_time, del_flag, status, data_status, tenant_id, remark) VALUES (4002, '缓存监控', 'cache', NULL, '/ext/cache', 4000, 'iconfont icon-shuju', '1', 1, '0', '0', '0', NULL, NULL, '2023-05-29 15:12:59', '2023-06-06 11:58:41', '0', '0', '0', NULL, NULL);
@@ -247,7 +256,7 @@ INSERT INTO sys_public_param (id, name, `key`, `value`, validate_code, type, sys
 INSERT INTO sys_public_param (id, name, `key`, `value`, validate_code, type, system_flag, sn, create_by, update_by, create_time, update_time, del_flag, status, data_status, tenant_id, remark) VALUES (1864331018177699841, '123123123', 'A_D', '123', '123456123123', '0', '0', 1, 1, 1, '2024-12-04 23:28:47', '2024-12-04 23:32:32', '1', '0', '0', NULL, NULL);
 INSERT INTO sys_public_param (id, name, `key`, `value`, validate_code, type, system_flag, sn, create_by, update_by, create_time, update_time, del_flag, status, data_status, tenant_id, remark) VALUES (1864331813266735106, 'asdadsa', 'AD_D', '123123', '1231231231', '1', '0', 1, 1, 1, '2024-12-04 23:31:57', '2024-12-04 23:32:27', '1', '0', '0', NULL, NULL);
 INSERT INTO sys_public_param (id, name, `key`, `value`, validate_code, type, system_flag, sn, create_by, update_by, create_time, update_time, del_flag, status, data_status, tenant_id, remark) VALUES (1864331907940564993, '12312', 'A_A', '123132231', '123132', '0', '0', 0, 1, 1, '2024-12-04 23:32:19', '2024-12-04 23:32:32', '1', '0', '0', NULL, NULL);
-INSERT INTO sys_role (id, name, code, description, sn, create_by, update_by, create_time, update_time, del_flag, status, data_status, tenant_id, remark) VALUES (1, '管理员', 'ROLE_ADMIN', '管理员', 1, NULL, 1, '2017-10-29 15:45:51', '2024-12-07 18:50:41', '0', '0', '0', NULL, NULL);
+INSERT INTO sys_role (id, name, code, description, sn, create_by, update_by, create_time, update_time, del_flag, status, data_status, data_scope, tenant_id, remark) VALUES (1, '管理员', 'ROLE_ADMIN', '管理员', 1, NULL, 1, '2017-10-29 15:45:51', '2024-12-07 18:50:41', '0', '0', '0', '1', NULL, NULL);
 INSERT INTO sys_role (id, name, code, description, sn, create_by, update_by, create_time, update_time, del_flag, status, data_status, tenant_id, remark) VALUES (2, '普通用户', 'GENERAL_USER', '普通用户', 2, NULL, 1, '2022-03-31 17:03:15', '2024-12-07 18:50:52', '1', '0', '0', NULL, NULL);
 INSERT INTO sys_role (id, name, code, description, sn, create_by, update_by, create_time, update_time, del_flag, status, data_status, tenant_id, remark) VALUES (1865348778786394113, '普通员工', 'NORMAL_ROLE', '普通员工', 2, 1, 1, '2024-12-07 18:53:00', '2024-12-07 18:53:06', '1', '0', '0', NULL, NULL);
 INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 1000, '2025-01-05 22:11:04');
@@ -290,6 +299,11 @@ INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 2211, '2025
 INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 2212, '2025-01-05 22:11:04');
 INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 2213, '2025-01-05 22:11:04');
 INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 2300, '2025-01-05 22:11:04');
+INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 2301, '2026-09-24 00:00:00');
+INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 2302, '2026-09-24 00:00:00');
+INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 2303, '2026-09-24 00:00:00');
+INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 2304, '2026-09-24 00:00:00');
+INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 2305, '2026-09-24 00:00:00');
 INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 2400, '2025-01-05 22:11:04');
 INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 2401, '2025-01-05 22:11:04');
 INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 2402, '2025-01-05 22:11:04');
@@ -305,9 +319,13 @@ INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 2850, '2025
 INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 2860, '2025-01-05 22:11:04');
 INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 2870, '2025-01-05 22:11:04');
 INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 2871, '2025-01-05 22:11:04');
+INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 2872, '2026-09-24 00:00:00');
+INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 2873, '2026-09-24 00:00:00');
+INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 2874, '2026-09-24 00:00:00');
 INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 2906, '2025-01-05 22:11:04');
 INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 2907, '2025-01-05 22:11:04');
 INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 2908, '2026-09-21 00:00:00');
+INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 2909, '2026-09-23 00:00:00');
 INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 4000, '2025-01-05 22:11:04');
 INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 4001, '2025-01-05 22:11:04');
 INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 4002, '2025-01-05 22:11:04');
@@ -444,12 +462,19 @@ INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visi
 INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, type, keep_alive, embedded, create_time) VALUES (5012, '新建请假', NULL, 'demo_leave_add', NULL, 5010, NULL, '0', 2, '1', '0', '0', CURRENT_TIMESTAMP);
 INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, type, keep_alive, embedded, create_time) VALUES (5013, '修改及提交请假', NULL, 'demo_leave_edit', NULL, 5010, NULL, '0', 3, '1', '0', '0', CURRENT_TIMESTAMP);
 INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, type, keep_alive, embedded, create_time) VALUES (5014, '删除请假草稿', NULL, 'demo_leave_del', NULL, 5010, NULL, '0', 4, '1', '0', '0', CURRENT_TIMESTAMP);
+INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, type, keep_alive, embedded, create_time) VALUES (5015, '请假恢复', 'leaveRecovery', NULL, '/demo/leave/recovery', 5000, 'ele-Refresh', '0', 5, '0', '0', '0', CURRENT_TIMESTAMP);
+INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, type, keep_alive, embedded, create_time) VALUES (5016, '查看请假恢复', NULL, 'demo_leave_recovery_view', NULL, 5015, NULL, '0', 1, '1', '0', '0', CURRENT_TIMESTAMP);
+INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, type, keep_alive, embedded, create_time) VALUES (5017, '执行请假恢复', NULL, 'demo_leave_recovery_edit', NULL, 5015, NULL, '0', 2, '1', '0', '0', CURRENT_TIMESTAMP);
 INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, type, keep_alive, embedded, create_time) VALUES (6000, '工作流', 'workflow', NULL, '/workflow', -1, 'ele-Connection', '1', 3, '0', '0', '0', CURRENT_TIMESTAMP);
 INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, type, keep_alive, embedded, create_time) VALUES (6001, '我的待办', 'todo', NULL, '/workflow/task/todo', 6000, 'ele-DocumentChecked', '1', 1, '0', '0', '0', CURRENT_TIMESTAMP);
 INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, type, keep_alive, embedded, create_time) VALUES (6002, '我的已办', 'done', NULL, '/workflow/task/done', 6000, 'ele-Finished', '1', 2, '0', '0', '0', CURRENT_TIMESTAMP);
 INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, type, keep_alive, embedded, create_time) VALUES (6003, '我发起的流程', 'instance', NULL, '/workflow/process/instance', 6000, 'ele-List', '1', 3, '0', '0', '0', CURRENT_TIMESTAMP);
 INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, type, keep_alive, embedded, create_time) VALUES (6004, '流程定义', 'definition', NULL, '/workflow/definition/index', 6000, 'ele-SetUp', '1', 4, '0', '0', '0', CURRENT_TIMESTAMP);
 INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, type, keep_alive, embedded, create_time) VALUES (6005, '可靠投递', 'recovery', NULL, '/workflow/recovery/index', 6000, 'ele-Refresh', '1', 5, '0', '0', '0', CURRENT_TIMESTAMP);
+INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, type, keep_alive, embedded, create_time) VALUES (6006, '表单管理', 'form', NULL, '/workflow/form/index', 6000, 'ele-Document', '1', 6, '0', '0', '0', CURRENT_TIMESTAMP);
+INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, type, keep_alive, embedded, create_time) VALUES (6007, '表单设计器', 'formDesigner', NULL, '/workflow/form/designer', 6000, NULL, '0', 7, '0', '0', '0', CURRENT_TIMESTAMP);
+INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, type, keep_alive, embedded, create_time) VALUES (6008, '表单版本', 'formVersion', NULL, '/workflow/form/version', 6000, NULL, '0', 8, '0', '0', '0', CURRENT_TIMESTAMP);
+INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, type, keep_alive, embedded, create_time) VALUES (6009, '字段权限', 'formPermission', NULL, '/workflow/form/permission', 6000, NULL, '0', 9, '0', '0', '0', CURRENT_TIMESTAMP);
 INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, type, keep_alive, embedded, create_time) VALUES (6011, '查看任务', NULL, 'workflow_task_view', NULL, 6001, NULL, '0', 1, '1', '0', '0', CURRENT_TIMESTAMP);
 INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, type, keep_alive, embedded, create_time) VALUES (6012, '办理任务', NULL, 'workflow_task_edit', NULL, 6001, NULL, '0', 2, '1', '0', '0', CURRENT_TIMESTAMP);
 INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, type, keep_alive, embedded, create_time) VALUES (6021, '查看流程', NULL, 'workflow_process_view', NULL, 6003, NULL, '0', 1, '1', '0', '0', CURRENT_TIMESTAMP);
@@ -459,17 +484,28 @@ INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visi
 INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, type, keep_alive, embedded, create_time) VALUES (6032, '部署及管理流程定义', NULL, 'workflow_definition_edit', NULL, 6004, NULL, '0', 2, '1', '0', '0', CURRENT_TIMESTAMP);
 INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, type, keep_alive, embedded, create_time) VALUES (6041, '查看可靠投递', NULL, 'workflow_recovery_view', NULL, 6005, NULL, '0', 1, '1', '0', '0', CURRENT_TIMESTAMP);
 INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, type, keep_alive, embedded, create_time) VALUES (6042, '恢复可靠投递', NULL, 'workflow_recovery_edit', NULL, 6005, NULL, '0', 2, '1', '0', '0', CURRENT_TIMESTAMP);
+INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, type, keep_alive, embedded, create_time) VALUES (6051, '查看表单', NULL, 'workflow_form_view', NULL, 6006, NULL, '0', 1, '1', '0', '0', CURRENT_TIMESTAMP);
+INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, type, keep_alive, embedded, create_time) VALUES (6052, '新增表单', NULL, 'workflow_form_add', NULL, 6006, NULL, '0', 2, '1', '0', '0', CURRENT_TIMESTAMP);
+INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, type, keep_alive, embedded, create_time) VALUES (6053, '编辑表单', NULL, 'workflow_form_edit', NULL, 6006, NULL, '0', 3, '1', '0', '0', CURRENT_TIMESTAMP);
+INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, type, keep_alive, embedded, create_time) VALUES (6054, '删除表单', NULL, 'workflow_form_del', NULL, 6006, NULL, '0', 4, '1', '0', '0', CURRENT_TIMESTAMP);
 INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 5010, CURRENT_TIMESTAMP);
 INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 5011, CURRENT_TIMESTAMP);
 INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 5012, CURRENT_TIMESTAMP);
 INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 5013, CURRENT_TIMESTAMP);
 INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 5014, CURRENT_TIMESTAMP);
+INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 5015, CURRENT_TIMESTAMP);
+INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 5016, CURRENT_TIMESTAMP);
+INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 5017, CURRENT_TIMESTAMP);
 INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 6000, CURRENT_TIMESTAMP);
 INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 6001, CURRENT_TIMESTAMP);
 INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 6002, CURRENT_TIMESTAMP);
 INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 6003, CURRENT_TIMESTAMP);
 INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 6004, CURRENT_TIMESTAMP);
 INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 6005, CURRENT_TIMESTAMP);
+INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 6006, CURRENT_TIMESTAMP);
+INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 6007, CURRENT_TIMESTAMP);
+INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 6008, CURRENT_TIMESTAMP);
+INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 6009, CURRENT_TIMESTAMP);
 INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 6011, CURRENT_TIMESTAMP);
 INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 6012, CURRENT_TIMESTAMP);
 INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 6021, CURRENT_TIMESTAMP);
@@ -479,6 +515,10 @@ INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 6031, CURRE
 INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 6032, CURRENT_TIMESTAMP);
 INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 6041, CURRENT_TIMESTAMP);
 INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 6042, CURRENT_TIMESTAMP);
+INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 6051, CURRENT_TIMESTAMP);
+INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 6052, CURRENT_TIMESTAMP);
+INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 6053, CURRENT_TIMESTAMP);
+INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 6054, CURRENT_TIMESTAMP);
 
 -- 第一阶段安全权限：管理查询与导入、导出分别授权。
 INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, keep_alive, embedded, type, create_by, update_by, create_time, update_time, del_flag, status, data_status, tenant_id, remark) VALUES (1106, '用户查看', NULL, 'sys_user_view', NULL, 1100, NULL, '0', 0, '0', '0', '1', NULL, NULL, CURRENT_TIMESTAMP, NULL, '0', '0', '0', NULL, NULL);
@@ -519,6 +559,46 @@ INSERT INTO sys_menu (id, name, permission, parent_id, visible, sn, type, keep_a
 INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 2904, CURRENT_TIMESTAMP);
 INSERT INTO sys_menu (id, name, permission, parent_id, visible, sn, type, keep_alive, embedded, create_time) VALUES (2905, '通知发送', 'sys_notice_send', 2003471392852377602, '0', 5, '1', '0', '0', CURRENT_TIMESTAMP);
 INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 2905, CURRENT_TIMESTAMP);
+
+-- AI 服务权限：页面菜单和接口权限统一使用 snake_case 标识。
+INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, type, keep_alive, embedded, create_time) VALUES (7000, 'AI服务', 'ai', NULL, '/ai', -1, 'ele-ChatDotRound', '1', 4, '0', '0', '0', CURRENT_TIMESTAMP);
+INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, type, keep_alive, embedded, create_time) VALUES (7001, 'AI对话', 'chat', NULL, '/ai/chat', 7000, 'ele-ChatDotRound', '1', 1, '0', '0', '0', CURRENT_TIMESTAMP);
+INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, type, keep_alive, embedded, create_time) VALUES (7002, 'AI知识库', 'knowledge', NULL, '/ai/knowledge', 7000, 'ele-Reading', '1', 2, '0', '0', '0', CURRENT_TIMESTAMP);
+INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, type, keep_alive, embedded, create_time) VALUES (7003, 'AI文档', 'document', NULL, '/ai/document', 7000, 'ele-Files', '1', 3, '0', '0', '0', CURRENT_TIMESTAMP);
+INSERT INTO sys_menu (id, name, en_name, permission, path, parent_id, icon, visible, sn, type, keep_alive, embedded, create_time) VALUES (7004, 'AI配置', 'config', NULL, '/ai/config', 7000, 'ele-Setting', '0', 4, '0', '0', '0', CURRENT_TIMESTAMP);
+INSERT INTO sys_menu (id, name, permission, parent_id, visible, sn, type, keep_alive, embedded, create_time) VALUES (7011, 'AI对话', 'ai_chat_add', 7001, '0', 1, '1', '0', '0', CURRENT_TIMESTAMP);
+INSERT INTO sys_menu (id, name, permission, parent_id, visible, sn, type, keep_alive, embedded, create_time) VALUES (7021, 'AI知识库对话', 'ai_rag_add', 7002, '0', 1, '1', '0', '0', CURRENT_TIMESTAMP);
+INSERT INTO sys_menu (id, name, permission, parent_id, visible, sn, type, keep_alive, embedded, create_time) VALUES (7031, 'AI会话查看', 'ai_session_view', 7001, '0', 2, '1', '0', '0', CURRENT_TIMESTAMP);
+INSERT INTO sys_menu (id, name, permission, parent_id, visible, sn, type, keep_alive, embedded, create_time) VALUES (7032, 'AI会话新增', 'ai_session_add', 7001, '0', 3, '1', '0', '0', CURRENT_TIMESTAMP);
+INSERT INTO sys_menu (id, name, permission, parent_id, visible, sn, type, keep_alive, embedded, create_time) VALUES (7033, 'AI会话编辑', 'ai_session_edit', 7001, '0', 4, '1', '0', '0', CURRENT_TIMESTAMP);
+INSERT INTO sys_menu (id, name, permission, parent_id, visible, sn, type, keep_alive, embedded, create_time) VALUES (7034, 'AI会话删除', 'ai_session_del', 7001, '0', 5, '1', '0', '0', CURRENT_TIMESTAMP);
+INSERT INTO sys_menu (id, name, permission, parent_id, visible, sn, type, keep_alive, embedded, create_time) VALUES (7041, 'AI消息查看', 'ai_message_view', 7001, '0', 6, '1', '0', '0', CURRENT_TIMESTAMP);
+INSERT INTO sys_menu (id, name, permission, parent_id, visible, sn, type, keep_alive, embedded, create_time) VALUES (7042, 'AI消息新增', 'ai_message_add', 7001, '0', 7, '1', '0', '0', CURRENT_TIMESTAMP);
+INSERT INTO sys_menu (id, name, permission, parent_id, visible, sn, type, keep_alive, embedded, create_time) VALUES (7043, 'AI消息删除', 'ai_message_del', 7001, '0', 8, '1', '0', '0', CURRENT_TIMESTAMP);
+INSERT INTO sys_menu (id, name, permission, parent_id, visible, sn, type, keep_alive, embedded, create_time) VALUES (7051, 'AI文档查看', 'ai_document_view', 7003, '0', 1, '1', '0', '0', CURRENT_TIMESTAMP);
+INSERT INTO sys_menu (id, name, permission, parent_id, visible, sn, type, keep_alive, embedded, create_time) VALUES (7052, 'AI文档新增', 'ai_document_add', 7003, '0', 2, '1', '0', '0', CURRENT_TIMESTAMP);
+INSERT INTO sys_menu (id, name, permission, parent_id, visible, sn, type, keep_alive, embedded, create_time) VALUES (7053, 'AI文档删除', 'ai_document_del', 7003, '0', 3, '1', '0', '0', CURRENT_TIMESTAMP);
+INSERT INTO sys_menu (id, name, permission, parent_id, visible, sn, type, keep_alive, embedded, create_time) VALUES (7061, 'AI配置查看', 'ai_config_view', 7004, '0', 1, '1', '0', '0', CURRENT_TIMESTAMP);
+INSERT INTO sys_menu (id, name, permission, parent_id, visible, sn, type, keep_alive, embedded, create_time) VALUES (7062, 'AI配置编辑', 'ai_config_edit', 7004, '0', 2, '1', '0', '0', CURRENT_TIMESTAMP);
+INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 7000, CURRENT_TIMESTAMP);
+INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 7001, CURRENT_TIMESTAMP);
+INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 7002, CURRENT_TIMESTAMP);
+INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 7003, CURRENT_TIMESTAMP);
+INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 7004, CURRENT_TIMESTAMP);
+INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 7011, CURRENT_TIMESTAMP);
+INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 7021, CURRENT_TIMESTAMP);
+INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 7031, CURRENT_TIMESTAMP);
+INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 7032, CURRENT_TIMESTAMP);
+INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 7033, CURRENT_TIMESTAMP);
+INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 7034, CURRENT_TIMESTAMP);
+INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 7041, CURRENT_TIMESTAMP);
+INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 7042, CURRENT_TIMESTAMP);
+INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 7043, CURRENT_TIMESTAMP);
+INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 7051, CURRENT_TIMESTAMP);
+INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 7052, CURRENT_TIMESTAMP);
+INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 7053, CURRENT_TIMESTAMP);
+INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 7061, CURRENT_TIMESTAMP);
+INSERT INTO sys_role_menu (role_id, menu_id, create_time) VALUES (1, 7062, CURRENT_TIMESTAMP);
 
 -- ----------------------------
 -- 默认租户

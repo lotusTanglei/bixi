@@ -48,6 +48,27 @@ test('Makefile provides a static cluster gate before the Docker failover target'
 	assert.doesNotMatch(runtimeTarget, /\bnode\b/);
 });
 
+test('cluster failover performs a hard local resource preflight before creating anything', () => {
+	const preflight = harness.indexOf('scripts/local-test-preflight.sh" cluster');
+	const reportDirectory = harness.indexOf('mkdir -p "${report_dir}"');
+	const composeStart = harness.indexOf('compose --profile cloud --profile workflow-cluster up');
+	assert.notEqual(preflight, -1, 'cluster harness must call the shared read-only preflight');
+	assert.ok(preflight < reportDirectory, 'preflight must run before creating the report directory');
+	assert.ok(preflight < composeStart, 'preflight must run before creating Compose resources');
+	assert.match(harness, /WORKFLOW_CLUSTER_PREFLIGHT_SKIP:-false/,
+		'cluster-specific preflight override must be explicit');
+	assert.match(harness, /BIXI_LOCAL_PREFLIGHT_SKIP:-false/,
+		'shared local preflight override must be explicit');
+	assert.match(
+		harness,
+		/if \[\[ "\$\{WORKFLOW_CLUSTER_PREFLIGHT_SKIP:-false\}" == "true" \|\| "\$\{BIXI_LOCAL_PREFLIGHT_SKIP:-false\}" == "true" \]\]/,
+		'only an explicit true value for either documented override may bypass the preflight'
+	);
+	assert.match(harness, /WORKFLOW_CLUSTER_PREFLIGHT_SKIP\/BIXI_LOCAL_PREFLIGHT_SKIP/,
+		'CI/dedicated hosts need an explicit, visible preflight override');
+	assert.match(harness, /no Docker resources were created/);
+});
+
 test('uses unbuffered MySQL output so lock markers are observable immediately', () => {
 	assert.ok(
 		/exec mysql[^\n]+--unbuffered/.test(script),

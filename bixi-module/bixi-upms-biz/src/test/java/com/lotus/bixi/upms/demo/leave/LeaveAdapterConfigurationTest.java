@@ -2,6 +2,8 @@ package com.lotus.bixi.upms.demo.leave;
 
 import com.lotus.bixi.upms.demo.leave.controller.LeaveRequestController;
 import com.lotus.bixi.upms.demo.leave.controller.LeaveWorkflowResultController;
+import com.lotus.bixi.upms.demo.leave.command.LeaveSubmitCommandExecutor;
+import com.lotus.bixi.upms.demo.leave.event.LeaveWorkflowEventPublisher;
 import com.lotus.bixi.upms.demo.leave.local.LocalWorkflowResultReceiver;
 import com.lotus.bixi.upms.demo.leave.service.LeaveRequestService;
 import com.lotus.bixi.workflow.api.service.WorkflowResultReceiver;
@@ -11,8 +13,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class LeaveAdapterConfigurationTest {
     private final ApplicationContextRunner contexts = new ApplicationContextRunner()
-            .withUserConfiguration(Config.class, LeaveRequestService.class, LeaveRequestController.class,
-                    LeaveWorkflowResultController.class, LocalWorkflowResultReceiver.class);
+            .withUserConfiguration(Config.class, LeaveSubmitCommandExecutor.class, LeaveRequestService.class,
+                    LeaveRequestController.class, LeaveWorkflowResultController.class, LocalWorkflowResultReceiver.class);
 
     @Test void disabledWorkflowCreatesNoLeaveServicesOrEndpoints() {
         contexts.withPropertyValues("workflow.enabled=false", "bixi.deployment.mode=single").run(context -> {
@@ -24,7 +26,9 @@ class LeaveAdapterConfigurationTest {
     }
 
     @Test void singleUsesLocalReceiverAndDoesNotExposeSpoofableInternalHttpEndpoint() {
-        contexts.withPropertyValues("workflow.enabled=true", "bixi.deployment.mode=single").run(context -> {
+        contexts.withBean(LeaveWorkflowEventPublisher.class, LeaveAdapterConfigurationTest::publisher)
+                .withPropertyValues("workflow.enabled=true", "bixi.reliable.enabled=true", "bixi.deployment.mode=single")
+                .run(context -> {
             assertThat(context).hasNotFailed().hasSingleBean(WorkflowResultReceiver.class)
                     .hasSingleBean(LocalWorkflowResultReceiver.class).hasSingleBean(LeaveRequestController.class)
                     .doesNotHaveBean(LeaveWorkflowResultController.class);
@@ -32,11 +36,27 @@ class LeaveAdapterConfigurationTest {
     }
 
     @Test void cloudUsesInternalHttpEndpointWithoutRegisteringLocalReceiver() {
-        contexts.withPropertyValues("workflow.enabled=true", "bixi.deployment.mode=cloud").run(context -> {
+        contexts.withBean(LeaveWorkflowEventPublisher.class, LeaveAdapterConfigurationTest::publisher)
+                .withPropertyValues("workflow.enabled=true", "bixi.reliable.enabled=true", "bixi.deployment.mode=cloud")
+                .run(context -> {
             assertThat(context).hasNotFailed().hasSingleBean(LeaveWorkflowResultController.class)
                     .hasSingleBean(LeaveRequestService.class).doesNotHaveBean(LocalWorkflowResultReceiver.class);
         });
     }
+
+    @Test void enabledWorkflowWithoutDurablePublisherFailsFast() {
+        contexts.withPropertyValues("workflow.enabled=true", "bixi.reliable.enabled=false", "bixi.deployment.mode=single")
+                .run(context -> assertThat(context).hasFailed()
+                        .getFailure().hasRootCauseInstanceOf(org.springframework.beans.factory.NoSuchBeanDefinitionException.class)
+                        .rootCause().hasMessageContaining(LeaveWorkflowEventPublisher.class.getName()));
+    }
+
+    private static LeaveWorkflowEventPublisher publisher() {
+        return new LeaveWorkflowEventPublisher(
+                org.mockito.Mockito.mock(com.lotus.bixi.common.mq.reliable.JdbcOutboxStore.class),
+                new com.lotus.bixi.workflow.api.event.WorkflowEventCodec());
+    }
+
     @org.springframework.context.annotation.Configuration(proxyBeanMethods = false)
     @org.mybatis.spring.annotation.MapperScan("com.lotus.bixi.upms.demo.leave.mapper")
     @org.springframework.boot.autoconfigure.ImportAutoConfiguration(com.baomidou.mybatisplus.autoconfigure.MybatisPlusAutoConfiguration.class)
@@ -52,6 +72,9 @@ class LeaveAdapterConfigurationTest {
         }
         @org.springframework.context.annotation.Bean com.lotus.bixi.upms.service.SysUserService users() {
             return org.mockito.Mockito.mock(com.lotus.bixi.upms.service.SysUserService.class);
+        }
+        @org.springframework.context.annotation.Bean com.fasterxml.jackson.databind.ObjectMapper objectMapper() {
+            return new com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules();
         }
     }
 }

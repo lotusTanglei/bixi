@@ -1,6 +1,7 @@
 package com.lotus.bixi.upms.service;
 
 import com.baomidou.mybatisplus.autoconfigure.MybatisPlusAutoConfiguration;
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lotus.bixi.common.mybatis.MybatisAutoConfiguration;
@@ -9,12 +10,15 @@ import com.lotus.bixi.common.security.component.PermissionService;
 import com.lotus.bixi.common.security.service.BixiUser;
 import com.lotus.bixi.upms.api.constant.MQConstants;
 import com.lotus.bixi.upms.api.dto.NoticeMessageDTO;
+import com.lotus.bixi.upms.api.entity.SysUserRole;
 import com.lotus.bixi.upms.api.entity.SysUserNotice;
 import com.lotus.bixi.upms.api.vo.SysNoticeVO;
 import com.lotus.bixi.upms.api.vo.UserNoticeVO;
 import com.lotus.bixi.upms.controller.SysNoticeController;
 import com.lotus.bixi.upms.controller.SysUserNoticeController;
 import com.lotus.bixi.upms.mq.NoticeConsumer;
+import com.lotus.bixi.upms.mq.PublishedNoticeNotifier;
+import com.lotus.bixi.upms.mq.RabbitNoticeDelivery;
 import com.lotus.bixi.upms.service.impl.SysNoticeServiceImpl;
 import com.lotus.bixi.upms.service.impl.SysUserNoticeServiceImpl;
 import org.junit.jupiter.api.AfterEach;
@@ -43,10 +47,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.mockito.ArgumentCaptor;
 
 import javax.sql.DataSource;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -60,6 +66,7 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.when;
 
 /** Real secured controllers, MyBatis XML, transactions and canonical tables; no external delivery. */
 @SpringJUnitConfig(NoticePublicationIntegrationTest.Config.class)
@@ -72,6 +79,7 @@ class NoticePublicationIntegrationTest {
     @Autowired NoticeConsumer consumer;
     @Autowired RabbitTemplate rabbit;
     @Autowired SysUserNoticeSseService sse;
+    @Autowired SysUserRoleService roles;
     @Autowired DataSource source;
     private JdbcTemplate jdbc;
 
@@ -82,7 +90,9 @@ class NoticePublicationIntegrationTest {
         for (String table : new String[]{"sys_notice", "sys_user_notice", "sys_user"}) {
             recreateCanonicalTable(table);
         }
-        jdbc.update("INSERT INTO sys_user(id,username,nickname) VALUES (11,'author','作者'),(22,'recipient','收件人'),(33,'other','其他人')");
+        jdbc.update("INSERT INTO sys_user(id,tenant_id,username,nickname) VALUES "
+                + "(11,1,'author','作者'),(22,1,'recipient','收件人'),(33,1,'other','其他人'),"
+                + "(44,2,'external','外租户用户')");
         reset(rabbit, sse);
         login(11L, "sys_notice_add", "sys_notice_edit");
     }
@@ -130,6 +140,25 @@ class NoticePublicationIntegrationTest {
     }
 
     @Test
+    void roleTargetsAreRestrictedToUsersInTheCurrentTenant() {
+        SysUserRole local = new SysUserRole();
+        local.setRoleId(700L);
+        local.setUserId(22L);
+        SysUserRole external = new SysUserRole();
+        external.setRoleId(700L);
+        external.setUserId(44L);
+        when(roles.list(any(Wrapper.class))).thenReturn(List.of(local, external));
+
+        var draft = request();
+        draft.setTargetType("2");
+        draft.setTargetIds("700");
+
+        assertThat(management.save(draft).getData()).isEqualTo(true);
+        assertThat(jdbc.queryForList("SELECT user_id FROM sys_user_notice WHERE notice_id=? ORDER BY user_id",
+                Long.class, draft.getId())).containsExactly(22L);
+    }
+
+    @Test
     void onlyExplicitSendMakesDraftVisibleToItsRecipient() {
         var draft = savedDraft();
         long recipientId = recipientId(draft.getId());
@@ -142,7 +171,9 @@ class NoticePublicationIntegrationTest {
 
         login(11L, "sys_notice_send");
         assertThat(management.send(draft.getId()).getData()).isEqualTo(true);
-        verify(rabbit).convertAndSend(eq(MQConstants.SYS_NOTICE_FANOUT_EXCHANGE), eq(""), any(NoticeMessageDTO.class));
+        ArgumentCaptor<NoticeMessageDTO> sent = ArgumentCaptor.forClass(NoticeMessageDTO.class);
+        verify(rabbit).convertAndSend(eq(MQConstants.SYS_NOTICE_FANOUT_EXCHANGE), eq(""), sent.capture());
+        assertThat(sent.getValue().getTenantId()).isEqualTo(1L);
         consumer.handleNoticeMessage(event(draft.getId()));
         verify(sse).publishRefresh(22L, draft.getId(), recipientId);
 
@@ -211,6 +242,33 @@ class NoticePublicationIntegrationTest {
         verify(rabbit, times(2)).convertAndSend(eq(MQConstants.SYS_NOTICE_FANOUT_EXCHANGE), eq(""), any(NoticeMessageDTO.class));
         consumer.handleNoticeMessage(event(draft.getId()));
         verify(sse).publishRefresh(22L, draft.getId(), recipientId);
+    }
+
+    @Test
+    void managementCanFilterFailedDeliveryRecordsAndRetryTheNotice() {
+        var draft = savedDraft();
+        long recipientId = recipientId(draft.getId());
+        assertThat(notices.sendNotice(draft.getId())).isTrue();
+        jdbc.update("UPDATE sys_user_notice SET delivery_status='FAILED', delivery_attempts=2,"
+                + " delivery_last_error='temporary outage' WHERE id=?", recipientId);
+
+        login(11L, "sys_notice_view");
+        var query = query(draft.getId());
+        query.setDeliveryStatus("FAILED");
+        var records = (IPage<?>) personal.getNoticeRecordPage(new Page<>(1, 10), query).getData();
+        assertThat(records.getTotal()).isEqualTo(1);
+        var record = (UserNoticeVO) records.getRecords().get(0);
+        assertThat(record.getDeliveryStatus()).isEqualTo("FAILED");
+        assertThat(record.getDeliveryAttempts()).isEqualTo(2);
+        assertThat(record.getDeliveryLastError()).isEqualTo("temporary outage");
+
+        login(11L, "sys_notice_send");
+        assertThat(management.retryDelivery(draft.getId()).getData()).isEqualTo(true);
+        verify(rabbit, times(2)).convertAndSend(eq(MQConstants.SYS_NOTICE_FANOUT_EXCHANGE), eq(""), any(NoticeMessageDTO.class));
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM sys_user_notice WHERE notice_id=?", Long.class,
+                draft.getId())).isEqualTo(1);
+        assertThat(jdbc.queryForObject("SELECT delivery_status FROM sys_user_notice WHERE id=?", String.class,
+                recipientId)).isEqualTo("PENDING");
     }
 
     @ParameterizedTest
@@ -315,6 +373,7 @@ class NoticePublicationIntegrationTest {
     private static NoticeMessageDTO event(Long noticeId) {
         var message = new NoticeMessageDTO();
         message.setNoticeId(noticeId);
+        message.setTenantId(1L);
         message.setTitle("系统通知");
         message.setContent("可信系统内容");
         message.setSenderId(11L);
@@ -348,7 +407,8 @@ class NoticePublicationIntegrationTest {
     @EnableTransactionManagement
     @EnableMethodSecurity
     @Import({SysNoticeServiceImpl.class, SysUserNoticeServiceImpl.class, SysNoticeController.class,
-            SysUserNoticeController.class, NoticeConsumer.class, MybatisAutoConfiguration.class})
+            SysUserNoticeController.class, PublishedNoticeNotifier.class, RabbitNoticeDelivery.class,
+            NoticeConsumer.class, MybatisAutoConfiguration.class})
     @MapperScan("com.lotus.bixi.upms.mapper")
     @ImportAutoConfiguration(MybatisPlusAutoConfiguration.class)
     static class Config {

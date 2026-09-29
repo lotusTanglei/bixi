@@ -1,6 +1,5 @@
 package com.lotus.bixi.upms.demo.leave.event;
 
-import com.lotus.bixi.common.core.constant.SecurityConstants;
 import com.lotus.bixi.common.core.context.TenantContextHolder;
 import com.lotus.bixi.common.mq.reliable.DurableMessage;
 import com.lotus.bixi.common.mq.reliable.DurableMessageHandler;
@@ -57,7 +56,7 @@ public final class LeaveBusinessTaskEventHandler implements DurableMessageHandle
         }
         Long previousTenant = TenantContextHolder.get();
         try {
-            TenantContextHolder.set(SecurityConstants.DEFAULT_TENANT_ID);
+            TenantContextHolder.set(tenantId(event.tenantScope()));
             // Lock the aggregate before touching the booking table. Both booking and
             // compensation use this same lock order, preventing MySQL gap-lock deadlocks.
             LeaveRequest leave = leaves.selectByIdForUpdate(event.businessId());
@@ -120,7 +119,7 @@ public final class LeaveBusinessTaskEventHandler implements DurableMessageHandle
     private void enqueueTaskResult(WorkflowEvent request, String operationId, boolean success,
                                     String bookingReference, String errorCode) {
         WorkflowEvent result = new WorkflowEvent(resultId(operationId, "result"),
-                WorkflowEventType.WORKFLOW_BUSINESS_TASK_RESULT, 1, "upms", "workflow", "default",
+                WorkflowEventType.WORKFLOW_BUSINESS_TASK_RESULT, 1, "upms", "workflow", request.tenantScope(),
                 request.processInstanceId(), PROCESS_KEY, BUSINESS_TABLE, request.businessId(), request.businessKey(),
                 request.round(), request.commandId(), nextSequence(request), Instant.now(), request.correlationId(),
                 request.eventId(), request.actor(), new WorkflowBusinessTaskResult(request.payload().requestHash(),
@@ -131,7 +130,7 @@ public final class LeaveBusinessTaskEventHandler implements DurableMessageHandle
     private void enqueueCompensationResult(WorkflowEvent request, String operationId, String compensationId,
                                            boolean success, String errorCode) {
         WorkflowEvent result = new WorkflowEvent(resultId(compensationId, "result"),
-                WorkflowEventType.WORKFLOW_COMPENSATION_RESULT, 1, "upms", "workflow", "default",
+                WorkflowEventType.WORKFLOW_COMPENSATION_RESULT, 1, "upms", "workflow", request.tenantScope(),
                 request.processInstanceId(), PROCESS_KEY, BUSINESS_TABLE, request.businessId(), request.businessKey(),
                 request.round(), request.commandId(), nextSequence(request), Instant.now(), request.correlationId(),
                 request.eventId(), request.actor(), new WorkflowCompensationResult(request.payload().requestHash(),
@@ -188,6 +187,10 @@ public final class LeaveBusinessTaskEventHandler implements DurableMessageHandle
 
     private static InboxDeliveryException permanent(String message) {
         return new InboxDeliveryException(InboxDeliveryException.Kind.PERMANENT, message);
+    }
+
+    private static long tenantId(String tenantScope) {
+        return "default".equals(tenantScope) ? 1L : Long.parseLong(tenantScope);
     }
 
     @FunctionalInterface

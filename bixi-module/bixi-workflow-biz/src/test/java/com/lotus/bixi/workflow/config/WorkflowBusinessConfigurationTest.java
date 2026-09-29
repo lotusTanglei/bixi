@@ -3,6 +3,10 @@ package com.lotus.bixi.workflow.config;
 import com.baomidou.mybatisplus.autoconfigure.MybatisPlusAutoConfiguration;
 import com.lotus.bixi.common.workflow.config.WorkflowAutoConfiguration;
 import com.lotus.bixi.common.feign.annotation.EnableBixiFeignClients;
+import com.lotus.bixi.upms.api.dto.CandidateIdentity;
+import com.lotus.bixi.upms.api.dto.CandidateRole;
+import com.lotus.bixi.upms.api.service.CandidateIdentityQueryService;
+import com.lotus.bixi.upms.api.service.CandidateRoleQueryService;
 import com.lotus.bixi.workflow.WorkflowApplication;
 import com.lotus.bixi.workflow.api.feign.RemoteWorkflowService;
 import com.lotus.bixi.workflow.controller.TaskController;
@@ -131,6 +135,18 @@ class WorkflowBusinessConfigurationTest {
         @Bean
         DataSourceTransactionManager transactionManager(DataSource dataSource) {
             return new DataSourceTransactionManager(dataSource);
+        }
+
+        @Bean
+        CandidateIdentityQueryService candidateIdentityQueryService() {
+            return userId -> userId == null || userId <= 0
+                    ? null : new CandidateIdentity(userId, true, false, 1L);
+        }
+
+        @Bean
+        CandidateRoleQueryService candidateRoleQueryService() {
+            return roleId -> roleId == null || roleId <= 0
+                    ? null : new CandidateRole(roleId, true, 1L);
         }
     }
 }

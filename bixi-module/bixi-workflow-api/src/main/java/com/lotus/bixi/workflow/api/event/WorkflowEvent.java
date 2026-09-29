@@ -17,7 +17,9 @@ public record WorkflowEvent(String eventId, WorkflowEventType type, int schemaVe
         if (schemaVersion != 1 || type == null || actor == null || payload == null) {
             throw new IllegalArgumentException("事件版本或类型无效");
         }
-        if (!"default".equals(tenantScope) || !tenantScope.equals(actor.tenantScope())) {
+        WorkflowEventValidation.tenantScope(tenantScope);
+        if (WorkflowEventValidation.tenantId(tenantScope)
+                != WorkflowEventValidation.tenantId(actor.tenantScope())) {
             throw new IllegalArgumentException("租户范围不匹配");
         }
         if (!"demo_leave_approval".equals(processKey) || !"demo_leave_request".equals(businessTable)

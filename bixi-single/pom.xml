@@ -44,6 +44,12 @@
             <artifactId>bixi-workflow-biz</artifactId>
             <version>${revision}</version>
         </dependency>
+        <!-- 可选 AI：同一业务实现，运行时通过 ai.enabled 显式启用 -->
+        <dependency>
+            <groupId>com.lotus</groupId>
+            <artifactId>bixi-ai-biz</artifactId>
+            <version>${revision}</version>
+        </dependency>
         <!--安全模块-->
         <dependency>
             <groupId>com.lotus</groupId>

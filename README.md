@@ -44,7 +44,7 @@ Bixi（碧玺）是一套面向企业后台和 SaaS 场景的前后端开发脚�
 | 对比项 | 微服务模式（`cloud`） | 单体模式（`single`） |
 |---|---|---|
 | 构建方式 | `mvn clean package -Pcloud`，根项目默认激活 | `mvn -Psingle -pl bixi-single -am clean package` |
-| 应用形态 | Gateway、Auth、UPMS、AI、Workflow、Quartz、Monitor 等服务独立部署 | `bixi-single` 组合为一个 Spring Boot 应用 |
+| 应用形态 | Gateway、Auth、UPMS、`bixi-ai-biz`、Workflow、Quartz、Monitor 等服务独立部署 | `bixi-single` 组合为一个 Spring Boot 应用，并可条件装配共享 AI/Workflow 业务实现 |
 | 注册与配置 | 使用 Nacos 服务发现和配置中心 | 配置文件本地加载，Nacos 运行时关闭 |
 | API 入口 | Spring Cloud Gateway | 直接访问单体应用 |
 | 服务调用 | OpenFeign + LoadBalancer | 不需要外部服务发现；保留公共调用组件依赖 |
@@ -62,7 +62,7 @@ Bixi（碧玺）是一套面向企业后台和 SaaS 场景的前后端开发脚�
 - `bixi-quartz`：定时任务
 - `bixi-workflow-biz`：工作流，默认关闭，通过 `workflow.enabled=true` 按需启用
 
-AI 和 Monitor 当前保持独立运行。Workflow 在 single 中复用已聚合的同一业务实现，在 cloud 中作为独立服务运行；启停配置和当前交付边界见[工作流运行说明](.docs/workflow/OPERATIONS.md)。
+`bixi-ai-biz` 在 cloud 中作为独立服务运行，是否启动由 `AI_ENABLED` 控制；single 复用同一业务实现，`AI_ENABLED` 默认值为 `false`，设置为 `true` 后按需装配。Monitor 仍保持独立运行。Workflow 在 single 中复用已聚合的同一业务实现，在 cloud 中作为独立服务运行；启停配置和当前交付边界见[工作流运行说明](.docs/workflow/OPERATIONS.md)。
 
 ---
 
@@ -81,7 +81,7 @@ AI 和 Monitor 当前保持独立运行。Workflow 在 single 中复用已聚合
 | Druid | 1.2.23 | 数据库连接池与监控 |
 | Dynamic Datasource | 4.3.1 | 动态数据源切换 |
 | Flowable | 7.1.0 | 工作流引擎，cloud/single 复用同一 Workflow 模块 |
-| Spring AI Alibaba | 1.0.0.2 | AI / DashScope 集成，独立 AI 模块使用 |
+| Spring AI Alibaba | 1.0.0.2 | AI / DashScope 集成，cloud 独立服务与 single 条件装配共用 |
 | SpringDoc OpenAPI | 2.7.0 | OpenAPI 接口文档 |
 | Undertow | Spring Boot Starter | Web 容器 |
 
@@ -250,6 +250,8 @@ spring:
 
 RabbitMQ 和 MinIO 也在该文件中配置，生产环境请通过环境变量注入账号、密码和 endpoint。
 
+single 模式下 AI 默认关闭；需要 DashScope 能力时设置 `AI_ENABLED=true` 并提供 `DASHSCOPE_API_KEY`。
+
 ### 微服务模式 Nacos 配置
 
 微服务模块的 `application.yml` 会导入以下类型的 Nacos Data ID：
@@ -324,7 +326,7 @@ make ci-gate
 | Demo Task | 独立业务表、CRUD、按钮权限、操作日志、统一验收 | 单体 / 微服务 |
 | Generator | 数据库表导入、模板配置、代码生成、预览下载 | 单体 / 微服务 |
 | Quartz | Cron 任务、执行记录、手动触发、暂停恢复 | 单体 / 微服务 |
-| AI | 会话、消息、模型调用、SSE、知识库 | 独立 AI 服务 |
+| AI | 会话、消息、模型调用、SSE、知识库 | cloud 独立服务 / single 条件装配 |
 | Workflow | 流程定义、部署、实例、任务、表单和审批 | 单体可选聚合 / 独立 Workflow 服务，默认关闭 |
 | Monitor | Spring Boot Admin 服务监控 | 独立 Monitor 服务 |
 

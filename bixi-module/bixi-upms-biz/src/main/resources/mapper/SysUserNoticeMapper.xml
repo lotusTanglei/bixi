@@ -9,6 +9,14 @@
         <result column="user_id" property="userId" />
         <result column="is_read" property="isRead" />
         <result column="read_time" property="readTime" />
+        <result column="delivery_status" property="deliveryStatus" />
+        <result column="delivery_attempts" property="deliveryAttempts" />
+        <result column="delivery_last_error" property="deliveryLastError" />
+        <result column="delivery_last_attempt_at" property="deliveryLastAttemptAt" />
+        <result column="delivery_delivered_at" property="deliveryDeliveredAt" />
+        <result column="delivery_receipt_status" property="deliveryReceiptStatus" />
+        <result column="delivery_receipt_code" property="deliveryReceiptCode" />
+        <result column="delivery_receipt_at" property="deliveryReceiptAt" />
         <result column="create_time" property="createTime" />
     </resultMap>
 
@@ -52,6 +60,9 @@
             </if>
             <if test="query.isRead != null and query.isRead != ''">
                 AND un.is_read = #{query.isRead}
+            </if>
+            <if test="query.deliveryStatus != null and query.deliveryStatus != ''">
+                AND un.delivery_status = #{query.deliveryStatus}
             </if>
             <if test="query.recipientName != null and query.recipientName != ''">
                 AND r.nickname LIKE concat('%', #{query.recipientName}, '%')

@@ -4,6 +4,7 @@ package com.lotus.bixi.common.security.annotation;
 
 import com.lotus.bixi.common.security.component.BixiResourceServerAutoConfiguration;
 import com.lotus.bixi.common.security.component.BixiResourceServerConfiguration;
+import com.lotus.bixi.common.security.component.BixiActuatorSecurityConfiguration;
 import com.lotus.bixi.common.security.feign.BixiFeignClientConfiguration;
 import org.springframework.context.annotation.Import;
 
@@ -20,7 +21,7 @@ import java.lang.annotation.*;
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @Import({BixiResourceServerAutoConfiguration.class, BixiResourceServerConfiguration.class,
-        BixiFeignClientConfiguration.class})
+        BixiActuatorSecurityConfiguration.class, BixiFeignClientConfiguration.class})
 public @interface EnableBixiResourceServer {
 
 }

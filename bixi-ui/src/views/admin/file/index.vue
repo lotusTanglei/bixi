@@ -20,7 +20,7 @@
 			</el-row>
 			<el-row>
 				<div class="mb8" style="width: 100%">
-					<el-button formDialogRef icon="folder-add" type="primary" class="ml10" v-auth="'sys_file_del'" @click="formDialogRef.openDialog()">
+					<el-button formDialogRef icon="folder-add" type="primary" class="ml10" v-auth="'sys_file_add'" @click="formDialogRef.openDialog()">
 						{{ $t('common.addBtn') }}
 					</el-button>
 					<el-button :disabled="multiple" icon="Delete" type="primary" class="ml10" v-auth="'sys_file_del'" @click="handleDelete(selectObjs)">

@@ -40,6 +40,13 @@ export const getObj = (id: String) => {
 	});
 };
 
+export const getTaskForm = (taskId: string) => {
+	return request({
+		url: `/admin/workflow/task/form/${encodeURIComponent(taskId)}`,
+		method: 'get',
+	});
+};
+
 export const complete = (obj: Object) => {
 	return request({
 		url: '/admin/workflow/task/complete',

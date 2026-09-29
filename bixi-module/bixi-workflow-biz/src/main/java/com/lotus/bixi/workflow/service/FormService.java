@@ -13,6 +13,8 @@ public interface FormService extends IService<WfForm> {
 
     WfForm getByKey(String formKey);
 
+    WfForm getByKeyForUpdate(String formKey);
+
     WfForm saveForm(FormDTO dto);
 
     WfForm updateForm(FormDTO dto);
@@ -26,5 +28,7 @@ public interface FormService extends IService<WfForm> {
     FormVO getByFormKey(String formKey);
 
     FormRenderVO getRenderInfo(String formKey);
+
+    FormRenderVO getRenderInfo(String formKey, Long formVersionId);
 
 }

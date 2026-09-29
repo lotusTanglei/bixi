@@ -20,17 +20,20 @@ public class AllTenantsReadOnlyInterceptor implements org.apache.ibatis.plugin.I
 
 	@Override
 	public Object intercept(Invocation invocation) throws Throwable {
-		if (!TenantContextHolder.isAllTenantsReadOnly()) return invocation.proceed();
+		boolean allTenantsReadOnly = TenantContextHolder.isAllTenantsReadOnly();
+		boolean tenantSwitchReadOnly = TenantContextHolder.isReadOnlySwitch();
+		if (!allTenantsReadOnly && !tenantSwitchReadOnly) return invocation.proceed();
+		String errorCode = allTenantsReadOnly ? "all_tenants_read_only" : "tenant_switch_read_only";
 		StatementHandler handler = (StatementHandler) invocation.getTarget();
 		Statement parsed;
 		try {
 			parsed = CCJSqlParserUtil.parse(handler.getBoundSql().getSql());
 		}
 		catch (RuntimeException invalidSql) {
-			throw new IllegalStateException("all_tenants_read_only", invalidSql);
+			throw new IllegalStateException(errorCode, invalidSql);
 		}
 		if (!(parsed instanceof Select)) {
-			throw new IllegalStateException("all_tenants_read_only");
+			throw new IllegalStateException(errorCode);
 		}
 		return invocation.proceed();
 	}

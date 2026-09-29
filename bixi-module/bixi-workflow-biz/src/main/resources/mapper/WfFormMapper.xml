@@ -6,8 +6,9 @@
         <id column="id" property="id"/>
         <result column="form_key" property="formKey"/>
         <result column="form_name" property="formName"/>
-        <result column="form_desc" property="formDesc"/>
-        <result column="category_id" property="categoryId"/>
+        <result column="form_type" property="formType"/>
+        <result column="description" property="formDesc"/>
+        <result column="category" property="category"/>
         <result column="current_version" property="currentVersion"/>
         <result column="status" property="status"/>
         <result column="create_by" property="createBy"/>

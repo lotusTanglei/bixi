@@ -1,6 +1,13 @@
 server:
   port: 5000
 
+bixi:
+  deployment:
+    mode: ${BIXI_DEPLOYMENT_MODE:cloud}
+
+ai:
+  enabled: ${AI_ENABLED:false}
+
 spring:
   application:
     name: @artifactId@
@@ -20,11 +27,14 @@ spring:
       - nacos:${spring.application.name}-@profiles.active@.yml
       - optional:nacos:${spring.application.name}-dtp-@profiles.active@.yml
   ai:
-    alibaba:
-      dashscope:
-        api-key: ${DASHSCOPE_API_KEY:}
-        chat:
-          options:
-            model: qwen-plus
-            temperature: 0.7
-            max-tokens: 2000
+    dashscope:
+      api-key: ${DASHSCOPE_API_KEY:}
+      chat:
+        enabled: ${AI_CHAT_ENABLED:${AI_ENABLED:false}}
+        options:
+          model: ${AI_CHAT_MODEL:qwen-plus}
+          temperature: ${AI_CHAT_TEMPERATURE:0.7}
+      embedding:
+        enabled: ${AI_EMBEDDING_ENABLED:${AI_ENABLED:false}}
+        options:
+          model: ${AI_EMBEDDING_MODEL:text-embedding-v2}

@@ -1,0 +1,52 @@
+{
+  "observedAt": "2026-09-27",
+  "scope": "UPMS notice SSE cross-instance fan-out",
+  "status": "focused-passed",
+  "implementation": [
+    "SSE emitters are keyed by tenantId and userId",
+    "Redis pub/sub carries tenantId, userId, noticeId, userNoticeId and a node origin",
+    "a node ignores its own Redis echo so one local refresh is emitted",
+    "Redis publication is best effort and cannot fail the local durable notification attempt"
+  ],
+  "checks": [
+    {
+      "name": "tenant-scoped local emitter registry",
+      "result": "passed",
+      "tests": "NoticeSseRedisBroadcasterTest.localEmitterRegistrySeparatesSameUserAcrossTenants"
+    },
+    {
+      "name": "tenant/user payload and same-node echo suppression",
+      "result": "passed",
+      "tests": "NoticeSseRedisBroadcasterTest.publishesTenantAndUserBoundPayloadAndIgnoresItsOwnEcho"
+    },
+    {
+      "name": "remote payload reaches local registry",
+      "result": "passed",
+      "tests": "NoticeSseRedisBroadcasterTest.forwardsRemoteTenantScopedPayloadToLocalEmitters"
+    },
+    {
+      "name": "Redis outage preserves local delivery",
+      "result": "passed",
+      "tests": "SysUserNoticeSseServiceImplTest.keepsTheLocalEmitterPathSuccessfulWhenCrossInstanceBroadcastFails"
+    },
+    {
+      "name": "existing notice delivery behavior",
+      "result": "passed",
+      "tests": "NoticeChannelDispatcherTest 12/12; PublishedNoticeNotifierTest 2/2; NoticeLocalDeliveryIntegrationTest 5/5; NoticePublicationIntegrationTest 18/18"
+    }
+  ],
+  "commands": [
+    "mvn -pl bixi-module/bixi-upms-biz -am -DskipTests=false -Dtest=SysUserNoticeSseServiceImplTest,NoticeSseRedisBroadcasterTest -Dsurefire.failIfNoSpecifiedTests=false test",
+    "mvn -pl bixi-module/bixi-upms-biz -am -DskipTests=false -Dtest=NoticeChannelDispatcherTest,PublishedNoticeNotifierTest,NoticePublicationIntegrationTest,NoticeLocalDeliveryIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false test",
+    "make architecture-check",
+    "make runtime-config-check",
+    "git diff --check"
+  ],
+  "runtimeBoundary": {
+    "realRedisBroker": false,
+    "twoIndependentUpmsProcesses": false,
+    "thirdPartyProvider": false,
+    "limitation": "The focused tests exercise the Redis message contract and listener behavior with an injected client. A disposable Redis instance and two independently routed UPMS processes are still required before claiming a production multi-replica black-box result. Redis pub/sub is an ephemeral hint; sys_user_notice remains the durable source of truth for reconnect/replay."
+  },
+  "secretsOmitted": true
+}

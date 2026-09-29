@@ -12,6 +12,14 @@
 								<el-option label="已读" value="1" />
 							</el-select>
 						</el-form-item>
+						<el-form-item label="投递状态" prop="deliveryStatus">
+							<el-select v-model="state.queryForm.deliveryStatus" placeholder="请选择投递状态" clearable>
+								<el-option label="待投递" value="PENDING" />
+								<el-option label="投递中" value="IN_FLIGHT" />
+								<el-option label="已送达" value="DELIVERED" />
+								<el-option label="失败" value="FAILED" />
+							</el-select>
+						</el-form-item>
 						<el-form-item>
 							<el-button icon="Search" type="primary" @click="getDataList">{{ t('common.queryBtn') }}</el-button>
 							<el-button icon="Refresh" @click="resetQuery">{{ t('common.resetBtn') }}</el-button>
@@ -27,13 +35,25 @@
 				>
 					<el-table-column label="序号" type="index" width="60" />
 					<el-table-column label="接收人" prop="recipientName" show-overflow-tooltip />
-					<el-table-column label="状态" prop="isRead" show-overflow-tooltip width="100">
+						<el-table-column label="状态" prop="isRead" show-overflow-tooltip width="100">
 						<template #default="scope">
 							<el-tag v-if="scope.row.isRead === '0'" type="danger">未读</el-tag>
 							<el-tag v-else type="success">已读</el-tag>
 						</template>
-					</el-table-column>
-					<el-table-column label="阅读时间" prop="readTime" show-overflow-tooltip width="180" />
+						</el-table-column>
+						<el-table-column label="投递状态" prop="deliveryStatus" show-overflow-tooltip width="110">
+							<template #default="scope">
+								<el-tag v-if="scope.row.deliveryStatus === 'PENDING'" type="info">待投递</el-tag>
+								<el-tag v-else-if="scope.row.deliveryStatus === 'IN_FLIGHT'" type="warning">投递中</el-tag>
+								<el-tag v-else-if="scope.row.deliveryStatus === 'DELIVERED'" type="success">已送达</el-tag>
+								<el-tag v-else type="danger">失败</el-tag>
+							</template>
+						</el-table-column>
+						<el-table-column label="尝试次数" prop="deliveryAttempts" width="100" />
+						<el-table-column label="失败原因" prop="deliveryLastError" show-overflow-tooltip min-width="180" />
+						<el-table-column label="最近尝试" prop="deliveryLastAttemptAt" show-overflow-tooltip width="180" />
+						<el-table-column label="送达时间" prop="deliveryDeliveredAt" show-overflow-tooltip width="180" />
+						<el-table-column label="阅读时间" prop="readTime" show-overflow-tooltip width="180" />
 					<el-table-column label="发送时间" prop="createTime" show-overflow-tooltip width="180" />
 				</el-table>
 				<pagination v-bind="state.pagination" @current-change="currentChangeHandle" @size-change="sizeChangeHandle"> </pagination>
@@ -51,9 +71,10 @@ const visible = ref(false);
 
 const state: BasicTableProps = reactive<BasicTableProps>({
 	queryForm: {
-		noticeId: '',
-		recipientName: '',
-		isRead: '',
+			noticeId: '',
+			recipientName: '',
+			isRead: '',
+			deliveryStatus: '',
 	},
 	pageList: recordPageList,
 	createdIsNeed: false,
@@ -72,6 +93,7 @@ const openDialog = (id: string) => {
 const resetQuery = () => {
 	state.queryForm.recipientName = '';
 	state.queryForm.isRead = '';
+	state.queryForm.deliveryStatus = '';
 	getDataList();
 };
 

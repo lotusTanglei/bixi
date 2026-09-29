@@ -2,6 +2,7 @@
 
 package com.lotus.bixi.upms.service.impl;
 
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -38,6 +39,13 @@ public class SysOauthClientDetailsServiceImpl extends ServiceImpl<SysOauthClient
     @CacheEvict(value = CacheConstants.CLIENT_DETAILS_KEY, key = "#clientDetails.clientId")
     @Transactional(rollbackFor = Exception.class)
     public Boolean updateClientById(SysOauthClientDetails clientDetails) {
+        if (StrUtil.isBlank(clientDetails.getClientSecret())) {
+            SysOauthClientDetails stored = getById(clientDetails.getId());
+            if (stored == null) {
+                return Boolean.FALSE;
+            }
+            clientDetails.setClientSecret(stored.getClientSecret());
+        }
         this.insertOrUpdate(clientDetails);
         return Boolean.TRUE;
     }

@@ -66,9 +66,9 @@ class LeaveBusinessTaskEventHandlerTest {
         assertThat(result.sourceOwner()).isEqualTo("upms");
         assertThat(result.targetOwner()).isEqualTo("workflow");
         assertThat(result.type()).isEqualTo(WorkflowEventType.WORKFLOW_BUSINESS_TASK_RESULT.name());
-        assertThat(codec.decode(result.payloadJson().getBytes(java.nio.charset.StandardCharsets.UTF_8)))
-                .extracting(WorkflowEvent::type)
-                .isEqualTo(WorkflowEventType.WORKFLOW_BUSINESS_TASK_RESULT);
+        WorkflowEvent decoded = codec.decode(result.payloadJson().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        assertThat(decoded.type()).isEqualTo(WorkflowEventType.WORKFLOW_BUSINESS_TASK_RESULT);
+        assertThat(decoded.tenantScope()).isEqualTo("42");
     }
 
     @Test
@@ -85,10 +85,10 @@ class LeaveBusinessTaskEventHandlerTest {
 
     private WorkflowEvent requestEvent() {
         return new WorkflowEvent(UUID.randomUUID().toString(), WorkflowEventType.WORKFLOW_BUSINESS_TASK_REQUESTED,
-                1, "workflow", "upms", "default", PROCESS_ID, "demo_leave_approval",
+                1, "workflow", "upms", "42", PROCESS_ID, "demo_leave_approval",
                 "demo_leave_request", LEAVE_ID, "leave:7:1", 1, UUID.randomUUID().toString(), 2,
                 Instant.parse("2026-09-22T00:00:00Z"), UUID.randomUUID().toString(), null,
-                new WorkflowActorSnapshot(42L, "applicant", "default", "upms", Instant.now()),
+                new WorkflowActorSnapshot(42L, "applicant", "42", "upms", Instant.now()),
                 new WorkflowBusinessTaskRequested(HASH, UUID.randomUUID().toString(), "execution-7",
                         "bookLeave", 1, Instant.parse("2026-09-22T00:05:00Z")));
     }

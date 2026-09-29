@@ -9,12 +9,16 @@ import com.lotus.bixi.generator.mapper.GenFieldTypeMapper;
 import com.lotus.bixi.generator.mapper.GenTableColumnMapper;
 import com.lotus.bixi.generator.service.GenTableColumnService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -26,6 +30,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @RequiredArgsConstructor
+@ConditionalOnProperty(prefix = "generator", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class GenTableColumnServiceImpl extends ServiceImpl<GenTableColumnMapper, GenTableColumn>
 		implements GenTableColumnService {
 
@@ -72,6 +77,23 @@ public class GenTableColumnServiceImpl extends ServiceImpl<GenTableColumnMapper,
 		});
 	}
 
+	@Override
+	public boolean updatePhysicalMetadataById(GenTableColumn column) {
+		if (column == null || column.getId() == null) {
+			throw new IllegalArgumentException("字段ID不能为空");
+		}
+		return this.lambdaUpdate()
+			.eq(GenTableColumn::getId, column.getId())
+			.set(GenTableColumn::getFieldName, column.getFieldName())
+			.set(GenTableColumn::getFieldType, column.getFieldType())
+			.set(GenTableColumn::getFieldComment, column.getFieldComment())
+			.set(GenTableColumn::getPrimaryPk, column.getPrimaryPk())
+			.set(GenTableColumn::getAttrName, column.getAttrName())
+			.set(GenTableColumn::getAttrType, column.getAttrType())
+			.set(GenTableColumn::getPackageName, column.getPackageName())
+			.update();
+	}
+
 	/**
 	 * 更新指定数据源和表名的表单字段信息
 	 * @param dsName 数据源名称
@@ -79,12 +101,44 @@ public class GenTableColumnServiceImpl extends ServiceImpl<GenTableColumnMapper,
 	 * @param tableFieldList 表单字段列表
 	 */
 	@Override
-
+	@Transactional(rollbackFor = Exception.class)
 	public void updateTableField(String dsName, String tableName, List<GenTableColumn> tableFieldList) {
+		if (dsName == null || dsName.isBlank() || tableName == null || tableName.isBlank()) {
+			throw new IllegalArgumentException("数据源和表名不能为空");
+		}
+		if (tableFieldList == null) throw new IllegalArgumentException("字段配置不能为空");
+
+		Map<Long, GenTableColumn> persistedById = this.list(Wrappers.<GenTableColumn>lambdaQuery()
+			.eq(GenTableColumn::getDsName, dsName)
+			.eq(GenTableColumn::getTableName, tableName))
+			.stream()
+			.collect(Collectors.toMap(GenTableColumn::getId, field -> field, (left, right) -> left,
+				LinkedHashMap::new));
 		AtomicInteger sort = new AtomicInteger();
-		this.updateBatchById(tableFieldList.stream()
-			.peek(field -> field.setSn(sort.getAndIncrement()))
-			.collect(Collectors.toList()));
+		Set<Long> submittedIds = new HashSet<>();
+		List<GenTableColumn> updates = tableFieldList.stream().map(submitted -> {
+			if (submitted == null || submitted.getId() == null
+					|| !submittedIds.add(submitted.getId()) || !persistedById.containsKey(submitted.getId())) {
+				throw new IllegalArgumentException("字段不属于当前表或字段ID重复");
+			}
+			GenTableColumn trusted = persistedById.get(submitted.getId());
+			trusted.setSn(sort.getAndIncrement());
+			trusted.setFieldComment(submitted.getFieldComment());
+			trusted.setFormItem(submitted.getFormItem());
+			trusted.setFormRequired(submitted.getFormRequired());
+			trusted.setFormType(submitted.getFormType());
+			trusted.setFormValidator(submitted.getFormValidator());
+			trusted.setGridItem(submitted.getGridItem());
+			trusted.setGridSort(submitted.getGridSort());
+			trusted.setQueryItem(submitted.getQueryItem());
+			trusted.setQueryType(submitted.getQueryType());
+			trusted.setQueryFormType(submitted.getQueryFormType());
+			trusted.setFieldDict(submitted.getFieldDict());
+			return trusted;
+		}).toList();
+		if (!updates.isEmpty() && !this.updateBatchById(updates)) {
+			throw new IllegalStateException("更新字段配置失败");
+		}
 	}
 
 }

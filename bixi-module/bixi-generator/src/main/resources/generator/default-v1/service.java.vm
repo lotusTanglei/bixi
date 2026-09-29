@@ -1,0 +1,29 @@
+package ${package}.${moduleName}.api.service;
+
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import ${package}.${moduleName}.api.dto.${ClassName}CreateDTO;
+import ${package}.${moduleName}.api.dto.${ClassName}ImportDTO;
+import ${package}.${moduleName}.api.dto.${ClassName}ImportResult;
+import ${package}.${moduleName}.api.dto.${ClassName}QueryDTO;
+import ${package}.${moduleName}.api.dto.${ClassName}UpdateDTO;
+import ${package}.${moduleName}.api.entity.${ClassName};
+import ${package}.${moduleName}.api.vo.${ClassName}VO;
+import ${package}.${moduleName}.api.vo.${ClassName}ExportVO;
+
+import java.util.List;
+
+/**
+ * Transport-neutral application contract shared by the cloud adapter and the
+ * single-process implementation. Persistence interfaces stay in the biz
+ * module; this API only exposes DTOs and result projections.
+ */
+public interface ${ClassName}Service {
+	IPage<${ClassName}VO> page${ClassName}(Page<${ClassName}> page, ${ClassName}QueryDTO query);
+	${ClassName}VO details(Long id);
+	boolean create(${ClassName}CreateDTO dto);
+	boolean update(${ClassName}UpdateDTO dto);
+	boolean delete(List<Long> ids);
+	${ClassName}ImportResult importRows(List<${ClassName}ImportDTO> rows);
+	List<${ClassName}ExportVO> exportRows(${ClassName}QueryDTO query);
+}

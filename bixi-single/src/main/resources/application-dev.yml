@@ -10,16 +10,11 @@ security:
     ignore:
       urls:
         - /webjars/**
-        - /v3/api-docs/**
-        - /doc.html
-        - /swagger-ui.html
-        - /swagger-ui/**
-        - /swagger-resources
         - /error
         - /token/**
-        - /actuator/**
+        - /actuator/health
+        - /actuator/health/**
         - /code/**
-        - /druid/**
   encode-key: ${SECURITY_ENCODE_KEY:}
   ignore-clients:
     - bixi
@@ -40,6 +35,18 @@ spring:
       host: ${REDIS_HOST:127.0.0.1}
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:}
+  ai:
+    dashscope:
+      api-key: ${DASHSCOPE_API_KEY:}
+      chat:
+        enabled: ${AI_CHAT_ENABLED:${AI_ENABLED:false}}
+        options:
+          model: ${AI_CHAT_MODEL:qwen-plus}
+          temperature: ${AI_TEMPERATURE:0.7}
+      embedding:
+        enabled: ${AI_EMBEDDING_ENABLED:${AI_ENABLED:false}}
+        options:
+          model: ${AI_EMBEDDING_MODEL:text-embedding-v2}
   # 数据源
   datasource:
     dynamic:
@@ -83,7 +90,7 @@ spring:
         exclusions: "*.js,*.gif,*.jpg,*.bmp,*.png,*.css,*.ico,/druid/*"
       # 配置DruidStatViewServlet
       stat-view-servlet:
-        enabled: true
+        enabled: ${DRUID_STAT_VIEW_ENABLED:false}
         url-pattern: "/druid/*"
         # IP白名单(没有配置或者为空，则允许所有访问)
         allow:
@@ -92,9 +99,20 @@ spring:
         #  禁用HTML页面上的“Reset All”功能
         reset-enable: false
         # 登录名
-        login-username: ${DRUID_USERNAME:bixi}
+        login-username: ${DRUID_USERNAME:}
         # 登录密码
         login-password: ${DRUID_PASSWORD:}
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+  endpoints:
+    web:
+      exposure:
+        include: health
 
 file:
   bucket: bixi

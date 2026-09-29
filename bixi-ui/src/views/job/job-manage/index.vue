@@ -32,7 +32,7 @@
 						{{ $t('common.delBtn') }}
 					</el-button>
 					<right-toolbar
-						:export="'job_sys_job_add'"
+						:export="'job_sys_job_export'"
 						@exportExcel="exportExcel"
 						@queryTable="getDataList"
 						class="ml10"
@@ -87,9 +87,9 @@
 
 				<el-table-column :label="$t('common.action')" fixed="right" width="300">
 					<template #default="scope">
-						<el-button @click="handleJobLog(scope.row)" text type="primary">日志</el-button>
+						<el-button v-auth="'job_sys_job_record_view'" @click="handleJobLog(scope.row)" text type="primary">日志</el-button>
 
-						<el-button v-auth="'job_sys_job_start_job'" @click="handleStartJob(scope.row)" text type="primary" v-if="scope.row.jobStatus !== '2'"
+						<el-button v-auth="'job_sys_job_start_job'" @click="handleStartJob(scope.row)" text type="primary" v-if="scope.row.status !== '2'"
 							>启动
 						</el-button>
 
@@ -104,7 +104,7 @@
 
 						<el-button v-auth="'job_sys_job_edit'" @click="handleEditJob(scope.row)" text type="primary">{{ $t('common.editBtn') }} </el-button>
 
-						<el-button v-auth="'job_sys_job_start_job'" @click="handleRunJob(scope.row)" text type="primary">执行</el-button>
+						<el-button v-auth="'job_sys_job_run_job'" @click="handleRunJob(scope.row)" text type="primary">执行</el-button>
 
 						<el-button v-auth="'job_sys_job_del'" @click="handleDelete(scope.row)" text type="primary">{{ $t('common.delBtn') }} </el-button>
 					</template>
@@ -185,14 +185,14 @@ const exportExcel = () => {
 
 /** 查看作业日志 */
 const handleJobLog = (row) => {
-	jobLogRef.value.openDialog(row.jobId);
+	jobLogRef.value.openDialog(row.id);
 };
 
 /** 编辑作业 */
 const handleEditJob = (row) => {
-	const jobStatus = row.jobStatus;
+	const jobStatus = row.status;
 	if (jobStatus === '1' || jobStatus === '3') {
-		formDialogRef.value.openDialog(row.jobId);
+		formDialogRef.value.openDialog(row.id);
 	} else {
 		useMessage().error('运行中定时任务不可修改，请先暂停后操作');
 	}

@@ -4,23 +4,25 @@ import com.lotus.bixi.common.mq.reliable.DurableMessage;
 import com.lotus.bixi.common.mq.reliable.DurableMessageHandler;
 import com.lotus.bixi.common.mq.reliable.InboxDeliveryException;
 import com.lotus.bixi.common.core.context.TenantContextHolder;
-import com.lotus.bixi.common.core.constant.SecurityConstants;
 import com.lotus.bixi.workflow.api.event.WorkflowEvent;
 import com.lotus.bixi.workflow.api.event.WorkflowEventCodec;
 import com.lotus.bixi.workflow.api.event.WorkflowEventType;
-import com.lotus.bixi.workflow.service.impl.ProcessInstanceServiceImpl;
+import com.lotus.bixi.workflow.service.TrustedProcessStarter;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 
 /** Handles the trusted UPMS start command inside the workflow inbox transaction. */
 public final class WorkflowStartRequestedHandler implements DurableMessageHandler {
+    private static final Logger LOG = LoggerFactory.getLogger(WorkflowStartRequestedHandler.class);
     private final WorkflowEventCodec codec;
-    private final ProcessInstanceServiceImpl processes;
+    private final TrustedProcessStarter processes;
     private final WorkflowEventRecorder recorder;
 
     public WorkflowStartRequestedHandler(@Qualifier("workflowEventCodec") WorkflowEventCodec codec,
-            ProcessInstanceServiceImpl processes,
+            TrustedProcessStarter processes,
             WorkflowEventRecorder recorder) {
         this.codec = codec;
         this.processes = processes;
@@ -43,23 +45,34 @@ public final class WorkflowStartRequestedHandler implements DurableMessageHandle
         }
         Long previousTenant = TenantContextHolder.get();
         try {
-            TenantContextHolder.set(SecurityConstants.DEFAULT_TENANT_ID);
+            TenantContextHolder.set(tenantId(event.tenantScope()));
             try {
-                var process = processes.startTrusted(event);
+                var result = processes.startTrusted(event);
+                if (result.rejected()) {
+                    recorder.recordRejected(event, result.rejectionCode());
+                    return Result.PROCESSED;
+                }
+                var process = result.process();
                 recorder.recordStarted(event, process);
                 if ("completed".equals(process.getStatus())) {
                     recorder.recordCompleted(process.getProcessInstanceId(), process.getBusinessId(),
                             process.getBusinessKey(), event.round(), event.commandId(), event.actor().userId(),
-                            event.actor().username(), event.payload().requestHash(),
+                            event.actor().username(), event.tenantScope(), event.payload().requestHash(),
                             com.lotus.bixi.workflow.api.event.WorkflowOutcome.APPROVED,
                             process.getEndTime().atZone(java.time.ZoneId.systemDefault()).toInstant(),
                             event.correlationId(), event.eventId());
                 }
                 return Result.PROCESSED;
             }
-            catch (IllegalArgumentException rejected) {
-                recorder.recordRejected(event, "INVALID_START");
-                return Result.PROCESSED;
+            catch (IllegalArgumentException invalid) {
+                throw new InboxDeliveryException(InboxDeliveryException.Kind.PERMANENT,
+                        "Workflow start command is invalid");
+            }
+            catch (RuntimeException failure) {
+                LOG.error("Workflow start inbox handling failed eventId={} commandId={} tenantScope={} "
+                                + "processKey={} cause={}", event.eventId(), event.commandId(), event.tenantScope(),
+                        event.processKey(), failure.toString(), failure);
+                throw failure;
             }
         }
         finally {
@@ -76,5 +89,9 @@ public final class WorkflowStartRequestedHandler implements DurableMessageHandle
             throw new InboxDeliveryException(InboxDeliveryException.Kind.PERMANENT,
                     "Workflow event payload is invalid");
         }
+    }
+
+    private static long tenantId(String tenantScope) {
+        return "default".equals(tenantScope) ? 1L : Long.parseLong(tenantScope);
     }
 }

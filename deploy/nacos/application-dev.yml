@@ -16,11 +16,23 @@ spring:
   boot:
     admin:
       client:
-        enabled: false
+        enabled: ${BIXI_SBA_CLIENT_ENABLED:false}
+        url: ${BIXI_SBA_CLIENT_URL:http://monitor:5001}
+        username: ${BIXI_SBA_CLIENT_USERNAME:}
+        password: ${BIXI_SBA_CLIENT_PASSWORD:}
+        instance:
+          service-host-type: ip
+          metadata:
+            user.name: ${BIXI_SBA_ACTUATOR_USERNAME:${BIXI_SBA_CLIENT_USERNAME:}}
+            user.password: ${BIXI_SBA_ACTUATOR_PASSWORD:${BIXI_SBA_CLIENT_PASSWORD:}}
   main:
     allow-bean-definition-overriding: true
 
 bixi:
+  sba:
+    actuator:
+      username: ${BIXI_SBA_ACTUATOR_USERNAME:${BIXI_SBA_CLIENT_USERNAME:}}
+      password: ${BIXI_SBA_ACTUATOR_PASSWORD:${BIXI_SBA_CLIENT_PASSWORD:}}
   reliable:
     enabled: ${BIXI_RELIABLE_ENABLED:false}
     rabbit:
@@ -31,16 +43,19 @@ bixi:
       password: ${BIXI_RELIABLE_RABBIT_PASSWORD:${RABBITMQ_PASSWORD:}}
       virtual-host: ${BIXI_RELIABLE_RABBIT_VIRTUAL_HOST:${RABBITMQ_VIRTUAL_HOST:/}}
 
+ai:
+  enabled: ${AI_ENABLED:false}
+
 management:
   endpoint:
     health:
       probes:
         enabled: true
-      show-details: always
+      show-details: never
   endpoints:
     web:
       exposure:
-        include: health,info,dynamictp
+        include: health,info,metrics,loggers,logfile,dynamictp
 
 logging:
   level:

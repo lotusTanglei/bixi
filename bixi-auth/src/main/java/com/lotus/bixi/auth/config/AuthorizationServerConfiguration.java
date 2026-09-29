@@ -86,7 +86,8 @@ public class AuthorizationServerConfiguration {
                         .consentPage(SecurityConstants.CUSTOM_CONSENT_PAGE_URI)), Customizer.withDefaults());
 
         AntPathRequestMatcher[] requestMatchers = new AntPathRequestMatcher[]{
-                AntPathRequestMatcher.antMatcher("/token/**"), AntPathRequestMatcher.antMatcher("/actuator/**"),
+                AntPathRequestMatcher.antMatcher("/token/**"), AntPathRequestMatcher.antMatcher("/actuator/health"),
+                AntPathRequestMatcher.antMatcher("/actuator/health/**"),
                 AntPathRequestMatcher.antMatcher("/code/image"), AntPathRequestMatcher.antMatcher("/css/**"),
                 AntPathRequestMatcher.antMatcher("/error")};
 

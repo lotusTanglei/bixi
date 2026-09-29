@@ -1,0 +1,19 @@
+package ${package}.${moduleName}.api.vo;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+#foreach($import in $childImportList)
+import ${import};
+#end
+
+@Data
+@Schema(description = "${tableComment}明细")
+public class ${ChildClassName}VO {
+	private Long id;
+#foreach($field in $childFieldList)
+#if($field.fieldName != 'id' && $field.fieldName != 'create_by' && $field.fieldName != 'update_by' && $field.fieldName != 'create_time' && $field.fieldName != 'update_time' && $field.fieldName != 'del_flag' && $field.fieldName != 'status' && $field.fieldName != 'data_status' && $field.fieldName != 'tenant_id')
+	@Schema(description = "$!field.fieldComment")
+	private ${field.attrType} ${field.attrName};
+#end
+#end
+}

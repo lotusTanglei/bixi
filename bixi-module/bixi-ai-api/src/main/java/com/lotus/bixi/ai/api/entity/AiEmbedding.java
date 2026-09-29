@@ -37,6 +37,9 @@ public class AiEmbedding extends BaseEntity<AiEmbedding> {
     @Schema(description = "分块索引")
     private Integer chunkIndex;
 
+    @Schema(description = "分块原文，用于回答来源追溯")
+    private String chunkContent;
+
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 }

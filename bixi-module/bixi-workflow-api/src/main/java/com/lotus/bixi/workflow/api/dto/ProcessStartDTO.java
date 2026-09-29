@@ -20,6 +20,9 @@ public class ProcessStartDTO extends WorkflowRequestDTO {
     @Schema(description = "流程标识")
     private String processKey;
 
+    @Schema(description = "用户选择并已渲染表单的 Flowable 流程定义 ID")
+    private String processDefinitionId;
+
     @Schema(description = "业务Key")
     private String businessKey;
 

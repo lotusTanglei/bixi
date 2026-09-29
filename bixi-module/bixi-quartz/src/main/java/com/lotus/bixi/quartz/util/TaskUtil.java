@@ -22,7 +22,7 @@ public class TaskUtil {
 	 * @return
 	 */
 	public static JobKey getKey(SysJob sysjob) {
-		return JobKey.jobKey(sysjob.getName(), sysjob.getGroup());
+		return JobKey.jobKey(sysjob.getName(), tenantGroup(sysjob));
 	}
 
 	/**
@@ -31,7 +31,15 @@ public class TaskUtil {
 	 * @return
 	 */
 	public static TriggerKey getTriggerKey(SysJob sysjob) {
-		return TriggerKey.triggerKey(sysjob.getName(), sysjob.getGroup());
+		return TriggerKey.triggerKey(sysjob.getName(), tenantGroup(sysjob));
+	}
+
+	private static String tenantGroup(SysJob sysjob) {
+		Long tenantId = sysjob.getTenantId();
+		if (tenantId == null || tenantId <= 0) {
+			throw new IllegalArgumentException("定时任务缺少有效租户");
+		}
+		return "tenant-" + tenantId + ":" + sysjob.getGroup();
 	}
 
 	/**
@@ -42,6 +50,7 @@ public class TaskUtil {
 	public void addOrUpateJob(SysJob sysjob, Scheduler scheduler) {
 		CronTrigger trigger = null;
 		try {
+			removeLegacyJob(sysjob, scheduler);
 			JobKey jobKey = getKey(sysjob);
 			// 获得触发器
 			TriggerKey triggerKey = getTriggerKey(sysjob);
@@ -49,7 +58,10 @@ public class TaskUtil {
 			// 判断触发器是否存在（如果存在说明之前运行过但是在当前被禁用了，如果不存在说明一次都没运行过）
 			if (trigger == null) {
 				// 新建一个工作任务 指定任务类型为串接进行的
-				JobDetail jobDetail = JobBuilder.newJob(BixiQuartzFactory.class).withIdentity(jobKey).build();
+					JobDetail jobDetail = JobBuilder.newJob(BixiQuartzFactory.class)
+						.withIdentity(jobKey)
+						.requestRecovery(true)
+						.build();
 				// 将任务信息添加到任务信息中
 				jobDetail.getJobDataMap().put(BixiQuartzEnum.SCHEDULE_JOB_KEY.getType(), sysjob);
 				// 将cron表达式进行转换
@@ -81,9 +93,52 @@ public class TaskUtil {
 				this.pauseJob(sysjob, scheduler);
 			}
 		}
-		catch (SchedulerException e) {
-			log.error("添加或更新定时任务，失败信息：{}", e.getMessage());
+		catch (ObjectAlreadyExistsException race) {
+			// Another scheduler thread/node may have created the same identity after
+			// our existence check. Re-read the trigger and let the caller trigger the
+			// already-registered job instead of surfacing a duplicate-key failure.
+			if (!reuseExistingJob(sysjob, scheduler)) throw schedulerFailure("添加或更新定时任务", race);
 		}
+		catch (SchedulerException e) {
+			// JDBC job stores may wrap the same race as JobPersistenceException
+			// rather than ObjectAlreadyExistsException.
+			if (isDuplicateScheduleRace(e) && reuseExistingJob(sysjob, scheduler)) return;
+			throw schedulerFailure("添加或更新定时任务", e);
+		}
+	}
+
+	private boolean reuseExistingJob(SysJob sysjob, Scheduler scheduler) {
+		for (int attempt = 0; attempt < 20; attempt++) {
+			try {
+				if (scheduler.getTrigger(getTriggerKey(sysjob)) != null) return true;
+				if (attempt < 19) Thread.sleep(25L);
+			}
+			catch (SchedulerException verificationFailure) {
+				throw schedulerFailure("添加或更新定时任务", verificationFailure);
+			}
+			catch (InterruptedException interrupted) {
+				Thread.currentThread().interrupt();
+				return false;
+			}
+		}
+		return false;
+	}
+
+	private boolean isDuplicateScheduleRace(SchedulerException failure) {
+		Throwable current = failure;
+		while (current != null) {
+			String message = current.getMessage();
+			if (current instanceof java.sql.SQLIntegrityConstraintViolationException
+					&& message != null && message.contains("Duplicate entry")) {
+				return true;
+			}
+			if (message != null && message.contains("Duplicate entry")
+					&& (message.contains("QRTZ_JOB_DETAILS") || message.contains("QRTZ_TRIGGERS"))) {
+				return true;
+			}
+			current = current.getCause();
+		}
+		return false;
 	}
 
 	/**
@@ -117,7 +172,7 @@ public class TaskUtil {
 			}
 		}
 		catch (SchedulerException e) {
-			log.error("暂停任务失败，失败信息：{}", e.getMessage());
+			throw schedulerFailure("暂停任务", e);
 		}
 
 	}
@@ -134,7 +189,7 @@ public class TaskUtil {
 			}
 		}
 		catch (SchedulerException e) {
-			log.error("恢复任务失败，失败信息：{}", e.getMessage());
+			throw schedulerFailure("恢复任务", e);
 		}
 
 	}
@@ -147,16 +202,33 @@ public class TaskUtil {
 	public void removeJob(SysJob sysjob, Scheduler scheduler) {
 		try {
 			if (scheduler != null) {
-				// 停止触发器
-				scheduler.pauseTrigger(getTriggerKey(sysjob));
-				// 移除触发器
-				scheduler.unscheduleJob(getTriggerKey(sysjob));
-				// 删除任务
-				scheduler.deleteJob(getKey(sysjob));
+				removeJob(scheduler, getTriggerKey(sysjob), getKey(sysjob));
+				removeLegacyJob(sysjob, scheduler);
 			}
 		}
-		catch (Exception e) {
-			log.error("移除定时任务失败，失败信息：{}", e.getMessage());
+		catch (SchedulerException e) {
+			throw schedulerFailure("删除任务", e);
+		}
+	}
+
+	private void removeLegacyJob(SysJob sysjob, Scheduler scheduler) throws SchedulerException {
+		TriggerKey legacyTriggerKey = TriggerKey.triggerKey(sysjob.getName(), sysjob.getGroup());
+		if (scheduler.getTrigger(legacyTriggerKey) != null) {
+			removeJob(scheduler, legacyTriggerKey, JobKey.jobKey(sysjob.getName(), sysjob.getGroup()));
+		}
+	}
+
+	private void removeJob(Scheduler scheduler, TriggerKey triggerKey, JobKey jobKey) throws SchedulerException {
+		// Quartz throws when pause/unschedule targets an identity already removed by
+		// another node. Treat that state as an idempotent delete while still
+		// removing an orphaned job detail when no trigger remains.
+		if (scheduler.getTrigger(triggerKey) != null) {
+			scheduler.pauseTrigger(triggerKey);
+			scheduler.unscheduleJob(triggerKey);
+			scheduler.deleteJob(jobKey);
+		}
+		else if (scheduler.checkExists(jobKey)) {
+			scheduler.deleteJob(jobKey);
 		}
 	}
 
@@ -171,7 +243,7 @@ public class TaskUtil {
 			}
 		}
 		catch (SchedulerException e) {
-			log.error("启动所有运行定时任务失败，失败信息：{}", e.getMessage());
+			throw schedulerFailure("启动全部任务", e);
 		}
 	}
 
@@ -185,9 +257,14 @@ public class TaskUtil {
 				scheduler.pauseAll();
 			}
 		}
-		catch (Exception e) {
-			log.error("暂停所有运行定时任务失败，失败信息：{}", e.getMessage());
+		catch (SchedulerException e) {
+			throw schedulerFailure("暂停全部任务", e);
 		}
+	}
+
+	private IllegalStateException schedulerFailure(String action, SchedulerException failure) {
+		log.error("{}失败", action, failure);
+		return new IllegalStateException(action + "失败: " + failure.getMessage(), failure);
 	}
 
 	/**

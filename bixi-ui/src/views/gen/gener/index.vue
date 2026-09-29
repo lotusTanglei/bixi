@@ -16,8 +16,8 @@
       <div style="text-align: center">
         <el-button style="margin-top: 12px" @click="go(1)" v-if="active === 0">下一步</el-button>
         <el-button style="margin-top: 12px" @click="go(0)" v-if="active === 1">上一步</el-button>
-        <el-button style="margin-top: 12px" @click="preview" v-if="active === 1">保存并预览</el-button>
-        <el-button style="margin-top: 12px" @click="generatorHandle" v-if="active === 1">保存并生成</el-button>
+        <el-button v-auth="'codegen_table_view'" style="margin-top: 12px" @click="preview" v-if="active === 1">保存并预览</el-button>
+        <el-button v-auth="'codegen_table_generate'" style="margin-top: 12px" @click="generatorHandle" v-if="active === 1">保存并生成</el-button>
       </div>
     </el-card>
 
@@ -28,8 +28,8 @@
 
 <script lang="ts" setup>
 import {useI18n} from 'vue-i18n';
-import {useGeneratorCodeApi} from '/@/api/gen/table';
-import {useMessage} from '/@/hooks/message';
+import {useGeneratorCodeApi, useGeneratorPreviewApi} from '/@/api/gen/table';
+import {useMessage, useMessageBox} from '/@/hooks/message';
 import {downBlobFile} from '/@/utils/other';
 
 const {t} = useI18n();
@@ -46,6 +46,7 @@ const tableName = ref();
 const dsName = ref();
 const editTableRef = ref();
 const generatorType = ref();
+const overwrite = ref(false);
 
 // tab 跳转
 const go = async (activeNum: number) => {
@@ -56,6 +57,7 @@ const go = async (activeNum: number) => {
       const dataform = await generatorRef.value.submitHandle();
       tableId.value = dataform.id;
       generatorType.value = dataform.generatorType;
+      overwrite.value = Boolean(dataform.overwrite);
     }
     if (active.value === activeNum) return;
     active.value = activeNum;
@@ -73,16 +75,28 @@ const preview = async () => {
 // 生成
 const generatorHandle = async () => {
   await editTableRef.value.submitHandle();
+	const previewFiles = (await useGeneratorPreviewApi(tableId.value)) as unknown as Array<{ templateVersion?: string }>;
+	const templateVersion = previewFiles[0]?.templateVersion;
+	if (!templateVersion) {
+	  useMessage().error('模板版本不可用，请重新预览');
+	  return;
+	}
   // 生成代码，zip压缩包
   if (generatorType.value === '0') {
-    downBlobFile(`/gen/generator/download?tableIds=${[tableId.value].join(',')}`, {}, `${tableName.value}.zip`);
+	downBlobFile(
+	  `/gen/generator/download?tableIds=${encodeURIComponent(tableId.value)}&templateVersion=${encodeURIComponent(templateVersion)}`,
+	  {},
+	  `${tableName.value}.zip`
+	);
   }
 
   // 写入到指定目录
   if (generatorType.value === '1') {
-    useGeneratorCodeApi([tableId.value].join(',')).then(() => {
-      useMessage().success(t('common.optSuccessText'));
-    });
+	if (overwrite.value) {
+	  await useMessageBox().confirm('已存在的生成文件将被覆盖，是否继续？');
+	}
+	await useGeneratorCodeApi({tableIds: [tableId.value], templateVersion, overwrite: overwrite.value});
+	useMessage().success(t('common.optSuccessText'));
   }
 };
 

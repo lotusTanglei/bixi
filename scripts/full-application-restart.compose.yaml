@@ -1,0 +1,41 @@
+# Image-only overrides for the isolated full-application restart rehearsal.
+# The normal Compose file remains the source of service wiring and profiles;
+# this file lets the rehearsal reuse images already built by the phase-two
+# runtime without rebuilding every service or touching an existing project.
+services:
+  mysql:
+    image: ${FULL_RESTART_MYSQL_IMAGE:-public.ecr.aws/docker/library/mysql:8.4.3}
+  redis:
+    image: ${FULL_RESTART_REDIS_IMAGE:-public.ecr.aws/docker/library/redis:7.4.2-alpine}
+  rabbitmq:
+    image: ${FULL_RESTART_RABBITMQ_IMAGE:-public.ecr.aws/docker/library/rabbitmq:4.0.5-management-alpine}
+  rabbitmq-config:
+    image: ${FULL_RESTART_RABBITMQ_IMAGE:-public.ecr.aws/docker/library/rabbitmq:4.0.5-management-alpine}
+  nacos:
+    image: ${FULL_RESTART_NACOS_IMAGE:-nacos-registry.cn-hangzhou.cr.aliyuncs.com/nacos/nacos-server:v2.4.3}
+    environment:
+      JVM_XMS: 64m
+      JVM_XMX: 192m
+      JVM_XMN: 64m
+  nacos-config:
+    image: ${FULL_RESTART_NACOS_IMAGE:-nacos-registry.cn-hangzhou.cr.aliyuncs.com/nacos/nacos-server:v2.4.3}
+  monitor:
+    image: ${FULL_RESTART_CLOUD_MONITOR_IMAGE:-bixi-phase2-cloud-monitor:latest}
+  gateway:
+    image: ${FULL_RESTART_CLOUD_GATEWAY_IMAGE:-bixi-phase2-cloud-gateway:latest}
+  auth:
+    image: ${FULL_RESTART_CLOUD_AUTH_IMAGE:-bixi-phase2-cloud-auth:latest}
+  upms:
+    image: ${FULL_RESTART_CLOUD_UPMS_IMAGE:-bixi-phase2-cloud-upms:latest}
+  generator:
+    image: ${FULL_RESTART_CLOUD_GENERATOR_IMAGE:-bixi-phase2-cloud-generator:latest}
+  quartz:
+    image: ${FULL_RESTART_CLOUD_QUARTZ_IMAGE:-bixi-phase2-cloud-quartz:latest}
+  workflow:
+    image: ${FULL_RESTART_CLOUD_WORKFLOW_IMAGE:-bixi-phase2-cloud-workflow:latest}
+  frontend-cloud:
+    image: ${FULL_RESTART_CLOUD_FRONTEND_IMAGE:-bixi-phase2-cloud-frontend-cloud:latest}
+  single:
+    image: ${FULL_RESTART_SINGLE_IMAGE:-bixi-phase2-single-fresh-single:latest}
+  frontend-single:
+    image: ${FULL_RESTART_SINGLE_FRONTEND_IMAGE:-bixi-phase2-single-fresh-frontend-single:latest}

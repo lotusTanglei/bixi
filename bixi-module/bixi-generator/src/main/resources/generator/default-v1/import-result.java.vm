@@ -1,0 +1,38 @@
+package ${package}.${moduleName}.api.dto;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Getter;
+
+import java.util.List;
+import java.util.Objects;
+
+@Getter
+@Schema(description = "${tableComment}导入结果")
+public final class ${ClassName}ImportResult {
+	public static final int MAX_ERRORS = 100;
+
+	private final boolean success;
+	private final String code;
+	private final int totalRows;
+	private final int importedRows;
+	private final List<${ClassName}ImportRowError> errors;
+
+	private ${ClassName}ImportResult(boolean success, String code, int totalRows, int importedRows,
+			List<${ClassName}ImportRowError> errors) {
+		this.success = success;
+		this.code = Objects.requireNonNull(code, "code");
+		this.totalRows = Math.max(0, totalRows);
+		this.importedRows = Math.max(0, importedRows);
+		this.errors = List.copyOf(Objects.requireNonNull(errors, "errors").stream()
+			.limit(MAX_ERRORS).toList());
+	}
+
+	public static ${ClassName}ImportResult success(int totalRows) {
+		return new ${ClassName}ImportResult(true, "SUCCESS", totalRows, totalRows, List.of());
+	}
+
+	public static ${ClassName}ImportResult failure(String code, int totalRows,
+			List<${ClassName}ImportRowError> errors) {
+		return new ${ClassName}ImportResult(false, code, totalRows, 0, errors);
+	}
+}

@@ -24,11 +24,14 @@ class LocalCandidateIdentityQueryServiceTest {
     @Test
     void localAdapterReturnsStatusAndTenantForExistingUser() {
         SysUser user = user(7L, "0", "0", "0", 42L);
+        user.setUsername("reviewer-7");
+        user.setName("可信审批人");
         when(userService.getById(7L)).thenReturn(user);
 
         CandidateIdentity identity = service.findById(7L);
 
-        assertThat(identity).isEqualTo(new CandidateIdentity(7L, true, false, 42L));
+        assertThat(identity).isEqualTo(new CandidateIdentity(
+                7L, true, false, 42L, "reviewer-7", "可信审批人"));
     }
 
     @Test

@@ -53,7 +53,6 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
-import org.springframework.test.util.AopTestUtils;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.sql.DataSource;
@@ -112,7 +111,8 @@ class WorkflowUpmsAutomaticTaskRabbitIntegrationTest {
         assumeTrue(System.getenv("RELIABLE_RABBIT_TEST_HOST") != null);
         jdbc = new JdbcTemplate(source);
         WorkflowTestSchema.create(jdbc, "wf_command", "wf_process_instance", "wf_approval_record",
-                "wf_form_data", "demo_leave_request", "demo_leave_booking");
+                "wf_form_data", "wf_process_definition", "demo_leave_request", "demo_leave_command",
+                "demo_leave_booking");
         applyReliableSchema("20260921_reliable_outbox.sql");
         applyReliableSchema("20260921_reliable_inbox.sql");
         applyReliableSchema("20260921_reliable_quarantine.sql");
@@ -127,6 +127,7 @@ class WorkflowUpmsAutomaticTaskRabbitIntegrationTest {
                 """, 101L, 11L, 22L, LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 2),
                 "真实 Rabbit 自动任务链路", "demo_leave:101:1");
         engine.getRepositoryService().createDeployment()
+                .tenantId("1")
                 .addClasspathResource("processes/demo_leave_approval_v2.bpmn20.xml").deploy();
         WorkflowApprovalIntegrationTest.login(11L);
 
@@ -176,6 +177,7 @@ class WorkflowUpmsAutomaticTaskRabbitIntegrationTest {
         LeaveWorkflowEventPublisher.Published published = transaction.execute(status ->
                 startPublisher.publishStart(leave, actor(11L)));
         assertThat(published).isNotNull();
+        prepareAcceptedCommand(leave, published);
 
         await("workflow receives UPMS start request", () -> "PROCESSED".equals(
                 status("workflow", "upms", "WORKFLOW_START_REQUESTED")), 12);
@@ -225,6 +227,37 @@ class WorkflowUpmsAutomaticTaskRabbitIntegrationTest {
         upmsEndpoint.start();
         assertThat(workflowDispatcher.dispatchOnce()).isOne();
 
+        // The UPMS transaction can commit its business result before the source
+        // Outbox records Rabbit delivery as DELIVERED. Keep Workflow offline so
+        // the confirmed wire copy stays durable while the IN_FLIGHT lease is
+        // recovered and sent again.
+        awaitWithoutDispatch("UPMS task result is durably recorded", () ->
+                "PROCESSED".equals(status("upms", "workflow", "WORKFLOW_BUSINESS_TASK_REQUESTED")), 12);
+        workflowEndpoint.stop();
+        DurableMessage resultEvent = load("upms", "WORKFLOW_BUSINESS_TASK_RESULT");
+        jdbc.execute("""
+                CREATE TRIGGER upms_result_mark_delivered_failure
+                BEFORE UPDATE ON reliable_outbox FOR EACH ROW
+                BEGIN
+                    IF NEW.source_owner = 'upms' AND NEW.event_id = '%s'
+                            AND NEW.status = 'DELIVERED' THEN
+                        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'simulated result mark-delivered failure';
+                    END IF;
+                END
+                """.formatted(resultEvent.eventId()));
+        try {
+            assertThatThrownBy(upmsDispatcher::dispatchOnce).isInstanceOf(DataAccessException.class);
+        }
+        finally {
+            jdbc.execute("DROP TRIGGER upms_result_mark_delivered_failure");
+        }
+        assertThat(jdbc.queryForObject("SELECT status FROM reliable_outbox WHERE source_owner=? AND event_id=?",
+                String.class, "upms", resultEvent.eventId())).isEqualTo("IN_FLIGHT");
+        jdbc.update("UPDATE reliable_outbox SET lease_until=TIMESTAMPADD(SECOND, -1, UTC_TIMESTAMP(6)) "
+                + "WHERE source_owner=? AND event_id=?", "upms", resultEvent.eventId());
+        workflowEndpoint.start();
+        assertThat(upmsDispatcher.dispatchOnce()).isOne();
+
         await("automatic task result completes leave", () -> "APPROVED".equals(
                 jdbc.queryForObject("SELECT leave_status FROM demo_leave_request WHERE id = 101", String.class)), 20);
         assertThat(jdbc.queryForObject("SELECT booking_state FROM demo_leave_booking WHERE leave_id = 101",
@@ -268,6 +301,7 @@ class WorkflowUpmsAutomaticTaskRabbitIntegrationTest {
         LeaveWorkflowEventPublisher.Published published = transaction.execute(
                 status -> startPublisher.publishStart(leave, actor(11L)));
         assertThat(published).isNotNull();
+        prepareAcceptedCommand(leave, published);
         await("workflow receives UPMS start request", () -> "PROCESSED".equals(
                 status("workflow", "upms", "WORKFLOW_START_REQUESTED")), 12);
         await("workflow started event is processed", () -> "PROCESSED".equals(
@@ -325,6 +359,7 @@ class WorkflowUpmsAutomaticTaskRabbitIntegrationTest {
         LeaveWorkflowEventPublisher.Published published = new TransactionTemplate(transactionManager).execute(
                 status -> startPublisher.publishStart(leave(), actor(11L)));
         assertThat(published).isNotNull();
+        prepareAcceptedCommand(leave(), published);
         await("workflow receives start request", () -> "PROCESSED".equals(
                 status("workflow", "upms", "WORKFLOW_START_REQUESTED")), 12);
         await("workflow started event is processed", () -> "PROCESSED".equals(
@@ -401,6 +436,7 @@ class WorkflowUpmsAutomaticTaskRabbitIntegrationTest {
         LeaveWorkflowEventPublisher.Published published = new TransactionTemplate(transactionManager).execute(
                 status -> startPublisher.publishStart(leave(), actor(11L)));
         assertThat(published).isNotNull();
+        prepareAcceptedCommand(leave(), published);
         await("workflow receives start request", () -> "PROCESSED".equals(
                 status("workflow", "upms", "WORKFLOW_START_REQUESTED")), 12);
 
@@ -495,11 +531,32 @@ class WorkflowUpmsAutomaticTaskRabbitIntegrationTest {
         return leave;
     }
 
+    private void prepareAcceptedCommand(LeaveRequest leave, LeaveWorkflowEventPublisher.Published published) {
+        jdbc.update("UPDATE demo_leave_request SET start_command_id = ?, start_request_hash = ? WHERE id = ?",
+                published.commandId(), published.requestHash(), leave.getId());
+        jdbc.update("""
+                INSERT INTO demo_leave_command
+                    (command_id, tenant_scope, actor_id, actor_name, client_request_id, operation,
+                     leave_id, round, request_hash, hash_version, payload_json, status, created_at)
+                VALUES (?, '1', ?, 'user-11', ?, 'START', ?, ?, ?, 1, '{}', 'ACCEPTED', CURRENT_TIMESTAMP(6))
+                """, published.commandId(), leave.getApplicantId(), published.commandId(), leave.getId(),
+                leave.getRound(), published.requestHash());
+    }
+
     private void await(String description, BooleanSupplier condition, int seconds) throws Exception {
         long deadline = System.nanoTime() + Duration.ofSeconds(seconds).toNanos();
         while (System.nanoTime() < deadline) {
             workflowDispatcher.dispatchOnce();
             upmsDispatcher.dispatchOnce();
+            if (condition.getAsBoolean()) return;
+            Thread.sleep(75);
+        }
+        assertThat(condition.getAsBoolean()).as(description).isTrue();
+    }
+
+    private void awaitWithoutDispatch(String description, BooleanSupplier condition, int seconds) throws Exception {
+        long deadline = System.nanoTime() + Duration.ofSeconds(seconds).toNanos();
+        while (System.nanoTime() < deadline) {
             if (condition.getAsBoolean()) return;
             Thread.sleep(75);
         }
@@ -600,12 +657,12 @@ class WorkflowUpmsAutomaticTaskRabbitIntegrationTest {
         }
 
         @Bean JdbcQuarantineStore workflowQuarantine(DataSource source, DataSourceTransactionManager manager) {
-            return new JdbcQuarantineStore(source, manager);
+            return new JdbcQuarantineStore(source, manager, "workflow");
         }
 
         @Bean(name = "upmsQuarantineStore") JdbcQuarantineStore upmsQuarantine(DataSource source,
                 DataSourceTransactionManager manager) {
-            return new JdbcQuarantineStore(source, manager);
+            return new JdbcQuarantineStore(source, manager, "upms");
         }
 
         @Bean WorkflowEventRecorder workflowEventRecorder(@Qualifier("workflowOutboxStore") JdbcOutboxStore outbox,
@@ -640,8 +697,8 @@ class WorkflowUpmsAutomaticTaskRabbitIntegrationTest {
         }
 
         @Bean LeaveWorkflowEventHandler leaveWorkflowEventHandler(LeaveRequestMapper leaves,
-                @Qualifier("leaveWorkflowEventCodec") WorkflowEventCodec codec) {
-            return new LeaveWorkflowEventHandler(leaves, codec);
+                @Qualifier("leaveWorkflowEventCodec") WorkflowEventCodec codec, DataSource dataSource) {
+            return new LeaveWorkflowEventHandler(leaves, codec, dataSource);
         }
 
         @Bean LeaveBusinessTaskEventHandler leaveBusinessTaskEventHandler(LeaveRequestMapper leaves,
@@ -652,15 +709,9 @@ class WorkflowUpmsAutomaticTaskRabbitIntegrationTest {
 
         @Bean WorkflowStartRequestedHandler workflowStartRequestedHandler(
                 @Qualifier("workflowEventCodec") WorkflowEventCodec codec,
-                ProcessInstanceService processes,
+                TrustedProcessStarter processes,
                 WorkflowEventRecorder recorder) {
-            try {
-                return new WorkflowStartRequestedHandler(codec,
-                        AopTestUtils.getTargetObject(processes), recorder);
-            }
-            catch (Exception proxyFailure) {
-                throw new IllegalStateException("无法获取 trusted workflow service", proxyFailure);
-            }
+            return new WorkflowStartRequestedHandler(codec, processes, recorder);
         }
 
         @Bean WorkflowBusinessTaskResultHandler workflowBusinessTaskResultHandler(ProcessEngine engine,

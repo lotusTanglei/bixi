@@ -25,6 +25,112 @@ const memoryStorage = () => {
 	return { getItem: key => values.get(key) ?? null, setItem: (key, value) => values.set(key, value), removeItem: key => values.delete(key), clear: () => values.clear(), key: index => [...values.keys()][index] ?? null, get length() { return values.size; } };
 };
 
+test('workflow deployment exposes the bounded multipart and form-binding contract', () => {
+	const dialog = readFileSync(new URL('../bixi-ui/src/views/workflow/definition/deploy-dialog.vue', import.meta.url), 'utf8');
+	const index = readFileSync(new URL('../bixi-ui/src/views/workflow/definition/index.vue', import.meta.url), 'utf8');
+	const start = readFileSync(new URL('../bixi-ui/src/views/workflow/process/start.vue', import.meta.url), 'utf8');
+	const startDialog = readFileSync(new URL('../bixi-ui/src/views/workflow/process/start-dialog.vue', import.meta.url), 'utf8');
+	const approveDialog = readFileSync(new URL('../bixi-ui/src/views/workflow/task/approve-dialog.vue', import.meta.url), 'utf8');
+	const formRenderer = readFileSync(new URL('../bixi-ui/src/components/form/FormRenderer.vue', import.meta.url), 'utf8');
+	const api = readFileSync(new URL('../bixi-ui/src/api/workflow/definition.ts', import.meta.url), 'utf8');
+	const processApi = readFileSync(new URL('../bixi-ui/src/api/workflow/process.ts', import.meta.url), 'utf8');
+	const taskApi = readFileSync(new URL('../bixi-ui/src/api/workflow/task.ts', import.meta.url), 'utf8');
+	const categoryController = readFileSync(new URL('../bixi-module/bixi-workflow-biz/src/main/java/com/lotus/bixi/workflow/controller/CategoryController.java', import.meta.url), 'utf8');
+	const acceptance = readFileSync(new URL('./acceptance.mjs', import.meta.url), 'utf8');
+	const compose = readFileSync(new URL('../compose.yaml', import.meta.url), 'utf8');
+	const main = readFileSync(new URL('../bixi-ui/src/main.ts', import.meta.url), 'utf8');
+	const pkg = JSON.parse(readFileSync(new URL('../bixi-ui/package.json', import.meta.url), 'utf8'));
+	assert.match(api, /url:\s*['"]\/admin\/workflow\/definition\/deploy['"]/);
+	assert.match(dialog, /prop=["']file["']/);
+	assert.match(dialog, /:on-change=["']handleFileChange["']/);
+	assert.match(dialog, /1024\s*\*\s*1024/);
+	assert.match(dialog, /formData\.append\(['"]formKey['"]/);
+	assert.match(dialog, /formData\.append\(['"]file['"]/);
+	assert.match(index, /<deploy-dialog\s+ref=["']deployDialogRef["']/);
+	assert.match(index, /openUploadDialog/);
+	assert.match(index, /上传 BPMN/);
+	assert.match(start, /item\.processDefinitionId/);
+	assert.match(start, /item\.processName/);
+	assert.match(start, /categoryName/);
+	assert.match(api, /url:\s*['"]\/admin\/workflow\/definition\/startable['"]/);
+	assert.match(start, /startable\s+as\s+definitionListApi/);
+	assert.doesNotMatch(start, /startable:\s*true/);
+	assert.doesNotMatch(start, /item\.name/);
+	assert.match(startDialog, /row\.processKey/);
+	assert.match(startDialog, /definitionData\.processName/);
+	assert.match(startDialog, /getStartForm/);
+	assert.match(startDialog, /<FormRenderer/);
+	assert.match(startDialog, /formId:/);
+	assert.match(startDialog, /formDataJson:/);
+	assert.match(startDialog, /processDefinitionId:\s*row\.processDefinitionId/);
+	assert.match(processApi, /processDefinitionId:\s*string/);
+	assert.doesNotMatch(startDialog, /row\.key/);
+	assert.match(taskApi, /url:\s*['"`]\/admin\/workflow\/task\/form\/\$\{encodeURIComponent\(taskId\)\}['"`]/);
+	assert.match(approveDialog, /getTaskForm/);
+	assert.match(approveDialog, /<FormRenderer/);
+	assert.match(approveDialog, /formDataJson/);
+	assert.match(formRenderer, /validateForm\(\(valid:\s*boolean\)/);
+	assert.match(formRenderer, /permission\s*===\s*['"]edit['"]/);
+	assert.match(formRenderer, /disableWidgets/);
+	assert.doesNotMatch(categoryController, /wf_category_manage/);
+	assert.match(categoryController, /categoryService\.listAll\(\)/);
+	assert.match(categoryController, /categoryService\.saveCategory\(category\)/);
+	assert.match(categoryController, /categoryService\.delete\(id\)/);
+	assert.ok(pkg.dependencies?.['vform3-builds'], 'the rendered form designer must be an installed runtime dependency');
+	assert.match(main, /from ['"]vform3-builds['"]/);
+	assert.match(main, /\.use\(VForm3\)/);
+	assert.match(acceptance, /body\s+instanceof\s+FormData/);
+	assert.match(acceptance, /stage2_form_acceptance/);
+	assert.match(acceptance, /formVersionId/);
+	assert.match(compose, /WORKFLOW_PUBLIC_START_MODELS:\s*\$\{WORKFLOW_PUBLIC_START_MODELS:-\}/);
+});
+
+test('workflow form administration follows the immutable backend contract', () => {
+	const api = readFileSync(new URL('../bixi-ui/src/api/workflow/form.ts', import.meta.url), 'utf8');
+	const index = readFileSync(new URL('../bixi-ui/src/views/workflow/form/index.vue', import.meta.url), 'utf8');
+	const dialog = readFileSync(new URL('../bixi-ui/src/views/workflow/form/form-dialog.vue', import.meta.url), 'utf8');
+	const designer = readFileSync(new URL('../bixi-ui/src/views/workflow/form/designer.vue', import.meta.url), 'utf8');
+	const versions = readFileSync(new URL('../bixi-ui/src/views/workflow/form/version.vue', import.meta.url), 'utf8');
+	const permissions = readFileSync(new URL('../bixi-ui/src/views/workflow/form/permission.vue', import.meta.url), 'utf8');
+	const formController = readFileSync(new URL('../bixi-module/bixi-workflow-biz/src/main/java/com/lotus/bixi/workflow/controller/FormController.java', import.meta.url), 'utf8');
+	const versionController = readFileSync(new URL('../bixi-module/bixi-workflow-biz/src/main/java/com/lotus/bixi/workflow/controller/FormVersionController.java', import.meta.url), 'utf8');
+	const permissionController = readFileSync(new URL('../bixi-module/bixi-workflow-biz/src/main/java/com/lotus/bixi/workflow/controller/FormPermissionController.java', import.meta.url), 'utf8');
+	const dataController = readFileSync(new URL('../bixi-module/bixi-workflow-biz/src/main/java/com/lotus/bixi/workflow/controller/FormDataController.java', import.meta.url), 'utf8');
+	const seed = readFileSync(new URL('../bixi-project-documents/sql/04_init_data.sql', import.meta.url), 'utf8');
+
+	assert.match(api, /url:\s*['"]\/admin\/workflow\/form\/list['"]/);
+	assert.doesNotMatch(api, /\/workflow\/form\/page/);
+	assert.match(api, /rollback[\s\S]*?method:\s*['"]post['"]/);
+	assert.match(api, /saveFieldPermissions[\s\S]*?method:\s*['"]put['"]/);
+	assert.match(index, /scope\.row\.currentVersion/);
+	assert.match(index, /scope\.row\.status\s*===\s*['"]1['"]/);
+	assert.match(index, /openDialog\(scope\.row\.formKey\)/);
+	assert.match(index, /deleteForms\(ids\)/);
+	assert.doesNotMatch(index, /workflow_form_(?:design|version|permission)/);
+	assert.match(dialog, /getFormByKey\(formKey\)/);
+	assert.match(designer, /getFormRender\(formKey\.value\)/);
+	assert.match(designer, /schemaJson:\s*JSON\.stringify\(json\)/);
+	assert.match(designer, /changeLog:\s*versionForm\.changeLog/);
+	assert.doesNotMatch(designer, /schemaContent|versionForm\.version|updateForm/);
+	assert.match(versions, /row\.schemaJson/);
+	assert.match(versions, /row\.isActive\s*===\s*['"]1['"]/);
+	assert.match(versions, /prop=["']changeLog["']/);
+	assert.match(versions, /res\.data\.v1Schema/);
+	assert.match(versions, /res\.data\.v2Schema/);
+	assert.match(permissions, /saveFieldPermissions/);
+	assert.match(permissions, /scope\.row\.permType/);
+	assert.doesNotMatch(permissions, /formPermission|dataPermission|fieldKey/);
+
+	const controllers = [formController, versionController, permissionController, dataController].join('\n');
+	assert.doesNotMatch(controllers, /@HasPermission\("wf_form/);
+	for (const permission of ['workflow_form_view', 'workflow_form_add', 'workflow_form_edit', 'workflow_form_del']) {
+		assert.match(seed, new RegExp(`['"]${permission}['"]`));
+	}
+	for (const path of ['/workflow/form/index', '/workflow/form/designer', '/workflow/form/version', '/workflow/form/permission']) {
+		assert.match(seed, new RegExp(path.replaceAll('/', '\\/')));
+	}
+});
+
 test('recovery reconciliation renders the complete redacted correlation contract', () => {
 	const recoveryView = readFileSync(new URL('../bixi-ui/src/views/workflow/recovery/index.vue', import.meta.url), 'utf8');
 	const recoveryApi = readFileSync(new URL('../bixi-ui/src/api/workflow/recovery.ts', import.meta.url), 'utf8');
@@ -98,7 +204,7 @@ function setup(path, apis = {}) {
 }
 
 const startPath = 'workflow/process/start-dialog.vue';
-const startDefinition = { id: 'approval:1', key: 'approval', name: '审批' };
+const startDefinition = { processDefinitionId: 'approval:1', processKey: 'approval', processName: '审批' };
 const validStartForm = state => { state.dataFormRef.value = { validate: async () => true, resetFields() {}, clearValidate() {} }; };
 
 test('start preserves the original request and payload across a lost response and page reload', async t => {
@@ -114,8 +220,9 @@ test('start preserves the original request and payload across a lost response an
 	first.bindings.dataForm.variables = { nested: { value: 'original' } };
 	await first.bindings.onSubmit();
 	assert.match(submitted[0].requestId ?? '', /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/);
-	assert.equal(submitted[0].processKey, startDefinition.key, 'ProcessStartDTO requires processKey');
-	assert.equal(Object.hasOwn(submitted[0], 'processDefinitionId'), false, 'ProcessStartDTO does not accept a version ID');
+	assert.equal(submitted[0].processKey, startDefinition.processKey, 'ProcessStartDTO requires processKey');
+	assert.equal(submitted[0].processDefinitionId, startDefinition.processDefinitionId,
+		'ProcessStartDTO pins the definition whose form was rendered');
 	assert.equal(storage.length, 1);
 	first.close();
 	const restored = setup(startPath, {
@@ -123,7 +230,7 @@ test('start preserves the original request and payload across a lost response an
 		start: async data => { submitted.push(JSON.parse(JSON.stringify(data))); return { code: 0 }; },
 	});
 	t.after(restored.destroy);
-	await restored.bindings.openDialog({ ...startDefinition, id: 'approval:2' });
+	await restored.bindings.openDialog({ ...startDefinition, processDefinitionId: 'approval:2' });
 	validStartForm(restored.bindings);
 	assert.equal(restored.bindings.dataForm.title, 'original title');
 	// Retrying always uses the persisted payload, even if mutable form state changes.
@@ -210,7 +317,7 @@ test('start validation and submission lock close, reopen and duplicate requests'
 	ui.close();
 	await state.openDialog({ id: 'other:1', key: 'other' });
 	assert.equal(state.visible.value, true);
-	assert.equal(state.dataForm.processKey, startDefinition.key);
+	assert.equal(state.dataForm.processKey, startDefinition.processKey);
 	const duplicate = state.onSubmit();
 	validation.resolve(true);
 	await settle();
@@ -264,6 +371,60 @@ test('start rejects definitions and saved requests that lack the required proces
 
 const leave = id => ({ id, approverId: `reviewer-${id}`, startDate: '2026-10-01', endDate: '2026-10-02', reason: `reason-${id}`, processInstanceId: id });
 const formPath = 'demo/leave/form.vue';
+
+test('leave submit preserves a stable actor-scoped request id until the response is confirmed', async t => {
+	const storage = memoryStorage(), submitted = [];
+	let actorId = '11', fail = true;
+	const ui = setup('demo/leave/index.vue', {
+		sessionStorage: storage,
+		useUserInfo: () => ({ userInfos: { user: { id: actorId } } }),
+		useTable: () => ({ getDataList: async () => {}, currentChangeHandle() {}, sizeChangeHandle() {} }),
+		fetchList: async () => ({ data: { records: [] } }), remove: async () => ({ code: 0 }),
+		refresh: async () => ({ code: 0 }), leaveStatusLabels: {},
+		submit: async (id, requestId) => {
+			submitted.push({ actorId, id, requestId });
+			if (fail) throw { msg: 'network timeout' };
+			return { code: 0 };
+		},
+	});
+	t.after(ui.destroy);
+	const row = { id: '7', leaveStatus: 'DRAFT' };
+	await ui.bindings.submitDraft(row);
+	assert.match(submitted[0].requestId ?? '', /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/);
+	assert.equal(storage.length, 1);
+	await ui.bindings.submitDraft(row);
+	assert.equal(submitted[1].requestId, submitted[0].requestId);
+	actorId = '22';
+	await ui.bindings.submitDraft(row);
+	assert.notEqual(submitted[2].requestId, submitted[0].requestId);
+	assert.equal(storage.length, 2);
+	fail = false;
+	await ui.bindings.submitDraft(row);
+	assert.equal(submitted[3].requestId, submitted[2].requestId);
+	assert.equal(storage.length, 1, 'only the confirmed actor request is removed');
+	actorId = '11';
+	await ui.bindings.submitDraft(row);
+	assert.equal(submitted[4].requestId, submitted[0].requestId);
+	assert.equal(storage.length, 0);
+});
+
+test('leave submit refuses malformed saved command identity instead of replacing it', async t => {
+	const storage = memoryStorage();
+	storage.setItem('leave:submit:11:7', JSON.stringify({ requestId: 'bad', leaveId: '7' }));
+	let sent = 0;
+	const ui = setup('demo/leave/index.vue', {
+		sessionStorage: storage,
+		useTable: () => ({ getDataList: async () => {}, currentChangeHandle() {}, sizeChangeHandle() {} }),
+		fetchList: async () => ({ data: { records: [] } }), remove: async () => ({ code: 0 }),
+		refresh: async () => ({ code: 0 }), leaveStatusLabels: {},
+		submit: async () => { sent++; return { code: 0 }; },
+	});
+	t.after(ui.destroy);
+	await ui.bindings.submitDraft({ id: '7', leaveStatus: 'DRAFT' });
+	assert.equal(sent, 0);
+	assert.equal(storage.length, 1);
+	assert.match(ui.bindings.error.value, /无法读取|核查/);
+});
 
 test('a late draft response cannot overwrite the next draft being saved', async t => {
 	const a = deferred(), saved = [];

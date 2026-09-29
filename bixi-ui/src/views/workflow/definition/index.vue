@@ -5,7 +5,10 @@
 			<el-form-item label="流程标识"><el-input v-model="state.queryForm.processKey" clearable /></el-form-item>
 			<el-form-item><el-button icon="Search" @click="getDataList">查询</el-button></el-form-item>
 		</el-form>
-		<div class="mb16"><el-button v-auth="'workflow_definition_edit'" type="primary" :loading="busy" @click="deployExample">部署请假示例</el-button></div>
+		<div class="mb16 definition-actions">
+			<el-button v-auth="'workflow_definition_edit'" type="primary" icon="Upload" :disabled="busy" @click="openUploadDialog">上传 BPMN</el-button>
+			<el-button v-auth="'workflow_definition_edit'" icon="DocumentAdd" :loading="busy" @click="deployExample">部署请假示例</el-button>
+		</div>
 		<el-alert v-if="error" :title="error" type="error" :closable="false" class="mb16" />
 		<el-table :data="state.dataList" v-loading="state.loading || busy" border empty-text="暂无流程定义">
 			<el-table-column label="流程名称" prop="processName" min-width="180" show-overflow-tooltip />
@@ -16,15 +19,19 @@
 				<el-button v-auth="'workflow_definition_edit'" text type="primary" @click="changeState(row)">{{ row.suspensionState === 1 ? '挂起' : '激活' }}</el-button>
 			</template></el-table-column>
 		</el-table>
+		<deploy-dialog ref="deployDialogRef" @refresh="getDataList" />
 	</div></div>
 </template>
 <script lang="ts" name="workflowDefinition" setup>
 import { list, deployDemo, suspend, activate } from '/@/api/workflow/definition';
 import { type BasicTableProps, useTable } from '/@/hooks/table';
 import { useMessage, useMessageBox } from '/@/hooks/message';
+const DeployDialog = defineAsyncComponent(() => import('./deploy-dialog.vue'));
 const state = reactive<BasicTableProps>({ queryForm: {}, isPage: false, pageList: list });
 const { getDataList } = useTable(state);
 const busy = ref(false); const error = ref('');
+const deployDialogRef = ref();
+const openUploadDialog = () => deployDialogRef.value?.openDialog();
 const run = async (action: () => Promise<unknown>, message: string) => {
 	busy.value = true; error.value = '';
 	try { await action(); useMessage().success(message); }
@@ -38,3 +45,8 @@ const changeState = async (row: any) => {
 	await run(() => (row.suspensionState === 1 ? suspend : activate)(row.processDefinitionId), '流程定义状态已更新');
 };
 </script>
+
+<style scoped>
+.definition-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.definition-actions :deep(.el-button + .el-button) { margin-left: 0; }
+</style>

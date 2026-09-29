@@ -53,13 +53,16 @@ public class WorkflowCompletionListener implements FlowableEventListener {
                 // extension without taking a second lock, so completion callbacks do not
                 // contend with the command-level process lock.
                 WfProcessInstance instance = instances.selectByProcessInstanceId(engineEvent.getProcessInstanceId());
-                if (instance != null && instance.getBusinessId() != null && instance.getBusinessRound() != null
+                if (instance != null && "demo_leave_approval".equals(instance.getProcessKey())
+                        && "demo_leave_request".equals(instance.getBusinessTable())
+                        && instance.getBusinessId() != null && instance.getBusinessRound() != null
                         && instance.getStartUserId() != null && instance.getStartRequestId() != null) {
                     WorkflowEventRecorder recorder = events.getIfAvailable();
                     if (recorder != null) {
-                        recorder.recordCompleted(instance.getProcessInstanceId(), instance.getBusinessId(),
-                                instance.getBusinessKey(), instance.getBusinessRound(), instance.getStartRequestId(),
-                                instance.getStartUserId(), instance.getStartUserName(), requestHash(instance),
+                                recorder.recordCompleted(instance.getProcessInstanceId(), instance.getBusinessId(),
+                                        instance.getBusinessKey(), instance.getBusinessRound(), instance.getStartRequestId(),
+                                        instance.getStartUserId(), instance.getStartUserName(),
+                                        tenantScope(instance), requestHash(instance),
                                 outcome(engineEvent.getType()),
                                 instance.getEndTime().atZone(java.time.ZoneId.systemDefault()).toInstant(),
                                 instance.getStartRequestId(), engineEvent.getProcessInstanceId());
@@ -91,5 +94,12 @@ public class WorkflowCompletionListener implements FlowableEventListener {
         catch (java.security.NoSuchAlgorithmException impossible) {
             throw new IllegalStateException("SHA-256 is unavailable", impossible);
         }
+    }
+
+    private static String tenantScope(WfProcessInstance instance) {
+        if (instance.getTenantId() == null || instance.getTenantId() <= 0) {
+            throw new IllegalStateException("流程终态缺少租户上下文");
+        }
+        return instance.getTenantId().toString();
     }
 }

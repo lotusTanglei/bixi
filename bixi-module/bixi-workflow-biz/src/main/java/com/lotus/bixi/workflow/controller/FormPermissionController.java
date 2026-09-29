@@ -5,6 +5,7 @@ import com.lotus.bixi.workflow.api.config.ConditionalOnWorkflowEnabled;
 import com.lotus.bixi.common.core.util.R;
 import com.lotus.bixi.common.log.annotation.SysLog;
 import com.lotus.bixi.common.security.annotation.HasPermission;
+import com.lotus.bixi.workflow.api.dto.FormFieldPermissionBatchDTO;
 import com.lotus.bixi.workflow.api.dto.FormPermissionDTO;
 import com.lotus.bixi.workflow.api.dto.RoleFormPermissionDTO;
 import com.lotus.bixi.workflow.api.vo.FormFieldPermissionVO;
@@ -31,7 +32,7 @@ public class FormPermissionController {
     private final FormPermissionService formPermissionService;
 
     @GetMapping("/list/{formId}")
-    @HasPermission("wf_form_perm_view")
+    @HasPermission("workflow_form_view")
     @Operation(summary = "查询表单权限列表")
     public R<List<FormPermissionVO>> listByFormId(@PathVariable Long formId) {
         return R.ok(formPermissionService.listByFormId(formId));
@@ -39,7 +40,7 @@ public class FormPermissionController {
 
     @PostMapping
     @SysLog("保存权限配置")
-    @HasPermission("wf_form_perm_edit")
+    @HasPermission("workflow_form_edit")
     @Operation(summary = "保存权限配置")
     public R<Boolean> save(@Valid @RequestBody FormPermissionDTO permissionDTO) {
         return R.ok(formPermissionService.savePermission(permissionDTO));
@@ -47,22 +48,42 @@ public class FormPermissionController {
 
     @DeleteMapping("/{id}")
     @SysLog("删除权限配置")
-    @HasPermission("wf_form_perm_del")
+    @HasPermission("workflow_form_del")
     @Operation(summary = "删除权限配置")
     public R<Boolean> delete(@PathVariable Long id) {
         return R.ok(formPermissionService.removeById(id));
     }
 
     @GetMapping("/field/{formId}/{roleId}")
-    @HasPermission("wf_form_perm_view")
+    @HasPermission("workflow_form_view")
     @Operation(summary = "查询字段权限")
     public R<List<FormFieldPermissionVO>> getFieldPermissions(@PathVariable Long formId, @PathVariable Long roleId) {
         return R.ok(formPermissionService.getFieldPermissions(formId, roleId));
     }
 
+    @GetMapping("/field/{formId}/{roleId}/{formVersionId}")
+    @HasPermission("workflow_form_view")
+    @Operation(summary = "查询版本作用域字段权限")
+    public R<List<FormFieldPermissionVO>> getVersionFieldPermissions(@PathVariable Long formId,
+            @PathVariable Long roleId, @PathVariable Long formVersionId,
+            @RequestParam(required = false) String processDefinitionId,
+            @RequestParam(required = false) String taskDefinitionKey) {
+        return R.ok(formPermissionService.getFieldPermissions(formId, roleId, formVersionId,
+                processDefinitionId, taskDefinitionKey));
+    }
+
+    @PutMapping("/field/{formId}/{roleId}/{formVersionId}")
+    @SysLog("保存角色字段权限")
+    @HasPermission("workflow_form_edit")
+    @Operation(summary = "保存版本作用域字段权限")
+    public R<Boolean> saveFieldPermissions(@PathVariable Long formId, @PathVariable Long roleId,
+            @PathVariable Long formVersionId, @Valid @RequestBody FormFieldPermissionBatchDTO dto) {
+        return R.ok(formPermissionService.saveFieldPermissions(formId, roleId, formVersionId, dto));
+    }
+
     @PostMapping("/role")
     @SysLog("保存角色表单权限")
-    @HasPermission("wf_form_perm_edit")
+    @HasPermission("workflow_form_edit")
     @Operation(summary = "保存角色表单权限")
     public R<Boolean> saveRolePermission(@Valid @RequestBody RoleFormPermissionDTO rolePermissionDTO) {
         return R.ok(formPermissionService.saveRolePermission(rolePermissionDTO));

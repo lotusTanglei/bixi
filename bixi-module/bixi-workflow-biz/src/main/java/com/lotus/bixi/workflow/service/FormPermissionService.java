@@ -1,6 +1,7 @@
 package com.lotus.bixi.workflow.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.lotus.bixi.workflow.api.dto.FormFieldPermissionBatchDTO;
 import com.lotus.bixi.workflow.api.dto.FormPermissionDTO;
 import com.lotus.bixi.workflow.api.dto.RoleFormPermissionDTO;
 import com.lotus.bixi.workflow.api.entity.SysFormPermission;
@@ -18,6 +19,12 @@ public interface FormPermissionService extends IService<SysFormPermission> {
     void deletePermission(Long id);
 
     List<FormFieldPermissionVO> getFieldPermissions(Long formId, Long roleId);
+
+    List<FormFieldPermissionVO> getFieldPermissions(Long formId, Long roleId, Long formVersionId,
+            String processDefinitionId, String taskDefinitionKey);
+
+    Boolean saveFieldPermissions(Long formId, Long roleId, Long formVersionId,
+            FormFieldPermissionBatchDTO dto);
 
     Boolean saveRolePermission(RoleFormPermissionDTO dto);
 

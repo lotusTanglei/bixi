@@ -10,6 +10,7 @@ import com.lotus.bixi.common.mybatis.config.MybatisPlusMetaObjectHandler;
 import com.lotus.bixi.common.mybatis.plugins.AllTenantsReadOnlyInterceptor;
 import com.lotus.bixi.common.mybatis.plugins.BixiPaginationInnerInterceptor;
 import com.lotus.bixi.common.mybatis.plugins.BixiTenantLineHandler;
+import com.lotus.bixi.common.mybatis.plugins.BixiTenantLineInnerInterceptor;
 import com.lotus.bixi.common.mybatis.plugins.DataScopeInterceptor;
 import com.lotus.bixi.common.mybatis.resolver.SqlFilterArgumentResolver;
 import org.springframework.context.annotation.Bean;
@@ -44,7 +45,7 @@ public class MybatisAutoConfiguration implements WebMvcConfigurer {
     @Bean
     public MybatisPlusInterceptor mybatisPlusInterceptor() {
         MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
-        interceptor.addInnerInterceptor(new TenantLineInnerInterceptor(new BixiTenantLineHandler()));
+		interceptor.addInnerInterceptor(new BixiTenantLineInnerInterceptor(new BixiTenantLineHandler()));
         interceptor.addInnerInterceptor(new BixiPaginationInnerInterceptor());
         return interceptor;
     }

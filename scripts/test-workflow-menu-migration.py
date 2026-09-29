@@ -8,6 +8,8 @@ import subprocess
 import time
 import uuid
 
+from local_test_preflight import ensure_local_test_preflight
+
 
 ROOT = Path(__file__).resolve().parents[1]
 SQL = ROOT / "bixi-project-documents/sql"
@@ -78,6 +80,7 @@ def rejected_without_changes(label, setup, expected_error):
 
 
 try:
+    ensure_local_test_preflight("single")
     docker("run", "--detach", "--rm", "--name", CONTAINER, "--network", "none",
            "-e", "MYSQL_ALLOW_EMPTY_PASSWORD=yes", IMAGE)
     for attempt in range(90):

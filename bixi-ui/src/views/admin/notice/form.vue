@@ -26,6 +26,17 @@
 							</el-select>
 						</el-form-item>
 					</el-col>
+					<el-col :span="12" class="mb20">
+						<el-form-item label="投递渠道" prop="deliveryChannel">
+							<el-select v-model="dataForm.deliveryChannel" class="w100">
+								<el-option label="站内实时提醒" value="IN_APP" />
+								<el-option label="邮件（HTTP provider）" value="EMAIL" />
+								<el-option label="Webhook" value="WEBHOOK" />
+								<el-option label="短信（未配置时失败关闭）" value="SMS" />
+								<el-option label="微信（未配置时失败关闭）" value="WECHAT" />
+							</el-select>
+						</el-form-item>
+					</el-col>
 					<el-col :span="24" class="mb20">
 						<el-form-item label="发送范围" prop="targetType">
 							<el-radio-group v-model="dataForm.targetType">
@@ -125,6 +136,7 @@ const dataForm = reactive({
 	content: '',
 	type: '0',
 	priority: '0',
+	deliveryChannel: 'IN_APP',
 	status: '0',
 	remark: '',
 	targetType: '0',

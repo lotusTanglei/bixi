@@ -73,28 +73,46 @@ public class JdbcInboxStore {
 
     /** Read bounded operator metadata without exposing payload contents to management APIs. */
     public List<AdminSnapshot> list(String targetOwner, String status, int limit) {
+        return listPage(targetOwner, status, limit, 0);
+    }
+
+    /** Read one page so callers can apply metadata filters without starving later matching rows. */
+    public List<AdminSnapshot> listPage(String targetOwner, String status, int limit, long offset) {
         DurableMessage.requireOwner(targetOwner);
         requireStatus(status);
         requireLimit(limit);
+        if (offset < 0) throw new IllegalArgumentException("Offset must not be negative");
         return independent.execute(transaction -> {
             String sql = status == null
-                    ? "SELECT * FROM reliable_inbox WHERE target_owner = ? ORDER BY received_at DESC LIMIT ?"
+                    ? "SELECT * FROM reliable_inbox WHERE target_owner = ? "
+                            + "ORDER BY received_at DESC, event_id DESC LIMIT ? OFFSET ?"
                     : "SELECT * FROM reliable_inbox WHERE target_owner = ? AND status = ? "
-                            + "ORDER BY received_at DESC LIMIT ?";
-            Object[] args = status == null ? new Object[] {targetOwner, limit}
-                    : new Object[] {targetOwner, status, limit};
+                            + "ORDER BY received_at DESC, event_id DESC LIMIT ? OFFSET ?";
+            Object[] args = status == null ? new Object[] {targetOwner, limit, offset}
+                    : new Object[] {targetOwner, status, limit, offset};
             return List.copyOf(jdbc.query(sql, (row, index) -> readAdminSnapshot(row), args));
         });
     }
 
     /** Move one failed receipt back to the normal due queue; the status predicate is the CAS fence. */
     public boolean retry(String targetOwner, String eventId) {
+        return retry(targetOwner, eventId, changed -> { });
+    }
+
+    /** Commit the retry CAS and its required side effect, such as an audit row, atomically. */
+    public boolean retry(String targetOwner, String eventId, java.util.function.Consumer<Boolean> afterUpdate) {
         requireIdentity(targetOwner, eventId);
-        return Boolean.TRUE.equals(independent.execute(transaction -> jdbc.update("""
-                UPDATE reliable_inbox SET status = 'RECEIVED', next_attempt_at = UTC_TIMESTAMP(6),
-                    lease_token = NULL, lease_until = NULL, last_error = NULL
-                WHERE target_owner = ? AND event_id = ? AND status = 'FAILED'
-                """, targetOwner, eventId) == 1));
+        Objects.requireNonNull(afterUpdate, "Retry side effect is required");
+        return Boolean.TRUE.equals(independent.execute(transaction -> {
+            boolean changed = jdbc.update("""
+                    UPDATE reliable_inbox SET status = 'RECEIVED', attempts = 0,
+                        next_attempt_at = UTC_TIMESTAMP(6),
+                        lease_token = NULL, lease_until = NULL, last_error = NULL
+                    WHERE target_owner = ? AND event_id = ? AND status = 'FAILED'
+                    """, targetOwner, eventId) == 1;
+            afterUpdate.accept(changed);
+            return changed;
+        }));
     }
 
     /** Claim at most immediately usable capacity. Independent workers skip held processing locks. */
@@ -171,9 +189,16 @@ public class JdbcInboxStore {
      * expiring during this transaction cannot be stolen; no external work belongs in this handler.
      */
     DurableMessageHandler.Result process(Lease lease, DurableMessageHandler handler) {
+        return process(lease, handler, result -> { });
+    }
+
+    /** Process a message and persist its required side effect in the same inbox transaction. */
+    DurableMessageHandler.Result process(Lease lease, DurableMessageHandler handler,
+            java.util.function.Consumer<DurableMessageHandler.Result> afterHandler) {
         requireOutsideTransaction();
         Objects.requireNonNull(lease, "Lease is required");
         Objects.requireNonNull(handler, "Handler is required");
+        Objects.requireNonNull(afterHandler, "Inbox side effect is required");
         return independent.execute(transaction -> {
             List<Boolean> ownership = jdbc.query("""
                     SELECT * FROM reliable_inbox
@@ -197,6 +222,7 @@ public class JdbcInboxStore {
             }
             DurableMessageHandler.Result result = Objects.requireNonNull(handler.handle(lease.message()),
                     "Handler must return a committed processing outcome");
+            afterHandler.accept(result);
             int changed = jdbc.update("""
                     UPDATE reliable_inbox SET status = ?, processed_at = UTC_TIMESTAMP(6),
                         lease_token = NULL, lease_until = NULL, last_error = NULL

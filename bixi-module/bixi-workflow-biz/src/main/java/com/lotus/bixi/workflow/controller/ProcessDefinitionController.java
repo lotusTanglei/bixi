@@ -16,6 +16,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -44,11 +45,36 @@ public class ProcessDefinitionController {
         return R.ok(processDefinitionService.deployDemoV3());
     }
 
+    @PostMapping(value = "/deploy", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @HasPermission("workflow_definition_edit")
+    @SysLog("上传部署流程定义")
+    @Operation(summary = "上传并部署 BPMN 流程定义")
+    public R<ProcessDefinitionVO> deploy(@RequestPart("file") MultipartFile file,
+                                        @RequestParam("name") String name,
+                                        @RequestParam(value = "category", required = false) String category,
+                                        @RequestParam(value = "formKey", required = false) String formKey) {
+        return R.ok(processDefinitionService.deploy(file, name, category, formKey));
+    }
+
     @GetMapping("/list")
     @HasPermission("workflow_definition_view")
     @Operation(summary = "查询流程定义列表")
     public R<List<ProcessDefinitionVO>> list(ProcessQueryDTO queryDTO) {
         return R.ok(processDefinitionService.listDefinitions(queryDTO));
+    }
+
+    @GetMapping("/startable")
+    @HasPermission("workflow_process_add")
+    @Operation(summary = "查询当前用户可发起的流程定义")
+    public R<List<ProcessDefinitionVO>> startable(ProcessQueryDTO queryDTO) {
+        return R.ok(processDefinitionService.listStartableDefinitions(queryDTO));
+    }
+
+    @GetMapping("/start-form/{processDefinitionId}")
+    @HasPermission("workflow_process_add")
+    @Operation(summary = "获取流程发起表单")
+    public R<FormRenderVO> getStartForm(@PathVariable String processDefinitionId) {
+        return R.ok(processDefinitionService.getStartForm(processDefinitionId));
     }
 
     @GetMapping("/{processKey}")

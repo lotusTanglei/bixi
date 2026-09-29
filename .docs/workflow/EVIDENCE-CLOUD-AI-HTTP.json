@@ -1,0 +1,59 @@
+{
+  "observedAt": "2026-09-27",
+  "composeProject": "bixi-phase2-cloud",
+  "mode": "cloud",
+  "provider": "local-deterministic",
+  "providerResponseMarker": "LOCAL-DETERMINISTIC-ANSWER",
+  "frontendProxy": {
+    "apiBase": "http://127.0.0.1:28080/api",
+    "status": "passed",
+    "loginStatus": 200,
+    "checks": [
+      "GET /ai/config -> 200/code 0",
+      "POST /ai/documents -> 200/code 0",
+      "GET /ai/documents/list -> 200/code 0",
+      "POST /ai/search -> 200/code 0",
+      "POST /ai/rag -> 200/code 0",
+      "POST /ai/chat -> 200/code 0 with provider marker",
+      "GET /ai/stream/chat -> 200 text/event-stream with provider marker",
+      "DELETE /ai/documents/{id} -> 200/code 0",
+      "POST /ai/search after delete -> 200/code 0 with zero results"
+    ],
+    "searchCount": 1,
+    "ragSourceCount": 1,
+    "streamContentType": "text/event-stream",
+    "providerMarkerObserved": true,
+    "searchAfterDeleteCount": 0
+  },
+  "gatewayDirect": {
+    "apiBase": "http://127.0.0.1:29997",
+    "status": "passed",
+    "checks": [
+      "GET /ai/config -> 200",
+      "POST /ai/documents -> 200",
+      "GET /ai/documents/list -> 200",
+      "POST /ai/search -> 200",
+      "POST /ai/chat -> 200 with provider marker",
+      "POST /ai/rag -> 200 with one source",
+      "GET /ai/stream/chat -> 200 text/event-stream with provider marker",
+      "DELETE /ai/documents/{id} -> 200",
+      "POST /ai/search after delete -> 200 with zero results"
+    ],
+    "searchAfterDeleteCount": 0
+  },
+  "routeChecks": {
+    "authToken": 200,
+    "adminHealth": 200,
+    "adminUserInfo": 200,
+    "adminMenu": 200,
+    "aiConfig": 200,
+    "aiModels": 200
+  },
+  "cleanup": true,
+  "secretsOmitted": true,
+  "limits": [
+    "The deterministic provider is a local stub and does not prove real DashScope/provider behavior.",
+    "Cloud runtime cross-tenant ownership and retrieval remain unverified; the Feign X-Tenant-Id propagation change has a separate focused/runtime tenant matrix, but the dedicated AI blackbox is still pending.",
+    "The older target/phase2-runtime/ai-cloud-enabled-http.json and ai-cloud-ownership-http.json files are failed run history, not passing evidence."
+  ]
+}

@@ -17,6 +17,15 @@ class WorkflowStartJsonContractTest {
         new JacksonConfiguration().customizer().customize(builder);
         return builder.build();
     }
+    @Test void publicStartCanPinTheDefinitionRenderedToTheUser() throws Exception {
+        var dto = new ProcessStartDTO();
+        dto.setProcessKey("approval");
+        dto.setProcessDefinitionId("approval:7:42");
+
+        var decoded = applicationJson().readValue(applicationJson().writeValueAsString(dto), ProcessStartDTO.class);
+
+        assertThat(decoded.getProcessDefinitionId()).isEqualTo("approval:7:42");
+    }
     @Test void longVariablesStayNumbersThroughTheActualApplicationMapper() throws Exception {
         var json = applicationJson();
         var dto = new ProcessStartDTO(); dto.setProcessKey("approval");

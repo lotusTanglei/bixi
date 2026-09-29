@@ -12,6 +12,14 @@ spring:
           uri: lb://bixi-upms-biz
           predicates:
             - Path=/admin/**
+        - id: bixi-generator
+          uri: lb://bixi-generator
+          predicates:
+            - Path=/gen/**
+        - id: bixi-quartz
+          uri: lb://bixi-quartz
+          predicates:
+            - Path=/job/**
       globalcors:
         cors-configurations:
           '[/**]':
@@ -25,6 +33,65 @@ spring:
 
 springdoc:
   api-docs:
-    enabled: true
+    enabled: ${BIXI_GATEWAY_DOCS_ENABLED:false}
   swagger-ui:
+    enabled: ${BIXI_GATEWAY_DOCS_ENABLED:false}
     use-root-path: true
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+bixi:
+  gateway:
+    security:
+      introspection-uri: ${BIXI_GATEWAY_SECURITY_INTROSPECTION_URI:http://auth:3000/token/check_token}
+      request-timeout: ${BIXI_GATEWAY_SECURITY_REQUEST_TIMEOUT:3s}
+
+---
+# The AI route is loaded only when the gateway's optional `ai` profile is
+# active. scripts/bixi.sh sets that profile together with AI_ENABLED, so a
+# disabled AI deployment has neither a registered service nor a gateway path.
+spring:
+  config:
+    activate:
+      on-profile: ai
+  cloud:
+    gateway:
+      # Spring's profile document replaces list-valued properties instead of
+      # appending to them. Keep the base routes here so enabling AI cannot
+      # silently remove authentication and management traffic.
+      routes:
+        - id: bixi-auth
+          uri: lb://bixi-auth
+          predicates:
+            - Path=/auth/**
+          filters:
+            - PreserveHostHeader
+        - id: bixi-upms
+          uri: lb://bixi-upms-biz
+          predicates:
+            - Path=/admin/**
+        - id: bixi-generator
+          uri: lb://bixi-generator
+          predicates:
+            - Path=/gen/**
+        - id: bixi-quartz
+          uri: lb://bixi-quartz
+          predicates:
+            - Path=/job/**
+        - id: bixi-ai
+          uri: lb://bixi-ai-biz
+          predicates:
+            - Path=/ai/**
+          filters:
+            # BixiRequestGlobalFilter strips the first public path segment.
+            # Restore the AI controller prefix for the downstream service.
+            - PrefixPath=/ai

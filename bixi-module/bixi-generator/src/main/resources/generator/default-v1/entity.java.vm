@@ -1,0 +1,25 @@
+package ${package}.${moduleName}.api.entity;
+
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.lotus.bixi.common.mybatis.base.BaseEntity;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+#foreach($import in $importList)
+import ${import};
+#end
+
+@Data
+@TableName("${tableName}")
+@EqualsAndHashCode(callSuper = true)
+@Schema(description = "${tableComment}")
+public class ${ClassName} extends BaseEntity<${ClassName}> {
+
+#foreach($field in $fieldList)
+#if($field.fieldName != 'id' && $field.fieldName != 'create_by' && $field.fieldName != 'update_by' && $field.fieldName != 'create_time' && $field.fieldName != 'update_time' && $field.fieldName != 'del_flag' && $field.fieldName != 'status' && $field.fieldName != 'data_status' && $field.fieldName != 'tenant_id' && $field.fieldName != 'remark')
+	@Schema(description = "$!field.fieldComment")
+	private ${field.attrType} ${field.attrName};
+
+#end
+#end
+}

@@ -4,6 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lotus.bixi.common.core.context.TenantContextHolder;
 import com.lotus.bixi.workflow.api.dto.ProcessStartDTO;
 import com.lotus.bixi.workflow.api.dto.TaskCompleteDTO;
+import com.lotus.bixi.workflow.api.entity.WfProcessInstance;
+import com.lotus.bixi.workflow.api.event.WorkflowActorSnapshot;
+import com.lotus.bixi.workflow.api.event.WorkflowEvent;
+import com.lotus.bixi.workflow.api.event.WorkflowEventType;
+import com.lotus.bixi.workflow.api.event.WorkflowStartRequested;
 import com.lotus.bixi.workflow.api.exception.WorkflowRequestConflictException;
 import com.lotus.bixi.workflow.api.exception.WorkflowCommandNotFoundException;
 import com.lotus.bixi.workflow.api.vo.ProcessInstanceVO;
@@ -41,10 +46,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringJUnitConfig(WorkflowStartIdempotencyTest.Config.class)
 @TestPropertySource(locations = "classpath:workflow-test.properties", properties = {"workflow.enabled=true",
         "workflow.database-schema-update=true", "workflow.async-executor-activate=false",
+        "workflow.public-start-models=approval,immediate",
         "flowable.check-process-definitions=false"})
 class WorkflowStartIdempotencyTest {
     @Autowired ObjectMapper applicationJson;
     @Autowired ProcessInstanceService processes;
+    @Autowired TrustedProcessStarter trustedProcesses;
     @Autowired ProcessDefinitionService definitions;
     @Autowired WorkflowCommandExecutor commands;
     @Autowired WfTaskService tasks;
@@ -55,14 +62,23 @@ class WorkflowStartIdempotencyTest {
     @Autowired ReservationBarrier reservation;
     @Autowired WorkflowApprovalIntegrationTest.ResultReceiver receiver;
     JdbcTemplate jdbc;
+    private static final String FORM_SCHEMA = """
+            {"widgetList":[
+              {"type":"number","options":{"name":"amount","required":true,"min":1}},
+              {"type":"input","options":{"name":"note","maxLength":20}}
+            ]}
+            """;
 
     @BeforeEach void setup() throws Exception {
         jdbc = new JdbcTemplate(source);
-        WorkflowTestSchema.create(jdbc, "wf_command", "wf_process_instance", "wf_approval_record", "wf_form_data");
+        WorkflowTestSchema.create(jdbc, "wf_command", "wf_process_instance", "wf_approval_record", "wf_form",
+                "wf_form_version", "wf_process_definition", "wf_form_data", "sys_form_permission",
+                "sys_role_form_permission");
         receiver.results.clear();
         receiver.fail = false;
         engine.getRepositoryService().createDeployment()
                 .addString("approval.bpmn20.xml", model("approval", true))
+                .addString("demo-leave.bpmn20.xml", model("demo_leave_approval", true))
                 .addString("immediate.bpmn20.xml", model("immediate", false)).deploy();
         login(11L);
     }
@@ -87,6 +103,158 @@ class WorkflowStartIdempotencyTest {
         var saved = applicationJson.readTree(lookup.getResponse().getContentAsString()).path("data").path("response");
         assertThat(original.path("id").isTextual()).isTrue();
         assertThat(saved).isEqualTo(original);
+    }
+
+    @Test void publicStartUsesTheDefinitionRenderedBeforeANewerVersionWasDeployed() {
+        String renderedDefinitionId = engine.getRepositoryService().createProcessDefinitionQuery()
+                .processDefinitionKey("approval").latestVersion().singleResult().getId();
+        engine.getRepositoryService().createDeployment()
+                .addString("approval-v2.bpmn20.xml", model("approval", true)).deploy();
+        String latestDefinitionId = engine.getRepositoryService().createProcessDefinitionQuery()
+                .processDefinitionKey("approval").latestVersion().singleResult().getId();
+        assertThat(latestDefinitionId).isNotEqualTo(renderedDefinitionId);
+
+        ProcessStartDTO dto = request("approval");
+        dto.setProcessDefinitionId(renderedDefinitionId);
+
+        assertThat(processes.start(dto).getProcessDefinitionId()).isEqualTo(renderedDefinitionId);
+    }
+
+    @Test void publicStartRejectsBusinessBindingReservedModelsAndIdentityVariablesBeforeReservingCommand() {
+        var businessBound = request("approval");
+        businessBound.setBusinessTable("demo_leave_request");
+        businessBound.setBusinessId(101L);
+        assertThatThrownBy(() -> processes.start(businessBound))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("业务关联");
+
+        var withRound = request("approval");
+        withRound.setVariables(Map.of("approverId", "22", "businessRound", 1));
+        assertThatThrownBy(() -> processes.start(withRound))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("业务关联");
+
+        var forgedActor = request("approval");
+        forgedActor.setVariables(Map.of("approverId", "22", "tenantScope", "2"));
+        assertThatThrownBy(() -> processes.start(forgedActor))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("身份变量");
+
+        var reserved = request("demo_leave_approval");
+        assertThatThrownBy(() -> processes.start(reserved))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("可信业务入口");
+
+        var notAllowed = request("not-on-the-public-allowlist");
+        assertThatThrownBy(() -> processes.start(notAllowed))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("未开放公共发起");
+        assertCounts(0, 0, 0);
+    }
+
+    @Test void trustedStartCommandJoinsTheInboxTransactionAndRollsBackWithIt() {
+        String commandId = UUID.randomUUID().toString();
+        String businessKey = "demo_leave:101:1";
+        String requestHash = "a".repeat(64);
+        WorkflowEvent event = trustedStartEvent(101L, 1, commandId, businessKey, requestHash);
+
+        new org.springframework.transaction.support.TransactionTemplate(transactionManager).executeWithoutResult(status -> {
+            ProcessInstanceVO started = trustedProcesses.startTrusted(event).process();
+            assertThat(started.getProcessInstanceId()).isNotBlank();
+            assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM wf_command WHERE request_id = ?", Long.class,
+                    commandId)).isEqualTo(1L);
+            assertThat(jdbc.queryForObject("SELECT source_owner FROM wf_command WHERE request_id = ?", String.class,
+                    commandId)).isEqualTo("upms");
+            status.setRollbackOnly();
+        });
+
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM wf_command WHERE request_id = ?", Long.class,
+                commandId)).isZero();
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM wf_process_instance WHERE business_key = ?", Long.class,
+                businessKey)).isZero();
+        assertThat(engine.getHistoryService().createHistoricProcessInstanceQuery().processInstanceBusinessKey(businessKey)
+                .count()).isZero();
+    }
+
+    @Test void trustedStartRejectsAnotherCommandForTheSameBusinessRound() {
+        String requestHash = "b".repeat(64);
+        WorkflowEvent first = trustedStartEvent(102L, 1, UUID.randomUUID().toString(),
+                "demo_leave:102:1", requestHash);
+        WorkflowEvent duplicate = trustedStartEvent(102L, 1, UUID.randomUUID().toString(),
+                "demo_leave:102:1", requestHash);
+
+        assertThat(trustedProcesses.startTrusted(first).rejected()).isFalse();
+        TrustedProcessStarter.StartResult replay = trustedProcesses.startTrusted(duplicate);
+
+        assertThat(replay.rejected()).isTrue();
+        assertThat(replay.rejectionCode()).isEqualTo("BUSINESS_OCCURRENCE_CONFLICT");
+        assertCounts(1, 1, 1);
+    }
+
+    @Test void trustedStartReplaysTheSameCommandBeforeCheckingTheBusinessOccurrence() {
+        WorkflowEvent event = trustedStartEvent(103L, 1, UUID.randomUUID().toString(),
+                "demo_leave:103:1", "c".repeat(64));
+
+        TrustedProcessStarter.StartResult first = trustedProcesses.startTrusted(event);
+        TrustedProcessStarter.StartResult replay = trustedProcesses.startTrusted(event);
+
+        assertThat(first.rejected()).isFalse();
+        assertThat(replay.rejected()).isFalse();
+        assertThat(replay.process().getProcessInstanceId()).isEqualTo(first.process().getProcessInstanceId());
+        assertCounts(1, 1, 1);
+    }
+
+    @Test void trustedStartPersistsItsSourceOwnerAndDoesNotConflictWithAnotherOwner() {
+        jdbc.update("""
+                INSERT INTO wf_process_instance
+                    (id, process_instance_id, business_owner, business_table, business_id, business_round, tenant_id)
+                VALUES (8999, 'other-owner-existing', 'hr', 'demo_leave_request', 105, 1, 1)
+                """);
+        WorkflowEvent event = trustedStartEvent(105L, 1, UUID.randomUUID().toString(),
+                "demo_leave:105:1", "d".repeat(64));
+
+        TrustedProcessStarter.StartResult result = trustedProcesses.startTrusted(event);
+
+        assertThat(result.rejected()).isFalse();
+        assertThat(jdbc.queryForObject("""
+                SELECT business_owner FROM wf_process_instance WHERE process_instance_id = ?
+                """, String.class, result.process().getProcessInstanceId())).isEqualTo("upms");
+        assertThat(jdbc.queryForObject("""
+                SELECT COUNT(*) FROM wf_process_instance
+                WHERE business_table = 'demo_leave_request' AND business_id = 105 AND business_round = 1
+                """, Long.class)).isEqualTo(2L);
+    }
+
+    @Test void databaseScopesBusinessOccurrenceByTrustedOwnerInsteadOfTenant() {
+        jdbc.update("""
+                INSERT INTO wf_process_instance
+                    (id, process_instance_id, business_owner, business_table, business_id, business_round, tenant_id)
+                VALUES (9001, 'manual-one', 'upms', 'demo_leave_request', 104, 1, 1)
+                """);
+        jdbc.update("""
+                INSERT INTO wf_process_instance
+                    (id, process_instance_id, business_owner, business_table, business_id, business_round, tenant_id)
+                VALUES (9002, 'other-owner', 'hr', 'demo_leave_request', 104, 1, 1)
+                """);
+
+        assertThatThrownBy(() -> jdbc.update("""
+                INSERT INTO wf_process_instance
+                    (id, process_instance_id, business_owner, business_table, business_id, business_round, tenant_id)
+                VALUES (9003, 'other-tenant', 'upms', 'demo_leave_request', 104, 1, 2)
+                """))
+                .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM wf_process_instance", Long.class)).isEqualTo(2L);
+    }
+
+    @Test void businessOccurrenceContractIsOwnedByTheTrustedSource() throws Exception {
+        Set<String> columns = new LinkedHashSet<>();
+        try (var connection = source.getConnection();
+             var result = connection.getMetaData().getColumns(null, null, "WF_PROCESS_INSTANCE", null)) {
+            while (result.next()) columns.add(result.getString("COLUMN_NAME"));
+        }
+        assertThat(columns).contains("BUSINESS_OWNER");
+        assertThat(WfProcessInstance.class).hasDeclaredFields("businessOwner");
+
     }
 
     @Test void httpVariablesRejectIsolatedSurrogatesAndKeepTheTaskUnchanged() throws Exception {
@@ -157,19 +325,59 @@ class WorkflowStartIdempotencyTest {
         assertCounts(1, 0, 1);
     }
 
-    @Test void normalizedFormNumbersAndOverwrittenIdentityReplay() {
+    @Test void normalizedFormNumbersReplay() {
+        bindApprovalForm();
         var dto = request("approval");
-        dto.setFormId(99L);
-        dto.setFormDataJson("{\"b\":1.0,\"a\":{\"字\":true}}");
-        dto.setVariables(Map.of("approverId", "22", "value", 1.0, "applicant", "forged", "tenantId", "forged"));
+        dto.setFormId(7L);
+        dto.setFormDataJson("{\"note\":\"same\",\"amount\":1.0}");
+        dto.setVariables(Map.of("approverId", "22", "value", 1.0));
         var first = processes.start(dto);
-        dto.setFormDataJson(" {\"a\":{\"字\":true},\"b\":1e0} ");
-        dto.setVariables(Map.of("value", 1, "approverId", "22", "startUserId", "another"));
+        dto.setFormDataJson(" {\"amount\":1e0,\"note\":\"same\"} ");
+        dto.setVariables(Map.of("value", 1, "approverId", "22"));
         assertThat(processes.start(dto)).usingRecursiveComparison().isEqualTo(first);
         assertThat(jdbc.queryForObject("SELECT data_json FROM wf_form_data", String.class))
-                .isEqualTo("{\"a\":{\"字\":true},\"b\":1}");
+                .isEqualTo("{\"amount\":1,\"note\":\"same\"}");
         assertThat(engine.getRuntimeService().getVariable(first.getProcessInstanceId(), "applicant")).isEqualTo("11");
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM wf_form_data", Long.class)).isEqualTo(1);
+    }
+
+    @Test void definitionBindingOwnsTheFormAndFreezesOneSnapshotPerCommand() {
+        bindApprovalForm();
+        var mismatched = request("approval");
+        mismatched.setFormId(8L);
+        mismatched.setFormDataJson("{\"amount\":2}");
+        assertThatThrownBy(() -> processes.start(mismatched))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("绑定表单");
+        assertCounts(0, 0, 0);
+
+        var invalid = request("approval");
+        invalid.setFormId(7L);
+        invalid.setFormDataJson("{\"note\":\"missing amount\"}");
+        assertThatThrownBy(() -> processes.start(invalid))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("amount");
+        assertCounts(0, 0, 0);
+
+        var valid = request("approval");
+        valid.setFormId(7L);
+        valid.setFormDataJson("{\"amount\":2,\"note\":\"initial\"}");
+        var first = processes.start(valid);
+        assertThat(jdbc.queryForMap("SELECT form_id, form_version_id FROM wf_process_instance "
+                + "WHERE process_instance_id = ?", first.getProcessInstanceId()))
+                .containsEntry("FORM_ID", 7L).containsEntry("FORM_VERSION_ID", 71L);
+        assertThat(jdbc.queryForMap("SELECT form_id, form_version_id FROM wf_form_data "
+                + "WHERE process_instance_id = ?", first.getProcessInstanceId()))
+                .containsEntry("FORM_ID", 7L).containsEntry("FORM_VERSION_ID", 71L);
+
+        jdbc.update("UPDATE wf_form_version SET is_active = '0' WHERE id = 71");
+        jdbc.update("UPDATE wf_form_version SET is_active = '1' WHERE id = 72");
+        jdbc.update("UPDATE wf_form SET current_version = 2 WHERE id = 7");
+        assertThat(processes.start(valid)).usingRecursiveComparison().isEqualTo(first);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM wf_form_data WHERE process_instance_id = ?",
+                Long.class, first.getProcessInstanceId())).isEqualTo(1L);
+        assertThat(jdbc.queryForObject("SELECT form_version_id FROM wf_process_instance WHERE process_instance_id = ?",
+                Long.class, first.getProcessInstanceId())).isEqualTo(71L);
     }
 
     @Test void localAndFeignEncodedNumericVariablesShareTheSameCommand() throws Exception {
@@ -202,12 +410,12 @@ class WorkflowStartIdempotencyTest {
         assertCounts(1, 1, 1);
     }
 
-    @Test void changedTitleVariablesRoundOrOperationConflict() {
+    @Test void changedTitleVariablesOrOperationConflict() {
         var original = request("approval");
         processes.start(original);
         for (java.util.function.Consumer<ProcessStartDTO> change : List.<java.util.function.Consumer<ProcessStartDTO>>of(
                 dto -> dto.setTitle("changed"), dto -> dto.setVariables(Map.of("approverId", "33")),
-                dto -> dto.setVariables(Map.of("approverId", "22", "businessRound", 2)), dto -> dto.setProcessKey("immediate"))) {
+                dto -> dto.setProcessKey("immediate"))) {
             var changed = request("approval");
             org.springframework.beans.BeanUtils.copyProperties(original, changed);
             change.accept(changed);
@@ -278,14 +486,12 @@ class WorkflowStartIdempotencyTest {
         assertCounts(1, 1, 1);
     }
 
-    @Test void immediateReplayDeliversOnlyOneTerminalResult() {
+    @Test void immediatePublicReplayReturnsTheSavedResponseWithoutBusinessNotification() {
         var dto = request("immediate");
-        dto.setBusinessTable("demo_leave_request"); dto.setBusinessId(1L);
-        dto.setVariables(Map.of("businessRound", 1));
         var first = processes.start(dto);
         assertThat(processes.start(dto)).usingRecursiveComparison().isEqualTo(first);
         assertThat(first.getStatus()).isEqualTo("completed");
-        assertThat(receiver.results).hasSize(1);
+        assertThat(receiver.results).isEmpty();
         assertCounts(1, 0, 1);
     }
 
@@ -308,8 +514,9 @@ class WorkflowStartIdempotencyTest {
         assertCounts(1, 1, 1);
     }
     @Test void formFailureRollsBackEngineExtensionAndCommand() {
-        var dto = request("approval"); dto.setFormId(99L); dto.setFormDataJson("{\"days\":2}");
-        jdbc.execute("ALTER TABLE wf_form_data ADD CONSTRAINT fail_form CHECK (form_id <> 99)");
+        bindApprovalForm();
+        var dto = request("approval"); dto.setFormId(7L); dto.setFormDataJson("{\"amount\":2}");
+        jdbc.execute("ALTER TABLE wf_form_data ADD CONSTRAINT fail_form CHECK (form_id <> 7)");
         assertThatThrownBy(() -> processes.start(dto)).isInstanceOf(RuntimeException.class);
         assertCounts(0, 0, 0);
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM wf_form_data", Long.class)).isZero();
@@ -317,7 +524,8 @@ class WorkflowStartIdempotencyTest {
         processes.start(dto); assertCounts(1, 1, 1);
     }
     @Test void commandResultFailureRollsBackAllEngineAndBusinessWrites() {
-        var dto = request("approval"); dto.setFormId(99L); dto.setFormDataJson("{\"days\":2}");
+        bindApprovalForm();
+        var dto = request("approval"); dto.setFormId(7L); dto.setFormDataJson("{\"amount\":2}");
         jdbc.execute("ALTER TABLE wf_command ADD CONSTRAINT fail_command_result CHECK (status <> 'SUCCEEDED')");
         assertThatThrownBy(() -> processes.start(dto)).isInstanceOf(RuntimeException.class);
         assertCounts(0, 0, 0);
@@ -340,6 +548,30 @@ class WorkflowStartIdempotencyTest {
         var dto = new ProcessStartDTO(); dto.setRequestId(UUID.randomUUID().toString());
         dto.setProcessKey(key); dto.setBusinessKey(UUID.randomUUID().toString()); dto.setTitle("intention");
         dto.setVariables(Map.of("approverId", "22")); return dto;
+    }
+
+    private WorkflowEvent trustedStartEvent(long businessId, int round, String commandId,
+                                            String businessKey, String requestHash) {
+        return new WorkflowEvent(UUID.randomUUID().toString(), WorkflowEventType.WORKFLOW_START_REQUESTED, 1,
+                "upms", "workflow", "1", null, "demo_leave_approval", "demo_leave_request",
+                businessId, businessKey, round, commandId, 0, java.time.Instant.now(), commandId, null,
+                new WorkflowActorSnapshot(11L, "starter", "1", "upms", java.time.Instant.now()),
+                new WorkflowStartRequested("trusted leave", 22L, requestHash));
+    }
+
+    private void bindApprovalForm() {
+        String definitionId = engine.getRepositoryService().createProcessDefinitionQuery()
+                .processDefinitionKey("approval").latestVersion().singleResult().getId();
+        jdbc.update("INSERT INTO wf_form (id, form_key, form_name, current_version, status, del_flag, data_status, tenant_id) "
+                + "VALUES (7, 'expense', 'Expense', 1, '1', '0', '0', 1)");
+        jdbc.update("INSERT INTO wf_form_version "
+                + "(id, form_id, version, schema_json, is_active, del_flag, status, data_status, tenant_id) "
+                + "VALUES (71, 7, 1, ?, '1', '0', '0', '0', 1), "
+                + "(72, 7, 2, ?, '0', '0', '0', '0', 1)", FORM_SCHEMA, FORM_SCHEMA);
+        jdbc.update("INSERT INTO wf_process_definition "
+                + "(id, process_definition_id, process_key, version, form_key, form_version_id, "
+                + "suspension_state, del_flag, status, data_status, tenant_id) "
+                + "VALUES (81, ?, 'approval', 1, 'expense', 71, 1, '0', '0', '0', 1)", definitionId);
     }
     private List<Object> race(ProcessStartDTO one, ProcessStartDTO two) throws Exception {
         reservation.collisions.set(0); reservation.barrier = new CyclicBarrier(2);

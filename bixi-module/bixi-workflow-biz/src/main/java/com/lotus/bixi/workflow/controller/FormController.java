@@ -20,6 +20,8 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @ConditionalOnWorkflowEnabled
 @RestController
 @AllArgsConstructor
@@ -31,14 +33,14 @@ public class FormController {
     private final FormService formService;
 
     @GetMapping("/list")
-    @HasPermission("wf_form_view")
+    @HasPermission("workflow_form_view")
     @Operation(summary = "查询表单列表")
     public R<IPage<FormVO>> list(Page<FormVO> page, FormQueryDTO queryDTO) {
         return R.ok(formService.listForms(page, queryDTO));
     }
 
     @GetMapping("/{formKey}")
-    @HasPermission("wf_form_view")
+    @HasPermission("workflow_form_view")
     @Operation(summary = "查询表单详情")
     public R<FormVO> getByFormKey(@PathVariable String formKey) {
         return R.ok(formService.getByFormKey(formKey));
@@ -46,7 +48,7 @@ public class FormController {
 
     @PostMapping
     @SysLog("创建表单")
-    @HasPermission("wf_form_add")
+    @HasPermission("workflow_form_add")
     @Operation(summary = "创建表单")
     public R<Boolean> save(@Valid @RequestBody FormDTO formDTO) {
         formService.saveForm(formDTO);
@@ -55,7 +57,7 @@ public class FormController {
 
     @PutMapping
     @SysLog("更新表单")
-    @HasPermission("wf_form_edit")
+    @HasPermission("workflow_form_edit")
     @Operation(summary = "更新表单")
     public R<Boolean> update(@Valid @RequestBody FormDTO formDTO) {
         formService.updateForm(formDTO);
@@ -64,14 +66,25 @@ public class FormController {
 
     @DeleteMapping("/{id}")
     @SysLog("删除表单")
-    @HasPermission("wf_form_del")
+    @HasPermission("workflow_form_del")
     @Operation(summary = "删除表单")
     public R<Boolean> delete(@PathVariable Long id) {
         return R.ok(formService.removeById(id));
     }
 
+    @DeleteMapping
+    @SysLog("批量删除表单")
+    @HasPermission("workflow_form_del")
+    @Operation(summary = "批量删除表单")
+    public R<Boolean> deleteBatch(@RequestBody List<Long> ids) {
+        if (ids == null || ids.isEmpty() || ids.stream().anyMatch(id -> id == null || id <= 0)) {
+            throw new IllegalArgumentException("表单ID不能为空");
+        }
+        return R.ok(formService.removeByIds(ids));
+    }
+
     @GetMapping("/render/{formKey}")
-    @HasPermission("wf_form_view")
+    @HasPermission("workflow_form_view")
     @Operation(summary = "获取表单渲染信息")
     public R<FormRenderVO> getRenderInfo(@PathVariable String formKey) {
         return R.ok(formService.getRenderInfo(formKey));

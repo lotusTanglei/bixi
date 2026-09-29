@@ -18,4 +18,6 @@ public interface SessionService extends IService<AiSession> {
     void deleteSession(Long id);
 
     SessionVO getSession(Long id);
+
+    AiSession requireOwnedSession(Long id);
 }

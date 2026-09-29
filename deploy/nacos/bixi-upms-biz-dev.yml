@@ -28,8 +28,38 @@ security:
         - /dict/remote/type/**
         - /param/publicValue/**
         - /log/save
-        - /actuator/**
+        - /actuator/health
+        - /actuator/health/**
         - /error
+
+generator:
+  enabled: ${GENERATOR_ENABLED:true}
+
+# External notice channels are opt-in. The generic HTTP adapters fail closed
+# when disabled or when an endpoint is absent; IN_APP remains the default.
+bixi:
+  notice:
+    default-channel: ${NOTICE_DEFAULT_CHANNEL:IN_APP}
+    receipt:
+      enabled: ${NOTICE_RECEIPT_ENABLED:false}
+      secret: ${NOTICE_RECEIPT_SECRET:}
+      signature-header: ${NOTICE_RECEIPT_SIGNATURE_HEADER:X-Bixi-Notice-Signature}
+    channels:
+      webhook:
+        enabled: ${NOTICE_WEBHOOK_ENABLED:false}
+        endpoint: ${NOTICE_WEBHOOK_ENDPOINT:}
+        bearer-token: ${NOTICE_WEBHOOK_BEARER_TOKEN:}
+      email:
+        enabled: ${NOTICE_EMAIL_ENABLED:false}
+        endpoint: ${NOTICE_EMAIL_ENDPOINT:}
+        api-key: ${NOTICE_EMAIL_API_KEY:}
+        from: ${NOTICE_EMAIL_FROM:}
+      sms:
+        enabled: ${NOTICE_SMS_ENABLED:false}
+        endpoint: ${NOTICE_SMS_ENDPOINT:}
+      wechat:
+        enabled: ${NOTICE_WECHAT_ENABLED:false}
+        endpoint: ${NOTICE_WECHAT_ENDPOINT:}
 
 mybatis-plus:
   mapper-locations: classpath*:/mapper/*Mapper.xml

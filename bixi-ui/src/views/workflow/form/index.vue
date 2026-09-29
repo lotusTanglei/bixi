@@ -51,15 +51,16 @@
 				<el-table-column label="序号" type="index" width="60" />
 				<el-table-column label="表单名称" prop="formName" show-overflow-tooltip></el-table-column>
 				<el-table-column label="表单标识" prop="formKey" show-overflow-tooltip></el-table-column>
-				<el-table-column label="当前版本" prop="version" width="100">
+				<el-table-column label="当前版本" prop="currentVersion" width="100">
 					<template #default="scope">
-						<el-tag>v{{ scope.row.version }}</el-tag>
+						<el-tag v-if="scope.row.currentVersion">v{{ scope.row.currentVersion }}</el-tag>
+						<span v-else>-</span>
 					</template>
 				</el-table-column>
 				<el-table-column label="状态" width="100">
 					<template #default="scope">
-						<el-tag :type="scope.row.status === 1 ? 'success' : 'info'">
-							{{ scope.row.status === 1 ? '启用' : '禁用' }}
+						<el-tag :type="scope.row.status === '1' ? 'success' : scope.row.status === '2' ? 'danger' : 'info'">
+							{{ scope.row.status === '1' ? '已发布' : scope.row.status === '2' ? '已停用' : '草稿' }}
 						</el-tag>
 					</template>
 				</el-table-column>
@@ -67,16 +68,16 @@
 				<el-table-column label="创建时间" prop="createTime" width="180"></el-table-column>
 				<el-table-column label="操作" width="280" fixed="right">
 					<template #default="scope">
-						<el-button v-auth="'workflow_form_design'" icon="Edit" text type="primary" @click="handleDesign(scope.row)">
+						<el-button v-auth="'workflow_form_edit'" icon="Edit" text type="primary" @click="handleDesign(scope.row)">
 							设计
 						</el-button>
-						<el-button v-auth="'workflow_form_edit'" icon="EditPen" text type="primary" @click="formDialogRef.openDialog(scope.row.id)">
+						<el-button v-auth="'workflow_form_edit'" icon="EditPen" text type="primary" @click="formDialogRef.openDialog(scope.row.formKey)">
 							编辑
 						</el-button>
-						<el-button v-auth="'workflow_form_version'" icon="Clock" text type="primary" @click="handleVersion(scope.row)">
+						<el-button v-auth="'workflow_form_edit'" icon="Clock" text type="primary" @click="handleVersion(scope.row)">
 							版本
 						</el-button>
-						<el-button v-auth="'workflow_form_permission'" icon="Lock" text type="primary" @click="handlePermission(scope.row)">
+						<el-button v-auth="'workflow_form_edit'" icon="Lock" text type="primary" @click="handlePermission(scope.row)">
 							权限
 						</el-button>
 						<el-button v-auth="'workflow_form_del'" icon="Delete" text type="primary" @click="handleDelete([scope.row.id])">
@@ -93,7 +94,7 @@
 </template>
 
 <script lang="ts" name="workflowForm" setup>
-import { getFormList, deleteForm } from '/@/api/workflow/form';
+import { getFormList, deleteForms } from '/@/api/workflow/form';
 import { BasicTableProps, useTable } from '/@/hooks/table';
 import { useMessage, useMessageBox } from '/@/hooks/message';
 import { useRouter } from 'vue-router';
@@ -134,11 +135,11 @@ const handleDelete = async (ids: string[]) => {
 	}
 
 	try {
-		await deleteForm(ids.join(','));
+		await deleteForms(ids);
 		getDataList();
 		useMessage().success('删除成功');
 	} catch (err: any) {
-		useMessage().error(err.msg);
+		useMessage().error(err.msg || '删除失败');
 	}
 };
 
@@ -148,6 +149,7 @@ const handleDesign = (row: any) => {
 		query: {
 			formId: row.id,
 			formKey: row.formKey,
+			formName: row.formName,
 		},
 	});
 };
@@ -157,6 +159,7 @@ const handleVersion = (row: any) => {
 		path: '/workflow/form/version',
 		query: {
 			formId: row.id,
+			formKey: row.formKey,
 			formName: row.formName,
 		},
 	});

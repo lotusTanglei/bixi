@@ -13,6 +13,7 @@ import com.lotus.bixi.generator.util.vo.GroupVO;
 import com.lotus.bixi.generator.util.vo.TemplateGroupDTO;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import java.util.LinkedList;
@@ -27,6 +28,7 @@ import java.util.List;
 @Slf4j
 @Service
 @AllArgsConstructor
+@ConditionalOnProperty(prefix = "generator", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class GenGroupServiceImpl extends ServiceImpl<GenGroupMapper, GenGroup> implements GenGroupService {
 
 	private final GenTemplateGroupService genTemplateGroupService;

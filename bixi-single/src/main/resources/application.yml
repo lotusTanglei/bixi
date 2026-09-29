@@ -1,6 +1,10 @@
 spring:
   application:
     name: @project.artifactId@  # 服务名称，取 pom.xml 中的 artifactId
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.amqp.RabbitHealthContributorAutoConfiguration
   # 上传文件大小限制
   servlet:
     multipart:
@@ -24,6 +28,28 @@ spring:
 bixi:
   deployment:
     mode: single
+  notice:
+    default-channel: ${NOTICE_DEFAULT_CHANNEL:IN_APP}
+    receipt:
+      enabled: ${NOTICE_RECEIPT_ENABLED:false}
+      secret: ${NOTICE_RECEIPT_SECRET:}
+      signature-header: ${NOTICE_RECEIPT_SIGNATURE_HEADER:X-Bixi-Notice-Signature}
+    channels:
+      webhook:
+        enabled: ${NOTICE_WEBHOOK_ENABLED:false}
+        endpoint: ${NOTICE_WEBHOOK_ENDPOINT:}
+        bearer-token: ${NOTICE_WEBHOOK_BEARER_TOKEN:}
+      email:
+        enabled: ${NOTICE_EMAIL_ENABLED:false}
+        endpoint: ${NOTICE_EMAIL_ENDPOINT:}
+        api-key: ${NOTICE_EMAIL_API_KEY:}
+        from: ${NOTICE_EMAIL_FROM:}
+      sms:
+        enabled: ${NOTICE_SMS_ENABLED:false}
+        endpoint: ${NOTICE_SMS_ENDPOINT:}
+      wechat:
+        enabled: ${NOTICE_WECHAT_ENABLED:false}
+        endpoint: ${NOTICE_WECHAT_ENDPOINT:}
   reliable:
     enabled: ${BIXI_RELIABLE_ENABLED:false}
     rabbit:
@@ -34,10 +60,21 @@ bixi:
       password: ${BIXI_RELIABLE_RABBIT_PASSWORD:${RABBITMQ_PASSWORD:}}
       virtual-host: ${BIXI_RELIABLE_RABBIT_VIRTUAL_HOST:${RABBITMQ_VIRTUAL_HOST:/}}
 
+# Generator is available in the shared single-process application by default;
+# set GENERATOR_ENABLED=false to remove its controllers and services at startup.
+generator:
+  enabled: ${GENERATOR_ENABLED:true}
+
 workflow:
   enabled: ${WORKFLOW_ENABLED:false}
   database-schema-update: ${WORKFLOW_SCHEMA_UPDATE:false}
   async-executor-activate: ${WORKFLOW_ASYNC_EXECUTOR_ACTIVATE:true}
+  public-start-models: ${WORKFLOW_PUBLIC_START_MODELS:}
+
+# AI is opt-in in the single-process runtime. Set AI_ENABLED=true together
+# with DASHSCOPE_API_KEY to install the AI routes and provider.
+ai:
+  enabled: ${AI_ENABLED:false}
 
 flowable:
   check-process-definitions: false

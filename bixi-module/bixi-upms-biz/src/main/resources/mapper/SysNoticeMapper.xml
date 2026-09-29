@@ -10,6 +10,7 @@
         <result column="type" property="type" />
         <result column="sender_id" property="senderId" />
         <result column="priority" property="priority" />
+        <result column="delivery_channel" property="deliveryChannel" />
         <result column="status" property="status" />
         <result column="tenant_id" property="tenantId" />
         <result column="create_by" property="createBy" />

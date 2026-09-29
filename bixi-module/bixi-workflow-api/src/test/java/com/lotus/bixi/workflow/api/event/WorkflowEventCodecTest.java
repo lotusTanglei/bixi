@@ -35,6 +35,18 @@ class WorkflowEventCodecTest {
         }
     }
 
+    @Test void eventEnvelopePreservesTheAuthenticatedTenantScope() {
+        WorkflowActorSnapshot tenantActor = new WorkflowActorSnapshot(22L, "申请人", "42", "upms",
+                now.minusSeconds(30));
+        WorkflowEvent tenantEvent = new WorkflowEvent(UUID.randomUUID().toString(),
+                WorkflowEventType.WORKFLOW_START_REQUESTED, 1, "upms", "workflow", "42", null,
+                "demo_leave_approval", "demo_leave_request", 7L, "leave:7:1", 1,
+                UUID.randomUUID().toString(), 0, now, UUID.randomUUID().toString(), null, tenantActor,
+                new WorkflowStartRequested("请假申请", 33L, requestHash));
+
+        assertThat(codec.decode(codec.encode(tenantEvent))).isEqualTo(tenantEvent);
+    }
+
     @Test void automaticTaskAndCompensationEventsRoundTripWithStableIdentifiers() {
         var requested = automaticEvent(WorkflowEventType.WORKFLOW_BUSINESS_TASK_REQUESTED,
                 new WorkflowBusinessTaskRequested(requestHash, UUID.randomUUID().toString(),

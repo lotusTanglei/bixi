@@ -13,7 +13,8 @@
 			<div class="input-tips">
 				<span>Enter 发送，Shift + Enter 换行</span>
 			</div>
-			<el-button type="primary" :loading="loading" :disabled="!inputText.trim() || disabled" @click="handleSend">
+			<el-button v-if="loading" type="danger" @click="emit('cancel')">停止生成</el-button>
+			<el-button v-else type="primary" :disabled="!inputText.trim() || disabled" @click="handleSend">
 				发送
 			</el-button>
 		</div>
@@ -31,6 +32,7 @@ defineProps<{
 
 const emit = defineEmits<{
 	(e: 'send', message: string): void;
+	(e: 'cancel'): void;
 }>();
 
 const handleKeydown = (e: KeyboardEvent) => {

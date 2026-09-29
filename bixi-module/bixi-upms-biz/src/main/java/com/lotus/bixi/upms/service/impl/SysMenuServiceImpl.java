@@ -91,7 +91,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
 
     @Override
     @Cacheable(value = CacheConstants.MENU_DETAILS,
-            key = "T(com.lotus.bixi.common.core.constant.CacheConstants).currentTenantKey('menu_details') + #roleId + ':' + @environment.getProperty('workflow.enabled', 'false')",
+            key = "T(com.lotus.bixi.common.core.constant.CacheConstants).currentTenantKey('menu_details') + #roleId + ':' + @environment.getProperty('workflow.enabled', 'false') + ':' + @environment.getProperty('generator.enabled', 'true') + ':' + @environment.getProperty('ai.enabled', 'false')",
             unless = "#result.isEmpty()")
     public List<SysMenu> findMenuByRoleId(Long roleId) {
         return baseMapper.listMenusByRoleId(roleId).stream().filter(this::isMenuAvailable).toList();
@@ -178,13 +178,27 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
     }
 
     private boolean isMenuAvailable(SysMenu menu) {
-        if (environment.getProperty("workflow.enabled", Boolean.class, false)) return true;
         String path = menu.getPath() == null ? "" : menu.getPath();
         String permission = menu.getPermission() == null ? "" : menu.getPermission();
-        return !(path.equals("/workflow") || path.startsWith("/workflow/")
+        boolean workflowEnabled = environment.getProperty("workflow.enabled", Boolean.class, false);
+        boolean generatorEnabled = environment.getProperty("generator.enabled", Boolean.class, true);
+        boolean aiEnabled = environment.getProperty("ai.enabled", Boolean.class, false);
+
+        if (!workflowEnabled && (path.equals("/workflow") || path.startsWith("/workflow/")
                 || path.equals("/demo/leave") || path.startsWith("/demo/leave/")
                 || permission.startsWith("workflow_") || permission.startsWith("wf_")
-                || permission.startsWith("demo_leave_"));
+                || permission.startsWith("demo_leave_"))) {
+            return false;
+        }
+        if (!generatorEnabled && (path.equals("/gen") || path.startsWith("/gen/")
+                || permission.startsWith("codegen_"))) {
+            return false;
+        }
+        if (!aiEnabled && (path.equals("/ai") || path.startsWith("/ai/")
+                || permission.startsWith("ai_") || permission.startsWith("ai:"))) {
+            return false;
+        }
+        return true;
     }
 
     @NotNull

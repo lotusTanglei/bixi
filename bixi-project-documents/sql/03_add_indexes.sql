@@ -70,6 +70,7 @@ CREATE INDEX idx_proc_inst_key ON wf_process_instance(process_key);
 CREATE INDEX idx_proc_inst_status ON wf_process_instance(status);
 CREATE INDEX idx_proc_inst_start_user ON wf_process_instance(start_user_id, create_time);
 CREATE INDEX idx_proc_inst_business ON wf_process_instance(business_key);
+CREATE INDEX idx_proc_inst_form_version ON wf_process_instance(form_version_id, create_time);
 
 -- 审批记录索引
 CREATE INDEX idx_approval_proc_time ON wf_approval_record(process_instance_id, approval_time DESC);
@@ -85,6 +86,11 @@ CREATE INDEX idx_form_data_proc ON wf_form_data(process_instance_id);
 CREATE INDEX idx_form_data_task ON wf_form_data(task_id);
 CREATE INDEX idx_form_data_business ON wf_form_data(business_key);
 CREATE INDEX idx_form_data_submit_time ON wf_form_data(submit_time);
+CREATE INDEX idx_form_data_version ON wf_form_data(form_version_id, create_time);
+
+-- 表单字段权限作用域索引
+CREATE INDEX idx_form_permission_runtime_scope
+ON sys_form_permission(form_id, form_version_id, process_definition_id, task_definition_key, field_code);
 
 -- =====================================================
 -- 3. AI 模块索引优化
@@ -217,6 +223,10 @@ CREATE INDEX idx_reliable_outbox_lease ON reliable_outbox(source_owner, status, 
 CREATE INDEX idx_reliable_inbox_due ON reliable_inbox(target_owner, status, next_attempt_at, received_at);
 CREATE INDEX idx_reliable_inbox_lease ON reliable_inbox(target_owner, status, lease_until);
 CREATE INDEX idx_wf_recovery_audit_created ON wf_recovery_audit(created_at, id);
+
+-- Quartz history lookup by task and by one trigger's retry attempts.
+CREATE INDEX idx_job_record_job_created ON sys_job_record(job_id, create_time, id);
+CREATE INDEX idx_job_record_execution ON sys_job_record(execution_id, attempt);
 
 -- Tenant predicates are appended to business queries; keep tenant_id as the
 -- leading column for the high-volume lookup paths.

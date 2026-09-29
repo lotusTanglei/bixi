@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lotus.bixi.common.core.util.R;
 import com.lotus.bixi.common.log.annotation.SysLog;
+import com.lotus.bixi.common.mq.reliable.Idempotent;
 import com.lotus.bixi.common.security.annotation.HasPermission;
 import com.lotus.bixi.upms.api.entity.SysNotice;
 import com.lotus.bixi.upms.api.vo.SysNoticeVO;
@@ -60,6 +61,7 @@ public class SysNoticeController {
      */
     @Operation(summary = "新增消息通知", description = "新增消息通知")
     @SysLog("新增消息通知")
+    @Idempotent(scope = "notice.save")
     @PostMapping
     @HasPermission("sys_notice_add")
     public R save(@RequestBody SysNoticeVO sysNotice) {
@@ -73,6 +75,7 @@ public class SysNoticeController {
      */
     @Operation(summary = "修改消息通知", description = "修改消息通知")
     @SysLog("修改消息通知")
+    @Idempotent(scope = "notice.update")
     @PutMapping
     @HasPermission("sys_notice_edit")
     public R updateById(@RequestBody SysNoticeVO sysNotice) {
@@ -86,6 +89,7 @@ public class SysNoticeController {
      */
     @Operation(summary = "通过id删除消息通知", description = "通过id删除消息通知")
     @SysLog("通过id删除消息通知")
+    @Idempotent(scope = "notice.delete")
     @DeleteMapping("/{id}")
     @HasPermission("sys_notice_del")
     public R removeById(@PathVariable Long id) {
@@ -99,10 +103,27 @@ public class SysNoticeController {
      */
     @Operation(summary = "发送通知", description = "发布草稿或重发已发布通知的实时提醒")
     @SysLog("发送通知")
+    @Idempotent(scope = "notice.send")
     @PostMapping("/send/{id}")
     @HasPermission("sys_notice_send")
     public R send(@PathVariable Long id) {
         return sysNoticeService.sendNotice(id) ? R.ok(Boolean.TRUE) : R.failed("仅草稿或已发布通知可发送提醒");
+    }
+
+    /**
+     * Retry recipient rows that are currently marked FAILED. The original
+     * notice and recipient identities are retained so a retry cannot create a
+     * second notification or a second recipient row.
+     */
+    @Operation(summary = "重试通知投递", description = "重试已发布通知的失败收件人投递")
+    @SysLog("重试通知投递")
+    @Idempotent(scope = "notice.delivery.retry")
+    @PostMapping({"/{id}/delivery/retry", "/delivery/retry/{id}"})
+    @HasPermission("sys_notice_send")
+    public R retryDelivery(@PathVariable Long id) {
+        return sysNoticeService.retryNoticeDelivery(id)
+                ? R.ok(Boolean.TRUE)
+                : R.failed("仅已发布通知可重试投递");
     }
 
 }

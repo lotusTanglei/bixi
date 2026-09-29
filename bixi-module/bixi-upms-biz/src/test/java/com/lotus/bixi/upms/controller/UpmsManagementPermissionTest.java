@@ -224,8 +224,8 @@ class UpmsManagementPermissionTest {
                 new Operation("department export", "sys_dept_export", c -> c.getBean(SysDeptController.class).export()),
                 new Operation("department import", "sys_dept_import", c -> c.getBean(SysDeptController.class).importDept(List.of(), null)),
                 new Operation("client details", "sys_client_view", c -> c.getBean(SysClientController.class).getByClientId("bixi")),
-                new Operation("client page", "sys_client_view", c -> c.getBean(SysClientController.class).getOauthClientDetailsPage(new Page<>(), new SysOauthClientDetails())),
-                new Operation("client export", "sys_client_export", c -> c.getBean(SysClientController.class).export(new SysOauthClientDetails())),
+                new Operation("client page", "sys_client_view", c -> c.getBean(SysClientController.class).getOauthClientDetailsPage(new Page<>(), null)),
+                new Operation("client export", "sys_client_export", c -> c.getBean(SysClientController.class).export(null)),
                 new Operation("client cache sync", "sys_client_edit", c -> c.getBean(SysClientController.class).sync()),
                 new Operation("session page", "sys_token_view", c -> c.getBean(SysTokenController.class).getTokenPage(Map.of("current", 1, "size", 10))),
                 new Operation("cache monitor", "sys_system_view", c -> c.getBean(SysSystemInfoController.class).cache()),
@@ -235,6 +235,7 @@ class UpmsManagementPermissionTest {
                 new Operation("notice update", "sys_notice_edit", c -> c.getBean(SysNoticeController.class).updateById(new SysNoticeVO())),
                 new Operation("notice delete", "sys_notice_del", c -> c.getBean(SysNoticeController.class).removeById(2L)),
                 new Operation("notice send", "sys_notice_send", c -> c.getBean(SysNoticeController.class).send(2L)),
+                new Operation("notice delivery retry", "sys_notice_send", c -> c.getBean(SysNoticeController.class).retryDelivery(2L)),
                 new Operation("notice delivery records", "sys_notice_view", c -> c.getBean(SysUserNoticeController.class).getNoticeRecordPage(new Page<>(), new UserNoticeVO()))
         );
     }

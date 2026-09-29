@@ -10,6 +10,12 @@ import java.util.Map;
 @Schema(description = "表单渲染视图对象")
 public class FormRenderVO implements Serializable {
 
+    @Schema(description = "表单ID")
+    private Long formId;
+
+    @Schema(description = "表单版本ID")
+    private Long formVersionId;
+
     @Schema(description = "表单标识")
     private String formKey;
 

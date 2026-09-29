@@ -1,0 +1,245 @@
+package ${package}.${moduleName}.service.impl;
+
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import ${package}.${moduleName}.api.dto.${ClassName}CreateDTO;
+import ${package}.${moduleName}.api.dto.${ClassName}ImportDTO;
+import ${package}.${moduleName}.api.dto.${ClassName}ImportResult;
+import ${package}.${moduleName}.api.dto.${ClassName}ImportRowError;
+import ${package}.${moduleName}.api.dto.${ClassName}QueryDTO;
+import ${package}.${moduleName}.api.dto.${ClassName}UpdateDTO;
+import ${package}.${moduleName}.api.entity.${ClassName};
+import ${package}.${moduleName}.api.vo.${ClassName}VO;
+import ${package}.${moduleName}.api.vo.${ClassName}ExportVO;
+import ${package}.${moduleName}.mapper.${ClassName}Mapper;
+import ${package}.${moduleName}.api.service.${ClassName}Service;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
+
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.text.Normalizer;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.HexFormat;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.Set;
+
+@Service("${moduleName}${ClassName}Service")
+public class ${ClassName}ServiceImpl extends ServiceImpl<${ClassName}Mapper, ${ClassName}> implements ${ClassName}Service {
+	private static final int MAX_IMPORT_ROWS = 1000;
+	private static final int MAX_IMPORT_ERRORS = ${ClassName}ImportResult.MAX_ERRORS;
+	private static final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
+
+	@Override
+	public IPage<${ClassName}VO> page${ClassName}(Page<${ClassName}> page, ${ClassName}QueryDTO query) {
+		LambdaQueryWrapper<${ClassName}> wrapper = queryWrapper(query);
+		wrapper.orderByDesc(${ClassName}::getCreateTime);
+		return page(page, wrapper).convert(entity -> BeanUtil.copyProperties(entity, ${ClassName}VO.class));
+	}
+
+	private LambdaQueryWrapper<${ClassName}> queryWrapper(${ClassName}QueryDTO query) {
+		if (query == null) query = new ${ClassName}QueryDTO();
+		LambdaQueryWrapper<${ClassName}> wrapper = Wrappers.lambdaQuery();
+#foreach($field in $queryList)
+#set($getter=$str.getProperty($field.attrName))
+#if($field.attrType == 'String')
+#set($present="StrUtil.isNotBlank")
+#else
+#set($present="Objects.nonNull")
+#end
+#if($field.queryType == 'like')
+		wrapper.like(${present}(query.${getter}()), ${ClassName}::${getter}, query.${getter}());
+#else
+		wrapper.eq(${present}(query.${getter}()), ${ClassName}::${getter}, query.${getter}());
+#end
+#end
+		return wrapper;
+	}
+
+	@Override
+	public ${ClassName}VO details(Long id) {
+		${ClassName} entity = getById(id);
+		if (entity == null) throw new IllegalArgumentException("${tableComment}不存在");
+		return BeanUtil.copyProperties(entity, ${ClassName}VO.class);
+	}
+
+	@Override
+	@Transactional(rollbackFor = Exception.class)
+	public boolean create(${ClassName}CreateDTO dto) {
+		return save(BeanUtil.copyProperties(dto, ${ClassName}.class));
+	}
+
+	@Override
+	@Transactional(rollbackFor = Exception.class)
+	public boolean update(${ClassName}UpdateDTO dto) {
+		if (getById(dto.getId()) == null) throw new IllegalArgumentException("${tableComment}不存在");
+		return updateById(BeanUtil.copyProperties(dto, ${ClassName}.class));
+	}
+
+	@Override
+	@Transactional(rollbackFor = Exception.class)
+	public boolean delete(List<Long> ids) {
+		if (ids == null || ids.isEmpty()) throw new IllegalArgumentException("至少选择一条数据");
+		return removeBatchByIds(ids);
+	}
+
+	@Override
+	@Transactional(rollbackFor = Exception.class)
+	public ${ClassName}ImportResult importRows(List<${ClassName}ImportDTO> rows) {
+		if (rows == null || rows.isEmpty()) {
+			return ${ClassName}ImportResult.failure("EMPTY_IMPORT", 0,
+				List.of(new ${ClassName}ImportRowError(1, List.of("导入文件不包含数据行"))));
+		}
+		if (rows.size() > MAX_IMPORT_ROWS) {
+			return ${ClassName}ImportResult.failure("ROW_LIMIT_EXCEEDED", rows.size(),
+				List.of(new ${ClassName}ImportRowError(MAX_IMPORT_ROWS + 1,
+					List.of("导入行数不能超过" + MAX_IMPORT_ROWS))));
+		}
+
+		List<${ClassName}ImportRowError> errors = new ArrayList<>();
+		Set<String> fingerprints = new HashSet<>();
+		for (int index = 0; index < rows.size(); index++) {
+			${ClassName}ImportDTO row = rows.get(index);
+			int rowNumber = index + 2;
+			if (row == null) {
+				addError(errors, rowNumber, List.of("数据行不能为空"));
+				continue;
+			}
+			List<String> violations = validator.validate(row).stream()
+				.map(ConstraintViolation::getMessage).filter(Objects::nonNull).distinct().sorted()
+				.limit(${ClassName}ImportRowError.MAX_MESSAGES).toList();
+			if (!violations.isEmpty()) addError(errors, rowNumber, violations);
+			if (!fingerprints.add(fingerprint(row))) {
+				addError(errors, rowNumber, List.of("上传文件内存在重复数据行"));
+			}
+		}
+		if (!errors.isEmpty()) {
+			return ${ClassName}ImportResult.failure("VALIDATION_FAILED", rows.size(), errors);
+		}
+
+		int currentRow = 2;
+		try {
+			for (${ClassName}ImportDTO row : rows) {
+				${ClassName} entity = new ${ClassName}();
+#foreach($field in $importFieldList)
+				entity.${str.setProperty($field.attrName)}(row.${str.getProperty($field.attrName)}());
+#end
+				if (baseMapper.insert(entity) != 1) throw new ImportWriteException(currentRow);
+				currentRow++;
+			}
+		}
+		catch (DuplicateKeyException collision) {
+			markRollbackOnly();
+			return ${ClassName}ImportResult.failure("DUPLICATE_KEY", rows.size(),
+				List.of(new ${ClassName}ImportRowError(currentRow, List.of("数据唯一性冲突"))));
+		}
+		catch (RuntimeException failure) {
+			markRollbackOnly();
+			return ${ClassName}ImportResult.failure("WRITE_FAILED", rows.size(),
+				List.of(new ${ClassName}ImportRowError(currentRow, List.of("数据写入失败"))));
+		}
+		return ${ClassName}ImportResult.success(rows.size());
+	}
+
+	@Override
+	public List<${ClassName}ExportVO> exportRows(${ClassName}QueryDTO query) {
+		return list(queryWrapper(query)).stream().map(this::toExportVO).toList();
+	}
+
+	private ${ClassName}ExportVO toExportVO(${ClassName} entity) {
+		${ClassName}ExportVO result = new ${ClassName}ExportVO();
+#foreach($field in $exportFieldList)
+#if($emailExportFields.contains($field.attrName))
+		result.${str.setProperty($field.attrName)}(maskEmail(entity.${str.getProperty($field.attrName)}()));
+#elseif($phoneExportFields.contains($field.attrName))
+		result.${str.setProperty($field.attrName)}(maskPhone(entity.${str.getProperty($field.attrName)}()));
+#elseif($identityExportFields.contains($field.attrName))
+		result.${str.setProperty($field.attrName)}(maskIdentity(entity.${str.getProperty($field.attrName)}()));
+#else
+		result.${str.setProperty($field.attrName)}(entity.${str.getProperty($field.attrName)}());
+#end
+#end
+		return result;
+	}
+
+	private static void addError(List<${ClassName}ImportRowError> errors, int rowNumber,
+			List<String> messages) {
+		if (errors.size() < MAX_IMPORT_ERRORS) {
+			errors.add(new ${ClassName}ImportRowError(rowNumber, messages));
+		}
+	}
+
+	private static String fingerprint(${ClassName}ImportDTO row) {
+		StringBuilder normalized = new StringBuilder();
+#foreach($field in $importFieldList)
+		appendFingerprint(normalized, row.${str.getProperty($field.attrName)}());
+#end
+		try {
+			return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256")
+				.digest(normalized.toString().getBytes(StandardCharsets.UTF_8)));
+		}
+		catch (NoSuchAlgorithmException impossible) {
+			throw new IllegalStateException("SHA-256 unavailable", impossible);
+		}
+	}
+
+	private static void appendFingerprint(StringBuilder target, Object value) {
+		String normalized = value == null ? "" : Normalizer.normalize(value.toString().strip(),
+			Normalizer.Form.NFKC).toLowerCase(Locale.ROOT);
+		target.append(normalized.length()).append(':').append(normalized).append(';');
+	}
+
+	private static String maskEmail(String value) {
+		if (StrUtil.isBlank(value)) return value;
+		String text = value.strip();
+		int separator = text.indexOf('@');
+		if (separator <= 0) return maskText(text);
+		return text.substring(0, 1) + "***" + text.substring(separator);
+	}
+
+	private static String maskPhone(String value) {
+		if (StrUtil.isBlank(value)) return value;
+		String text = value.strip();
+		if (text.length() <= 7) return maskText(text);
+		return text.substring(0, 3) + "****" + text.substring(text.length() - 4);
+	}
+
+	private static String maskIdentity(String value) {
+		if (StrUtil.isBlank(value)) return value;
+		String text = value.strip();
+		if (text.length() <= 6) return maskText(text);
+		return text.substring(0, 2) + "********" + text.substring(text.length() - 4);
+	}
+
+	private static String maskText(String value) {
+		if (StrUtil.isBlank(value)) return value;
+		String text = value.strip();
+		if (text.length() == 1) return "*";
+		return text.substring(0, 1) + "***" + text.substring(text.length() - 1);
+	}
+
+	private static void markRollbackOnly() {
+		TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+	}
+
+	private static final class ImportWriteException extends RuntimeException {
+		private ImportWriteException(int rowNumber) {
+			super("import write failed at row " + rowNumber);
+		}
+	}
+}

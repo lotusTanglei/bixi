@@ -4,6 +4,8 @@ import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lotus.bixi.common.core.util.R;
+import com.lotus.bixi.common.log.annotation.SysLog;
+import com.lotus.bixi.common.security.annotation.HasPermission;
 import com.lotus.bixi.quartz.entity.SysJobRecord;
 import com.lotus.bixi.quartz.service.SysJobRecordService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -34,12 +36,15 @@ public class SysJobRecordController {
 	 * @return
 	 */
 	@GetMapping("/page")
+	@HasPermission("job_sys_job_record_view")
 	@Operation(description = "分页定时任务日志查询")
 	public R getSysJobRecordPage(Page page, SysJobRecord sysJobLog) {
 		return R.ok(sysJobRecordService.page(page, Wrappers.query(sysJobLog)));
 	}
 
 	@DeleteMapping
+	@HasPermission("job_sys_job_record_del")
+	@SysLog("删除定时任务日志")
 	@Operation(description = "批量删除日志")
 	public R deleteLogs(@RequestBody Long[] ids) {
 		return R.ok(sysJobRecordService.removeBatchByIds(CollUtil.toList(ids)));

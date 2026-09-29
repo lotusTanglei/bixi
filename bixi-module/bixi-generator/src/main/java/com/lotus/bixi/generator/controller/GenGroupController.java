@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,6 +30,7 @@ import java.util.List;
  */
 @RestController
 @RequiredArgsConstructor
+@ConditionalOnProperty(prefix = "generator", name = "enabled", havingValue = "true", matchIfMissing = true)
 @RequestMapping("/group")
 @Tag(description = "group", name = "模板分组管理")
 @SecurityRequirement(name = HttpHeaders.AUTHORIZATION)
@@ -123,6 +125,7 @@ public class GenGroupController {
 	 */
 	@GetMapping("/list")
 	@Operation(summary = "查询列表", description = "查询列表")
+	@HasPermission("codegen_group_view")
 	public R list() {
 		List<GenGroup> list = genGroupService
 			.list(Wrappers.<GenGroup>lambdaQuery().orderByDesc(GenGroup::getCreateTime));

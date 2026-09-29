@@ -8,7 +8,8 @@ public record WorkflowActorSnapshot(long userId, String username, String tenantS
     public WorkflowActorSnapshot {
         if (userId <= 0) throw new IllegalArgumentException("userId无效");
         WorkflowEventValidation.text(username, "username", 128);
-        if (!"default".equals(tenantScope) || !"upms".equals(originatingService)) {
+        WorkflowEventValidation.tenantScope(tenantScope);
+        if (!"upms".equals(originatingService)) {
             throw new IllegalArgumentException("actor来源无效");
         }
         WorkflowEventValidation.instant(authorizedAt, "authorizedAt");

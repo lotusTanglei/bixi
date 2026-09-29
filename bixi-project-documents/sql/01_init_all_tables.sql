@@ -57,9 +57,67 @@ CREATE TABLE `demo_leave_request` (
   UNIQUE KEY `uk_leave_process_instance` (`process_instance_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='工作流请假示例';
 
+-- Stable client submissions and their immutable accepted response.
+DROP TABLE IF EXISTS `demo_leave_command`;
+CREATE TABLE `demo_leave_command` (
+  `command_id` char(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `tenant_scope` varchar(32) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `actor_id` bigint NOT NULL,
+  `actor_name` varchar(64) NOT NULL,
+  `client_request_id` char(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `operation` varchar(32) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `leave_id` bigint NOT NULL,
+  `round` int NOT NULL,
+  `request_hash` char(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `hash_version` int NOT NULL DEFAULT 1,
+  `payload_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `status` varchar(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `process_instance_id` varchar(64) DEFAULT NULL,
+  `error_code` varchar(64) DEFAULT NULL,
+  `response_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `created_at` datetime(6) NOT NULL,
+  `completed_at` datetime(6) DEFAULT NULL,
+  PRIMARY KEY (`command_id`),
+  UNIQUE KEY `uk_demo_leave_command_request` (`tenant_scope`, `actor_id`, `client_request_id`),
+  UNIQUE KEY `uk_demo_leave_command_business` (`leave_id`, `round`, `operation`),
+  CONSTRAINT `chk_demo_leave_command_status` CHECK (`status` IN ('ACCEPTED', 'STARTED', 'REJECTED')),
+  CONSTRAINT `chk_demo_leave_command_round` CHECK (`round` > 0),
+  CONSTRAINT `chk_demo_leave_command_hash_version` CHECK (`hash_version` = 1)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='请假提交幂等命令';
+
 -- ----------------------------
 -- Table structure for demo_leave_booking
 -- ----------------------------
+DROP TABLE IF EXISTS `wf_business_task`;
+CREATE TABLE `wf_business_task` (
+  `operation_id` char(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL COMMENT '稳定外部操作ID',
+  `process_instance_id` varchar(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL COMMENT '流程实例ID',
+  `execution_id` varchar(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL COMMENT '首次请求执行ID',
+  `activity_id` varchar(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL COMMENT '首次请求活动ID',
+  `activity_occurrence` int NOT NULL COMMENT '活动发生序号',
+  `business_owner` varchar(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL COMMENT '业务owner',
+  `business_table` varchar(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL COMMENT '业务表',
+  `business_id` bigint NOT NULL COMMENT '业务ID',
+  `business_round` int NOT NULL COMMENT '业务轮次',
+  `request_hash` char(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL COMMENT '请求摘要',
+  `tenant_scope` varchar(32) CHARACTER SET ascii COLLATE ascii_bin NOT NULL COMMENT '租户范围',
+  `status` varchar(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL COMMENT '外部任务状态',
+  `deadline` datetime(6) NOT NULL COMMENT '结果截止时间',
+  `result_event_id` char(36) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL COMMENT '最近结果事件ID',
+  `compensation_id` char(36) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL COMMENT '稳定补偿ID',
+  `last_error` varchar(128) DEFAULT NULL COMMENT '脱敏错误码',
+  `created_at` datetime(6) NOT NULL,
+  `updated_at` datetime(6) NOT NULL,
+  PRIMARY KEY (`operation_id`),
+  UNIQUE KEY `uk_wf_business_task_occurrence` (`process_instance_id`,`activity_id`,`activity_occurrence`),
+  UNIQUE KEY `uk_wf_business_task_compensation` (`compensation_id`),
+  KEY `idx_wf_business_task_status_deadline` (`status`,`deadline`),
+  CONSTRAINT `chk_wf_business_task_status` CHECK (`status` IN
+    ('WAITING','SUCCEEDED','FAILED','TIMED_OUT','CANCELED','COMPENSATING','COMPENSATED')),
+  CONSTRAINT `chk_wf_business_task_round` CHECK (`business_round` > 0),
+  CONSTRAINT `chk_wf_business_task_occurrence` CHECK (`activity_occurrence` > 0)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Workflow外部业务任务状态';
+
 DROP TABLE IF EXISTS `demo_leave_booking`;
 CREATE TABLE `demo_leave_booking` (
   `operation_id` char(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL COMMENT '自动任务操作ID',
@@ -427,6 +485,7 @@ CREATE TABLE `sys_notice` (
   `type` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '0' COMMENT '消息类型（0通知 1公告 2私信）',
   `sender_id` bigint DEFAULT NULL COMMENT '发送人ID',
   `priority` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '0' COMMENT '优先级（0普通 1重要 2紧急）',
+  `delivery_channel` varchar(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT 'IN_APP' COMMENT '投递渠道（IN_APP、EMAIL、SMS、WECHAT、WEBHOOK）',
   `status` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '0' COMMENT '状态（0草稿 1已发布 2已撤回）',
   `create_by` bigint DEFAULT NULL COMMENT '创建人',
   `update_by` bigint DEFAULT NULL COMMENT '修改人',
@@ -450,6 +509,14 @@ CREATE TABLE `sys_user_notice` (
   `user_id` bigint NOT NULL COMMENT '用户ID',
   `is_read` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '0' COMMENT '是否已读（0否 1是）',
   `read_time` datetime DEFAULT NULL COMMENT '阅读时间',
+  `delivery_status` varchar(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT 'PENDING' COMMENT '实时投递状态',
+  `delivery_attempts` int NOT NULL DEFAULT 0 COMMENT '实时投递尝试次数',
+  `delivery_last_error` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '最近一次投递失败原因',
+  `delivery_last_attempt_at` datetime DEFAULT NULL COMMENT '最近一次投递尝试时间',
+  `delivery_delivered_at` datetime DEFAULT NULL COMMENT '投递成功时间',
+  `delivery_receipt_status` varchar(16) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL COMMENT '第三方回执状态',
+  `delivery_receipt_code` varchar(64) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL COMMENT '第三方回执码（已脱敏）',
+  `delivery_receipt_at` datetime DEFAULT NULL COMMENT '第三方回执时间',
   `create_by` bigint DEFAULT NULL COMMENT '创建人',
   `update_by` bigint DEFAULT NULL COMMENT '修改人',
   `create_time` datetime DEFAULT NULL COMMENT '创建时间',
@@ -462,6 +529,7 @@ CREATE TABLE `sys_user_notice` (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE KEY `uk_sys_user_notice` (`notice_id`, `user_id`) USING BTREE,
   KEY `idx_sys_user_notice_user` (`user_id`) USING BTREE,
+  KEY `idx_sys_user_notice_delivery` (`notice_id`, `delivery_status`, `del_flag`) USING BTREE,
   KEY `sys_user_notice_del_flag` (`del_flag`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='用户消息关联表';
 -- =====================================================
@@ -469,6 +537,28 @@ CREATE TABLE `sys_user_notice` (
 -- 版本: 1.0.0
 -- 说明: AI 会话、消息、文档、向量嵌入等表
 -- =====================================================
+
+-- AI 租户模型配置表。每个租户只有一份当前配置；provider 密钥不落库。
+DROP TABLE IF EXISTS `ai_model_config`;
+CREATE TABLE `ai_model_config` (
+    `id` BIGINT NOT NULL COMMENT '主键ID',
+    `current_model` VARCHAR(64) NOT NULL DEFAULT 'qwen-plus' COMMENT '当前模型',
+    `temperature` DECIMAL(4,3) NOT NULL DEFAULT 0.700 COMMENT '温度参数',
+    `max_tokens` INT NOT NULL DEFAULT 2000 COMMENT '最大token数',
+    `top_p` DECIMAL(4,3) NOT NULL DEFAULT 0.900 COMMENT 'topP参数',
+    `system_prompt` TEXT COMMENT '系统提示词',
+    `create_by` BIGINT DEFAULT NULL COMMENT '创建者',
+    `update_by` BIGINT DEFAULT NULL COMMENT '修改者',
+    `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    `del_flag` CHAR(1) DEFAULT '0' COMMENT '删除标记：0-正常，1-删除',
+    `status` CHAR(1) DEFAULT '0' COMMENT '业务状态',
+    `data_status` CHAR(1) DEFAULT '0' COMMENT '数据库状态',
+    `tenant_id` BIGINT NOT NULL COMMENT '租户ID',
+    `remark` VARCHAR(500) DEFAULT NULL COMMENT '备注',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_ai_model_config_tenant` (`tenant_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='AI租户模型配置表';
 
 -- AI 会话表
 CREATE TABLE `ai_session` (
@@ -482,7 +572,9 @@ CREATE TABLE `ai_session` (
     `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `del_flag` CHAR(1) DEFAULT '0' COMMENT '删除标记：0-正常，1-删除',
+    `data_status` CHAR(1) DEFAULT '0' COMMENT '数据库状态',
     `tenant_id` bigint DEFAULT NULL COMMENT '租户ID',
+    `remark` VARCHAR(500) DEFAULT NULL COMMENT '备注',
     PRIMARY KEY (`id`),
     KEY `idx_user_id` (`user_id`),
     KEY `idx_create_time` (`create_time`)
@@ -501,7 +593,10 @@ CREATE TABLE `ai_message` (
     `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `del_flag` CHAR(1) DEFAULT '0' COMMENT '删除标记：0-正常，1-删除',
+    `status` CHAR(1) DEFAULT '0' COMMENT '业务状态',
+    `data_status` CHAR(1) DEFAULT '0' COMMENT '数据库状态',
     `tenant_id` bigint DEFAULT NULL COMMENT '租户ID',
+    `remark` VARCHAR(500) DEFAULT NULL COMMENT '备注',
     PRIMARY KEY (`id`),
     KEY `idx_session_id` (`session_id`),
     KEY `idx_create_time` (`create_time`)
@@ -522,7 +617,10 @@ CREATE TABLE `ai_conversation` (
     `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `del_flag` CHAR(1) DEFAULT '0' COMMENT '删除标记：0-正常，1-删除',
+    `status` CHAR(1) DEFAULT '0' COMMENT '业务状态',
+    `data_status` CHAR(1) DEFAULT '0' COMMENT '数据库状态',
     `tenant_id` bigint DEFAULT NULL COMMENT '租户ID',
+    `remark` VARCHAR(500) DEFAULT NULL COMMENT '备注',
     PRIMARY KEY (`id`),
     KEY `idx_session_id` (`session_id`),
     KEY `idx_user_id` (`user_id`),
@@ -543,7 +641,10 @@ CREATE TABLE `ai_document` (
     `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `del_flag` CHAR(1) DEFAULT '0' COMMENT '删除标记：0-正常，1-删除',
+    `status` CHAR(1) DEFAULT '0' COMMENT '业务状态',
+    `data_status` CHAR(1) DEFAULT '0' COMMENT '数据库状态',
     `tenant_id` bigint DEFAULT NULL COMMENT '租户ID',
+    `remark` VARCHAR(500) DEFAULT NULL COMMENT '备注',
     PRIMARY KEY (`id`),
     KEY `idx_user_id` (`user_id`),
     KEY `idx_vector_status` (`vector_status`),
@@ -559,15 +660,20 @@ CREATE TABLE `ai_embedding` (
     `embedding` TEXT COMMENT '向量数据，JSON数组或逗号分隔数字',
     `dimension` INT DEFAULT NULL COMMENT '向量维度',
     `chunk_index` INT DEFAULT NULL COMMENT '分块索引',
+    `chunk_content` LONGTEXT COMMENT '分块原文，用于来源追溯',
     `create_by` BIGINT DEFAULT NULL COMMENT '创建者',
     `update_by` BIGINT DEFAULT NULL COMMENT '更新者',
     `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `del_flag` CHAR(1) DEFAULT '0' COMMENT '删除标记：0-正常，1-删除',
+    `status` CHAR(1) DEFAULT '0' COMMENT '业务状态',
+    `data_status` CHAR(1) DEFAULT '0' COMMENT '数据库状态',
     `tenant_id` bigint DEFAULT NULL COMMENT '租户ID',
+    `remark` VARCHAR(500) DEFAULT NULL COMMENT '备注',
     PRIMARY KEY (`id`),
     KEY `idx_document_id` (`document_id`),
-    KEY `idx_vector_id` (`vector_id`)
+    KEY `idx_vector_id` (`vector_id`),
+    KEY `idx_embedding_document_chunk` (`document_id`, `chunk_index`, `del_flag`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='AI向量嵌入表';
 -- =====================================================
 -- 工作流模块数据库表
@@ -585,6 +691,7 @@ CREATE TABLE `wf_process_definition` (
     `version` INT DEFAULT 1 COMMENT '版本号',
     `description` VARCHAR(500) DEFAULT NULL COMMENT '描述',
     `form_key` VARCHAR(255) DEFAULT NULL COMMENT '表单Key',
+    `form_version_id` BIGINT DEFAULT NULL COMMENT '发布时固定的表单版本ID',
     `diagram_resource_name` VARCHAR(255) DEFAULT NULL COMMENT '流程图资源名',
     `suspension_state` INT DEFAULT 1 COMMENT '挂起状态: 1激活, 0挂起',
     `create_by` BIGINT DEFAULT NULL COMMENT '创建者',
@@ -597,8 +704,9 @@ CREATE TABLE `wf_process_definition` (
     `status` CHAR(1) DEFAULT '0' COMMENT '数据状态（业务）：0-正常',
     `data_status` CHAR(1) DEFAULT '0' COMMENT '数据状态（数据库）：0-正常',
     PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_wf_process_definition_id` (`process_definition_id`),
     KEY `idx_process_key` (`process_key`),
-    KEY `idx_process_definition_id` (`process_definition_id`)
+    KEY `idx_wf_definition_form_version` (`form_version_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='流程定义扩展表';
 
 -- 流程实例扩展表
@@ -609,7 +717,10 @@ CREATE TABLE `wf_process_instance` (
     `start_request_hash` CHAR(64) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL,
     `process_definition_id` VARCHAR(64) DEFAULT NULL COMMENT '流程定义ID',
     `process_key` VARCHAR(64) DEFAULT NULL COMMENT '流程标识',
+    `form_id` BIGINT DEFAULT NULL COMMENT '发起时固定的表单ID',
+    `form_version_id` BIGINT DEFAULT NULL COMMENT '发起时固定的表单版本ID',
     `business_key` VARCHAR(255) DEFAULT NULL COMMENT '业务Key',
+    `business_owner` VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL COMMENT '可信业务来源owner',
     `business_table` VARCHAR(128) DEFAULT NULL COMMENT '业务表名',
     `business_id` BIGINT DEFAULT NULL COMMENT '业务ID',
     `business_round` INT DEFAULT NULL COMMENT '业务申请轮次',
@@ -629,9 +740,11 @@ CREATE TABLE `wf_process_instance` (
     `data_status` CHAR(1) DEFAULT '0' COMMENT '数据状态（数据库）：0-正常',
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_wf_process_instance_id` (`process_instance_id`),
+    UNIQUE KEY `uk_wf_process_business_round` (`business_owner`,`business_table`,`business_id`,`business_round`),
     KEY `idx_business_key` (`business_key`),
     KEY `idx_start_user_id` (`start_user_id`),
-    KEY `idx_status` (`status`)
+    KEY `idx_status` (`status`),
+    KEY `idx_wf_instance_form_version` (`form_version_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='流程实例扩展表';
 
 -- Workflow START commands; a successful row commits with its engine transaction.
@@ -755,7 +868,7 @@ CREATE TABLE `wf_form_version` (
     `data_status` CHAR(1) DEFAULT '0' COMMENT '数据状态（数据库）：0-正常',
     PRIMARY KEY (`id`),
     KEY `idx_form_id` (`form_id`),
-    KEY `idx_version` (`form_id`, `version`)
+    UNIQUE KEY `uk_wf_form_version` (`form_id`, `version`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='表单版本表';
 
 -- 表单数据表
@@ -790,6 +903,9 @@ CREATE TABLE `wf_form_data` (
 CREATE TABLE `sys_form_permission` (
     `id` BIGINT NOT NULL COMMENT '主键ID',
     `form_id` BIGINT NOT NULL COMMENT '表单ID',
+    `form_version_id` BIGINT DEFAULT NULL COMMENT '表单版本ID，为空表示全部版本',
+    `process_definition_id` VARCHAR(64) DEFAULT NULL COMMENT 'Flowable流程定义ID，为空表示全部定义',
+    `task_definition_key` VARCHAR(64) DEFAULT NULL COMMENT '任务定义Key，__start__ 表示发起节点，为空表示全部节点',
     `field_code` VARCHAR(64) COMMENT '字段编码，为空表示表单级权限',
     `permission` VARCHAR(64) NOT NULL COMMENT '权限标识',
     `perm_type` VARCHAR(32) NOT NULL COMMENT '权限类型：view/edit/readonly/hidden',
@@ -805,7 +921,8 @@ CREATE TABLE `sys_form_permission` (
     `data_status` CHAR(1) DEFAULT '0' COMMENT '数据状态（数据库）：0-正常',
     PRIMARY KEY (`id`),
     KEY `idx_form_id` (`form_id`),
-    KEY `idx_permission` (`permission`)
+    KEY `idx_permission` (`permission`),
+    KEY `idx_form_permission_scope` (`form_id`, `form_version_id`, `process_definition_id`, `task_definition_key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='表单权限表';
 
 -- 角色表单权限关联表
@@ -887,6 +1004,7 @@ DROP TABLE IF EXISTS `gen_group`;
 CREATE TABLE `gen_group` (
   `id` bigint NOT NULL,
   `group_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '分组名称',
+  `active_group_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci GENERATED ALWAYS AS (IF(`del_flag` = '0', `group_name`, NULL)) STORED COMMENT '未删除分组唯一名称',
   `group_desc` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '分组描述',
   `create_by` bigint DEFAULT NULL COMMENT '创建人',
   `update_by` bigint DEFAULT NULL COMMENT '修改人',
@@ -897,7 +1015,8 @@ CREATE TABLE `gen_group` (
   `data_status` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '0' COMMENT '数据状态（用来标识数据状态，可用于割接，特殊数据处理）',
   `tenant_id` bigint DEFAULT NULL COMMENT '租户id',
   `remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '备注',
-  PRIMARY KEY (`id`) USING BTREE
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE KEY `uk_gen_group_active_name` (`active_group_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='模板分组';
 
 -- ----------------------------
@@ -1206,6 +1325,8 @@ CREATE TABLE `sys_job` (
   `method_params_value` varchar(2000) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '参数值',
   `cron_expression` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'cron执行表达式',
   `misfire_policy` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '3' COMMENT '错失执行策略（1错失周期立即执行 2错失周期执行一次 3下周期执行）',
+  `retry_count` int NOT NULL DEFAULT 0 COMMENT '失败重试次数，不包含首次执行',
+  `retry_interval_seconds` int NOT NULL DEFAULT 5 COMMENT '重试间隔（秒）',
   `tenant_type` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '1' COMMENT '1、多租户任务;2、非多租户任务',
   `execute_status` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '0' COMMENT '状态（0正常 1异常）',
   `start_time` timestamp NULL DEFAULT NULL COMMENT '初次执行时间',
@@ -1221,7 +1342,7 @@ CREATE TABLE `sys_job` (
   `tenant_id` bigint DEFAULT NULL COMMENT '租户id',
   `remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE KEY `job_name_group_idx` (`name`,`group`) USING BTREE
+  UNIQUE KEY `uk_job_tenant_name_group` (`tenant_id`,`name`,`group`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='定时任务调度表';
 
 -- ----------------------------
@@ -1231,6 +1352,11 @@ DROP TABLE IF EXISTS `sys_job_record`;
 CREATE TABLE `sys_job_record` (
   `id` bigint NOT NULL COMMENT '任务日志ID',
   `job_id` bigint NOT NULL COMMENT '任务id',
+  `execution_id` varchar(128) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL COMMENT '单次触发执行标识',
+  `attempt` int NOT NULL DEFAULT 1 COMMENT '当前尝试序号',
+  `max_attempts` int NOT NULL DEFAULT 1 COMMENT '最大尝试次数',
+  `trigger_type` varchar(16) NOT NULL DEFAULT 'LEGACY' COMMENT 'CRON、MANUAL或RECOVERY',
+  `recovered` tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否由节点故障恢复触发',
   `message` varchar(500) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT NULL COMMENT '日志信息',
   `execute_time` varchar(30) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT NULL COMMENT '执行时间',
   `exception_info` varchar(2000) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT '' COMMENT '异常信息',
@@ -1303,17 +1429,19 @@ CREATE TABLE reliable_inbox (
 -- Rejected wire messages are retained for diagnosis and explicit operator replay.
 DROP TABLE IF EXISTS reliable_quarantine;
 CREATE TABLE reliable_quarantine (
+    target_owner VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
     evidence_id VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
     body_json LONGTEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL,
     reason VARCHAR(256) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
     quarantined_at DATETIME(6) NOT NULL DEFAULT (UTC_TIMESTAMP(6)),
-    PRIMARY KEY (evidence_id)
+    PRIMARY KEY (target_owner, evidence_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
--- Operator recovery actions are retained independently from delivery state changes.
+-- Operator retry actions commit atomically with their delivery state changes.
 DROP TABLE IF EXISTS wf_recovery_audit;
 CREATE TABLE wf_recovery_audit (
     id BIGINT NOT NULL AUTO_INCREMENT,
+    tenant_scope VARCHAR(32) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
     actor_id BIGINT NOT NULL,
     action VARCHAR(32) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
     owner VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
@@ -1321,8 +1449,18 @@ CREATE TABLE wf_recovery_audit (
     evidence_id VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NULL,
     changed TINYINT(1) NOT NULL,
     reason VARCHAR(256) NOT NULL,
+    request_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NULL,
+    expected_status VARCHAR(32) CHARACTER SET ascii COLLATE ascii_bin NULL,
+    resource_type VARCHAR(32) CHARACTER SET ascii COLLATE ascii_bin NULL,
+    resource_id VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NULL,
+    previous_status VARCHAR(32) CHARACTER SET ascii COLLATE ascii_bin NULL,
+    current_status VARCHAR(32) CHARACTER SET ascii COLLATE ascii_bin NULL,
+    outcome VARCHAR(32) CHARACTER SET ascii COLLATE ascii_bin NULL,
+    detail VARCHAR(256) NULL,
+    completed_at DATETIME(6) NULL,
     created_at DATETIME(6) NOT NULL DEFAULT (UTC_TIMESTAMP(6)),
-    PRIMARY KEY (id)
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_wf_recovery_request (tenant_scope, owner, action, request_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='可靠投递人工恢复审计';
 
 -- ----------------------------

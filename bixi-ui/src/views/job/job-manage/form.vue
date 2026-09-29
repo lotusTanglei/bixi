@@ -1,5 +1,5 @@
 <template>
-	<el-dialog v-model="visible" :close-on-click-modal="false" :title="form.jobId ? $t('common.editBtn') : $t('common.addBtn')" draggable>
+		<el-dialog v-model="visible" :close-on-click-modal="false" :title="form.id ? $t('common.editBtn') : $t('common.addBtn')" draggable>
 		<el-form ref="dataFormRef" :model="form" :rules="dataRules" formDialogRef label-width="120px" v-loading="loading">
       <el-row :gutter="20">
         <el-col :span="12" class="mb20">
@@ -52,15 +52,25 @@
           </el-form-item>
         </el-col>
 
-        <el-col :span="12" class="mb20">
-          <el-form-item :label="t('job.misfirePolicy')" prop="misfirePolicy">
+	        <el-col :span="12" class="mb20">
+	          <el-form-item :label="t('job.misfirePolicy')" prop="misfirePolicy">
             <el-select v-model="form.misfirePolicy" :placeholder="t('job.inputmisfirePolicyTip')">
               <el-option v-for="(item, index) in misfire_policy" :key="index" :label="item.label"
                          :value="item.value"></el-option>
             </el-select>
-          </el-form-item>
-        </el-col>
-        <el-col :span="24" class="mb20">
+	          </el-form-item>
+	        </el-col>
+	        <el-col :span="12" class="mb20">
+	          <el-form-item :label="t('job.retryCount')" prop="retryCount">
+	            <el-input-number v-model="form.retryCount" :min="0" :max="5" :step="1" controls-position="right" />
+	          </el-form-item>
+	        </el-col>
+	        <el-col :span="12" class="mb20">
+	          <el-form-item :label="t('job.retryIntervalSeconds')" prop="retryIntervalSeconds">
+	            <el-input-number v-model="form.retryIntervalSeconds" :min="1" :max="300" :step="1" controls-position="right" />
+	          </el-form-item>
+	        </el-col>
+	        <el-col :span="24" class="mb20">
           <el-form-item :label="t('job.remark')" prop="remark">
             <el-input v-model="form.remark" :placeholder="t('job.inputremarkTip')" type="textarea"/>
           </el-form-item>
@@ -99,7 +109,7 @@ const loading = ref(false);
 const {misfire_policy, job_type} = useDict('job_status', 'job_execute_status', 'misfire_policy', 'job_type');
 
 // 提交表单数据
-const form = reactive({
+const initialForm = () => ({
   id: '',
   name: '',
   group: '',
@@ -109,11 +119,12 @@ const form = reactive({
   methodName: '',
   methodParamsValue: '',
   cronExpression: '',
-  misfirePolicy: '',
-  jobStatus: '',
-  jobExecuteStatus: '',
+  misfirePolicy: '3',
+  retryCount: 0,
+  retryIntervalSeconds: 5,
   remark: '',
 });
+const form = reactive(initialForm());
 
 const popoverVis = (bol: boolean) => {
   popoverVisible.value = bol;
@@ -121,27 +132,37 @@ const popoverVis = (bol: boolean) => {
 
 const popoverVisible = ref(false);
 // 定义校验规则
+const requiredForType = (types: string[], message: string) => (_rule: unknown, value: string, callback: (error?: Error) => void) => {
+  if (types.includes(form.type) && !value?.trim()) {
+    callback(new Error(message));
+    return;
+  }
+  callback();
+};
+
 const dataRules = reactive({
   name: [{validator: rule.overLength, trigger: 'blur'},{required: true, message: '任务名称不能为空', trigger: 'blur'}],
   group: [{validator: rule.overLength, trigger: 'blur'},{required: true, message: '任务组名不能为空', trigger: 'blur'}],
   type: [{required: true, message: '任务类型不能为空', trigger: 'blur'}],
   cronExpression: [{validator: rule.overLength, trigger: 'blur'},{required: true, message: 'cron不能为空', trigger: 'blur'}],
   misfirePolicy: [{required: true, message: '策略不能为空', trigger: 'blur'}],
-  executePath: [{validator: rule.overLength, trigger: 'blur'},{required: true, message: '执行路径不能为空', trigger: 'blur'}],
-  className: [{validator: rule.overLength, trigger: 'blur'},{required: true, message: '执行文件不能为空', trigger: 'blur'}],
-  methodName: [{validator: rule.overLength, trigger: 'blur'},{required: true, message: '执行方法不能为空', trigger: 'blur'}],
+  executePath: [{validator: rule.overLength, trigger: 'blur'}, {validator: requiredForType(['3', '4'], '执行路径不能为空'), trigger: 'blur'}],
+  className: [{validator: rule.overLength, trigger: 'blur'}, {validator: requiredForType(['1', '2'], '执行文件不能为空'), trigger: 'blur'}],
+  methodName: [{validator: rule.overLength, trigger: 'blur'}, {validator: requiredForType(['1', '2'], '执行方法不能为空'), trigger: 'blur'}],
   methodParamsValue: [{validator: rule.overLength, trigger: 'blur'}],
+  retryCount: [{required: true, type: 'number', min: 0, max: 5, message: '重试次数必须在0到5之间', trigger: 'change'}],
+  retryIntervalSeconds: [{required: true, type: 'number', min: 1, max: 300, message: '重试间隔必须在1到300秒之间', trigger: 'change'}],
 });
 
 // 打开弹窗
 const openDialog = (id: string) => {
   visible.value = true;
-  form.id = '';
+  Object.assign(form, initialForm());
 
-  // 重置表单数据
-  nextTick(() => {
-    dataFormRef.value?.resetFields();
-  });
+	  // 重置表单数据
+	  nextTick(() => {
+	    dataFormRef.value?.clearValidate();
+	  });
 
   // 获取sysJob信息
   if (id) {
@@ -158,7 +179,22 @@ const onSubmit = async () => {
 
   try {
     loading.value = true;
-    form.id ? await putObj(form) : await addObj(form);
+    const payload = {
+      id: form.id || undefined,
+      name: form.name,
+      group: form.group,
+      type: form.type,
+      executePath: ['3', '4'].includes(form.type) ? form.executePath : '',
+      className: ['1', '2'].includes(form.type) ? form.className : '',
+      methodName: ['1', '2'].includes(form.type) ? form.methodName : '',
+      methodParamsValue: form.methodParamsValue,
+      cronExpression: form.cronExpression,
+      misfirePolicy: form.misfirePolicy,
+      retryCount: form.retryCount,
+      retryIntervalSeconds: form.retryIntervalSeconds,
+      remark: form.remark,
+    };
+    form.id ? await putObj(payload) : await addObj(payload);
     useMessage().success(t(form.id ? 'common.editSuccessText' : 'common.addSuccessText'));
     visible.value = false;
     emit('refresh');
@@ -171,10 +207,25 @@ const onSubmit = async () => {
 
 // 初始化表单数据
 const getsysJobData = (id: string) => {
-  // 获取数据
-  getObj(id).then((res: any) => {
-    Object.assign(form, res.data);
-  });
+	  // 获取数据
+	  getObj(id).then((res: any) => {
+	    const data = res.data ?? {};
+	    Object.assign(form, {
+	      id: data.id ?? id,
+	      name: data.name ?? '',
+	      group: data.group ?? '',
+	      type: data.type ?? '',
+	      executePath: data.executePath ?? '',
+	      className: data.className ?? '',
+	      methodName: data.methodName ?? '',
+	      methodParamsValue: data.methodParamsValue ?? '',
+	      cronExpression: data.cronExpression ?? '',
+	      misfirePolicy: data.misfirePolicy ?? '3',
+	      retryCount: data.retryCount ?? 0,
+	      retryIntervalSeconds: data.retryIntervalSeconds ?? 5,
+	      remark: data.remark ?? '',
+	    });
+	  });
 };
 
 // 暴露变量

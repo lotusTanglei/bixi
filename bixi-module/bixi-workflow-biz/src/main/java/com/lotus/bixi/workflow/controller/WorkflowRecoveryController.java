@@ -4,6 +4,13 @@ import com.lotus.bixi.common.core.util.R;
 import com.lotus.bixi.common.log.annotation.SysLog;
 import com.lotus.bixi.common.security.annotation.HasPermission;
 import com.lotus.bixi.workflow.api.config.ConditionalOnWorkflowEnabled;
+import com.lotus.bixi.workflow.api.dto.WorkflowRecoveryRequestDTO;
+import com.lotus.bixi.workflow.api.dto.WorkflowRecoveryQueryDTO;
+import com.lotus.bixi.workflow.api.vo.WorkflowRecoveryBusinessTaskVO;
+import com.lotus.bixi.workflow.api.vo.WorkflowRecoveryCommandVO;
+import com.lotus.bixi.workflow.api.vo.WorkflowRecoveryEventVO;
+import com.lotus.bixi.workflow.api.vo.WorkflowRecoveryPageVO;
+import com.lotus.bixi.workflow.api.vo.WorkflowRecoveryResultVO;
 import com.lotus.bixi.workflow.api.vo.WorkflowInboxSnapshotVO;
 import com.lotus.bixi.workflow.api.vo.WorkflowOutboxSnapshotVO;
 import com.lotus.bixi.workflow.api.vo.WorkflowQuarantineSnapshotVO;
@@ -15,11 +22,13 @@ import com.lotus.bixi.workflow.service.impl.WorkflowRecoveryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import jakarta.validation.Valid;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -34,6 +43,53 @@ import java.util.List;
 @Tag(name = "workflow-recovery", description = "可靠投递恢复管理")
 public class WorkflowRecoveryController {
     private final WorkflowRecoveryService recovery;
+
+    @GetMapping("/events/page")
+    @HasPermission("workflow_recovery_view")
+    @Operation(summary = "分页查询工作流事件")
+    public R<WorkflowRecoveryPageVO<WorkflowRecoveryEventVO>> events(
+            @Valid WorkflowRecoveryQueryDTO query) {
+        return R.ok(recovery.pageEvents(query));
+    }
+
+    @GetMapping("/events/{eventId}")
+    @HasPermission("workflow_recovery_view")
+    @Operation(summary = "查询工作流事件详情")
+    public R<WorkflowRecoveryEventVO> event(@PathVariable String eventId) {
+        return R.ok(recovery.event(eventId));
+    }
+
+    @GetMapping("/commands/page")
+    @HasPermission("workflow_recovery_view")
+    @Operation(summary = "分页查询工作流命令")
+    public R<WorkflowRecoveryPageVO<WorkflowRecoveryCommandVO>> commands(
+            @Valid WorkflowRecoveryQueryDTO query) {
+        return R.ok(recovery.pageCommands(query));
+    }
+
+    @GetMapping("/commands/{commandId}")
+    @HasPermission("workflow_recovery_view")
+    @Operation(summary = "查询工作流命令详情")
+    public R<WorkflowRecoveryCommandVO> command(@PathVariable String commandId) {
+        return R.ok(recovery.command(commandId));
+    }
+
+    @GetMapping("/business-tasks/page")
+    @HasPermission("workflow_recovery_view")
+    @Operation(summary = "分页查询工作流业务任务")
+    public R<WorkflowRecoveryPageVO<WorkflowRecoveryBusinessTaskVO>> businessTasks(
+            @Valid WorkflowRecoveryQueryDTO query) {
+        return R.ok(recovery.pageBusinessTasks(query));
+    }
+
+    @PostMapping("/business-tasks/{operationId}/reconcile")
+    @SysLog("对账工作流任务")
+    @HasPermission("workflow_recovery_edit")
+    @Operation(summary = "对账工作流业务任务")
+    public R<WorkflowRecoveryResultVO> reconcileBusinessTask(@PathVariable String operationId,
+            @Valid @RequestBody WorkflowRecoveryRequestDTO request) {
+        return R.ok(recovery.reconcileBusinessTask(operationId, request));
+    }
 
     @GetMapping("/outbox")
     @HasPermission("workflow_recovery_view")
@@ -92,6 +148,15 @@ public class WorkflowRecoveryController {
     public R<WorkflowRecoveryActionVO> retryInbox(@PathVariable String eventId,
             @RequestParam String reason) {
         return R.ok(recovery.retryInbox(eventId, reason));
+    }
+
+    @PostMapping("/events/{eventId}/retry")
+    @SysLog("重试工作流事件")
+    @HasPermission("workflow_recovery_edit")
+    @Operation(summary = "重试工作流事件")
+    public R<WorkflowRecoveryResultVO> retryEvent(@PathVariable String eventId,
+            @Valid @RequestBody WorkflowRecoveryRequestDTO request) {
+        return R.ok(recovery.retryEvent(eventId, request));
     }
 
     @PostMapping("/quarantine/{evidenceId}/replay")

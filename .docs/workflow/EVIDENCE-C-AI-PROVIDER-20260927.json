@@ -1,0 +1,17 @@
+{
+  "observedAt": "2026-09-27",
+  "provider": "local-deterministic-dashscope-compatible",
+  "status": "passed",
+  "checks": [
+    "health endpoint",
+    "DashScope-compatible synchronous text generation response",
+    "X-DashScope-SSE streaming frames",
+    "DashScope-compatible embedding endpoint and text_index response"
+  ],
+  "command": "node scripts/test-dashscope-provider.mjs",
+  "limitations": [
+    "This validates the provider protocol contract only.",
+    "A real third-party DashScope API key and vendor delivery receipt were not exercised."
+  ],
+  "secretsOmitted": true
+}

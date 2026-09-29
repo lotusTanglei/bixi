@@ -4,19 +4,22 @@ import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class UpmsRecoveryAuditStoreTest {
 
     @Test
-    void recordsUpmsRecoveryActionInAnIndependentTransaction() {
+    void recordsDirectlyButParticipatesInAnAmbientRecoveryTransaction() {
         DriverManagerDataSource dataSource = new DriverManagerDataSource(
                 "jdbc:h2:mem:upms-recovery-audit;MODE=MySQL;DB_CLOSE_DELAY=-1", "sa", "");
         JdbcTemplate jdbc = new JdbcTemplate(dataSource);
         jdbc.execute("""
                 CREATE TABLE wf_recovery_audit (
                     id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                    tenant_scope VARCHAR(32) NOT NULL,
                     actor_id BIGINT NOT NULL,
                     action VARCHAR(64) NOT NULL,
                     owner VARCHAR(32) NOT NULL,
@@ -28,13 +31,23 @@ class UpmsRecoveryAuditStoreTest {
                 )
                 """);
 
-        UpmsRecoveryAuditStore store = new UpmsRecoveryAuditStore(dataSource,
-                new DataSourceTransactionManager(dataSource));
+        DataSourceTransactionManager manager = new DataSourceTransactionManager(dataSource);
+        UpmsRecoveryAuditStore store = new UpmsRecoveryAuditStore(dataSource, manager);
         store.record(7L, "INBOX_RETRY", "upms",
                 "00000000-0000-0000-0000-000000000007", null, true, "manual recovery");
 
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM wf_recovery_audit", Integer.class)).isEqualTo(1);
         assertThat(jdbc.queryForObject("SELECT owner FROM wf_recovery_audit", String.class)).isEqualTo("upms");
+        assertThat(jdbc.queryForObject("SELECT tenant_scope FROM wf_recovery_audit", String.class)).isEqualTo("1");
         assertThat(jdbc.queryForObject("SELECT changed FROM wf_recovery_audit", Boolean.class)).isTrue();
+
+        jdbc.execute("TRUNCATE TABLE wf_recovery_audit");
+        TransactionTemplate transaction = new TransactionTemplate(manager);
+        assertThatThrownBy(() -> transaction.executeWithoutResult(status -> {
+            store.record(7L, "INBOX_RETRY", "upms",
+                    "00000000-0000-0000-0000-000000000007", null, true, "manual recovery");
+            throw new IllegalStateException("recovery failed after audit");
+        })).isInstanceOf(IllegalStateException.class);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM wf_recovery_audit", Integer.class)).isZero();
     }
 }

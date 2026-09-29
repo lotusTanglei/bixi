@@ -50,4 +50,19 @@ class SysFileServiceImplCompensationTest {
         assertThat(result.getMsg()).isEqualTo("file_upload_failed");
         verify(fileTemplate).removeObject(eq("private"), anyString());
     }
+
+    @Test
+    void databaseInsertReturningZeroAlsoRemovesTheAlreadyStoredObject() throws Exception {
+        ReflectionTestUtils.setField(service, "baseMapper", mapper);
+        when(properties.getBucket()).thenReturn("private");
+        when(mapper.insert(any(SysFile.class))).thenReturn(0);
+
+        MockMultipartFile upload = new MockMultipartFile("file", "secret.txt", "text/plain",
+                "secret".getBytes());
+        com.lotus.bixi.common.core.util.R<?> result = service.uploadFile(upload);
+
+        assertThat(result.getCode()).isEqualTo(1);
+        assertThat(result.getMsg()).isEqualTo("file_upload_failed");
+        verify(fileTemplate).removeObject(eq("private"), anyString());
+    }
 }

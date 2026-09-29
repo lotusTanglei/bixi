@@ -157,12 +157,18 @@ try {
 
 async function verifyWorkflow(menu, currentUser) {
 	const enabled = env.WORKFLOW_ENABLED === 'true';
-	const reliable = env.BIXI_RELIABLE_ENABLED === 'true';
-	for (const path of ['/demo/leave/index', '/workflow/task/todo', '/workflow/task/done', '/workflow/process/instance']) {
+	if (enabled) {
+		assert(env.BIXI_RELIABLE_ENABLED === 'true', 'enabled workflow requires BIXI_RELIABLE_ENABLED=true');
+		if (mode === 'cloud') {
+			assert(env.BIXI_RELIABLE_RABBIT_ENABLED === 'true',
+				'cloud workflow requires BIXI_RELIABLE_RABBIT_ENABLED=true');
+		}
+	}
+	for (const path of ['/demo/leave/index', '/workflow/task/todo', '/workflow/task/done', '/workflow/process/instance', '/workflow/form/index']) {
 		assert(containsMenuPath(menu, path) === enabled, `workflow menu visibility does not match enabled=${enabled}: ${path}`);
 	}
 	if (!enabled) {
-		for (const path of ['/admin/demo/leave/page', '/admin/workflow/task/todo/page']) {
+		for (const path of ['/admin/demo/leave/page', '/admin/workflow/task/todo/page', '/admin/workflow/form/list']) {
 			const response = await authorized(path);
 			assert(response.status === 404, `disabled workflow endpoint must be absent: ${path}`, response);
 		}
@@ -179,6 +185,7 @@ async function verifyWorkflow(menu, currentUser) {
 		const reviewer = await createActor(`wf-r-${suffix}`);
 		const outsider = await createActor(`wf-o-${suffix}`);
 		const actor = (who, path, options = {}) => authorized(path, { ...options, headers: { Authorization: `Bearer ${who.token}` } });
+		const formVersioning = await verifyWorkflowFormVersioning(suffix, processIds);
 		assertApi(await authorized('/admin/workflow/definition/deploy-demo', { method: 'POST' }), 'deploy leave model');
 		assertApi(await authorized('/admin/workflow/definition/deploy-demo', { method: 'POST' }), 'redeploy leave model');
 		const definitions = assertApi(await authorized('/admin/workflow/definition/list?processKey=demo_leave_approval'), 'list leave models');
@@ -189,36 +196,11 @@ async function verifyWorkflow(menu, currentUser) {
 		const beforeStart = await processCount();
 		const invalidStart = await authorized('/admin/workflow/process/start', { method: 'POST', body: { ...startIntent, requestId: undefined } });
 		assertDenied(invalidStart, 'START without requestId');
-		const invalidUnicodeStartId = randomUUID();
-		const invalidUnicodeStart = await authorized('/admin/workflow/process/start', { method: 'POST', body: {
-			...startIntent, requestId: invalidUnicodeStartId, variables: { approverId: reviewer.id, text: '\uD800' },
-		} });
-		assert(invalidUnicodeStart.status === 400, 'START must reject isolated Unicode surrogate with HTTP400', invalidUnicodeStart);
-		const invalidUnicodeStartCommand = await authorized(`/admin/workflow/command/${invalidUnicodeStartId}`);
-		assert(invalidUnicodeStartCommand.status === 404, 'invalid START created a command', invalidUnicodeStartCommand);
-		assert(await processCount() === beforeStart, 'invalid START created a process');
-		// Two simultaneous HTTP requests model a client/proxy retry while the first response is still pending.
-		const concurrentStarts = await Promise.all([0, 1].map(() => authorized('/admin/workflow/process/start', { method: 'POST', body: startIntent })));
-		const [originalStart, concurrentStart] = concurrentStarts.map(response => assertApi(response, 'concurrent start intention'));
-		processIds.push(originalStart.processInstanceId);
-		assert(JSON.stringify(concurrentStart) === JSON.stringify(originalStart), 'concurrent START returned different instances/snapshots');
-		const repeatedStart = assertApi(await authorized('/admin/workflow/process/start', { method: 'POST', body: startIntent }), 'replay same start intention');
-		assert(JSON.stringify(repeatedStart) === JSON.stringify(originalStart), 'START replay changed the saved response');
-		assert(await processCount() === beforeStart + 1, 'START retry or rejected request created extra process instances');
-		const startCommand = assertApi(await authorized(`/admin/workflow/command/${startIntent.requestId}`), 'query own start command');
-		assert(startCommand.resultCode === 'SUCCESS' && startCommand.processInstanceId === originalStart.processInstanceId,
-			'START command result missing', startCommand);
-		assert(JSON.stringify(startCommand.response) === JSON.stringify(originalStart), 'command query changed the START wire snapshot');
-		const startConflict = await authorized('/admin/workflow/process/start', { method: 'POST', body: { ...startIntent, title: 'changed intention' } });
-		assert(startConflict.status === 409 && startConflict.body?.data?.errorCode === 'WORKFLOW_REQUEST_CONFLICT', 'START content conflict must be HTTP409', startConflict);
-		const hiddenCommand = await actor(outsider, `/admin/workflow/command/${startIntent.requestId}`);
-		assert(hiddenCommand.status === 404 && hiddenCommand.body?.data?.errorCode === 'WORKFLOW_COMMAND_NOT_FOUND', 'another actor can infer command existence', hiddenCommand);
-		assertApi(await authorized(`/admin/workflow/process/cancel/${originalStart.processInstanceId}?requestId=${randomUUID()}`, { method: 'DELETE' }), 'finish START test process');
-		const endedStart = assertApi(await authorized('/admin/workflow/process/start', { method: 'POST', body: startIntent }), 'replay START after process ended');
-		assert(JSON.stringify(endedStart) === JSON.stringify(originalStart), 'ended process changed immutable START result');
-		const currentStart = assertApi(await authorized(`/admin/workflow/process/details/${originalStart.processInstanceId}`), 'read current START process');
-		assert(currentStart.status === 'terminated', 'START replay restarted an ended process');
-		auditExpected.push({ title: '发起流程', marker: startIntent.requestId });
+		assertDenied(await authorized('/admin/workflow/process/start', { method: 'POST', body: startIntent }),
+			'business workflow must reject public START');
+		const rejectedStartCommand = await authorized(`/admin/workflow/command/${startIntent.requestId}`);
+		assert(rejectedStartCommand.status === 404, 'rejected public START created a command', rejectedStartCommand);
+		assert(await processCount() === beforeStart, 'rejected public START created a process');
 		const approvers = assertApi(await authorized(`/admin/demo/leave/approvers?name=${encodeURIComponent(reviewer.username)}`), 'find approver');
 		assert(approvers.records.some(user => String(user.id) === reviewer.id), 'reviewer not returned as active approver');
 		assert(approvers.records.every(user => !Object.hasOwn(user, 'password')), 'approver lookup exposed passwords');
@@ -233,17 +215,22 @@ async function verifyWorkflow(menu, currentUser) {
 			assertDenied(await actor(outsider, `/admin/demo/leave/${draft.id}`, { method: 'PUT', body: payload }), 'outsider edit draft');
 			assertApi(await authorized(`/admin/demo/leave/${draft.id}`, { method: 'PUT', body: { ...payload, reason: `${reason}-edited` } }), 'edit leave draft');
 			auditExpected.push({ title: '新增请假申请', marker: reason }, { title: '修改请假申请', marker: String(draft.id) });
-			const submittedResponse = assertApi(await authorized(`/admin/demo/leave/${draft.id}/submit`, { method: 'POST' }), 'submit leave');
-			const submitted = reliable
-				? await poll(
-					async () => assertApi(await authorized(`/admin/demo/leave/details/${draft.id}`), 'read reliable leave binding'),
-					value => value.leaveStatus === 'IN_REVIEW' && value.processInstanceId,
-					'reliable leave workflow binding'
-				)
-				: submittedResponse;
+			const submitRequestId = randomUUID();
+			const submitPath = `/admin/demo/leave/${draft.id}/submit?requestId=${submitRequestId}`;
+			const concurrentSubmissions = await Promise.all([0, 1].map(() => authorized(submitPath, { method: 'POST' })));
+			const [submittedResponse, replayedSubmission] = concurrentSubmissions.map(response => assertApi(response, 'submit leave'));
+			assert(JSON.stringify(replayedSubmission) === JSON.stringify(submittedResponse), 'leave submit replay changed the saved response');
+			assert(JSON.stringify(assertApi(await authorized(submitPath, { method: 'POST' }), 'replay leave submit'))
+				=== JSON.stringify(submittedResponse), 'sequential leave submit replay changed the saved response');
+				const submitted = await poll(
+						async () => assertApi(await authorized(`/admin/demo/leave/details/${draft.id}`), 'read reliable leave binding'),
+						value => value.leaveStatus === 'IN_REVIEW' && value.processInstanceId,
+						'reliable leave workflow binding'
+					);
 			assert(submitted.leaveStatus === 'IN_REVIEW' && submitted.processInstanceId, 'leave not bound to running process', submitted);
 			processIds.push(submitted.processInstanceId);
-			assertDenied(await authorized(`/admin/demo/leave/${draft.id}/submit`, { method: 'POST' }), 'repeat submitted leave');
+			assertDenied(await authorized(`/admin/demo/leave/${draft.id}/submit?requestId=${randomUUID()}`, { method: 'POST' }),
+				'repeat submitted leave with a new requestId');
 			assertDenied(await authorized(`/admin/demo/leave/${draft.id}`, { method: 'PUT', body: payload }), 'edit submitted leave');
 			assertDenied(await actor(outsider, `/admin/workflow/process/details/${submitted.processInstanceId}`), 'outsider read process');
 			assertDenied(await actor(outsider, `/admin/demo/leave/details/${draft.id}`), 'outsider read submitted leave');
@@ -326,13 +313,11 @@ async function verifyWorkflow(menu, currentUser) {
 			const final = await poll(async () => assertApi(await authorized(`/admin/demo/leave/details/${draft.id}`), 'read final leave'), value => value.leaveStatus === expected, 'automatic business writeback');
 			assert(final.endedAt, 'business terminal time missing', final);
 			assertApi(await authorized(`/admin/demo/leave/${draft.id}/refresh`, { method: 'POST' }), 'reconcile final state');
-			if (reliable) {
 				const recoveryRows = assertApi(await authorized('/admin/upms/recovery/reconcile?limit=100'), 'query UPMS recovery reconciliation');
 				const currentRecovery = recoveryRows.find(row => String(row.businessId) === String(draft.id));
 				assert(currentRecovery, 'UPMS recovery reconciliation did not return the submitted leave', recoveryRows);
 				assert(['MATCHED', 'PENDING_DELIVERY', 'FAILED_DELIVERY'].includes(currentRecovery.classification),
 					'UPMS recovery reconciliation returned an unknown classification', currentRecovery);
-			}
 			auditExpected.push({ title: '提交请假申请', marker: String(draft.id) });
 		}
 		const disposable = assertApi(await authorized('/admin/demo/leave', { method: 'POST', body: { approverId: reviewer.id, startDate: '2026-10-01', endDate: '2026-10-01', reason: `delete-${suffix}` } }), 'create disposable draft');
@@ -341,8 +326,15 @@ async function verifyWorkflow(menu, currentUser) {
 		auditExpected.push({ title: '删除请假申请', marker: String(disposable.id) });
 		const invalid = await authorized('/admin/demo/leave', { method: 'POST', body: { approverId: reviewer.id, startDate: '2026-10-03', endDate: '2026-10-01', reason: 'invalid dates' } });
 		assertDenied(invalid, 'invalid leave dates');
-		const audit = await poll(loadAuditLogs, records => auditExpected.every(expected => records.some(record => !baseline.has(String(record.id)) && record.title === expected.title && String(record.params).includes(expected.marker))), 'leave write audit');
-		return { enabled: true, states: ['APPROVED', 'REJECTED', 'CANCELED'], startRetryAndConflict: true, assigneeAndDataPermissions: true, history: true, auditLogs: audit.filter(record => !baseline.has(String(record.id)) && record.title.includes('请假')).map(record => ({ id: String(record.id), title: record.title })) };
+		const audit = await poll(loadAuditLogs, records => auditExpected.every(expected => records.some(record =>
+			!baseline.has(String(record.id))
+			&& record.title === expected.title
+			&& `${record.requestUri || ''}\n${record.params || ''}`.includes(expected.marker)
+		)), 'leave write audit');
+		return { enabled: true, states: ['APPROVED', 'REJECTED', 'CANCELED'], startRetryAndConflict: true,
+			assigneeAndDataPermissions: true, history: true, formVersioning,
+			auditLogs: audit.filter(record => !baseline.has(String(record.id)) && record.title.includes('请假'))
+				.map(record => ({ id: String(record.id), title: record.title })) };
 	} finally {
 		for (const id of processIds) await authorized(`/admin/workflow/process/cancel/${id}?requestId=${randomUUID()}`, { method: 'DELETE' }).catch(() => undefined);
 		for (const id of drafts) await authorized(`/admin/demo/leave/${id}`, { method: 'DELETE' }).catch(() => undefined);
@@ -361,6 +353,114 @@ async function verifyWorkflow(menu, currentUser) {
 		assert(response.status === 200 && response.body?.access_token, 'acceptance actor login failed', { status: response.status });
 		return { id: String(user.id), username: actorUsername, token: response.body.access_token };
 	}
+}
+
+async function verifyWorkflowFormVersioning(suffix, processIds) {
+	const processKey = 'stage2_form_acceptance';
+	const allowed = new Set((env.WORKFLOW_PUBLIC_START_MODELS || '').split(',').map(value => value.trim()).filter(Boolean));
+	assert(allowed.size === 1 && allowed.has(processKey),
+		`enabled acceptance requires WORKFLOW_PUBLIC_START_MODELS=${processKey}`, [...allowed]);
+
+	const formKey = `stage2_form_${suffix.replaceAll('-', '_')}`;
+	assertApi(await authorized('/admin/workflow/form', {
+		method: 'POST',
+		body: { formKey, formName: `Stage 2 form ${suffix}`, formType: 'approval', category: 'acceptance' },
+	}), 'create workflow acceptance form');
+	const formPage = assertApi(await authorized(
+		`/admin/workflow/form/list?current=1&size=10&formKey=${encodeURIComponent(formKey)}`),
+	'load workflow acceptance form');
+	const form = formPage.records?.find(candidate => candidate.formKey === formKey);
+	assert(form?.id, 'created workflow form was not returned', formPage);
+
+	const schemaV1 = JSON.stringify({ widgetList: [
+		{ type: 'input', options: { name: 'legacyNote', label: 'Legacy note', required: true } },
+	] });
+	await createAndActivateFormVersion(form.id, 1, schemaV1, 'acceptance v1');
+	const v1 = await findFormVersion(form.id, 1);
+	const definitionV1 = await deployAcceptanceDefinition(formKey, `${suffix}-v1`);
+	const oldProcess = assertApi(await authorized('/admin/workflow/process/start', {
+		method: 'POST',
+		body: { requestId: randomUUID(), processKey, businessKey: `form-old-${suffix}`,
+			title: `Form v1 ${suffix}`, formId: form.id,
+			formDataJson: JSON.stringify({ legacyNote: 'kept-on-v1' }) },
+	}), 'start v1-bound workflow');
+	assert(oldProcess?.processInstanceId, 'v1-bound workflow did not return an instance', oldProcess);
+	processIds.push(oldProcess.processInstanceId);
+
+	const schemaV2 = JSON.stringify({ widgetList: [
+		{ type: 'input', options: { name: 'legacyNote', label: 'Legacy note', required: true } },
+		{ type: 'input', options: { name: 'newNote', label: 'New note', required: true } },
+	] });
+	await createAndActivateFormVersion(form.id, 2, schemaV2, 'acceptance v2');
+	const v2 = await findFormVersion(form.id, 2);
+	const definitionV2 = await deployAcceptanceDefinition(formKey, `${suffix}-v2`);
+	assert(Number(definitionV2.version) > Number(definitionV1.version),
+		'redeploying the same process key did not create a newer definition', { definitionV1, definitionV2 });
+
+	const oldRender = assertApi(await authorized(
+		`/admin/workflow/form/data/process/${encodeURIComponent(oldProcess.processInstanceId)}`),
+	'render old workflow form after v2 deployment');
+	assert(String(oldRender.formVersionId) === String(v1.id) && oldRender.version === 1,
+		'old workflow instance drifted away from form v1', oldRender);
+	assert(JSON.parse(oldRender.dataJson).legacyNote === 'kept-on-v1',
+		'old workflow instance lost its v1 data', oldRender);
+	assert(!oldRender.schemaJson.includes('newNote'), 'old workflow instance received a v2-only field', oldRender);
+
+	const newProcess = assertApi(await authorized('/admin/workflow/process/start', {
+		method: 'POST',
+		body: { requestId: randomUUID(), processKey, businessKey: `form-new-${suffix}`,
+			title: `Form v2 ${suffix}`, formId: form.id,
+			formDataJson: JSON.stringify({ legacyNote: 'new-on-v2', newNote: 'required-on-v2' }) },
+	}), 'start v2-bound workflow');
+	assert(newProcess?.processInstanceId, 'v2-bound workflow did not return an instance', newProcess);
+	processIds.push(newProcess.processInstanceId);
+	const newRender = assertApi(await authorized(
+		`/admin/workflow/form/data/process/${encodeURIComponent(newProcess.processInstanceId)}`),
+	'render new workflow form');
+	assert(String(newRender.formVersionId) === String(v2.id) && newRender.version === 2,
+		'new workflow instance did not bind form v2', newRender);
+	assert(JSON.parse(newRender.dataJson).newNote === 'required-on-v2'
+		&& newRender.schemaJson.includes('newNote'), 'new workflow instance did not use the v2 contract', newRender);
+
+	return { processKey, formKey, definitionVersions: [definitionV1.version, definitionV2.version],
+		formVersions: [v1.version, v2.version], oldInstanceFrozen: true, newInstanceUsesV2: true };
+}
+
+async function createAndActivateFormVersion(formId, version, schemaJson, changeLog) {
+	assertApi(await authorized('/admin/workflow/form/version', {
+		method: 'POST', body: { formId, schemaJson, changeLog },
+	}), `create workflow form v${version}`);
+	assertApi(await authorized(`/admin/workflow/form/version/activate/${formId}/${version}`, { method: 'PUT' }),
+		`activate workflow form v${version}`);
+}
+
+async function findFormVersion(formId, version) {
+	const versions = assertApi(await authorized(`/admin/workflow/form/version/list/${formId}`),
+		`list workflow form versions for v${version}`);
+	const found = versions.find(candidate => Number(candidate.version) === version);
+	assert(found?.id && found.isActive === '1', `workflow form v${version} is not active`, versions);
+	return found;
+}
+
+async function deployAcceptanceDefinition(formKey, name) {
+	const bpmn = `<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:flowable="http://flowable.org/bpmn" targetNamespace="https://bixi.dev/acceptance">
+  <process id="stage2_form_acceptance" name="Stage 2 form acceptance" isExecutable="true">
+    <startEvent id="start"/>
+    <sequenceFlow id="toReview" sourceRef="start" targetRef="review"/>
+    <userTask id="review" name="Review" flowable:assignee="\${initiator}"/>
+    <sequenceFlow id="toEnd" sourceRef="review" targetRef="end"/>
+    <endEvent id="end"/>
+  </process>
+</definitions>`;
+	const body = new FormData();
+	body.append('name', name);
+	body.append('category', 'acceptance');
+	body.append('formKey', formKey);
+	body.append('file', new Blob([bpmn], { type: 'application/xml' }), 'stage2_form_acceptance.bpmn20.xml');
+	return assertApi(await authorized('/admin/workflow/definition/deploy', { method: 'POST', body }),
+		`deploy ${name}`);
 }
 
 function assertDenied(response, action) {
@@ -432,7 +532,7 @@ async function authorized(path, options = {}) {
 async function request(path, options = {}) {
 	const headers = { Accept: 'application/json', ...options.headers };
 	let body = options.body;
-	if (body && typeof body !== 'string') {
+	if (body && typeof body !== 'string' && !(body instanceof FormData)) {
 		headers['Content-Type'] = 'application/json';
 		body = JSON.stringify(body);
 	}

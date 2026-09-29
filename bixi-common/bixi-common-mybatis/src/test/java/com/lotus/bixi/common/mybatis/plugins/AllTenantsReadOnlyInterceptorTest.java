@@ -42,6 +42,24 @@ class AllTenantsReadOnlyInterceptorTest {
                 .hasMessage("all_tenants_read_only");
     }
 
+    @Test
+    void rejectsWriteSqlInAReadOnlyTenantSwitch() throws Throwable {
+        TenantContextHolder.set(7L);
+        TenantContextHolder.setReadOnlySwitch(true);
+        StatementHandler handler = mock(StatementHandler.class);
+        BoundSql boundSql = new BoundSql(new org.apache.ibatis.session.Configuration(),
+                "UPDATE sys_user SET name = 'x'", java.util.List.of(), null);
+        when(handler.getBoundSql()).thenReturn(boundSql);
+        Invocation invocation = new Invocation(handler,
+                StatementHandler.class.getMethod("prepare", Connection.class, Integer.class),
+                new Object[] {mock(Connection.class), 0});
+
+        AllTenantsReadOnlyInterceptor interceptor = new AllTenantsReadOnlyInterceptor();
+        assertThatThrownBy(() -> interceptor.intercept(invocation))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("tenant_switch_read_only");
+    }
+
     private static Object invoke(Method method, Object target, Invocation invocation) throws Throwable {
         try {
             return method.invoke(target, invocation);

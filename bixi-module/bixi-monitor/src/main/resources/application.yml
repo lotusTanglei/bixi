@@ -1,6 +1,17 @@
 server:
   port: 5001
 
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
 spring:
   application:
     name: @artifactId@

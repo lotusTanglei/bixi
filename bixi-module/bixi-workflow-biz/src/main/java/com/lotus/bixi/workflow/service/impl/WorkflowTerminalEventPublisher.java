@@ -3,6 +3,7 @@ package com.lotus.bixi.workflow.service.impl;
 import com.lotus.bixi.workflow.api.config.ConditionalOnWorkflowEnabled;
 import com.lotus.bixi.workflow.api.entity.WfProcessInstance;
 import com.lotus.bixi.workflow.api.event.WorkflowOutcome;
+import com.lotus.bixi.common.core.context.TenantContextHolder;
 import com.lotus.bixi.workflow.event.WorkflowTerminalEventSink;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
@@ -47,15 +48,26 @@ public final class WorkflowTerminalEventPublisher {
         String safeCausationId = isUuid(causationId) ? causationId : null;
         durable.recordCompleted(instance.getProcessInstanceId(), instance.getBusinessId(),
                 instance.getBusinessKey(), instance.getBusinessRound(), instance.getStartRequestId(),
-                actorId, actorName, requestHash, outcome,
+                actorId, actorName, tenantScope(instance), requestHash, outcome,
                 instance.getEndTime().atZone(java.time.ZoneId.systemDefault()).toInstant(),
                 correlationId, safeCausationId);
     }
 
     private static boolean hasDurableAssociation(WfProcessInstance instance) {
-        return instance.getBusinessId() != null && instance.getBusinessKey() != null
+        return "demo_leave_approval".equals(instance.getProcessKey())
+                && "demo_leave_request".equals(instance.getBusinessTable())
+                && instance.getBusinessId() != null && instance.getBusinessKey() != null
                 && instance.getBusinessRound() != null && instance.getStartRequestId() != null
                 && instance.getEndTime() != null;
+    }
+
+    private static String tenantScope(WfProcessInstance instance) {
+        if (instance.getTenantId() != null && instance.getTenantId() > 0) {
+            return instance.getTenantId().toString();
+        }
+        Long current = TenantContextHolder.get();
+        if (current == null || current <= 0) throw new IllegalStateException("流程终态缺少租户上下文");
+        return current.toString();
     }
 
     private static boolean isUuid(String value) {

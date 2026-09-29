@@ -63,7 +63,7 @@
 		</el-dropdown>
 		<Search ref="searchRef" />
 		<global-websocket uri="/admin/ws/info" v-if="websocketEnable" @rollback="rollback" />
-		<global-sse uri="/admin/user-notice/stream" v-if="sseEnable" @message="onSseMessage" />
+		<global-sse uri="/admin/user-notice/stream" v-if="sseEnable" @open="onSseOpen" @message="onSseMessage" />
 		<personal-drawer ref="personalDrawerRef"></personal-drawer>
 	</div>
 </template>
@@ -226,6 +226,13 @@ const onSseMessage = async (data: string) => {
 	try {
 		const noticeCenter = useNoticeCenter();
 		await noticeCenter.refresh();
+	} catch {
+	}
+};
+
+const onSseOpen = async () => {
+	try {
+		await useNoticeCenter().refresh();
 	} catch {
 	}
 };

@@ -107,12 +107,12 @@ class RabbitBrokerRestartIntegrationTest extends MysqlInboxTestSupport {
                 new RabbitDurableTransport.Route("workflow", "upms", EXCHANGE, "upms.workflow"),
                 new RabbitDurableTransport.Route("upms", "workflow", UPMS_EXCHANGE, "workflow.upms"),
                 WORKFLOW_QUEUE, workflowExecutor, workflowInbox,
-                new JdbcQuarantineStore(dataSource, manager), delivery, () -> true);
+                new JdbcQuarantineStore(dataSource, manager, "workflow"), delivery, () -> true);
         var upms = new RabbitOwnerEndpoint(settings,
                 new RabbitDurableTransport.Route("upms", "workflow", UPMS_EXCHANGE, "workflow.upms"),
                 new RabbitDurableTransport.Route("workflow", "upms", EXCHANGE, "upms.workflow"),
                 UPMS_QUEUE, upmsExecutor, upmsInbox,
-                new JdbcQuarantineStore(dataSource, manager), delivery, () -> true);
+                new JdbcQuarantineStore(dataSource, manager, "upms"), delivery, () -> true);
         return new Endpoints(workflow, upms);
     }
 

@@ -4,6 +4,8 @@ import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.time.Duration;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Data
@@ -17,6 +19,9 @@ public class WorkflowProperties {
     private String databaseSchemaUpdate = "false";
 
     private String historyLevel = "full";
+
+    /** Public HTTP starts are closed unless an unbound process key is explicitly allowed. */
+    private Set<String> publicStartModels = new LinkedHashSet<>();
 
     /** A process-local default keeps two replicas from claiming the same job identity. */
     private String lockOwner = UUID.randomUUID().toString();

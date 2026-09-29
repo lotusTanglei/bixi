@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "revision": "${FULL_40_CHARACTER_LOWERCASE_GIT_REVISION}",
+  "groupName": "bixi-default",
+  "templates": [
+    {
+      "templateName": "entity",
+      "sourcePath": "templates/entity.java.vm",
+      "generatorPath": "${apiPath}/src/main/java/${packagePath}/api/entity/${className}.java",
+      "sha256": "${LOWERCASE_SHA256_OF_ENTITY_TEMPLATE}",
+      "size": ${ENTITY_TEMPLATE_SIZE_BYTES}
+    }
+  ]
+}

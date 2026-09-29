@@ -9,6 +9,7 @@ import com.lotus.bixi.upms.api.service.CandidateRoleQueryService;
 import com.lotus.bixi.common.core.context.TenantContextHolder;
 import com.lotus.bixi.workflow.api.dto.ProcessStartDTO;
 import com.lotus.bixi.workflow.api.dto.TaskCompleteDTO;
+import com.lotus.bixi.workflow.api.dto.TaskTransferDTO;
 import com.lotus.bixi.workflow.api.vo.TaskVO;
 import org.flowable.engine.ProcessEngine;
 import org.junit.jupiter.api.AfterEach;
@@ -39,9 +40,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /** Authorization coverage for candidate users and trusted role candidates. */
 @SpringJUnitConfig(WfTaskServiceCandidateAuthorizationTest.Config.class)
-@TestPropertySource(locations = "classpath:workflow-test.properties", properties = {
+    @TestPropertySource(locations = "classpath:workflow-test.properties", properties = {
         "workflow.enabled=true", "workflow.database-schema-update=true",
-        "workflow.async-executor-activate=false", "flowable.check-process-definitions=false"})
+        "workflow.async-executor-activate=false", "flowable.check-process-definitions=false",
+        "workflow.public-start-models=candidate-auth,role-candidate-auth"})
 class WfTaskServiceCandidateAuthorizationTest {
 
     @Autowired ProcessEngine engine;
@@ -58,6 +60,8 @@ class WfTaskServiceCandidateAuthorizationTest {
         candidates.reset();
         engine.getRepositoryService().createDeployment().tenantId("1")
                 .addString("candidate-auth.bpmn20.xml", model()).deploy();
+        engine.getRepositoryService().createDeployment().tenantId("1")
+                .addString("role-candidate-auth.bpmn20.xml", roleCandidateModel()).deploy();
         login(11L);
     }
 
@@ -115,6 +119,29 @@ class WfTaskServiceCandidateAuthorizationTest {
     }
 
     @Test
+    void activeRoleCandidateCanReadTaskAndProcessDetailsBeforeClaiming() {
+        String taskId = startTask();
+        String processInstanceId = engine.getTaskService().createTaskQuery()
+                .taskId(taskId).singleResult().getProcessInstanceId();
+
+        loginWithRole(33L, 11L);
+
+        assertThat(tasks.getById(taskId).getTaskId()).isEqualTo(taskId);
+        assertThat(processes.getById(processInstanceId).getProcessInstanceId()).isEqualTo(processInstanceId);
+    }
+
+    @Test
+    void activeRoleCandidateCanUnclaimATaskTheyClaimed() {
+        String taskId = startTask("role-candidate-auth");
+        loginWithRole(33L, 11L);
+        tasks.claim(taskId, 33L, UUID.randomUUID().toString());
+
+        tasks.unclaim(taskId, UUID.randomUUID().toString());
+
+        assertThat(engine.getTaskService().createTaskQuery().taskId(taskId).singleResult().getAssignee()).isNull();
+    }
+
+    @Test
     void sameGroupNonAssigneeCannotCompleteAssignedTask() {
         String taskId = startTask();
         login(22L);
@@ -127,10 +154,60 @@ class WfTaskServiceCandidateAuthorizationTest {
         assertThatThrownBy(() -> tasks.complete(complete)).isInstanceOf(AccessDeniedException.class);
     }
 
+    @Test
+    void transferRejectsUnavailableMissingAndCrossTenantTargetsWithoutChangingTheAssignee() {
+        String taskId = startTask();
+        login(22L);
+        tasks.claim(taskId, 22L, UUID.randomUUID().toString());
+
+        candidates.identity(44L, new CandidateIdentity(44L, false, false, 1L));
+        candidates.identity(45L, new CandidateIdentity(45L, true, true, 1L));
+        candidates.identity(46L, new CandidateIdentity(46L, true, false, 2L));
+        candidates.identity(47L, null);
+
+        for (long target : List.of(44L, 45L, 46L, 47L)) {
+            TaskTransferDTO transfer = new TaskTransferDTO();
+            transfer.setTaskId(taskId);
+            transfer.setTransferUserId(target);
+            transfer.setRequestId(UUID.randomUUID().toString());
+
+            assertThatThrownBy(() -> tasks.transfer(transfer))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("目标办理人不存在、不可用或租户不匹配");
+            assertThat(engine.getTaskService().createTaskQuery().taskId(taskId).singleResult().getAssignee())
+                    .isEqualTo("22");
+        }
+    }
+
+    @Test
+    void transferAuditUsesTheTrustedCandidateNameInsteadOfClientMetadata() {
+        String taskId = startTask();
+        login(22L);
+        tasks.claim(taskId, 22L, UUID.randomUUID().toString());
+        candidates.identity(33L, new CandidateIdentity(33L, true, false, 1L,
+                "reviewer-33", "可信审批人"));
+
+        TaskTransferDTO transfer = new TaskTransferDTO();
+        transfer.setTaskId(taskId);
+        transfer.setTransferUserId(33L);
+        transfer.setTransferUserName("伪造姓名");
+        transfer.setTransferReason("工作交接");
+        transfer.setRequestId(UUID.randomUUID().toString());
+        tasks.transfer(transfer);
+
+        JdbcTemplate jdbc = new JdbcTemplate(dataSource);
+        assertThat(jdbc.queryForObject("SELECT delegate_user_name FROM wf_approval_record WHERE task_id = ?",
+                String.class, taskId)).isEqualTo("可信审批人");
+    }
+
     private String startTask() {
+        return startTask("candidate-auth");
+    }
+
+    private String startTask(String processKey) {
         ProcessStartDTO request = new ProcessStartDTO();
         request.setRequestId(UUID.randomUUID().toString());
-        request.setProcessKey("candidate-auth");
+        request.setProcessKey(processKey);
         request.setBusinessKey(UUID.randomUUID().toString());
         String processInstanceId = processes.start(request).getProcessInstanceId();
         return engine.getTaskService().createTaskQuery().processInstanceId(processInstanceId).singleResult().getId();
@@ -166,6 +243,18 @@ class WfTaskServiceCandidateAuthorizationTest {
                     <sequenceFlow id="toTask" sourceRef="start" targetRef="review"/>
                     <userTask id="review" name="审批" flowable:candidateUsers="22,44,45,46,22"
                         flowable:candidateGroups="role:11,role:11"/>
+                    <sequenceFlow id="toEnd" sourceRef="review" targetRef="end"/><endEvent id="end"/>
+                  </process></definitions>
+                """;
+    }
+
+    private static String roleCandidateModel() {
+        return """
+                <definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:flowable="http://flowable.org/bpmn" targetNamespace="https://bixi.example/test">
+                  <process id="role-candidate-auth" isExecutable="true"><startEvent id="start"/>
+                    <sequenceFlow id="toTask" sourceRef="start" targetRef="review"/>
+                    <userTask id="review" name="审批" flowable:candidateGroups="role:11"/>
                     <sequenceFlow id="toEnd" sourceRef="review" targetRef="end"/><endEvent id="end"/>
                   </process></definitions>
                 """;

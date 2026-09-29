@@ -20,6 +20,7 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.util.StringUtils;
 
 import java.util.UUID;
 
@@ -53,9 +54,9 @@ public class SecuritySecureConfig {
 		http.authorizeHttpRequests((authorizeRequests) -> authorizeRequests //
 			.requestMatchers(new AntPathRequestMatcher(this.adminServer.path("/assets/**")))
 			.permitAll()
-			.requestMatchers(new AntPathRequestMatcher(this.adminServer.path("/actuator/info")))
-			.permitAll()
 			.requestMatchers(new AntPathRequestMatcher(adminServer.path("/actuator/health")))
+			.permitAll()
+			.requestMatchers(new AntPathRequestMatcher(adminServer.path("/actuator/health/**")))
 			.permitAll()
 			.requestMatchers(new AntPathRequestMatcher(this.adminServer.path("/login")))
 			.permitAll()
@@ -86,6 +87,10 @@ public class SecuritySecureConfig {
 	// Required to provide UserDetailsService for "remember functionality"
 	@Bean
 	public InMemoryUserDetailsManager userDetailsService(PasswordEncoder passwordEncoder) {
+		if (!StringUtils.hasText(security.getUser().getName())
+				|| !StringUtils.hasText(security.getUser().getPassword())) {
+			throw new IllegalStateException("Monitor credentials must be configured");
+		}
 		UserDetails user = User.withUsername(security.getUser().getName())
 			.password(passwordEncoder.encode(security.getUser().getPassword()))
 			.roles("USER")

@@ -172,6 +172,25 @@ class AuthenticationSecurityChainTest {
         }
     }
 
+    @ParameterizedTest(name = "documentation and operational endpoints, resource server = {0}")
+    @ValueSource(booleans = {false, true})
+    void documentationAndOperationalEndpointsRequireBearerWhileHealthRemainsPublic(boolean resourceServer) throws Exception {
+        try (var context = context(resourceServer)) {
+            MockMvc mvc = mvc(context);
+            mvc.perform(get("/actuator/health"))
+                    .andExpect(status().isOk()).andExpect(content().string("ok"));
+            int healthSubPathStatus = mvc.perform(get("/actuator/health/readiness"))
+                    .andReturn().getResponse().getStatus();
+            assertThat(healthSubPathStatus).isNotEqualTo(424);
+            for (String protectedPath : List.of(
+                    "/actuator/env", "/v3/api-docs", "/swagger-ui/index.html", "/druid/index.html")) {
+                mvc.perform(get(protectedPath)).andExpect(status().isFailedDependency());
+                mvc.perform(get(protectedPath).header("Authorization", "Bearer resource-token"))
+                        .andExpect(status().isOk()).andExpect(content().string("ok"));
+            }
+        }
+    }
+
     @Test
     void getLogoutDoesNotInvalidateFormSession() throws Exception {
         try (var context = context(false)) {
@@ -272,7 +291,8 @@ class AuthenticationSecurityChainTest {
         context.register(Fixtures.class);
         // Real component scanning must discover the form configuration; @Import would hide missing @Configuration.
         context.scan("com.lotus.bixi.auth.config");
-        if (single) context.register(BixiResourceServerConfiguration.class);
+        // Cloud Auth and the single composition root both protect non-OAuth endpoints with the shared chain.
+        context.register(BixiResourceServerConfiguration.class);
         context.refresh();
         return context;
     }
@@ -383,5 +403,8 @@ class AuthenticationSecurityChainTest {
     @RestController
     static class BusinessEndpoint {
         @RequestMapping(value = "/business", method = {RequestMethod.GET, RequestMethod.POST}) String business(java.security.Principal principal) { return principal.getName(); }
+
+        @GetMapping({"/actuator/health", "/actuator/env", "/v3/api-docs", "/swagger-ui/index.html", "/druid/index.html"})
+        String operationalEndpoint() { return "ok"; }
     }
 }

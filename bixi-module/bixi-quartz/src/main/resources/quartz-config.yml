@@ -22,3 +22,12 @@ spring:
     job-store-type: jdbc # 持久化到数据库
     jdbc:
       initialize-schema: never # 不初始化表结构
+bixi:
+  quartz:
+    rest:
+      # Connect/read timeout for outbound REST tasks; keep this finite and bounded by the implementation.
+      timeout-millis: ${BIXI_QUARTZ_REST_TIMEOUT_MILLIS:5000}
+      # Maximum response bytes consumed by a successful REST task; bounded by the implementation.
+      max-response-bytes: ${BIXI_QUARTZ_REST_MAX_RESPONSE_BYTES:1048576}
+      # Comma-separated exact host names/IPs. Leave empty in production; use only for reviewed local/test endpoints.
+      allowed-hosts: ${BIXI_QUARTZ_REST_ALLOWED_HOSTS:}

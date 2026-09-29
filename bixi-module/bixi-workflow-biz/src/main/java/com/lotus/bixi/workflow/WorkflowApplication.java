@@ -16,7 +16,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
  * @date 2025-01-01
  */
 @EnableDynamicDataSource
-@EnableBixiDoc(value = "workflow")
+@EnableBixiDoc(value = "admin/workflow")
 @EnableBixiFeignClients
 @EnableBixiResourceServer
 @EnableDiscoveryClient

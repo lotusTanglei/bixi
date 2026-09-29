@@ -16,11 +16,17 @@ import org.springframework.stereotype.Component;
 @Component
 public class GlobalEventListener implements FlowableEventListener {
 
+    private final TaskCreateListener taskCreateListener;
+
+    public GlobalEventListener(TaskCreateListener taskCreateListener) {
+        this.taskCreateListener = taskCreateListener;
+    }
+
     @Override
     public void onEvent(FlowableEvent event) {
         FlowableEventType eventType = event.getType();
         
-        log.info("全局事件监听 - eventType: {}", eventType);
+        log.debug("全局事件监听 - eventType: {}", eventType);
 
         switch (eventType.name()) {
             case "TASK_CREATED":
@@ -47,6 +53,7 @@ public class GlobalEventListener implements FlowableEventListener {
             if (entity instanceof TaskEntityImpl) {
                 TaskEntityImpl task = (TaskEntityImpl) entity;
                 log.info("处理任务创建事件 - processInstanceId: {}", task.getProcessInstanceId());
+                taskCreateListener.notify(task);
             }
         }
     }
@@ -86,7 +93,7 @@ public class GlobalEventListener implements FlowableEventListener {
 
     @Override
     public boolean isFailOnException() {
-        return false;
+        return true;
     }
 
     @Override

@@ -43,6 +43,7 @@
 import { fetchList, remove, submit, refresh, leaveStatusLabels, type LeaveRequest } from '/@/api/demo/leave';
 import { type BasicTableProps, useTable } from '/@/hooks/table';
 import { useMessage, useMessageBox } from '/@/hooks/message';
+import { useUserInfo } from '/@/stores/userInfo';
 import FormDialog from './form.vue';
 import DetailDialog from './detail.vue';
 const formRef = ref();
@@ -52,6 +53,34 @@ const busy = ref(false);
 const error = ref('');
 const state = reactive<BasicTableProps>({ queryForm: {}, pageList: fetchList });
 const { getDataList, currentChangeHandle, sizeChangeHandle } = useTable(state);
+const uuidPattern = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/;
+const currentActor = () => String(useUserInfo().userInfos.user?.id ?? '');
+const newRequestId = () => {
+	if (crypto.randomUUID) return crypto.randomUUID();
+	const bytes = crypto.getRandomValues(new Uint8Array(16));
+	bytes[6] = (bytes[6] & 15) | 64;
+	bytes[8] = (bytes[8] & 63) | 128;
+	const hex = Array.from(bytes, value => value.toString(16).padStart(2, '0')).join('');
+	return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+};
+const submitIntent = (leaveId: string, actorId: string) => {
+	if (!actorId) throw new Error('用户信息尚未就绪，请刷新后重试');
+	const storageKey = `leave:submit:${encodeURIComponent(actorId)}:${encodeURIComponent(leaveId)}`;
+	const saved = sessionStorage.getItem(storageKey);
+	if (saved) {
+		try {
+			const intent = JSON.parse(saved);
+			if (intent.actorId !== actorId || intent.leaveId !== leaveId || !uuidPattern.test(intent.requestId)) throw new Error();
+			return { storageKey, requestId: intent.requestId };
+		} catch {
+			throw new Error('已保存的提交记录无法读取，请联系管理员核查结果');
+		}
+	}
+	const requestId = newRequestId();
+	try { sessionStorage.setItem(storageKey, JSON.stringify({ actorId, leaveId, requestId })); }
+	catch { throw new Error('无法保存本次提交，请检查浏览器会话存储后重试'); }
+	return { storageKey, requestId };
+};
 const run = async (action: () => Promise<unknown>, success: string) => {
 	busy.value = true; error.value = '';
 	try { await action(); useMessage().success(success); }
@@ -61,7 +90,21 @@ const run = async (action: () => Promise<unknown>, success: string) => {
 const submitDraft = async (row: LeaveRequest) => {
 	try { await useMessageBox().confirm('提交后将进入审批，申请内容不能再修改。确认提交？'); }
 	catch { return; }
-	await run(() => submit(row.id), '申请已提交');
+	busy.value = true; error.value = '';
+	try {
+		const actorId = currentActor();
+		const intent = submitIntent(String(row.id), actorId);
+		const response: any = await submit(row.id, intent.requestId);
+		if (currentActor() !== actorId) throw new Error('当前用户已变更，请重新登录后核查提交结果');
+		if (!response || response.code !== 0) throw response || new Error('提交结果尚未确认');
+		sessionStorage.removeItem(intent.storageKey);
+		useMessage().success('申请已提交');
+	} catch (err: any) {
+		error.value = err?.msg || err?.message || '提交结果尚未确认，请使用原请求重试';
+	} finally {
+		busy.value = false;
+		getDataList(false);
+	}
 };
 const refreshState = (row: LeaveRequest) => run(() => refresh(row.id), '状态已同步');
 const deleteDrafts = async () => {

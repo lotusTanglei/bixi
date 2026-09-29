@@ -31,6 +31,14 @@ test_backend_cloud:
     - apt-get update && apt-get install -y make
   script:
     - make backend-cloud-ci
+    - ./scripts/ci-artifacts.sh create cloud
+  artifacts:
+    paths:
+      - "**/target/*.jar"
+      - target/ci-artifacts/cloud/
+    exclude:
+      - .m2/**/*
+      - bixi-ui/node_modules/**/*
 
 test_backend_single:
   stage: test
@@ -38,6 +46,11 @@ test_backend_single:
     - apt-get update && apt-get install -y make
   script:
     - make backend-single-ci
+    - ./scripts/ci-artifacts.sh create single
+  artifacts:
+    paths:
+      - bixi-single/target/*.jar
+      - target/ci-artifacts/single/
 
 test_workflow_optional_engines:
   stage: test
@@ -97,16 +110,31 @@ accept_dual_mode:
 
 package_backend_cloud:
   stage: package
+  needs:
+    - job: test_backend_cloud
+      artifacts: true
+    - job: accept_dual_mode
+      artifacts: false
   script:
-    - mvn -Pcloud package -DskipTests
+    - ./scripts/ci-artifacts.sh verify cloud
   artifacts:
     paths:
       - "**/target/*.jar"
+      - target/ci-artifacts/cloud/
+    exclude:
+      - .m2/**/*
+      - bixi-ui/node_modules/**/*
 
 package_backend_single:
   stage: package
+  needs:
+    - job: test_backend_single
+      artifacts: true
+    - job: accept_dual_mode
+      artifacts: false
   script:
-    - mvn -Psingle -pl bixi-single -am package -DskipTests
+    - ./scripts/ci-artifacts.sh verify single
   artifacts:
     paths:
       - "bixi-single/target/*.jar"
+      - target/ci-artifacts/single/

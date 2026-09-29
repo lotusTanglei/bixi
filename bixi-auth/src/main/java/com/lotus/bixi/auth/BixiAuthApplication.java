@@ -1,6 +1,7 @@
 package com.lotus.bixi.auth;
 
 import com.lotus.bixi.common.feign.annotation.EnableBixiFeignClients;
+import com.lotus.bixi.common.security.annotation.EnableBixiResourceServer;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -11,6 +12,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
  * @date 2025-01-01
  */
 @EnableBixiFeignClients
+@EnableBixiResourceServer
 @EnableDiscoveryClient
 @ConditionalOnProperty(name = "bixi.deployment.mode", havingValue = "cloud", matchIfMissing = true)
 @SpringBootApplication

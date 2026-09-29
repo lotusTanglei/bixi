@@ -39,7 +39,7 @@ public class TaskInvokFactory {
 		else if (JobTypeQuartzEnum.JAR.getType().equals(jobType)) {
 			taskInvok = SpringContextHolder.getBean("jarTaskInvok");
 		}
-		else if (StrUtil.isBlank(jobType)) {
+		else {
 			log.info("定时任务类型无对应反射方式，反射类型:{}", jobType);
 			throw new TaskException("定时任务类型无对应反射方式，反射类型:" + jobType);
 		}

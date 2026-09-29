@@ -1,7 +1,9 @@
 package com.lotus.bixi.upms.controller;
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lotus.bixi.common.core.util.R;
+import com.lotus.bixi.common.core.context.TenantContextHolder;
 import com.lotus.bixi.common.log.annotation.SysLog;
 import com.lotus.bixi.common.security.annotation.HasPermission;
 import com.lotus.bixi.common.security.annotation.Inner;
@@ -32,7 +34,12 @@ public class SysTenantController {
 	@GetMapping("/page")
 	@HasPermission("tenant_view")
 	public R<?> page(Page<SysTenant> page) {
-		return R.ok(tenantService.page(page));
+		if (TenantContextHolder.isAllTenantsReadOnly()) {
+			return R.ok(tenantService.page(page));
+		}
+		Long tenantId = TenantContextHolder.get();
+		return R.ok(tenantService.page(page, Wrappers.<SysTenant>lambdaQuery()
+				.eq(tenantId != null, SysTenant::getId, tenantId)));
 	}
 
 	@PostMapping

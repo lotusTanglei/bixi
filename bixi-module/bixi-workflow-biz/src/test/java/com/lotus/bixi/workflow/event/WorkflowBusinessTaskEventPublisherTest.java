@@ -30,7 +30,7 @@ class WorkflowBusinessTaskEventPublisherTest {
         publisher.publish(new WorkflowBusinessTaskEventPublisher.Context(
                 "process-7", "demo_leave_approval", 7L, "leave:7:1", 1, commandId,
                 hash, UUID.randomUUID().toString(), null,
-                new WorkflowActorSnapshot(42L, "applicant", "default", "upms", Instant.now()),
+                new WorkflowActorSnapshot(42L, "applicant", "42", "upms", Instant.now()),
                 "execution-7", operationId, "bookLeave", 1, Instant.parse("2026-09-22T00:05:00Z")));
 
         ArgumentCaptor<DurableMessage> captured = ArgumentCaptor.forClass(DurableMessage.class);
@@ -45,5 +45,6 @@ class WorkflowBusinessTaskEventPublisherTest {
         assertThat(payload.operationId()).isEqualTo(operationId);
         assertThat(payload.executionId()).isEqualTo("execution-7");
         assertThat(event.aggregateSequence()).isEqualTo(2);
+        assertThat(event.tenantScope()).isEqualTo("42");
     }
 }

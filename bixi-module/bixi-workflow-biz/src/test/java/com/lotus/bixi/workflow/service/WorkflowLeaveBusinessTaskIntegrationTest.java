@@ -2,7 +2,6 @@ package com.lotus.bixi.workflow.service;
 
 import com.lotus.bixi.common.mq.reliable.DurableMessage;
 import com.lotus.bixi.common.mq.reliable.JdbcOutboxStore;
-import com.lotus.bixi.workflow.api.dto.ProcessStartDTO;
 import com.lotus.bixi.workflow.api.event.WorkflowBusinessTaskRequested;
 import com.lotus.bixi.workflow.api.event.WorkflowBusinessTaskResult;
 import com.lotus.bixi.workflow.api.event.WorkflowCompensationRequested;
@@ -14,6 +13,7 @@ import com.lotus.bixi.workflow.event.LeaveBusinessTaskRequestDelegate;
 import com.lotus.bixi.workflow.event.LeaveCompensationRequestDelegate;
 import com.lotus.bixi.workflow.event.WorkflowBusinessTaskEventPublisher;
 import com.lotus.bixi.workflow.event.WorkflowBusinessTaskResultHandler;
+import com.lotus.bixi.workflow.event.WorkflowBusinessTaskStore;
 import org.flowable.engine.ProcessEngine;
 import org.flowable.engine.ManagementService;
 import org.junit.jupiter.api.AfterEach;
@@ -27,6 +27,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import javax.sql.DataSource;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -45,20 +46,23 @@ import static org.mockito.Mockito.mock;
 class WorkflowLeaveBusinessTaskIntegrationTest {
     @Autowired ProcessEngine engine;
     @Autowired ManagementService management;
-    @Autowired ProcessInstanceService processes;
+    @Autowired TrustedProcessStarter trustedProcesses;
     @Autowired ProcessDefinitionService definitions;
     @Autowired WorkflowEventCodec codec;
     @Autowired OutboxCapture outbox;
     @Autowired DataSource source;
+    @Autowired WorkflowBusinessTaskStore businessTasks;
 
     private JdbcTemplate jdbc;
 
     @BeforeEach
     void setup() throws Exception {
         jdbc = new JdbcTemplate(source);
-        WorkflowTestSchema.create(jdbc, "wf_process_instance", "wf_command", "wf_approval_record", "wf_form_data");
+        WorkflowTestSchema.create(jdbc, "wf_process_definition", "wf_process_instance", "wf_command",
+                "wf_approval_record", "wf_form_data");
+        createBusinessTaskTable();
         outbox.messages.clear();
-        engine.getRepositoryService().createDeployment()
+        engine.getRepositoryService().createDeployment().tenantId("1")
                 .addClasspathResource("processes/demo_leave_approval_v2.bpmn20.xml").deploy();
     }
 
@@ -82,12 +86,15 @@ class WorkflowLeaveBusinessTaskIntegrationTest {
                 .processInstanceId(started.getProcessInstanceId()).activityId("waitBusinessResult").count()).isEqualTo(1);
 
         WorkflowBusinessTaskRequested payload = (WorkflowBusinessTaskRequested) request.payload();
+        assertThat(businessTasks.find(payload.operationId()).status()).isEqualTo("WAITING");
         assertThat(engine.getRuntimeService().getVariable(started.getProcessInstanceId(), "businessOperationId"))
                 .isEqualTo(payload.operationId());
-        new WorkflowBusinessTaskResultHandler(engine.getRuntimeService(), codec).handle(resultMessage(request,
+        new WorkflowBusinessTaskResultHandler(engine.getRuntimeService(), engine.getHistoryService(), codec,
+                businessTasks).handle(resultMessage(request,
                 new WorkflowBusinessTaskResult(payload.requestHash(), payload.operationId(), true,
                         "BOOK-" + payload.operationId().substring(0, 8), null, Instant.now())));
 
+        assertThat(businessTasks.find(payload.operationId()).status()).isEqualTo("SUCCEEDED");
         assertThat(engine.getRuntimeService().createProcessInstanceQuery()
                 .processInstanceId(started.getProcessInstanceId()).count()).isZero();
         assertThat(jdbc.queryForObject("SELECT status FROM wf_process_instance WHERE process_instance_id = ?",
@@ -106,7 +113,8 @@ class WorkflowLeaveBusinessTaskIntegrationTest {
         WorkflowBusinessTaskRequested payload = (WorkflowBusinessTaskRequested) request.payload();
         assertThat(engine.getRuntimeService().getVariable(started.getProcessInstanceId(), "businessOperationId"))
                 .isEqualTo(payload.operationId());
-        new WorkflowBusinessTaskResultHandler(engine.getRuntimeService(), codec).handle(resultMessage(request,
+        new WorkflowBusinessTaskResultHandler(engine.getRuntimeService(), engine.getHistoryService(), codec,
+                businessTasks).handle(resultMessage(request,
                 new WorkflowBusinessTaskResult(payload.requestHash(), payload.operationId(), false, null,
                         "BOOKING_CONFLICT", Instant.now())));
 
@@ -114,10 +122,13 @@ class WorkflowLeaveBusinessTaskIntegrationTest {
         WorkflowEvent compensation = codec.decode(compensationMessage.payloadJson()
                 .getBytes(java.nio.charset.StandardCharsets.UTF_8));
         WorkflowCompensationRequested compensationPayload = (WorkflowCompensationRequested) compensation.payload();
-        new WorkflowBusinessTaskResultHandler(engine.getRuntimeService(), codec).handle(resultMessage(compensation,
+        assertThat(businessTasks.find(payload.operationId()).status()).isEqualTo("COMPENSATING");
+        new WorkflowBusinessTaskResultHandler(engine.getRuntimeService(), engine.getHistoryService(), codec,
+                businessTasks).handle(resultMessage(compensation,
                 new WorkflowCompensationResult(compensationPayload.requestHash(), compensationPayload.operationId(),
                         compensationPayload.compensationId(), true, null, Instant.now())));
 
+        assertThat(businessTasks.find(payload.operationId()).status()).isEqualTo("COMPENSATED");
         assertThat(engine.getRuntimeService().createProcessInstanceQuery()
                 .processInstanceId(started.getProcessInstanceId()).count()).isZero();
         assertThat(jdbc.queryForObject("SELECT status FROM wf_process_instance WHERE process_instance_id = ?",
@@ -141,6 +152,8 @@ class WorkflowLeaveBusinessTaskIntegrationTest {
         WorkflowEvent request = codec.decode(pending("WORKFLOW_BUSINESS_TASK_REQUESTED").payloadJson()
                 .getBytes(java.nio.charset.StandardCharsets.UTF_8));
         WorkflowBusinessTaskRequested requestPayload = (WorkflowBusinessTaskRequested) request.payload();
+        assertThat(businessTasks.find(requestPayload.operationId()).status()).isEqualTo("COMPENSATING");
+        assertThat(businessTasks.find(requestPayload.operationId()).lastError()).isEqualTo("AUTO_TASK_TIMEOUT");
         assertThat(engine.getRuntimeService().createExecutionQuery()
                 .processInstanceId(started.getProcessInstanceId()).activityId("waitCompensationResult").count())
                 .isOne();
@@ -148,8 +161,11 @@ class WorkflowLeaveBusinessTaskIntegrationTest {
         var lateResult = resultMessage(request, new WorkflowBusinessTaskResult(
                 requestPayload.requestHash(), requestPayload.operationId(), true,
                 "BOOK-LATE", null, Instant.now()));
-        assertThat(new WorkflowBusinessTaskResultHandler(engine.getRuntimeService(), engine.getHistoryService(), codec).handle(lateResult))
+        assertThat(new WorkflowBusinessTaskResultHandler(engine.getRuntimeService(), engine.getHistoryService(), codec,
+                businessTasks).handle(lateResult))
                 .isEqualTo(com.lotus.bixi.common.mq.reliable.DurableMessageHandler.Result.IGNORED);
+        assertThat(businessTasks.find(requestPayload.operationId()).resultEventId())
+                .isEqualTo(codec.decode(lateResult.payloadJson().getBytes(StandardCharsets.UTF_8)).eventId());
 
         WorkflowEvent compensation = codec.decode(pending("WORKFLOW_COMPENSATION_REQUESTED").payloadJson()
                 .getBytes(java.nio.charset.StandardCharsets.UTF_8));
@@ -157,13 +173,16 @@ class WorkflowLeaveBusinessTaskIntegrationTest {
         var compensationResult = resultMessage(compensation, new WorkflowCompensationResult(
                 compensationPayload.requestHash(), compensationPayload.operationId(),
                 compensationPayload.compensationId(), true, null, Instant.now()));
-        assertThat(new WorkflowBusinessTaskResultHandler(engine.getRuntimeService(), codec).handle(compensationResult))
+        assertThat(new WorkflowBusinessTaskResultHandler(engine.getRuntimeService(), engine.getHistoryService(), codec,
+                businessTasks).handle(compensationResult))
                 .isEqualTo(com.lotus.bixi.common.mq.reliable.DurableMessageHandler.Result.PROCESSED);
+        assertThat(businessTasks.find(requestPayload.operationId()).status()).isEqualTo("COMPENSATED");
         assertThat(engine.getRuntimeService().createProcessInstanceQuery()
                 .processInstanceId(started.getProcessInstanceId()).count()).isZero();
         assertThat(jdbc.queryForObject("SELECT status FROM wf_process_instance WHERE process_instance_id = ?",
                 String.class, started.getProcessInstanceId())).isEqualTo("terminated");
-        assertThat(new WorkflowBusinessTaskResultHandler(engine.getRuntimeService(), engine.getHistoryService(), codec).handle(lateResult))
+        assertThat(new WorkflowBusinessTaskResultHandler(engine.getRuntimeService(), engine.getHistoryService(), codec,
+                businessTasks).handle(lateResult))
                 .isEqualTo(com.lotus.bixi.common.mq.reliable.DurableMessageHandler.Result.IGNORED);
     }
 
@@ -188,14 +207,14 @@ class WorkflowLeaveBusinessTaskIntegrationTest {
         WorkflowEvent oldRequest = codec.decode(pending("WORKFLOW_BUSINESS_TASK_REQUESTED").payloadJson()
                 .getBytes(java.nio.charset.StandardCharsets.UTF_8));
         WorkflowBusinessTaskRequested oldPayload = (WorkflowBusinessTaskRequested) oldRequest.payload();
-        new WorkflowBusinessTaskResultHandler(engine.getRuntimeService(), engine.getHistoryService(), codec)
+        new WorkflowBusinessTaskResultHandler(engine.getRuntimeService(), engine.getHistoryService(), codec, businessTasks)
                 .handle(resultMessage(oldRequest, new WorkflowBusinessTaskResult(oldPayload.requestHash(),
                         oldPayload.operationId(), true, "BOOK-OLD", null, Instant.now())));
         assertThat(engine.getRuntimeService().createProcessInstanceQuery()
                 .processInstanceId(oldInstance.getProcessInstanceId()).count()).isZero();
 
         outbox.messages.clear();
-        var newInstance = start();
+        var newInstance = start(102L);
         assertThat(newInstance.getProcessDefinitionId()).isEqualTo(v3.getProcessDefinitionId());
         String newTaskId = engine.getTaskService().createTaskQuery()
                 .processInstanceId(newInstance.getProcessInstanceId()).singleResult().getId();
@@ -206,7 +225,7 @@ class WorkflowLeaveBusinessTaskIntegrationTest {
         WorkflowEvent newRequest = codec.decode(pending("WORKFLOW_BUSINESS_TASK_REQUESTED").payloadJson()
                 .getBytes(java.nio.charset.StandardCharsets.UTF_8));
         WorkflowBusinessTaskRequested newPayload = (WorkflowBusinessTaskRequested) newRequest.payload();
-        new WorkflowBusinessTaskResultHandler(engine.getRuntimeService(), engine.getHistoryService(), codec)
+        new WorkflowBusinessTaskResultHandler(engine.getRuntimeService(), engine.getHistoryService(), codec, businessTasks)
                 .handle(resultMessage(newRequest, new WorkflowBusinessTaskResult(newPayload.requestHash(),
                         newPayload.operationId(), true, "BOOK-NEW", null, Instant.now())));
         assertThat(engine.getRuntimeService().createProcessInstanceQuery()
@@ -214,28 +233,19 @@ class WorkflowLeaveBusinessTaskIntegrationTest {
     }
 
     private com.lotus.bixi.workflow.api.vo.ProcessInstanceVO start() {
-        String requestId = UUID.randomUUID().toString();
-        String businessKey = "leave-" + UUID.randomUUID();
-        String requestHash = "a".repeat(64);
-        ProcessStartDTO dto = new ProcessStartDTO();
-        dto.setRequestId(requestId);
-        dto.setProcessKey("demo_leave_approval");
-        dto.setBusinessTable("demo_leave_request");
-        dto.setBusinessId(101L);
-        dto.setBusinessKey(businessKey);
-        dto.setTitle("Leave request");
-        dto.setVariables(java.util.Map.of("approverId", "22", "businessRound", 1,
-                "businessId", 101L, "businessKey", businessKey, "businessTable", "demo_leave_request",
-                "startRequestId", requestId, "startRequestHash", requestHash, "startUserName", "applicant"));
+        return start(101L);
+    }
+
+    private com.lotus.bixi.workflow.api.vo.ProcessInstanceVO start(long businessId) {
         WorkflowApprovalIntegrationTest.login(11L);
-        return processes.start(dto);
+        return WorkflowTrustedStartTestSupport.start(trustedProcesses, "Leave request", businessId, 1);
     }
 
     private DurableMessage resultMessage(WorkflowEvent request, Object payload) {
         WorkflowEvent result = new WorkflowEvent(UUID.randomUUID().toString(),
                 payload instanceof WorkflowBusinessTaskResult ? WorkflowEventType.WORKFLOW_BUSINESS_TASK_RESULT
                         : WorkflowEventType.WORKFLOW_COMPENSATION_RESULT,
-                1, "upms", "workflow", "default", request.processInstanceId(), request.processKey(),
+                1, "upms", "workflow", request.tenantScope(), request.processInstanceId(), request.processKey(),
                 request.businessTable(), request.businessId(), request.businessKey(), request.round(),
                 request.commandId(), request.aggregateSequence() + 1, Instant.now(), request.correlationId(),
                 request.eventId(), request.actor(), (com.lotus.bixi.workflow.api.event.WorkflowPayload) payload);
@@ -247,6 +257,35 @@ class WorkflowLeaveBusinessTaskIntegrationTest {
         return outbox.messages.stream()
                 .filter(message -> type.equals(message.type()))
                 .findFirst().orElseThrow();
+    }
+
+    private void createBusinessTaskTable() {
+        jdbc.execute("DROP TABLE IF EXISTS wf_business_task");
+        jdbc.execute("""
+                CREATE TABLE wf_business_task (
+                  operation_id VARCHAR(36) PRIMARY KEY,
+                  process_instance_id VARCHAR(64) NOT NULL,
+                  execution_id VARCHAR(64) NOT NULL,
+                  activity_id VARCHAR(128) NOT NULL,
+                  activity_occurrence INT NOT NULL,
+                  business_owner VARCHAR(64) NOT NULL,
+                  business_table VARCHAR(128) NOT NULL,
+                  business_id BIGINT NOT NULL,
+                  business_round INT NOT NULL,
+                  request_hash VARCHAR(64) NOT NULL,
+                  tenant_scope VARCHAR(32) NOT NULL,
+                  status VARCHAR(16) NOT NULL,
+                  deadline TIMESTAMP(6) NOT NULL,
+                  result_event_id VARCHAR(36),
+                  compensation_id VARCHAR(36),
+                  last_error VARCHAR(128),
+                  created_at TIMESTAMP(6) NOT NULL,
+                  updated_at TIMESTAMP(6) NOT NULL,
+                  CONSTRAINT uk_wf_business_task_occurrence
+                    UNIQUE (process_instance_id, activity_id, activity_occurrence),
+                  CONSTRAINT uk_wf_business_task_compensation UNIQUE (compensation_id)
+                )
+                """);
     }
 
     static final class OutboxCapture {
@@ -273,10 +312,18 @@ class WorkflowLeaveBusinessTaskIntegrationTest {
             return new WorkflowBusinessTaskEventPublisher(outbox, codec);
         }
 
+        @Bean WorkflowBusinessTaskStore workflowBusinessTaskStore(DataSource source) {
+            return new WorkflowBusinessTaskStore(source);
+        }
+
         @Bean("leaveBusinessTaskRequestDelegate") LeaveBusinessTaskRequestDelegate leaveBusinessTaskRequestDelegate(
-                WorkflowBusinessTaskEventPublisher publisher) { return new LeaveBusinessTaskRequestDelegate(publisher); }
+                WorkflowBusinessTaskEventPublisher publisher, WorkflowBusinessTaskStore tasks) {
+            return new LeaveBusinessTaskRequestDelegate(publisher, tasks);
+        }
 
         @Bean("leaveCompensationRequestDelegate") LeaveCompensationRequestDelegate leaveCompensationRequestDelegate(
-                WorkflowBusinessTaskEventPublisher publisher) { return new LeaveCompensationRequestDelegate(publisher); }
+                WorkflowBusinessTaskEventPublisher publisher, WorkflowBusinessTaskStore tasks) {
+            return new LeaveCompensationRequestDelegate(publisher, tasks);
+        }
     }
 }

@@ -1,0 +1,37 @@
+{
+  "observedAt": "2026-09-26",
+  "composeProject": "bixi-phase2-cloud",
+  "mode": "cloud",
+  "apiBase": "http://localhost:28080/api",
+  "command": "BIXI_MODE=cloud BIXI_ENV_FILE=target/phase2-runtime/cloud-enabled.env node scripts/cloud-notice-sse-blackbox.mjs",
+  "result": {
+    "status": "passed",
+    "userId": "1",
+    "noticeId": "2103874759105613826",
+    "recipientId": "2103874759143362561",
+    "sseOpen": true,
+    "refresh": {
+      "type": "notice",
+      "noticeId": "2103874759105613826",
+      "userNoticeId": "2103874759143362561"
+    },
+    "deliveryStatus": "DELIVERED",
+    "resend": true,
+    "retry": true,
+    "cleanup": true,
+    "activeBlackboxNoticeCountAfterCleanup": 0
+  },
+  "assertions": [
+    "administrator login succeeds without recording credentials",
+    "GET /admin/user-notice/stream returns 200 text/event-stream and event open/data ok",
+    "IN_APP notice publication creates one recipient and reaches DELIVERED",
+    "SSE refresh noticeId and userNoticeId match the persisted recipient",
+    "mark-read, resend, and delivery retry preserve the same recipient and read state",
+    "temporary notice is deleted after the run"
+  ],
+  "limits": [
+    "This verifies the local IN_APP/SSE path and management retry endpoint only.",
+    "It does not prove third-party provider delivery, receipts, or vendor rate limits.",
+    "Cloud Quartz has no gateway route or separate Quartz service in this deployment; its HTTP blackbox is not applicable to cloud."
+  ]
+}

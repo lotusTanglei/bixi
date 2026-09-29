@@ -7,13 +7,16 @@ import com.lotus.bixi.common.security.component.PermissionService;
 import com.lotus.bixi.common.security.service.BixiUser;
 import com.lotus.bixi.common.core.util.R;
 import com.lotus.bixi.common.core.context.TenantContextHolder;
+import com.lotus.bixi.common.mq.reliable.JdbcOutboxStore;
+import com.lotus.bixi.common.mq.reliable.ReliableDeliveryProperties;
 import com.lotus.bixi.upms.api.entity.SysUser;
 import com.lotus.bixi.upms.service.SysUserService;
 import com.lotus.bixi.upms.demo.leave.dto.LeaveRequestDTO;
 import com.lotus.bixi.upms.demo.leave.entity.LeaveRequest;
+import com.lotus.bixi.upms.demo.leave.event.LeaveWorkflowEventPublisher;
 import com.lotus.bixi.upms.demo.leave.service.LeaveRequestService;
-import com.lotus.bixi.workflow.api.dto.ProcessStartDTO;
 import com.lotus.bixi.workflow.api.dto.WorkflowResultDTO;
+import com.lotus.bixi.workflow.api.event.WorkflowEventCodec;
 import com.lotus.bixi.workflow.api.service.WorkflowService;
 import com.lotus.bixi.workflow.api.vo.ProcessInstanceVO;
 import org.junit.jupiter.api.*;
@@ -36,7 +39,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import com.lotus.bixi.common.feign.sentinel.handle.GlobalBizExceptionHandler;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 import javax.sql.DataSource;
 import java.nio.charset.StandardCharsets;
 import java.time.*;
@@ -52,8 +54,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /** Actual MyBatis, transactions, canonical schema and domain service. Only external contracts are mocked. */
 @org.springframework.test.context.event.RecordApplicationEvents
 @SpringJUnitConfig(LeaveRequestIntegrationTest.Config.class)
-@TestPropertySource(properties = {"workflow.enabled=true", "bixi.deployment.mode=cloud", "mybatis-plus.global-config.banner=false"})
-class LeaveRequestIntegrationTest {
+@TestPropertySource(properties = {"workflow.enabled=true", "bixi.reliable.enabled=true",
+        "bixi.deployment.mode=cloud", "mybatis-plus.global-config.banner=false"})
+public class LeaveRequestIntegrationTest {
     @Autowired LeaveRequestService leaves;
     @Autowired com.lotus.bixi.upms.demo.leave.controller.LeaveWorkflowResultController internalController;
     @Autowired org.springframework.mock.web.MockHttpServletRequest innerRequest;
@@ -70,7 +73,15 @@ class LeaveRequestIntegrationTest {
         reset(workflows, users);
         innerRequest.removeHeader(com.lotus.bixi.common.core.constant.SecurityConstants.FROM);
         jdbc = new JdbcTemplate(source);
+        try (var connection = source.getConnection()) {
+            if ("H2".equals(connection.getMetaData().getDatabaseProductName())) {
+                jdbc.execute("CREATE ALIAS IF NOT EXISTS UTC_TIMESTAMP FOR '"
+                        + LeaveRequestIntegrationTest.class.getName() + ".utcTimestamp'");
+            }
+        }
         recreateTable("demo_leave_request");
+        recreateTable("demo_leave_command");
+        recreateTable("reliable_outbox");
         SysUser user = new SysUser();
         user.setId(22L); user.setLockFlag("0"); user.setDelFlag("0"); user.setStatus("0");
         when(users.getById(22L)).thenReturn(user);
@@ -144,33 +155,66 @@ class LeaveRequestIntegrationTest {
         mvc.perform(post("/demo/leave/{id}/refresh", draft.getId()))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.code").value(1))
                 .andExpect(jsonPath("$.msg").value("尚无已确认的流程绑定，不能自动重试，请联系管理员核查"));
-        when(workflows.startProcess(any())).thenReturn(R.ok(process(draft, "running")));
-        when(workflows.getProcessInstance("p-1")).thenReturn(R.ok(process(draft, "running")));
-        leaves.submit(draft.getId());
-        mvc.perform(post("/demo/leave/{id}/submit", draft.getId()))
+        leaves.submit(draft.getId(), UUID.randomUUID().toString());
+        mvc.perform(post("/demo/leave/{id}/submit", draft.getId())
+                        .param("requestId", UUID.randomUUID().toString()))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.code").value(1))
-                .andExpect(jsonPath("$.msg").value("仅草稿可修改、删除或提交"));
+                .andExpect(jsonPath("$.msg").value("请假申请已提交，不能使用新的requestId重复提交"));
         mvc.perform(put("/demo/leave/{id}", draft.getId()).contentType("application/json").content("""
                 {"approverId":22,"startDate":"2026-10-01","endDate":"2026-10-02","reason":"修改"}
                 """))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.code").value(1));
         mvc.perform(delete("/demo/leave/{id}", draft.getId()))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.code").value(1));
-        assertThat(leaves.details(draft.getId()).getLeaveStatus()).isEqualTo("IN_REVIEW");
-        verify(workflows, times(1)).startProcess(any());
+        assertThat(leaves.details(draft.getId()).getLeaveStatus()).isEqualTo("SUBMITTING");
+        verify(workflows, never()).startProcess(any());
     }
 
-    @Test void externalStartFailureRemainsHttpServerErrorAndRetryIsBusinessFailure() throws Exception {
+    @Test void submitRequiresAStableClientRequestIdAndReplaysTheSavedResponse() throws Exception {
         var draft = leaves.create(request());
-        when(workflows.startProcess(any())).thenThrow(new IllegalStateException("workflow unavailable"));
         var mvc = httpWithProjectErrors();
         mvc.perform(post("/demo/leave/{id}/submit", draft.getId()))
-                .andExpect(status().isInternalServerError()).andExpect(jsonPath("$.code").value(1))
-                .andExpect(jsonPath("$.msg").value("workflow unavailable"));
-        assertThat(leaves.details(draft.getId()).getLeaveStatus()).isEqualTo("SUBMITTING");
-        mvc.perform(post("/demo/leave/{id}/submit", draft.getId()))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.code").value(1));
-        verify(workflows, times(1)).startProcess(any());
+                .andExpect(status().isBadRequest());
+
+        String requestId = UUID.randomUUID().toString();
+        LeaveRequest first = leaves.submit(draft.getId(), requestId);
+        LeaveRequest replay = leaves.submit(draft.getId(), requestId);
+
+        assertThat(replay).usingRecursiveComparison().isEqualTo(first);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM demo_leave_command", Long.class)).isEqualTo(1L);
+        assertThat(jdbc.queryForObject("SELECT client_request_id FROM demo_leave_command", String.class))
+                .isEqualTo(requestId);
+        assertThat(jdbc.queryForObject("SELECT status FROM demo_leave_command", String.class)).isEqualTo("ACCEPTED");
+        assertThat(first.getLeaveStatus()).isEqualTo("SUBMITTING");
+        assertThat(first.getProcessInstanceId()).isNull();
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM reliable_outbox", Long.class)).isEqualTo(1L);
+        verify(workflows, never()).startProcess(any());
+
+        jdbc.update("UPDATE demo_leave_command SET status = 'STARTED', process_instance_id = 'p-1'");
+        assertThat(leaves.submit(draft.getId(), requestId)).usingRecursiveComparison().isEqualTo(first);
+        jdbc.update("UPDATE demo_leave_command SET status = 'REJECTED', error_code = 'INVALID_START'");
+        assertThat(leaves.submit(draft.getId(), requestId)).usingRecursiveComparison().isEqualTo(first);
+        verify(workflows, never()).startProcess(any());
+
+        var otherDraft = leaves.create(request());
+        assertThatThrownBy(() -> leaves.submit(otherDraft.getId(), requestId))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("requestId");
+        verify(workflows, never()).startProcess(any());
+    }
+
+    @Test void outboxFailureRollsBackAndTheSameRequestCanRecover() throws Exception {
+        var draft = leaves.create(request());
+        String requestId = UUID.randomUUID().toString();
+        jdbc.execute("DROP TABLE reliable_outbox");
+        assertThatThrownBy(() -> leaves.submit(draft.getId(), requestId))
+                .isInstanceOf(org.springframework.jdbc.BadSqlGrammarException.class);
+        assertThat(leaves.details(draft.getId()).getLeaveStatus()).isEqualTo("DRAFT");
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM demo_leave_command", Long.class)).isZero();
+        recreateTable("reliable_outbox");
+        assertThat(leaves.submit(draft.getId(), requestId).getLeaveStatus()).isEqualTo("SUBMITTING");
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM reliable_outbox", Long.class)).isEqualTo(1L);
+        verify(workflows, never()).startProcess(any());
     }
 
     @Test void actualControllerEnforcesPermissionsAndEmitsTrustedWriteAuditEvents() {
@@ -226,95 +270,94 @@ class LeaveRequestIntegrationTest {
         assertThatThrownBy(() -> leaves.details(draft.getId())).isInstanceOf(AccessDeniedException.class);
         assertThatThrownBy(() -> leaves.update(draft.getId(), request())).isInstanceOf(AccessDeniedException.class);
         assertThatThrownBy(() -> leaves.delete(draft.getId())).isInstanceOf(AccessDeniedException.class);
-        assertThatThrownBy(() -> leaves.submit(draft.getId())).isInstanceOf(AccessDeniedException.class);
+        assertThatThrownBy(() -> leaves.submit(draft.getId(), UUID.randomUUID().toString()))
+                .isInstanceOf(AccessDeniedException.class);
     }
 
     @Test void directServiceCallsEnforcePermissions() {
         var draft = leaves.create(request()); login(11L, List.of());
         assertThatThrownBy(() -> leaves.create(request())).isInstanceOf(AccessDeniedException.class);
         assertThatThrownBy(() -> leaves.details(draft.getId())).isInstanceOf(AccessDeniedException.class);
-        assertThatThrownBy(() -> leaves.submit(draft.getId())).isInstanceOf(AccessDeniedException.class);
+        assertThatThrownBy(() -> leaves.submit(draft.getId(), UUID.randomUUID().toString()))
+                .isInstanceOf(AccessDeniedException.class);
     }
 
-    @Test void submittingCommitsBeforeExternalStartAndBindsTrustedResponse() {
+    @Test void submissionCommandBusinessStateAndOutboxShareOneLocalTransaction() {
         var draft = leaves.create(request());
-        when(workflows.startProcess(any())).thenAnswer(invocation -> {
-            assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
-            assertThat(jdbc.queryForObject("SELECT leave_status FROM demo_leave_request WHERE id=?", String.class, draft.getId())).isEqualTo("SUBMITTING");
-            ProcessStartDTO start = invocation.getArgument(0);
-            assertThat(start.getRequestId()).isEqualTo(UUID.nameUUIDFromBytes(
-                    ("upms:leave:start:" + draft.getId() + ":" + draft.getRound()).getBytes(StandardCharsets.UTF_8)).toString());
-            assertThat(start.getBusinessId()).isEqualTo(draft.getId());
-            assertThat(start.getBusinessKey()).isEqualTo(draft.getBusinessKey());
-            assertThat(start.getBusinessTable()).isEqualTo("demo_leave_request");
-            assertThat(start.getProcessKey()).isEqualTo("demo_leave_approval");
-            assertThat(start.getVariables()).containsEntry("approverId", "22").containsEntry("businessRound", 1);
-            return R.ok(process(draft, "running"));
-        });
-        when(workflows.getProcessInstance("p-1")).thenReturn(R.ok(process(draft, "running")));
-        var submitted = leaves.submit(draft.getId());
-        assertThat(submitted.getLeaveStatus()).isEqualTo("IN_REVIEW");
-        assertThat(submitted.getProcessInstanceId()).isEqualTo("p-1");
+        String requestId = UUID.randomUUID().toString();
+        var submitted = leaves.submit(draft.getId(), requestId);
+        assertThat(submitted.getLeaveStatus()).isEqualTo("SUBMITTING");
+        assertThat(submitted.getProcessInstanceId()).isNull();
         assertThat(submitted.getSubmittedAt()).isNotNull();
-        assertThatThrownBy(() -> leaves.submit(draft.getId())).isInstanceOf(IllegalArgumentException.class);
+        String commandId = jdbc.queryForObject("SELECT command_id FROM demo_leave_command", String.class);
+        assertThat(commandId).matches("[0-9a-f-]{36}");
+        assertThat(jdbc.queryForObject("SELECT start_command_id FROM demo_leave_request WHERE id=?",
+                String.class, draft.getId())).isEqualTo(commandId);
+        assertThat(jdbc.queryForObject("SELECT event_id FROM reliable_outbox", String.class))
+                .isEqualTo(UUID.nameUUIDFromBytes(("leave:event:" + draft.getId() + ":1:start")
+                        .getBytes(StandardCharsets.UTF_8)).toString());
+        String payload = jdbc.queryForObject("SELECT payload_json FROM reliable_outbox", String.class);
+        var event = new WorkflowEventCodec().decode(payload.getBytes(StandardCharsets.UTF_8));
+        assertThat(event.commandId()).isEqualTo(commandId);
+        assertThat(event.businessId()).isEqualTo(draft.getId());
+        assertThat(event.businessKey()).isEqualTo(draft.getBusinessKey());
+        assertThat(event.tenantScope()).isEqualTo("1");
+        assertThatThrownBy(() -> leaves.submit(draft.getId(), UUID.randomUUID().toString()))
+                .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> leaves.update(draft.getId(), request())).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> leaves.delete(draft.getId())).isInstanceOf(IllegalArgumentException.class);
-        verify(workflows, times(1)).startProcess(any());
+        verify(workflows, never()).startProcess(any());
     }
 
-    @Test void ambiguousStartFailureStaysSubmittingWithoutBlindRetry() {
+    @Test void outboxRetryKeepsTheStableCommandAndEventIdentity() throws Exception {
         var draft = leaves.create(request());
-        when(workflows.startProcess(any())).thenThrow(new IllegalStateException("timeout after remote commit"));
-        assertThatThrownBy(() -> leaves.submit(draft.getId())).isInstanceOf(IllegalStateException.class);
-        assertThat(leaves.details(draft.getId()).getLeaveStatus()).isEqualTo("SUBMITTING");
-        assertThatThrownBy(() -> leaves.submit(draft.getId())).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> leaves.refresh(draft.getId())).isInstanceOf(IllegalArgumentException.class);
-        verify(workflows, times(1)).startProcess(any());
+        String requestId = UUID.randomUUID().toString();
+        jdbc.execute("DROP TABLE reliable_outbox");
+        assertThatThrownBy(() -> leaves.submit(draft.getId(), requestId)).isInstanceOf(RuntimeException.class);
+        assertThat(leaves.details(draft.getId()).getLeaveStatus()).isEqualTo("DRAFT");
+        recreateTable("reliable_outbox");
+        assertThat(leaves.submit(draft.getId(), requestId).getLeaveStatus()).isEqualTo("SUBMITTING");
+        String commandId = jdbc.queryForObject("SELECT command_id FROM demo_leave_command", String.class);
+        assertThat(jdbc.queryForObject("SELECT payload_json FROM reliable_outbox", String.class))
+                .contains("\"commandId\":\"" + commandId + "\"");
+        assertThat(leaves.submit(draft.getId(), requestId).getStartCommandId()).isEqualTo(commandId);
+        verify(workflows, never()).startProcess(any());
     }
 
     @Test void duplicateConcurrentSubmitStartsAtMostOneProcess() throws Exception {
         var draft = leaves.create(request());
-        CountDownLatch started = new CountDownLatch(1), release = new CountDownLatch(1);
-        when(workflows.startProcess(any())).thenAnswer(invocation -> {
-            started.countDown(); assertThat(release.await(10, TimeUnit.SECONDS)).isTrue();
-            return R.ok(process(draft, "running"));
-        });
-        when(workflows.getProcessInstance("p-1")).thenReturn(R.ok(process(draft, "running")));
-        var pool = Executors.newSingleThreadExecutor();
+        CountDownLatch ready = new CountDownLatch(2), begin = new CountDownLatch(1);
+        String requestId = UUID.randomUUID().toString();
+        var pool = Executors.newFixedThreadPool(2);
         try {
-            var first = pool.submit(() -> { login(11L); try { return leaves.submit(draft.getId()); } finally { SecurityContextHolder.clearContext(); } });
-            assertThat(started.await(10, TimeUnit.SECONDS)).isTrue();
-            assertThatThrownBy(() -> leaves.submit(draft.getId())).isInstanceOf(IllegalArgumentException.class);
-            release.countDown(); assertThat(first.get(10, TimeUnit.SECONDS).getLeaveStatus()).isEqualTo("IN_REVIEW");
-            verify(workflows, times(1)).startProcess(any());
-        } finally { release.countDown(); pool.shutdownNow(); }
+            Callable<LeaveRequest> submit = () -> {
+                login(11L); TenantContextHolder.set(1L); ready.countDown();
+                try { assertThat(begin.await(10, TimeUnit.SECONDS)).isTrue(); return leaves.submit(draft.getId(), requestId); }
+                finally { SecurityContextHolder.clearContext(); TenantContextHolder.clear(); }
+            };
+            var first = pool.submit(submit);
+            var second = pool.submit(submit);
+            assertThat(ready.await(10, TimeUnit.SECONDS)).isTrue(); begin.countDown();
+            assertThat(first.get(10, TimeUnit.SECONDS).getLeaveStatus()).isEqualTo("SUBMITTING");
+            assertThat(second.get(10, TimeUnit.SECONDS)).usingRecursiveComparison().isEqualTo(first.get());
+            assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM demo_leave_command", Long.class)).isEqualTo(1L);
+            assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM reliable_outbox", Long.class)).isEqualTo(1L);
+            verify(workflows, never()).startProcess(any());
+        } finally { begin.countDown(); pool.shutdownNow(); }
     }
 
-    @Test void refusesUntrustedStartIdentityAndDoesNotBindIt() {
-        var draft = leaves.create(request()); var forged = process(draft, "running"); forged.setStartUserId(33L);
-        when(workflows.startProcess(any())).thenReturn(R.ok(forged));
-        assertThatThrownBy(() -> leaves.submit(draft.getId())).isInstanceOf(IllegalArgumentException.class);
+    @Test void terminalCallbackCannotBindAStartThatHasNotBeenConfirmed() {
+        var draft = leaves.create(request());
+        leaves.submit(draft.getId(), UUID.randomUUID().toString());
+        leaves.receive(result(draft, "completed"));
         assertThat(leaves.details(draft.getId()).getProcessInstanceId()).isNull();
         assertThat(leaves.details(draft.getId()).getLeaveStatus()).isEqualTo("SUBMITTING");
     }
 
-    @Test void earlyCallbackCannotBindAndAuthoritativeFetchCatchesFastCompletion() {
+    @Test void acceptedSubmissionDoesNotPollThePublicWorkflowApi() {
         var draft = leaves.create(request());
-        when(workflows.startProcess(any())).thenAnswer(invocation -> {
-            leaves.receive(result(draft, "completed"));
-            assertThat(leaves.details(draft.getId()).getProcessInstanceId()).isNull();
-            assertThat(leaves.details(draft.getId()).getLeaveStatus()).isEqualTo("SUBMITTING");
-            return R.ok(process(draft, "running"));
-        });
-        when(workflows.getProcessInstance("p-1")).thenReturn(R.ok(process(draft, "completed")));
-        assertThat(leaves.submit(draft.getId()).getLeaveStatus()).isEqualTo("APPROVED");
-    }
-
-    @Test void terminalStartResponseIsAppliedEvenWhenFollowupFetchFails() {
-        var draft = leaves.create(request());
-        when(workflows.startProcess(any())).thenReturn(R.ok(process(draft, "completed")));
-        when(workflows.getProcessInstance("p-1")).thenThrow(new IllegalStateException("network down"));
-        assertThat(leaves.submit(draft.getId()).getLeaveStatus()).isEqualTo("APPROVED");
+        assertThat(leaves.submit(draft.getId(), UUID.randomUUID().toString()).getLeaveStatus()).isEqualTo("SUBMITTING");
+        verifyNoInteractions(workflows);
     }
 
     @Test void resultCallbacksEmitAuditWithoutAttributingAnonymousSystemWorkToStarter() {
@@ -427,12 +470,14 @@ class LeaveRequestIntegrationTest {
     }
 
     private MockMvc httpWithProjectErrors() {
-        return MockMvcBuilders.standaloneSetup(controller).setControllerAdvice(new GlobalBizExceptionHandler()).build();
+        return MockMvcBuilders.standaloneSetup(controller).setControllerAdvice(
+                new com.lotus.bixi.upms.demo.leave.controller.LeaveRequestExceptionAdvice(),
+                new GlobalBizExceptionHandler()).build();
     }
 
     private void recreateTable(String table) throws Exception {
         String schema = new ClassPathResource("sql/01_init_all_tables.sql").getContentAsString(StandardCharsets.UTF_8);
-        var matcher = Pattern.compile("CREATE TABLE `" + table + "` \\([\\s\\S]*?\\) ENGINE[^;]*;").matcher(schema);
+        var matcher = Pattern.compile("CREATE TABLE `?" + table + "`? \\([\\s\\S]*?\\) ENGINE[^;]*;").matcher(schema);
         assertThat(matcher.find()).as("canonical schema for %s", table).isTrue();
         String ddl = matcher.group();
         try (var connection = source.getConnection()) {
@@ -454,9 +499,11 @@ class LeaveRequestIntegrationTest {
 
     private LeaveRequest started() {
         var draft = leaves.create(request());
-        when(workflows.startProcess(any())).thenReturn(R.ok(process(draft, "running")));
+        leaves.submit(draft.getId(), UUID.randomUUID().toString());
+        jdbc.update("UPDATE demo_leave_request SET process_instance_id='p-1', leave_status='IN_REVIEW' WHERE id=?",
+                draft.getId());
         when(workflows.getProcessInstance("p-1")).thenReturn(R.ok(process(draft, "running")));
-        return leaves.submit(draft.getId());
+        return leaves.details(draft.getId());
     }
     private static LeaveRequestDTO request() {
         var dto = new LeaveRequestDTO(); dto.setApproverId(22L); dto.setReason("家事");
@@ -475,6 +522,9 @@ class LeaveRequestIntegrationTest {
         result.setBusinessKey(draft.getBusinessKey()); result.setBusinessId(draft.getId()); result.setRound(1);
         result.setStartUserId(11L); result.setStatus(status); result.setEndTime(LocalDateTime.of(2026, 10, 1, 10, 0)); return result;
     }
+    public static java.sql.Timestamp utcTimestamp(int precision) {
+        return java.sql.Timestamp.from(java.time.Instant.now());
+    }
     private static void login(long id) { login(id, List.of("demo_leave_view", "demo_leave_add", "demo_leave_edit", "demo_leave_del")); }
     private static void login(long id, List<String> permissions) {
         var authorities = permissions.stream().map(SimpleGrantedAuthority::new).toList();
@@ -483,8 +533,10 @@ class LeaveRequestIntegrationTest {
     }
     @Configuration(proxyBeanMethods = false)
     @EnableTransactionManagement @EnableMethodSecurity @EnableAspectJAutoProxy
-    @Import({LeaveRequestService.class, MybatisAutoConfiguration.class,
+    @Import({LeaveRequestService.class, com.lotus.bixi.upms.demo.leave.command.LeaveSubmitCommandExecutor.class,
+            MybatisAutoConfiguration.class,
             com.lotus.bixi.upms.demo.leave.controller.LeaveRequestController.class,
+            com.lotus.bixi.upms.demo.leave.controller.LeaveRequestExceptionAdvice.class,
             com.lotus.bixi.upms.demo.leave.controller.LeaveWorkflowResultController.class,
             com.lotus.bixi.common.log.aspect.SysLogAspect.class,
             com.lotus.bixi.common.core.util.SpringContextHolder.class,
@@ -509,6 +561,21 @@ class LeaveRequestIntegrationTest {
             return new DriverManagerDataSource("jdbc:h2:mem:leave-" + UUID.randomUUID() + ";MODE=MySQL;DB_CLOSE_DELAY=-1", "sa", "");
         }
         @Bean DataSourceTransactionManager transactionManager(DataSource source) { return new DataSourceTransactionManager(source); }
+        @Bean com.fasterxml.jackson.databind.ObjectMapper objectMapper() {
+            return new com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules();
+        }
+        @Bean ReliableDeliveryProperties reliableDeliveryProperties() {
+            return ReliableDeliveryProperties.defaults();
+        }
+        @Bean JdbcOutboxStore upmsOutboxStore(DataSource source,
+                org.springframework.transaction.PlatformTransactionManager transactionManager,
+                ReliableDeliveryProperties properties) {
+            return new JdbcOutboxStore(source, transactionManager, properties);
+        }
+        @Bean WorkflowEventCodec workflowEventCodec() { return new WorkflowEventCodec(); }
+        @Bean LeaveWorkflowEventPublisher publisher(JdbcOutboxStore outbox, WorkflowEventCodec codec) {
+            return new LeaveWorkflowEventPublisher(outbox, codec);
+        }
         @Bean WorkflowService workflows() { return mock(WorkflowService.class); }
         @Bean SysUserService users() { return mock(SysUserService.class); }
         @Bean("pms") PermissionService permissions() { return new PermissionService(); }

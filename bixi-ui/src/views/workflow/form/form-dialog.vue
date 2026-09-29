@@ -12,12 +12,6 @@
 					v-model="form.formKey"
 				></el-input>
 			</el-form-item>
-			<el-form-item label="状态" prop="status">
-				<el-radio-group v-model="form.status">
-					<el-radio :label="1">启用</el-radio>
-					<el-radio :label="0">禁用</el-radio>
-				</el-radio-group>
-			</el-form-item>
 			<el-form-item label="描述" prop="description">
 				<el-input
 					placeholder="请输入表单描述"
@@ -47,13 +41,17 @@ const dataFormRef = ref();
 const visible = ref(false);
 const loading = ref(false);
 
-const form = reactive({
+const initialForm = () => ({
 	id: '',
 	formName: '',
 	formKey: '',
+	formType: 'normal',
 	description: '',
-	status: 1,
+	category: '',
+	status: '0',
+	remark: '',
 });
+const form = reactive(initialForm());
 
 const dataRules = ref({
 	formName: [
@@ -67,17 +65,16 @@ const dataRules = ref({
 	],
 });
 
-const openDialog = async (id?: string) => {
+const openDialog = async (formKey?: string) => {
 	visible.value = true;
-	form.id = '';
+	Object.assign(form, initialForm());
 
 	nextTick(() => {
 		dataFormRef.value?.resetFields();
 	});
 
-	if (id) {
-		form.id = id;
-		await getFormData(id);
+	if (formKey) {
+		await getFormData(formKey);
 	}
 };
 
@@ -98,10 +95,10 @@ const onSubmit = async () => {
 	}
 };
 
-const getFormData = async (id: string) => {
+const getFormData = async (formKey: string) => {
 	try {
 		loading.value = true;
-		const res = await getFormByKey(id);
+		const res = await getFormByKey(formKey);
 		Object.assign(form, res.data);
 	} catch (err: any) {
 		useMessage().error(err.msg);

@@ -16,6 +16,9 @@ public class ProcessQueryDTO implements Serializable {
     @Schema(description = "流程名称")
     private String processName;
 
+    @Schema(description = "流程分类")
+    private String category;
+
     @Schema(description = "业务Key")
     private String businessKey;
 

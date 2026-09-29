@@ -34,6 +34,10 @@ public class WfProcessDefinition extends BaseEntity<WfProcessDefinition> {
     @Schema(description = "表单Key")
     private String formKey;
 
+    @TableField("form_version_id")
+    @Schema(description = "发布时固定的表单版本ID")
+    private Long formVersionId;
+
     @Schema(description = "流程图资源名")
     private String diagramResourceName;
 

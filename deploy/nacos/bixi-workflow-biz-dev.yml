@@ -23,8 +23,13 @@ security:
   oauth2:
     ignore:
       urls:
-        - /actuator/**
+        - /actuator/health
+        - /actuator/health/**
         - /error
+
+springdoc:
+  api-docs:
+    path: /workflow/v3/api-docs
 
 mybatis-plus:
   mapper-locations: classpath*:/mapper/*Mapper.xml

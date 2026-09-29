@@ -1,6 +1,5 @@
 package com.lotus.bixi.workflow.event;
 
-import com.lotus.bixi.common.core.constant.SecurityConstants;
 import com.lotus.bixi.common.core.context.TenantContextHolder;
 import com.lotus.bixi.common.mq.reliable.DurableMessage;
 import com.lotus.bixi.common.mq.reliable.DurableMessageHandler;
@@ -25,17 +24,24 @@ public final class WorkflowBusinessTaskResultHandler implements DurableMessageHa
     private final RuntimeService runtime;
     private final HistoryService history;
     private final WorkflowEventCodec codec;
+    private final WorkflowBusinessTaskResultStore tasks;
 
     public WorkflowBusinessTaskResultHandler(RuntimeService runtime,
             @Qualifier("workflowEventCodec") WorkflowEventCodec codec) {
-        this(runtime, null, codec);
+        this(runtime, null, codec, null);
     }
 
     public WorkflowBusinessTaskResultHandler(RuntimeService runtime, HistoryService history,
             @Qualifier("workflowEventCodec") WorkflowEventCodec codec) {
+        this(runtime, history, codec, null);
+    }
+
+    public WorkflowBusinessTaskResultHandler(RuntimeService runtime, HistoryService history,
+            @Qualifier("workflowEventCodec") WorkflowEventCodec codec, WorkflowBusinessTaskResultStore tasks) {
         this.runtime = runtime;
         this.history = history;
         this.codec = codec;
+        this.tasks = tasks;
     }
 
     @Override
@@ -44,15 +50,19 @@ public final class WorkflowBusinessTaskResultHandler implements DurableMessageHa
         validateEnvelope(message, event);
         Long previousTenant = TenantContextHolder.get();
         try {
-            TenantContextHolder.set(SecurityConstants.DEFAULT_TENANT_ID);
+            TenantContextHolder.set(tenantId(event.tenantScope()));
             if (event.type() == WorkflowEventType.WORKFLOW_BUSINESS_TASK_RESULT) {
                 WorkflowBusinessTaskResult result = (WorkflowBusinessTaskResult) event.payload();
                 return apply(event, result.operationId(), "waitBusinessResult", "businessTaskResultOperationId",
-                        result.success(), result.bookingReference(), result.errorCode());
+                        result.success(), result.bookingReference(), result.errorCode(),
+                        () -> tasks == null || tasks.recordBusinessResult(event, result),
+                        () -> tasks != null && tasks.recordBusinessResultWithoutExecution(event, result));
             }
             WorkflowCompensationResult result = (WorkflowCompensationResult) event.payload();
             return apply(event, result.operationId(), "waitCompensationResult", "compensationResultOperationId",
-                    result.success(), null, result.errorCode());
+                    result.success(), null, result.errorCode(),
+                    () -> tasks == null || tasks.recordCompensationResult(event, result),
+                    () -> tasks != null && tasks.recordCompensationResultWithoutExecution(event, result));
         }
         finally {
             if (previousTenant == null) TenantContextHolder.clear();
@@ -61,7 +71,9 @@ public final class WorkflowBusinessTaskResultHandler implements DurableMessageHa
     }
 
     private Result apply(WorkflowEvent event, String operationId, String activityId, String completedVariable,
-                         boolean success, String bookingReference, String errorCode) {
+                         boolean success, String bookingReference, String errorCode,
+                         java.util.function.BooleanSupplier persistResult,
+                         java.util.function.BooleanSupplier persistWithoutExecution) {
         Execution execution = runtime.createExecutionQuery()
                 .processInstanceId(event.processInstanceId())
                 .activityId(activityId)
@@ -69,6 +81,10 @@ public final class WorkflowBusinessTaskResultHandler implements DurableMessageHa
                 .filter(candidate -> operationId.equals(runtime.getVariable(candidate.getId(), "businessOperationId")))
                 .findFirst().orElse(null);
         if (execution == null) {
+            // The owner-local durable row is authoritative when Flowable has already
+            // crossed a timeout/termination boundary. Persist the late event before
+            // acknowledging it; a WAITING row still falls through to retryable recovery.
+            if (persistWithoutExecution.getAsBoolean()) return Result.IGNORED;
             Object prior = runtimeVariable(event.processInstanceId(), completedVariable);
             if (operationId.equals(prior)) return Result.IGNORED;
             if ("waitBusinessResult".equals(activityId)
@@ -88,6 +104,9 @@ public final class WorkflowBusinessTaskResultHandler implements DurableMessageHa
         Object expectedHash = runtime.getVariable(execution.getId(), "startRequestHash");
         if (expectedHash != null && !event.payload().requestHash().equals(expectedHash)) {
             throw new InboxDeliveryException(InboxDeliveryException.Kind.PERMANENT, "自动任务结果摘要冲突");
+        }
+        if (!persistResult.getAsBoolean()) {
+            return Result.IGNORED;
         }
         Map<String, Object> variables = new HashMap<>();
         variables.put(completedVariable, operationId);
@@ -153,6 +172,10 @@ public final class WorkflowBusinessTaskResultHandler implements DurableMessageHa
 
     private static InboxDeliveryException permanent(String message) {
         return new InboxDeliveryException(InboxDeliveryException.Kind.PERMANENT, message);
+    }
+
+    private static long tenantId(String tenantScope) {
+        return "default".equals(tenantScope) ? 1L : Long.parseLong(tenantScope);
     }
 
 }

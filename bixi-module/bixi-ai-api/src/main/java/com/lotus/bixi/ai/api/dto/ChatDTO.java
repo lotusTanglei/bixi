@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * 对话传输对象
@@ -31,6 +32,9 @@ public class ChatDTO implements Serializable {
 
     @Schema(description = "最大token数")
     private Integer maxTokens;
+
+    @Schema(description = "RAG检索的文档ID列表；为空时检索当前用户可见的全部文档")
+    private List<Long> documentIds;
 
     private static final long serialVersionUID = 1L;
 }

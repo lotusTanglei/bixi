@@ -1,5 +1,6 @@
 package com.lotus.bixi.ai.api.feign;
 
+import com.lotus.bixi.ai.api.config.ConditionalOnAiEnabled;
 import com.lotus.bixi.ai.api.constant.AiConstants;
 import com.lotus.bixi.ai.api.dto.ChatDTO;
 import com.lotus.bixi.ai.api.vo.ChatVO;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.GetMapping;
  * @date 2025-01-01
  */
 @FeignClient(contextId = "remoteAiService", value = AiConstants.AI_SERVICE)
+@ConditionalOnAiEnabled
 public interface RemoteAiService {
 
     @NoToken

@@ -1,176 +1,122 @@
 <template>
 	<div class="layout-padding">
-		<div class="layout-padding-auto layout-padding-view">
-			<el-card shadow="never">
-				<template #header>
-					<div class="card-header">
-						<div class="header-left">
-							<el-button icon="Back" @click="handleBack">返回</el-button>
-							<span class="form-name">{{ formName }} - 权限配置</span>
-						</div>
+		<div class="layout-padding-auto layout-padding-view permission-page">
+			<header class="page-header">
+				<div class="header-title">
+					<el-button icon="Back" @click="handleBack">返回</el-button>
+					<span>{{ formName }} - 字段权限</span>
+				</div>
+				<el-button
+					v-auth="'workflow_form_edit'"
+					type="primary"
+					icon="Check"
+					:disabled="!selectedRole || !selectedVersionId || fieldList.length === 0"
+					:loading="saving"
+					@click="handleSaveFieldPermission"
+				>
+					保存字段权限
+				</el-button>
+			</header>
+
+			<el-form :inline="true" :model="scopeForm" class="scope-toolbar">
+				<el-form-item label="表单版本" required>
+					<el-select v-model="selectedVersionId" placeholder="请选择版本" style="width: 180px" @change="handleScopeChange">
+						<el-option
+							v-for="item in versionList"
+							:key="item.id"
+							:label="`v${item.version}${item.isActive === '1' ? '（当前）' : ''}`"
+							:value="item.id"
+						/>
+					</el-select>
+				</el-form-item>
+				<el-form-item label="流程定义 ID">
+					<el-input v-model="scopeForm.processDefinitionId" clearable placeholder="留空表示全部流程定义" @change="handleScopeChange" />
+				</el-form-item>
+				<el-form-item label="任务节点 Key">
+					<el-input v-model="scopeForm.taskDefinitionKey" clearable placeholder="留空表示全部节点" @change="handleScopeChange" />
+				</el-form-item>
+				<el-form-item>
+					<el-button icon="Refresh" :disabled="!selectedRole" @click="loadFieldPermissions">刷新</el-button>
+				</el-form-item>
+			</el-form>
+
+			<div class="permission-grid">
+				<section class="role-pane">
+					<div class="pane-title">角色</div>
+					<el-table
+						:data="roleList"
+						highlight-current-row
+						v-loading="roleLoading"
+						@current-change="handleRoleChange"
+					>
+						<el-table-column label="角色名称" prop="roleName" min-width="120" />
+						<el-table-column label="角色标识" prop="roleCode" min-width="120" show-overflow-tooltip />
+					</el-table>
+				</section>
+
+				<section class="field-pane">
+					<div class="pane-title">
+						<span>字段策略</span>
+						<span v-if="selectedRole" class="selected-role">{{ selectedRole.roleName }}</span>
 					</div>
-				</template>
-
-				<el-tabs v-model="activeTab" class="permission-tabs">
-					<el-tab-pane label="角色权限" name="role">
-						<el-row :gutter="20">
-							<el-col :span="8">
-								<el-card shadow="never" class="role-card">
-									<template #header>
-										<div class="card-title">角色列表</div>
-									</template>
-									<el-table
-										:data="roleList"
-										highlight-current-row
-										@current-change="handleRoleChange"
-										v-loading="roleLoading"
-										max-height="500"
-									>
-										<el-table-column label="角色名称" prop="roleName" />
-										<el-table-column label="角色标识" prop="roleCode" />
-									</el-table>
-								</el-card>
-							</el-col>
-							<el-col :span="16">
-								<el-card shadow="never" class="permission-card">
-									<template #header>
-										<div class="card-title">
-											<span>权限配置</span>
-											<el-button
-												type="primary"
-												size="small"
-												:disabled="!selectedRole"
-												:loading="saving"
-												@click="handleSavePermission"
-											>
-												保存权限
-											</el-button>
-										</div>
-									</template>
-									<el-empty v-if="!selectedRole" description="请先选择角色" />
-									<div v-else>
-										<el-form :model="permissionForm" label-width="100px" v-loading="permissionLoading">
-											<el-form-item label="表单权限">
-												<el-radio-group v-model="permissionForm.formPermission">
-													<el-radio label="view">只读</el-radio>
-													<el-radio label="edit">编辑</el-radio>
-													<el-radio label="none">无权限</el-radio>
-												</el-radio-group>
-											</el-form-item>
-											<el-form-item label="数据权限">
-												<el-radio-group v-model="permissionForm.dataPermission">
-													<el-radio label="all">全部数据</el-radio>
-													<el-radio label="dept">本部门数据</el-radio>
-													<el-radio label="self">仅本人数据</el-radio>
-												</el-radio-group>
-											</el-form-item>
-										</el-form>
-									</div>
-								</el-card>
-							</el-col>
-						</el-row>
-					</el-tab-pane>
-
-					<el-tab-pane label="字段权限" name="field">
-						<el-row :gutter="20">
-							<el-col :span="8">
-								<el-card shadow="never" class="role-card">
-									<template #header>
-										<div class="card-title">角色列表</div>
-									</template>
-									<el-table
-										:data="roleList"
-										highlight-current-row
-										@current-change="handleFieldRoleChange"
-										v-loading="roleLoading"
-										max-height="500"
-									>
-										<el-table-column label="角色名称" prop="roleName" />
-										<el-table-column label="角色标识" prop="roleCode" />
-									</el-table>
-								</el-card>
-							</el-col>
-							<el-col :span="16">
-								<el-card shadow="never" class="field-card">
-									<template #header>
-										<div class="card-title">
-											<span>字段权限配置</span>
-											<el-button
-												type="primary"
-												size="small"
-												:disabled="!selectedFieldRole"
-												:loading="fieldSaving"
-												@click="handleSaveFieldPermission"
-											>
-												保存字段权限
-											</el-button>
-										</div>
-									</template>
-									<el-empty v-if="!selectedFieldRole" description="请先选择角色" />
-									<el-table
-										v-else
-										:data="fieldList"
-										border
-										v-loading="fieldLoading"
-										:cell-style="tableStyle.cellStyle"
-										:header-cell-style="tableStyle.headerCellStyle"
-									>
-										<el-table-column label="字段名称" prop="fieldName" />
-										<el-table-column label="字段标识" prop="fieldKey" />
-										<el-table-column label="字段类型" prop="fieldType" width="120" />
-										<el-table-column label="权限设置" width="200">
-											<template #default="scope">
-												<el-select v-model="scope.row.permission" placeholder="请选择权限">
-													<el-option label="可编辑" value="edit" />
-													<el-option label="只读" value="view" />
-													<el-option label="隐藏" value="hidden" />
-												</el-select>
-											</template>
-										</el-table-column>
-									</el-table>
-								</el-card>
-							</el-col>
-						</el-row>
-					</el-tab-pane>
-				</el-tabs>
-			</el-card>
+					<el-empty v-if="!selectedRole" description="请选择角色" />
+					<el-empty v-else-if="!selectedVersionId" description="当前表单还没有可配置版本" />
+					<el-table
+						v-else
+						:data="fieldList"
+						border
+						v-loading="fieldLoading"
+						:cell-style="tableStyle.cellStyle"
+						:header-cell-style="tableStyle.headerCellStyle"
+					>
+						<el-table-column label="字段名称" prop="fieldLabel" min-width="160" />
+						<el-table-column label="字段标识" prop="fieldCode" min-width="160" show-overflow-tooltip />
+						<el-table-column label="组件类型" prop="fieldType" width="120" />
+						<el-table-column label="访问策略" width="180">
+							<template #default="scope">
+								<el-select v-model="scope.row.permType" aria-label="字段访问策略">
+									<el-option label="可编辑" value="edit" />
+									<el-option label="只读" value="readonly" />
+									<el-option label="隐藏" value="hidden" />
+								</el-select>
+							</template>
+						</el-table-column>
+					</el-table>
+				</section>
+			</div>
 		</div>
 	</div>
 </template>
 
 <script lang="ts" name="workflowFormPermission" setup>
-import { useMessage } from '/@/hooks/message';
-import { getPermissionList, savePermission, getFieldPermissions } from '/@/api/workflow/form';
-import { useRoute, useRouter } from 'vue-router';
-import { tableStyle } from '/@/hooks/table';
+import { getFieldPermissions, getVersionList, saveFieldPermissions } from '/@/api/workflow/form';
 import { list as getRoleList } from '/@/api/admin/role';
+import { useMessage } from '/@/hooks/message';
+import { tableStyle } from '/@/hooks/table';
+import { useRoute, useRouter } from 'vue-router';
 
 const route = useRoute();
 const router = useRouter();
 
 const formId = ref('');
 const formName = ref('');
-const activeTab = ref('role');
+const versionList = ref<any[]>([]);
+const selectedVersionId = ref<string | number>('');
 const roleList = ref<any[]>([]);
-const roleLoading = ref(false);
 const selectedRole = ref<any>(null);
-const selectedFieldRole = ref<any>(null);
-const permissionLoading = ref(false);
+const fieldList = ref<any[]>([]);
+const roleLoading = ref(false);
 const fieldLoading = ref(false);
 const saving = ref(false);
-const fieldSaving = ref(false);
-
-const permissionForm = reactive({
-	formPermission: 'view',
-	dataPermission: 'self',
+const scopeForm = reactive({
+	processDefinitionId: '',
+	taskDefinitionKey: '',
 });
-
-const fieldList = ref<any[]>([]);
 
 onMounted(async () => {
 	formId.value = route.query.formId as string;
-	formName.value = route.query.formName as string || '未命名表单';
-	await loadRoleList();
+	formName.value = (route.query.formName as string) || '未命名表单';
+	await Promise.all([loadRoleList(), loadVersionList()]);
 });
 
 const loadRoleList = async () => {
@@ -185,60 +131,44 @@ const loadRoleList = async () => {
 	}
 };
 
+const loadVersionList = async () => {
+	try {
+		const res = await getVersionList(formId.value);
+		versionList.value = res.data || [];
+		selectedVersionId.value = versionList.value.find((item) => item.isActive === '1')?.id || versionList.value[0]?.id || '';
+	} catch (err: any) {
+		useMessage().error(err.msg || '加载表单版本失败');
+	}
+};
+
 const handleBack = () => {
-	router.push('/workflow/form');
+	router.push('/workflow/form/index');
 };
 
 const handleRoleChange = async (row: any) => {
 	selectedRole.value = row;
-	if (!row) return;
-
-	try {
-		permissionLoading.value = true;
-		const res = await getPermissionList(formId.value);
-		const permission = res.data?.find((p: any) => p.roleId === row.id);
-		if (permission) {
-			permissionForm.formPermission = permission.formPermission || 'view';
-			permissionForm.dataPermission = permission.dataPermission || 'self';
-		} else {
-			permissionForm.formPermission = 'view';
-			permissionForm.dataPermission = 'self';
-		}
-	} catch (err: any) {
-		useMessage().error(err.msg || '加载权限配置失败');
-	} finally {
-		permissionLoading.value = false;
-	}
+	fieldList.value = [];
+	if (row && selectedVersionId.value) await loadFieldPermissions();
 };
 
-const handleSavePermission = async () => {
-	if (!selectedRole.value) return;
-
-	try {
-		saving.value = true;
-		await savePermission({
-			formId: formId.value,
-			roleId: selectedRole.value.id,
-			formPermission: permissionForm.formPermission,
-			dataPermission: permissionForm.dataPermission,
-		});
-		useMessage().success('保存成功');
-	} catch (err: any) {
-		useMessage().error(err.msg || '保存失败');
-	} finally {
-		saving.value = false;
-	}
+const handleScopeChange = async () => {
+	fieldList.value = [];
+	if (selectedRole.value && selectedVersionId.value) await loadFieldPermissions();
 };
 
-const handleFieldRoleChange = async (row: any) => {
-	selectedFieldRole.value = row;
-	if (!row) return;
+const scopeParams = () => ({
+	processDefinitionId: scopeForm.processDefinitionId.trim() || undefined,
+	taskDefinitionKey: scopeForm.taskDefinitionKey.trim() || undefined,
+});
 
+const loadFieldPermissions = async () => {
+	if (!selectedRole.value || !selectedVersionId.value) return;
 	try {
 		fieldLoading.value = true;
-		const res = await getFieldPermissions(formId.value, row.id);
+		const res = await getFieldPermissions(formId.value, selectedRole.value.id, selectedVersionId.value, scopeParams());
 		fieldList.value = res.data || [];
 	} catch (err: any) {
+		fieldList.value = [];
 		useMessage().error(err.msg || '加载字段权限失败');
 	} finally {
 		fieldLoading.value = false;
@@ -246,57 +176,102 @@ const handleFieldRoleChange = async (row: any) => {
 };
 
 const handleSaveFieldPermission = async () => {
-	if (!selectedFieldRole.value) return;
-
+	if (!selectedRole.value || !selectedVersionId.value || fieldList.value.length === 0) return;
 	try {
-		fieldSaving.value = true;
-		await savePermission({
-			formId: formId.value,
-			roleId: selectedFieldRole.value.id,
-			fieldPermissions: fieldList.value.map((f) => ({
-				fieldKey: f.fieldKey,
-				permission: f.permission,
+		saving.value = true;
+		await saveFieldPermissions(formId.value, selectedRole.value.id, selectedVersionId.value, {
+			...scopeParams(),
+			fields: fieldList.value.map((field) => ({
+				fieldCode: field.fieldCode,
+				permType: field.permType,
 			})),
 		});
-		useMessage().success('保存成功');
+		useMessage().success('字段权限保存成功');
+		await loadFieldPermissions();
 	} catch (err: any) {
-		useMessage().error(err.msg || '保存失败');
+		useMessage().error(err.msg || '保存字段权限失败');
 	} finally {
-		fieldSaving.value = false;
+		saving.value = false;
 	}
 };
 </script>
 
 <style lang="scss" scoped>
-.card-header {
+.permission-page {
 	display: flex;
-	justify-content: space-between;
+	min-height: 0;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.page-header,
+.header-title,
+.pane-title {
+	display: flex;
 	align-items: center;
-
-	.header-left {
-		display: flex;
-		align-items: center;
-		gap: 15px;
-
-		.form-name {
-			font-size: 16px;
-			font-weight: 500;
-		}
-	}
 }
 
-.permission-tabs {
-	.card-title {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		font-weight: 500;
-	}
+.page-header {
+	justify-content: space-between;
+	gap: 16px;
+	border-bottom: 1px solid var(--el-border-color-light);
+	padding-bottom: 14px;
 }
 
-.role-card,
-.permission-card,
-.field-card {
-	min-height: 600px;
+.header-title {
+	gap: 12px;
+	font-size: 16px;
+	font-weight: 600;
+}
+
+.scope-toolbar {
+	border-bottom: 1px solid var(--el-border-color-lighter);
+}
+
+.permission-grid {
+	display: grid;
+	min-height: 0;
+	grid-template-columns: minmax(280px, 0.35fr) minmax(480px, 1fr);
+	gap: 20px;
+}
+
+.role-pane,
+.field-pane {
+	min-width: 0;
+}
+
+.role-pane {
+	border-right: 1px solid var(--el-border-color-lighter);
+	padding-right: 20px;
+}
+
+.pane-title {
+	min-height: 36px;
+	justify-content: space-between;
+	font-weight: 600;
+}
+
+.selected-role {
+	color: var(--el-text-color-secondary);
+	font-size: 13px;
+	font-weight: 400;
+}
+
+@media (max-width: 900px) {
+	.page-header {
+		align-items: flex-start;
+		flex-direction: column;
+	}
+
+	.permission-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.role-pane {
+		border-bottom: 1px solid var(--el-border-color-lighter);
+		border-right: 0;
+		padding-bottom: 16px;
+		padding-right: 0;
+	}
 }
 </style>

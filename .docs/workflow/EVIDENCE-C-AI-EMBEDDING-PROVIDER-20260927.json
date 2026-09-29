@@ -1,0 +1,31 @@
+{
+  "observedAt": "2026-09-27",
+  "scope": "AI/RAG embedding provider selection and transactional ingestion",
+  "status": "passed",
+  "runtime": {
+    "java": "17.0.2",
+    "providerSecretRecorded": false,
+    "externalDashScopeCall": false
+  },
+  "command": "JAVA_HOME=$(/usr/libexec/java_home -v 17) mvn -pl bixi-module/bixi-ai-biz -am -Dtest=AiConditionalConfigurationTest,AiControllerSecurityContractTest,AiSchemaContractTest,ChatServiceImplTest,DocumentContentExtractorTest,VectorStoreServiceImplTest,VectorStoreProviderIntegrationTest,AiOwnershipIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false test",
+  "result": {
+    "tests": 36,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "build": "SUCCESS"
+  },
+  "checks": [
+    "When Spring AI EmbeddingModel is available, document chunks are embedded in one provider batch call.",
+    "Provider vectors are persisted with the configured embedding model name and validated shared dimension.",
+    "The same provider is used to create query vectors before cosine ranking.",
+    "Provider exceptions abort ingestion; the document row and partial embedding rows roll back together.",
+    "When no EmbeddingModel bean exists, the existing bixi-local-hash-v1 deterministic fallback remains active.",
+    "No API key or provider response is persisted in the evidence."
+  ],
+  "tests": [
+    "VectorStoreServiceImplTest.providerEmbeddingsArePersistedAndUsedForQuerySimilarity",
+    "VectorStoreProviderIntegrationTest.providerFailureRollsBackDocumentAndPartialEmbeddings"
+  ],
+  "limitation": "This focused suite uses an in-process provider double; it proves the Spring AI contract and transaction boundary, but does not prove a live third-party DashScope network call or model quality."
+}

@@ -2,6 +2,7 @@ package com.lotus.bixi.generator.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.lotus.bixi.common.core.util.R;
+import com.lotus.bixi.generator.dto.TemplateUpdateResult;
 import com.lotus.bixi.generator.entity.GenTemplate;
 
 /**
@@ -16,12 +17,12 @@ public interface GenTemplateService extends IService<GenTemplate> {
 	 * 检查版本
 	 * @return {@link R }
 	 */
-	R checkVersion();
+	R<Boolean> checkVersion();
 
 	/**
 	 * 在线更新
 	 * @return {@link R }
 	 */
-	R onlineUpdate();
+	R<TemplateUpdateResult> onlineUpdate();
 
 }

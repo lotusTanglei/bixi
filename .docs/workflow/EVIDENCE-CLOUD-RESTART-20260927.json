@@ -1,0 +1,23 @@
+{
+  "date": "2026-09-27",
+  "mode": "cloud-enabled",
+  "project": "bixi-phase2-cloud",
+  "servicesRestarted": ["workflow", "upms"],
+  "dependentServiceObserved": "gateway",
+  "baselineAcceptanceExitCode": 0,
+  "baselineAcceptanceSeconds": 23,
+  "restartRecoverySecondsToHealthy": 42,
+  "postRestartAcceptanceExitCode": 0,
+  "postRestartAcceptanceSeconds": 39,
+  "assertions": [
+    "APPROVED/REJECTED/CANCELED workflow outcomes",
+    "stable retry and conflict handling",
+    "operator and data-scope permissions",
+    "history and frozen form versions",
+    "audit records"
+  ],
+  "limitations": [
+    "This run restarts the Workflow and UPMS application containers and observes Gateway recovery; it is not a full simultaneous restart of every Cloud dependency.",
+    "Result-loss and broker-durability fault injection remain covered by the dedicated reliable-message tests, not by this restart run."
+  ]
+}

@@ -6,20 +6,32 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lotus.bixi.workflow.api.dto.FormDataDTO;
 import com.lotus.bixi.workflow.api.entity.WfFormData;
+import com.lotus.bixi.workflow.api.entity.WfProcessInstance;
+import com.lotus.bixi.workflow.api.vo.FormRenderVO;
 import com.lotus.bixi.workflow.mapper.WfFormDataMapper;
 import com.lotus.bixi.workflow.service.FormDataService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.flowable.engine.HistoryService;
+import org.flowable.engine.TaskService;
+import org.flowable.task.api.Task;
+import org.flowable.task.api.history.HistoricTaskInstance;
 
 import java.util.List;
+import java.util.LinkedHashSet;
 
 @Slf4j
 @ConditionalOnWorkflowEnabled
 @Service
 @AllArgsConstructor
 public class FormDataServiceImpl extends ServiceImpl<WfFormDataMapper, WfFormData> implements FormDataService {
+
+    private final WorkflowAccessService access;
+    private final WorkflowFormRuntimeService runtimeForms;
+    private final TaskService taskService;
+    private final HistoryService historyService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -42,34 +54,53 @@ public class FormDataServiceImpl extends ServiceImpl<WfFormDataMapper, WfFormDat
     }
 
     @Override
-    public WfFormData getByProcessInstanceId(String processInstanceId) {
+    public FormRenderVO renderByProcessInstanceId(String processInstanceId) {
         if (StrUtil.isBlank(processInstanceId)) {
             return null;
         }
-        return this.lambdaQuery()
-                .eq(WfFormData::getProcessInstanceId, processInstanceId)
-                .one();
+        WfProcessInstance instance = access.requireProcessView(processInstanceId);
+        List<Task> active = taskService.createTaskQuery().processInstanceId(processInstanceId).active().list();
+        if (active.size() > 1) {
+            throw new IllegalArgumentException("流程存在多个活动任务，请按任务查询表单");
+        }
+        if (active.size() == 1) {
+            Task task = active.get(0);
+            return runtimeForms.render(instance, task.getProcessDefinitionId(), task.getTaskDefinitionKey());
+        }
+        HistoricTaskInstance latest = historyService.createHistoricTaskInstanceQuery()
+                .processInstanceId(processInstanceId).finished()
+                .orderByHistoricTaskInstanceEndTime().desc().listPage(0, 1).stream().findFirst().orElse(null);
+        return latest == null
+                ? runtimeForms.render(instance, instance.getProcessDefinitionId(), WorkflowFormRuntimeService.START_TASK_KEY)
+                : runtimeForms.render(instance, latest.getProcessDefinitionId(), latest.getTaskDefinitionKey());
     }
 
     @Override
-    public WfFormData getByTaskId(String taskId) {
+    public FormRenderVO renderByTaskId(String taskId) {
         if (StrUtil.isBlank(taskId)) {
             return null;
         }
-        return this.lambdaQuery()
-                .eq(WfFormData::getTaskId, taskId)
-                .one();
+        Task current = taskService.createTaskQuery().taskId(taskId).singleResult();
+        if (current != null) {
+            WfProcessInstance instance = access.requireProcessView(current.getProcessInstanceId());
+            return runtimeForms.render(instance, current.getProcessDefinitionId(), current.getTaskDefinitionKey());
+        }
+        HistoricTaskInstance historic = historyService.createHistoricTaskInstanceQuery().taskId(taskId).singleResult();
+        if (historic == null) throw new IllegalArgumentException("任务不存在");
+        WfProcessInstance instance = access.requireProcessView(historic.getProcessInstanceId());
+        return runtimeForms.render(instance, historic.getProcessDefinitionId(), historic.getTaskDefinitionKey());
     }
 
     @Override
-    public List<WfFormData> listByBusinessKey(String businessKey) {
+    public List<FormRenderVO> renderByBusinessKey(String businessKey) {
         if (StrUtil.isBlank(businessKey)) {
             return List.of();
         }
-        return this.lambdaQuery()
+        LinkedHashSet<String> processIds = new LinkedHashSet<>(this.lambdaQuery()
                 .eq(WfFormData::getBusinessKey, businessKey)
                 .orderByDesc(WfFormData::getCreateTime)
-                .list();
+                .list().stream().map(WfFormData::getProcessInstanceId).filter(StrUtil::isNotBlank).toList());
+        return processIds.stream().map(this::renderByProcessInstanceId).toList();
     }
 
 }

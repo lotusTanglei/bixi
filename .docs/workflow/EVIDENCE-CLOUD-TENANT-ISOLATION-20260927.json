@@ -1,0 +1,28 @@
+{
+  "observedAt": "2026-09-27",
+  "composeProject": "bixi-phase2-cloud",
+  "mode": "cloud",
+  "apiBase": "http://127.0.0.1:29997",
+  "frontendHealth": "http://127.0.0.1:28080/healthz",
+  "command": "BIXI_MODE=cloud BIXI_API_BASE_URL=http://127.0.0.1:29997 BIXI_ORIGIN=http://127.0.0.1:28080 BIXI_MYSQL_CONTAINER=bixi-phase2-cloud-mysql-1 BIXI_REDIS_CONTAINER=bixi-phase2-cloud-redis-1 node scripts/tenant-isolation-acceptance.mjs",
+  "status": "passed",
+  "exitCode": 0,
+  "checks": [
+    "same username and role code in two tenants select the requested tenant during login",
+    "tenant-local task list, detail, XLSX export, and insert tenant binding",
+    "cross-tenant detail, update, and delete are rejected without mutating the owner row",
+    "forged X-Tenant-Id and ordinary ALL tenant scope are rejected",
+    "platform ALL tenant list/detail/export are read-only; ALL and switched writes are rejected",
+    "a disabled tenant rejects existing HTTP access and refresh-token exchange"
+  ],
+  "lifecycleStatusMutation": "fixture SQL only; access and refresh denial were verified over HTTP",
+  "fixtureCleanup": {
+    "mysqlRowsRemaining": 0,
+    "tenantStatusCacheKeysRemaining": 0,
+    "secretsOmitted": true
+  },
+  "limits": [
+    "The tenant status mutation endpoint was not used because external fixture SQL does not invalidate the running authorization cache; its write permission remains a separate API concern.",
+    "This evidence does not prove Cloud AI document/search/RAG cross-tenant runtime isolation; that dedicated AI blackbox must be rerun with the Feign tenant-header path."
+  ]
+}

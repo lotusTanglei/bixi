@@ -115,6 +115,10 @@
                     <plugin>
                         <groupId>org.springframework.boot</groupId>
                         <artifactId>spring-boot-maven-plugin</artifactId>
+                        <configuration>
+                            <!-- Keep the thin main artifact consumable by cross-module test fixtures. -->
+                            <classifier>exec</classifier>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>

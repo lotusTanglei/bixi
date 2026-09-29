@@ -28,6 +28,31 @@ public class SysJobRecord extends BaseEntity<SysJobRecord> {
 	private Long jobId;
 
 	/**
+	 * Quartz 单次触发的执行标识，同一次触发的重试共享该值
+	 */
+	private String executionId;
+
+	/**
+	 * 当前尝试序号，从 1 开始
+	 */
+	private Integer attempt;
+
+	/**
+	 * 本次触发允许的最大尝试次数
+	 */
+	private Integer maxAttempts;
+
+	/**
+	 * CRON、MANUAL 或 RECOVERY
+	 */
+	private String triggerType;
+
+	/**
+	 * 是否由 Quartz 节点故障恢复触发
+	 */
+	private Boolean recovered;
+
+	/**
 	 * 日志信息
 	 */
 	private String message;

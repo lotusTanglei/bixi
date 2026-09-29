@@ -18,7 +18,7 @@ export function list() {
 export function online() {
 	return request({
 		url: '/gen/template/online',
-		method: 'get',
+		method: 'post',
 	});
 }
 

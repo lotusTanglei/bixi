@@ -12,8 +12,6 @@
 </template>
 
 <script lang="ts" name="FormRenderer" setup>
-import { useMessage } from '/@/hooks/message';
-
 interface FormSchema {
 	widgetList?: any[];
 	formConfig?: any;
@@ -36,6 +34,10 @@ const props = defineProps({
 		type: Boolean,
 		default: false,
 	},
+	permissions: {
+		type: Object as PropType<Record<string, string>>,
+		default: () => ({}),
+	},
 });
 
 const emit = defineEmits(['submit', 'validate']);
@@ -56,30 +58,55 @@ const globalDsv = reactive({
 	formConfig: {},
 });
 
-const getFormData = async () => {
-	try {
-		const valid = await vFormRenderRef.value?.validateForm();
-		if (valid) {
-			const formData = vFormRenderRef.value?.getFormData();
-			emit('validate', true);
-			return formData;
-		} else {
-			emit('validate', false);
-			return null;
+const validateForm = () =>
+	new Promise<boolean>((resolve) => {
+		const renderer = vFormRenderRef.value;
+		if (!renderer) {
+			resolve(false);
+			return;
 		}
-	} catch (error) {
-		emit('validate', false);
-		return null;
-	}
+		renderer.validateForm((valid: boolean) => resolve(valid));
+	});
+
+const editableData = (source: Record<string, any> = {}) => {
+	const entries = Object.entries(props.permissions);
+	const data =
+		entries.length === 0
+			? source
+			: Object.fromEntries(
+					entries
+						.filter(([, permission]) => permission === 'edit')
+						.filter(([field]) => Object.prototype.hasOwnProperty.call(source, field))
+						.map(([field]) => [field, source[field]])
+				);
+	return JSON.parse(JSON.stringify(data));
 };
 
-const validateForm = async () => {
-	try {
-		return await vFormRenderRef.value?.validateForm();
-	} catch (error) {
-		return false;
-	}
+const getFormDataSnapshot = () => editableData(vFormRenderRef.value?.getFormData(false) || {});
+
+const getFormData = async () => {
+	const valid = await validateForm().catch(() => false);
+	emit('validate', valid);
+	return valid ? getFormDataSnapshot() : null;
 };
+
+const applyPermissions = async () => {
+	await nextTick();
+	const renderer = vFormRenderRef.value;
+	if (!renderer) return;
+	if (props.readonly) renderer.disableForm();
+	else renderer.enableForm();
+	const disabled = Object.entries(props.permissions)
+		.filter(([, permission]) => permission !== 'edit')
+		.map(([field]) => field);
+	const hidden = Object.entries(props.permissions)
+		.filter(([, permission]) => permission === 'hidden')
+		.map(([field]) => field);
+	if (disabled.length > 0) renderer.disableWidgets(disabled);
+	if (hidden.length > 0) renderer.hideWidgets(hidden);
+};
+
+watch(() => [props.formSchema, props.permissions, props.readonly], applyPermissions, { deep: true, immediate: true, flush: 'post' });
 
 const resetForm = () => {
 	vFormRenderRef.value?.resetForm();
@@ -107,6 +134,7 @@ const setFieldValue = (fieldName: string, value: any) => {
 
 defineExpose({
 	getFormData,
+	getFormDataSnapshot,
 	validateForm,
 	resetForm,
 	setFormData,

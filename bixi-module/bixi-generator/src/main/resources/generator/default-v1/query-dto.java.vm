@@ -1,0 +1,18 @@
+package ${package}.${moduleName}.api.dto;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+#foreach($import in $importList)
+import ${import};
+#end
+
+@Data
+@Schema(description = "${tableComment}查询条件")
+public class ${ClassName}QueryDTO {
+
+#foreach($field in $queryList)
+	@Schema(description = "$!field.fieldComment")
+	private ${field.attrType} ${field.attrName};
+
+#end
+}

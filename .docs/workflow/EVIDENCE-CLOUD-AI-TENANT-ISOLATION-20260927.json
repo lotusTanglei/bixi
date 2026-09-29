@@ -1,0 +1,23 @@
+{
+  "observedAt": "2026-09-26T20:10:39.332Z",
+  "composeProject": "bixi-phase2-cloud",
+  "mode": "cloud",
+  "apiBase": "http://127.0.0.1:29997",
+  "provider": "local-deterministic",
+  "status": "passed",
+  "checked": [
+    "same username selected requested tenant and both principals received AI permissions",
+    "tenant-local document create/list and ownership binding",
+    "vector search returns only the authenticated user and tenant document",
+    "RAG returns an owned source and no cross-tenant source",
+    "forged X-Tenant-Id rejected before AI service access",
+    "cross-tenant delete rejected without mutation",
+    "owner deletes remove document and vector search visibility"
+  ],
+  "secretsOmitted": true,
+  "cleanup": {
+    "attempted": true,
+    "mysqlRowsRemaining": 0,
+    "tenantStatusCacheKeysRemaining": 0
+  }
+}

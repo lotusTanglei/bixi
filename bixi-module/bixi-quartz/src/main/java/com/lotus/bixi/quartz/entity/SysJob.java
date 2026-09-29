@@ -76,6 +76,16 @@ public class SysJob extends BaseEntity<SysJob> {
 	private String misfirePolicy;
 
 	/**
+	 * 失败后的重试次数，不包含首次执行
+	 */
+	private Integer retryCount;
+
+	/**
+	 * 重试间隔（秒）
+	 */
+	private Integer retryIntervalSeconds;
+
+	/**
 	 * 1、多租户任务;2、非多租户任务
 	 */
 	private String tenantType;

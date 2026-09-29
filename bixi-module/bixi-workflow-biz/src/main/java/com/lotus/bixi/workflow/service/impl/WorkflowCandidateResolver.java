@@ -7,6 +7,7 @@ import com.lotus.bixi.upms.api.service.CandidateIdentityQueryService;
 import com.lotus.bixi.upms.api.service.CandidateRoleQueryService;
 import com.lotus.bixi.workflow.api.config.ConditionalOnWorkflowEnabled;
 import com.lotus.bixi.workflow.api.identity.WorkflowCandidateGroup;
+import com.lotus.bixi.workflow.api.event.WorkflowTaskNotification;
 import org.flowable.bpmn.model.UserTask;
 import org.flowable.identitylink.api.IdentityLinkInfo;
 import org.flowable.task.api.Task;
@@ -70,7 +71,15 @@ public final class WorkflowCandidateResolver {
     }
 
     public boolean isCandidate(Task task, BixiUser user, Collection<? extends IdentityLinkInfo> links) {
-        if (task == null || user == null || task.getAssignee() != null || !sameTenant(task, user)) {
+        if (task == null || user == null || task.getAssignee() != null) {
+            return false;
+        }
+        return hasCandidateLink(task, user, links);
+    }
+
+    /** Whether the current active identity is still represented by a task candidate link. */
+    public boolean hasCandidateLink(Task task, BixiUser user, Collection<? extends IdentityLinkInfo> links) {
+        if (task == null || user == null || !sameTenant(task, user)) {
             return false;
         }
         CandidateIdentity identity = identities.findById(user.getId());
@@ -141,6 +150,30 @@ public final class WorkflowCandidateResolver {
                 : sanitize(task.getCandidateUsers(), task.getCandidateGroups());
     }
 
+    /** Whether a user can safely become the assignee of a task in the supplied tenant. */
+    public boolean isActiveIdentity(Long userId, Long tenantId) {
+        if (userId == null || userId <= 0 || tenantId == null || tenantId <= 0) {
+            return false;
+        }
+        CandidateIdentity identity = identities.findById(userId);
+        return identity != null && identity.enabled() && !identity.locked()
+                && java.util.Objects.equals(identity.userId(), userId)
+                && java.util.Objects.equals(identity.tenantId(), tenantId);
+    }
+
+    public CandidateIdentity requireActiveIdentity(Long userId, Long tenantId) {
+        if (userId == null || userId <= 0 || tenantId == null || tenantId <= 0) {
+            throw new IllegalArgumentException("目标办理人不存在、不可用或租户不匹配");
+        }
+        CandidateIdentity identity = identities.findById(userId);
+        if (identity == null || !identity.enabled() || identity.locked()
+                || !java.util.Objects.equals(identity.userId(), userId)
+                || !java.util.Objects.equals(identity.tenantId(), tenantId)) {
+            throw new IllegalArgumentException("目标办理人不存在、不可用或租户不匹配");
+        }
+        return identity;
+    }
+
     /**
      * Validates server-executable UserTask candidate metadata. Every role is checked against
      * the current tenant and active role state before a definition can be deployed.
@@ -149,6 +182,11 @@ public final class WorkflowCandidateResolver {
         if (task == null) {
             invalid("节点为空");
         }
+        LinkedHashSet<String> distinctUsers = new LinkedHashSet<>(safeValues(task.getCandidateUsers()));
+        LinkedHashSet<String> distinctGroups = new LinkedHashSet<>(safeValues(task.getCandidateGroups()));
+        if (distinctUsers.size() + distinctGroups.size() > WorkflowTaskNotification.MAX_RECIPIENT_IDENTITIES) {
+            invalid("候选收件人数量超过" + WorkflowTaskNotification.MAX_RECIPIENT_IDENTITIES);
+        }
         for (String value : safeValues(task.getCandidateUsers())) {
             if (!isPositiveDecimal(value)) {
                 invalid("候选用户必须是正十进制用户ID");
@@ -156,8 +194,9 @@ public final class WorkflowCandidateResolver {
             long userId = parsePositive(value, "候选用户");
             CandidateIdentity identity = identities.findById(userId);
             if (identity == null || !java.util.Objects.equals(identity.userId(), userId)
+                    || !identity.enabled() || identity.locked()
                     || identity.tenantId() == null || !java.util.Objects.equals(identity.tenantId(), tenantId)) {
-                invalid("候选用户不存在或租户不匹配");
+                invalid("候选用户不存在、不可用或租户不匹配");
             }
         }
         for (String value : safeValues(task.getCandidateGroups())) {
@@ -177,10 +216,7 @@ public final class WorkflowCandidateResolver {
     }
 
     private boolean activeIdentity(BixiUser user) {
-        CandidateIdentity identity = identities.findById(user.getId());
-        return user.getTenantId() != null && identity != null && identity.enabled() && !identity.locked()
-                && java.util.Objects.equals(identity.userId(), user.getId())
-                && identity.tenantId() != null && java.util.Objects.equals(identity.tenantId(), user.getTenantId());
+        return user != null && isActiveIdentity(user.getId(), user.getTenantId());
     }
 
     private boolean activeRoleForTenant(String value, Long tenantId) {

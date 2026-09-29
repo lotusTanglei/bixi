@@ -1,0 +1,111 @@
+#set($dollar = '$')
+<template>
+	<el-dialog v-model="visible" :close-on-click-modal="false" :title="form.id ? '编辑${tableComment}' : '新增${tableComment}'" width="min(900px, 94vw)">
+		<el-form ref="dataFormRef" v-loading="loading" :model="form" :rules="rules" label-width="100px">
+#foreach($field in $formList)
+#if($field.fieldName != 'id')
+			<el-form-item label="$!field.fieldComment" prop="${field.attrName}">
+#if($field.formType == 'date')
+				<el-date-picker v-model="form.${field.attrName}" type="date" value-format="YYYY-MM-DD" />
+#elseif($field.attrType == 'Integer' || $field.attrType == 'Long' || $field.attrType == 'BigDecimal' || $field.attrType == 'Double')
+				<el-input-number v-model="form.${field.attrName}" />
+#else
+				<el-input v-model="form.${field.attrName}" clearable placeholder="输入$!field.fieldComment" />
+#end
+			</el-form-item>
+#end
+#end
+			<div class="child-toolbar">
+				<span>${tableComment}明细</span>
+					<el-button v-auth-all="writePermissions" icon="Plus" type="primary" @click="addChild">新增明细</el-button>
+			</div>
+			<el-table :data="form.children" border empty-text="暂无明细">
+#foreach($field in $childFormList)
+				<el-table-column label="$!field.fieldComment" min-width="150">
+					<template #default="scope">
+							<el-form-item :prop="`children.${dollar}{scope.${dollar}index}.${field.attrName}`"#if($field.formRequired == '1') :rules="[{ required: true, message: '$!field.fieldComment不能为空', trigger: 'blur' }]"#end>
+#if($field.attrType == 'Integer' || $field.attrType == 'Long' || $field.attrType == 'BigDecimal' || $field.attrType == 'Double')
+							<el-input-number v-model="scope.row.${field.attrName}" />
+#else
+							<el-input v-model="scope.row.${field.attrName}" clearable />
+#end
+						</el-form-item>
+					</template>
+				</el-table-column>
+#end
+				<el-table-column align="center" fixed="right" label="操作" width="76">
+					<template #default="scope">
+									<el-button v-auth-all="writePermissions" icon="Delete" text type="danger" @click="removeChild(scope.${dollar}index)" />
+					</template>
+				</el-table-column>
+			</el-table>
+		</el-form>
+		<template #footer>
+			<el-button @click="visible = false">取消</el-button>
+				<el-button v-auth-all="writePermissions" :loading="loading" type="primary" @click="submit">确认</el-button>
+		</template>
+	</el-dialog>
+</template>
+
+<script lang="ts" name="${moduleName}${ClassName}Dialog" setup>
+import { addObj, getObj, putObj, ${ChildClassName}Form, ${ClassName}Form } from '/@/api/${moduleName}/${functionName}';
+import { useMessage } from '/@/hooks/message';
+
+const emit = defineEmits(['refresh']);
+const visible = ref(false);
+const loading = ref(false);
+const dataFormRef = ref();
+const emptyChild = (): ${ChildClassName}Form => ({
+#foreach($field in $childFormList)
+	${field.attrName}: #if($field.attrType == 'String')''#else 0#end,
+#end
+});
+const emptyForm = (): ${ClassName}Form => ({
+#foreach($field in $formList)
+#if($field.fieldName != 'id')
+	${field.attrName}: #if($field.attrType == 'String')''#else 0#end,
+#end
+#end
+	children: [],
+});
+const form = reactive<${ClassName}Form>(emptyForm());
+const writePermissions = computed(() => form.id
+	? ['${permissionPrefix}_edit', '${childPermissionPrefix}_edit']
+	: ['${permissionPrefix}_add', '${childPermissionPrefix}_add']);
+const rules = {
+#foreach($field in $formList)
+#if($field.fieldName != 'id' && $field.formRequired == '1')
+	${field.attrName}: [{ required: true, message: '$!field.fieldComment不能为空', trigger: 'blur' }],
+#end
+#end
+};
+const addChild = () => form.children.push(emptyChild());
+const removeChild = (index: number) => form.children.splice(index, 1);
+const openDialog = async (id?: string) => {
+	Object.assign(form, emptyForm());
+	visible.value = true;
+	await nextTick();
+	dataFormRef.value?.clearValidate();
+	if (!id) return;
+	try { loading.value = true; Object.assign(form, (await getObj(id)).data); }
+	catch (error: any) { useMessage().error(error?.msg || '加载失败'); }
+	finally { loading.value = false; }
+};
+const submit = async () => {
+	if (!(await dataFormRef.value?.validate().catch(() => false))) return;
+	try {
+		loading.value = true;
+		await (form.id ? putObj({ ...form }) : addObj({ ...form }));
+		useMessage().success(form.id ? '修改成功' : '新增成功');
+		visible.value = false;
+		emit('refresh');
+	} catch (error: any) { useMessage().error(error?.msg || '保存失败'); }
+	finally { loading.value = false; }
+};
+defineExpose({ openDialog });
+</script>
+
+<style scoped>
+.child-toolbar { display: flex; align-items: center; justify-content: space-between; margin: 12px 0 8px; }
+:deep(.el-table .el-form-item) { margin: 14px 0; }
+</style>

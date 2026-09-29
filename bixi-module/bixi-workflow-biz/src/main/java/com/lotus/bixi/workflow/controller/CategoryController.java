@@ -28,14 +28,14 @@ public class CategoryController {
     private final CategoryService categoryService;
 
     @GetMapping("/list")
-    @HasPermission("wf_category_manage")
+    @HasPermission({"workflow_definition_view", "workflow_process_add"})
     @Operation(summary = "查询分类列表")
     public R<List<WfCategory>> list() {
-        return R.ok(categoryService.list());
+        return R.ok(categoryService.listAll());
     }
 
     @GetMapping("/tree")
-    @HasPermission("wf_category_manage")
+    @HasPermission({"workflow_definition_view", "workflow_process_add"})
     @Operation(summary = "查询分类树")
     public R<List<WfCategory>> tree() {
         return R.ok(categoryService.tree());
@@ -43,25 +43,32 @@ public class CategoryController {
 
     @PostMapping
     @SysLog("新增分类")
-    @HasPermission("wf_category_manage")
+    @HasPermission("workflow_definition_edit")
     @Operation(summary = "新增分类")
     public R<Boolean> save(@Valid @RequestBody WfCategory category) {
-        return R.ok(categoryService.save(category));
+        if (category.getId() != null) {
+            throw new IllegalArgumentException("新增分类不能指定ID");
+        }
+        return R.ok(categoryService.saveCategory(category) != null);
     }
 
     @PutMapping
     @SysLog("更新分类")
-    @HasPermission("wf_category_manage")
+    @HasPermission("workflow_definition_edit")
     @Operation(summary = "更新分类")
     public R<Boolean> update(@Valid @RequestBody WfCategory category) {
-        return R.ok(categoryService.updateById(category));
+        if (category.getId() == null) {
+            throw new IllegalArgumentException("分类ID不能为空");
+        }
+        return R.ok(categoryService.saveCategory(category) != null);
     }
 
     @DeleteMapping("/{id}")
     @SysLog("删除分类")
-    @HasPermission("wf_category_manage")
+    @HasPermission("workflow_definition_edit")
     @Operation(summary = "删除分类")
     public R<Boolean> delete(@PathVariable Long id) {
-        return R.ok(categoryService.removeById(id));
+        categoryService.delete(id);
+        return R.ok(Boolean.TRUE);
     }
 }

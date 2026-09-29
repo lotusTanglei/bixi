@@ -8,7 +8,8 @@ package com.lotus.bixi.ai.api.constant;
  */
 public interface AiConstants {
 
-    String AI_SERVICE = "bixi-ai";
+    /** Nacos service name emitted by the bixi-ai-biz application. */
+    String AI_SERVICE = "bixi-ai-biz";
 
     String DEFAULT_MODEL = "qwen-plus";
 

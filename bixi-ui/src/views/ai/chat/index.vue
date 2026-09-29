@@ -2,7 +2,7 @@
 	<div class="chat-container">
 		<el-container class="chat-layout">
 			<el-aside width="280px" class="chat-aside">
-				<SessionList />
+				<SessionList @create="handleCreate" />
 			</el-aside>
 			<el-main class="chat-main">
 				<div class="chat-content">
@@ -11,6 +11,7 @@
 						:disabled="!aiStore.currentSession"
 						:loading="aiStore.loading"
 						placeholder="请输入您的问题..."
+						@cancel="handleCancel"
 						@send="handleSend"
 					/>
 				</div>
@@ -21,7 +22,7 @@
 
 <script lang="ts" name="AiChat" setup>
 import { useAiStore } from '/@/stores/ai';
-import { chat, ragChat, messageList } from '/@/api/ai/chat';
+import { createSession, messageList, sessionList, streamChat } from '/@/api/ai/chat';
 import { useMessage } from '/@/hooks/message';
 import SessionList from './components/SessionList.vue';
 import MessageList from './components/MessageList.vue';
@@ -29,7 +30,8 @@ import MessageInput from './components/MessageInput.vue';
 
 const aiStore = useAiStore();
 const messageListRef = ref();
-const { success, error } = useMessage();
+const { error } = useMessage();
+let streamController: AbortController | null = null;
 
 const generateId = () => {
 	return Date.now().toString(36) + Math.random().toString(36).substr(2);
@@ -57,28 +59,65 @@ const handleSend = async (content: string) => {
 		createTime: new Date().toISOString(),
 	};
 	aiStore.addMessage(assistantMessage);
+	const controller = new AbortController();
+	streamController = controller;
+	let answer = '';
 
 	try {
-		const res = await chat({
-			sessionId: aiStore.currentSession.id,
-			message: content,
-			...aiStore.config,
-		});
-
-		if (res.code === 0) {
-			aiStore.updateMessage(assistantMessage.id, res.data?.content || res.msg || '回复成功');
-		} else {
-			aiStore.updateMessage(assistantMessage.id, res.msg || '请求失败');
-			error(res.msg || '请求失败');
-		}
+		await streamChat(
+			{ sessionId: aiStore.currentSession.id, message: content },
+			(chunk) => {
+				answer += chunk;
+				aiStore.updateMessage(assistantMessage.id, answer);
+			},
+			controller.signal,
+		);
 	} catch (err: any) {
-		aiStore.updateMessage(assistantMessage.id, '网络错误，请稍后重试');
-		error(err.msg || '网络错误');
+		if (controller.signal.aborted) {
+			if (!answer) aiStore.updateMessage(assistantMessage.id, '已停止生成');
+		} else {
+			const message = err?.msg || err?.message || '网络错误，请稍后重试';
+			if (!answer) aiStore.updateMessage(assistantMessage.id, message);
+			error(message);
+		}
 	} finally {
+		if (streamController === controller) streamController = null;
 		aiStore.setLoading(false);
 		nextTick(() => {
 			messageListRef.value?.scrollToBottom();
 		});
+	}
+};
+
+const handleCancel = () => streamController?.abort();
+
+const handleCreate = async () => {
+	try {
+		const res = await createSession({ title: '新对话' });
+		if (res.code !== 0 || !res.data) {
+			error(res.msg || '创建会话失败');
+			return;
+		}
+		aiStore.addSession(res.data);
+		aiStore.clearMessages();
+	} catch (err: any) {
+		error(err.msg || '创建会话失败');
+	}
+};
+
+const loadSessions = async () => {
+	try {
+		const res = await sessionList();
+		if (res.code !== 0) {
+			error(res.msg || '加载会话失败');
+			return;
+		}
+		const sessions = res.data || [];
+		const currentId = aiStore.currentSession?.id;
+		aiStore.setSessionList(sessions);
+		aiStore.setCurrentSession(sessions.find((session: any) => session.id === currentId) || sessions[0] || null);
+	} catch (err: any) {
+		error(err.msg || '加载会话失败');
 	}
 };
 
@@ -104,6 +143,9 @@ watch(
 	},
 	{ immediate: true }
 );
+
+onMounted(loadSessions);
+onBeforeUnmount(handleCancel);
 </script>
 
 <style lang="scss" scoped>

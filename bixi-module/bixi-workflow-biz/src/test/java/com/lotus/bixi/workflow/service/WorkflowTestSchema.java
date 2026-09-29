@@ -20,7 +20,7 @@ final class WorkflowTestSchema {
             jdbc.execute("DROP TABLE IF EXISTS " + table);
             String sql = matcher.group();
             if (!mysql) {
-                sql = sql.replaceAll(" CHARACTER SET ascii COLLATE ascii_bin", "")
+                sql = sql.replaceAll(" CHARACTER SET [a-zA-Z0-9_]+ COLLATE [a-zA-Z0-9_]+", "")
                         .replaceFirst("\\) ENGINE[^;]*;", ")")
                         .replaceAll("UNIQUE KEY `([^`]+)`", "CONSTRAINT `$1` UNIQUE")
                         .replaceAll(",\\s*KEY `[^`]+` \\([^)]*\\)", "");

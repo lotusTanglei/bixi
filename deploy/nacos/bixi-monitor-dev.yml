@@ -1,0 +1,14 @@
+spring:
+  security:
+    user:
+      name: ${BIXI_SBA_CLIENT_USERNAME:monitor}
+      password: ${BIXI_SBA_CLIENT_PASSWORD:}
+
+management:
+  endpoint:
+    health:
+      show-details: never
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics

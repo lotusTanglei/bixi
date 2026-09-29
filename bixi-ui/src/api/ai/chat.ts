@@ -1,4 +1,6 @@
 import request from '/@/utils/request';
+import { consumeSseResponse } from '/@/utils/sse';
+import type { AxiosResponse } from 'axios';
 
 export const chat = (data: object) => {
 	return request({
@@ -16,13 +18,23 @@ export const ragChat = (data: object) => {
 	});
 };
 
-export const streamChat = (data: object) => {
-	return request({
-		url: '/ai/stream/chat',
-		method: 'get',
-		params: data,
-		responseType: 'stream',
-	});
+export const streamChat = async (data: object, onData: (content: string) => void, signal?: AbortSignal) => {
+	let response: AxiosResponse<ReadableStream<Uint8Array>>;
+	try {
+		response = await request<ReadableStream<Uint8Array>, AxiosResponse<ReadableStream<Uint8Array>>>({
+			url: '/ai/stream/chat',
+			method: 'get',
+			params: data,
+			headers: { Accept: 'text/event-stream' },
+			responseType: 'stream',
+			adapter: 'fetch',
+			signal,
+		});
+	} catch (failure: any) {
+		if (typeof failure?.data?.getReader !== 'function') throw failure;
+		response = failure;
+	}
+	await consumeSseResponse(response, onData);
 };
 
 export const sessionList = (params?: object) => {

@@ -15,11 +15,16 @@ import com.lotus.bixi.common.mq.reliable.ReliableDeliveryWorker;
 import com.lotus.bixi.common.mq.reliable.ReliableRabbitProperties;
 import com.lotus.bixi.workflow.api.config.ConditionalOnWorkflowEnabled;
 import com.lotus.bixi.workflow.api.event.WorkflowEventCodec;
+import com.lotus.bixi.workflow.api.event.WorkflowTaskNotificationCodec;
 import com.lotus.bixi.workflow.event.WorkflowEventRecorder;
 import com.lotus.bixi.workflow.event.WorkflowStartRequestedHandler;
 import com.lotus.bixi.workflow.event.WorkflowBusinessTaskEventPublisher;
+import com.lotus.bixi.workflow.event.WorkflowBusinessTaskStore;
+import com.lotus.bixi.workflow.event.WorkflowTaskNotificationPublisher;
+import com.lotus.bixi.workflow.event.WorkflowTaskNotificationSink;
 import com.lotus.bixi.workflow.event.LeaveBusinessTaskRequestDelegate;
 import com.lotus.bixi.workflow.event.WorkflowBusinessTaskResultHandler;
+import com.lotus.bixi.workflow.service.TrustedProcessStarter;
 import com.lotus.bixi.workflow.event.LeaveCompensationRequestDelegate;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -48,6 +53,12 @@ public class WorkflowReliableConfiguration {
     @ConditionalOnMissingBean(name = "workflowEventCodec")
     WorkflowEventCodec workflowEventCodec() { return new WorkflowEventCodec(); }
 
+    @Bean("workflowTaskNotificationCodec")
+    @ConditionalOnMissingBean(name = "workflowTaskNotificationCodec")
+    WorkflowTaskNotificationCodec workflowTaskNotificationCodec() {
+        return new WorkflowTaskNotificationCodec();
+    }
+
     @Bean("workflowReliableDeliveryProperties")
     @ConditionalOnMissingBean(name = "workflowReliableDeliveryProperties")
     ReliableDeliveryProperties reliableDeliveryProperties(
@@ -73,7 +84,7 @@ public class WorkflowReliableConfiguration {
 
     @Bean("workflowQuarantineStore")
     JdbcQuarantineStore workflowQuarantineStore(DataSource dataSource, PlatformTransactionManager transactionManager) {
-        return new JdbcQuarantineStore(dataSource, transactionManager);
+        return new JdbcQuarantineStore(dataSource, transactionManager, "workflow");
     }
 
     @Bean
@@ -98,22 +109,34 @@ public class WorkflowReliableConfiguration {
         return new WorkflowBusinessTaskEventPublisher(workflowOutboxStore, codec);
     }
 
+    @Bean
+    WorkflowTaskNotificationSink workflowTaskNotificationSink(
+            @Qualifier("workflowOutboxStore") JdbcOutboxStore workflowOutboxStore,
+            @Qualifier("workflowTaskNotificationCodec") WorkflowTaskNotificationCodec codec) {
+        return new WorkflowTaskNotificationPublisher(workflowOutboxStore, codec);
+    }
+
+    @Bean
+    WorkflowBusinessTaskStore workflowBusinessTaskStore(DataSource dataSource) {
+        return new WorkflowBusinessTaskStore(dataSource);
+    }
+
     @Bean(name = "leaveBusinessTaskRequestDelegate")
     LeaveBusinessTaskRequestDelegate leaveBusinessTaskRequestDelegate(
-            WorkflowBusinessTaskEventPublisher publisher) {
-        return new LeaveBusinessTaskRequestDelegate(publisher);
+            WorkflowBusinessTaskEventPublisher publisher, WorkflowBusinessTaskStore tasks) {
+        return new LeaveBusinessTaskRequestDelegate(publisher, tasks);
     }
 
     @Bean(name = "leaveCompensationRequestDelegate")
     LeaveCompensationRequestDelegate leaveCompensationRequestDelegate(
-            WorkflowBusinessTaskEventPublisher publisher) {
-        return new LeaveCompensationRequestDelegate(publisher);
+            WorkflowBusinessTaskEventPublisher publisher, WorkflowBusinessTaskStore tasks) {
+        return new LeaveCompensationRequestDelegate(publisher, tasks);
     }
 
     @Bean
     WorkflowStartRequestedHandler workflowStartRequestedHandler(
             @Qualifier("workflowEventCodec") WorkflowEventCodec codec,
-            com.lotus.bixi.workflow.service.impl.ProcessInstanceServiceImpl processes,
+            TrustedProcessStarter processes,
             WorkflowEventRecorder recorder) {
         return new WorkflowStartRequestedHandler(codec, processes, recorder);
     }
@@ -122,8 +145,9 @@ public class WorkflowReliableConfiguration {
     WorkflowBusinessTaskResultHandler workflowBusinessTaskResultHandler(
             org.flowable.engine.RuntimeService runtime,
             org.flowable.engine.HistoryService history,
-            @Qualifier("workflowEventCodec") WorkflowEventCodec codec) {
-        return new WorkflowBusinessTaskResultHandler(runtime, history, codec);
+            @Qualifier("workflowEventCodec") WorkflowEventCodec codec,
+            WorkflowBusinessTaskStore tasks) {
+        return new WorkflowBusinessTaskResultHandler(runtime, history, codec, tasks);
     }
 
     @Bean

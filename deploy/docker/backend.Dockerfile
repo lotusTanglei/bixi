@@ -12,8 +12,9 @@ COPY . .
 
 RUN --mount=type=cache,target=/root/.m2 \
     mvn -B -ntp -P"${MAVEN_PROFILE}" -pl "${MODULE}" -am package -Dmaven.test.skip=true \
-    && JAR_FILE="$(find "${MODULE}/target" -maxdepth 1 -type f -name '*.jar' \
-        ! -name 'original-*' ! -name '*-sources.jar' | head -n 1)" \
+    && JAR_FILE="$(find "${MODULE}/target" -maxdepth 1 -type f -name '*-exec.jar' -print -quit)" \
+    && if [ -z "${JAR_FILE}" ]; then JAR_FILE="$(find "${MODULE}/target" -maxdepth 1 -type f -name '*.jar' \
+        ! -name 'original-*' ! -name '*-sources.jar' | head -n 1)"; fi \
     && test -n "${JAR_FILE}" \
     && cp "${JAR_FILE}" /app.jar
 
@@ -23,7 +24,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/* \
     && useradd --system --uid 10001 --create-home bixi \
-    && install -d -o bixi -g bixi /app/logs /data/files
+    && install -d -o bixi -g bixi /app/logs /data/files /data/generator-output
 
 WORKDIR /app
 COPY --from=build --chown=bixi:bixi /app.jar /app/app.jar

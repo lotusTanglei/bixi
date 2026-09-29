@@ -31,7 +31,9 @@ public class LocalCandidateIdentityQueryService implements CandidateIdentityQuer
                 user.getId(),
                 "0".equals(user.getStatus()),
                 !"0".equals(user.getLockFlag()),
-                user.getTenantId());
+                user.getTenantId(),
+                user.getUsername(),
+                user.getName());
     }
 
 }

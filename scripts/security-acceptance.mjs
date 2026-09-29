@@ -39,6 +39,8 @@ try {
 	adminToken = await login(env.ADMIN_USERNAME, env.ADMIN_PASSWORD);
 	const adminInfo = api(await call('/admin/user/info', { token: adminToken }), 'administrator identity');
 	const adminUser = adminInfo.sysUser;
+	assert.equal(String(adminInfo.dataScope), '1',
+		'Administrator must have tenant-wide data scope without enabling ALL_TENANTS');
 	const requiredPermissions = ['sys_user_view', 'sys_user_import', 'sys_role_view', 'sys_role_import',
 		'sys_menu_view', 'sys_dept_view', 'sys_dept_export', 'sys_dept_import', 'sys_log_view',
 		'sys_client_view', 'sys_client_export', 'sys_token_view', 'sys_system_view'];

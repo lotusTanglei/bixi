@@ -8,8 +8,11 @@ import subprocess
 import time
 import uuid
 
+from local_test_preflight import ensure_local_test_preflight
+
 
 ROOT = Path(__file__).resolve().parents[1]
+ensure_local_test_preflight("single")
 SQL = ROOT / "bixi-project-documents/sql"
 MIGRATION = SQL / "migrations/20260921_security_permissions.sql"
 IMAGE = os.environ.get("SECURITY_TEST_MYSQL_IMAGE", "mysql:8.0.45")

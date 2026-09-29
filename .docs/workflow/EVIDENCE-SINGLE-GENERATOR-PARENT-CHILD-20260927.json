@@ -1,0 +1,19 @@
+{
+  "observedAt": "2026-09-27",
+  "mode": "single",
+  "status": "passed",
+  "checkCount": 12,
+  "checks": [
+    "anonymous access rejected",
+    "parent and two children created",
+    "parent details include children",
+    "child replacement is atomic",
+    "invalid relationship key rejected",
+    "failed update rolls back parent and children",
+    "parent deletion cleans children",
+    "create, update, and delete audit records present"
+  ],
+  "command": "node scripts/test-generator-parent-child-runtime.mjs",
+  "evidenceFile": "target/phase2-runtime/EVIDENCE-SINGLE-GENERATOR-PARENT-CHILD-20260927.json",
+  "secretsOmitted": true
+}

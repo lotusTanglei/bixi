@@ -5,6 +5,26 @@ set +x
 cd "$(dirname "$0")/.."
 ROOT="$PWD"
 
+# This rehearsal starts two Workflow JVMs plus the cloud dependencies. Check
+# the local Docker VM before creating the report directory, env file, project,
+# or any disposable container. The read-only preflight requires 8 GiB by
+# default for cluster mode. A CI or dedicated host with an independently
+# enforced resource budget may explicitly bypass it.
+if [[ "${WORKFLOW_CLUSTER_PREFLIGHT_SKIP:-false}" == "true" || "${BIXI_LOCAL_PREFLIGHT_SKIP:-false}" == "true" ]]; then
+  echo 'WARNING: cluster resource preflight was explicitly bypassed (WORKFLOW_CLUSTER_PREFLIGHT_SKIP/BIXI_LOCAL_PREFLIGHT_SKIP).' >&2
+else
+  set +e
+  BIXI_LOCAL_PREFLIGHT_FAIL_ON_CONFLICT=true \
+    BIXI_LOCAL_PREFLIGHT_FAIL_ON_STORAGE_PRESSURE="${BIXI_LOCAL_PREFLIGHT_FAIL_ON_STORAGE_PRESSURE:-true}" \
+    bash "${ROOT}/scripts/local-test-preflight.sh" cluster
+  preflight_status=$?
+  set -e
+  if (( preflight_status != 0 )); then
+    echo "Environment blocked: cluster preflight failed (status=${preflight_status}); no Docker resources were created." >&2
+    exit "${preflight_status}"
+  fi
+fi
+
 if [[ ! -s "${ROOT}/.env" ]]; then
   echo 'Missing .env. Run make init-env first.' >&2
   exit 1

@@ -21,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -66,6 +67,36 @@ class WorkflowBusinessTaskResultHandlerTest {
         when(runtime.getVariable(PROCESS_ID, "businessTaskResultOperationId")).thenReturn(OPERATION_ID);
 
         assertThat(handler.handle(message(result(true)))).isEqualTo(DurableMessageHandler.Result.IGNORED);
+    }
+
+    @Test
+    void resultIsIgnoredWhenDurableBusinessRecordDidNotWinCas() {
+        WorkflowBusinessTaskResultStore tasks = mock(WorkflowBusinessTaskResultStore.class);
+        handler = new WorkflowBusinessTaskResultHandler(runtime, null, codec, tasks);
+        when(executions.list()).thenReturn(List.of(execution));
+        when(tasks.recordBusinessResult(any(WorkflowEvent.class), any(WorkflowBusinessTaskResult.class)))
+                .thenReturn(false);
+
+        assertThat(handler.handle(message(result(true)))).isEqualTo(DurableMessageHandler.Result.IGNORED);
+
+        verify(runtime, never()).setVariables(eq("execution-7"), any());
+        verify(runtime, never()).trigger("execution-7");
+    }
+
+    @Test
+    void lateResultIsAcknowledgedFromDurableTerminalStateWhenExecutionIsGone() {
+        WorkflowBusinessTaskResultStore tasks = mock(WorkflowBusinessTaskResultStore.class);
+        handler = new WorkflowBusinessTaskResultHandler(runtime, null, codec, tasks);
+        when(executions.list()).thenReturn(List.of());
+        when(tasks.recordBusinessResultWithoutExecution(any(WorkflowEvent.class),
+                any(WorkflowBusinessTaskResult.class))).thenReturn(true);
+
+        assertThat(handler.handle(message(result(true)))).isEqualTo(DurableMessageHandler.Result.IGNORED);
+
+        verify(tasks).recordBusinessResultWithoutExecution(any(WorkflowEvent.class),
+                any(WorkflowBusinessTaskResult.class));
+        verify(runtime, never()).setVariables(eq("execution-7"), any());
+        verify(runtime, never()).trigger("execution-7");
     }
 
     private WorkflowEvent result(boolean success) {

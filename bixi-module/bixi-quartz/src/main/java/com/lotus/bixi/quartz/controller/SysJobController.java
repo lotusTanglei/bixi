@@ -10,6 +10,7 @@ import com.lotus.bixi.common.log.annotation.SysLog;
 import com.lotus.bixi.common.security.annotation.HasPermission;
 import com.lotus.bixi.common.security.util.SecurityUtils;
 import com.lotus.bixi.quartz.constants.BixiQuartzEnum;
+import com.lotus.bixi.quartz.dto.SysJobMutationDTO;
 import com.lotus.bixi.quartz.entity.SysJob;
 import com.lotus.bixi.quartz.entity.SysJobRecord;
 import com.lotus.bixi.quartz.service.SysJobRecordService;
@@ -19,6 +20,7 @@ import com.pig4cloud.plugin.excel.annotation.ResponseExcel;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.Scheduler;
@@ -57,12 +59,13 @@ public class SysJobController {
 	 * @return R
 	 */
 	@GetMapping("/page")
+	@HasPermission("job_sys_job_view")
 	@Operation(description = "分页定时业务查询")
 	public R getSysJobPage(Page page, SysJob sysJob) {
 		LambdaQueryWrapper<SysJob> wrapper = Wrappers.<SysJob>lambdaQuery()
 			.like(StrUtil.isNotBlank(sysJob.getName()), SysJob::getName, sysJob.getName())
 			.like(StrUtil.isNotBlank(sysJob.getGroup()), SysJob::getGroup, sysJob.getGroup())
-			.eq(StrUtil.isNotBlank(sysJob.getStatus()), SysJob::getStatus, sysJob.getGroup())
+			.eq(StrUtil.isNotBlank(sysJob.getStatus()), SysJob::getStatus, sysJob.getStatus())
 			.eq(StrUtil.isNotBlank(sysJob.getExecuteStatus()), SysJob::getExecuteStatus,
 					sysJob.getExecuteStatus());
 		return R.ok(sysJobService.page(page, wrapper));
@@ -74,9 +77,11 @@ public class SysJobController {
 	 * @return R
 	 */
 	@GetMapping("/{id}")
+	@HasPermission("job_sys_job_view")
 	@Operation(description = "唯一标识查询定时任务")
 	public R getById(@PathVariable("id") Long id) {
-		return R.ok(sysJobService.getById(id));
+		SysJob job = sysJobService.getById(id);
+		return job == null ? R.failed("无此定时任务,请确认") : R.ok(job);
 	}
 
 	/**
@@ -88,7 +93,8 @@ public class SysJobController {
 	@PostMapping
 	@HasPermission("job_sys_job_add")
 	@Operation(description = "新增定时任务")
-	public R save(@RequestBody SysJob sysJob) {
+	public R save(@Valid @RequestBody SysJobMutationDTO request) {
+		SysJob sysJob = request.toEntity();
 		long count = sysJobService.count(
 				Wrappers.query(SysJob.builder().name(sysJob.getName()).group(sysJob.getGroup()).build()));
 
@@ -108,8 +114,29 @@ public class SysJobController {
 	@PutMapping
 	@HasPermission("job_sys_job_edit")
 	@Operation(description = "修改定时任务")
-	public R updateById(@RequestBody SysJob sysJob) {
+	public R updateById(@Valid @RequestBody SysJobMutationDTO request) {
+		if (request.getId() == null) {
+			return R.failed("任务ID不能为空");
+		}
+		SysJob sysJob = request.toEntity();
 		SysJob querySysJob = this.sysJobService.getById(sysJob.getId());
+		if (querySysJob == null) {
+			throw new IllegalArgumentException("无此定时任务,请确认");
+		}
+		if (BixiQuartzEnum.JOB_STATUS_RUNNING.getType().equals(querySysJob.getStatus())) {
+			throw new IllegalArgumentException("运行中的定时任务不能修改,请先暂停");
+		}
+
+		// 任务状态由服务端维护，禁止客户端借编辑接口切换运行状态。
+		sysJob.setStatus(querySysJob.getStatus());
+		sysJob.setTenantId(querySysJob.getTenantId());
+		long duplicate = sysJobService.count(Wrappers.<SysJob>lambdaQuery()
+			.eq(SysJob::getName, sysJob.getName())
+			.eq(SysJob::getGroup, sysJob.getGroup())
+			.ne(SysJob::getId, sysJob.getId()));
+		if (duplicate > 0) {
+			return R.failed("任务重复，请检查此组内是否已包含同名任务");
+		}
 		if (BixiQuartzEnum.JOB_STATUS_NOT_RUNNING.getType().equals(querySysJob.getStatus())) {
 			// 如修改暂停的需更新调度器
 			this.taskUtil.addOrUpateJob(sysJob, scheduler);
@@ -132,14 +159,17 @@ public class SysJobController {
 	@Operation(description = "唯一标识查询定时任务，暂停任务才能删除")
 	public R removeById(@PathVariable Long id) {
 		SysJob querySysJob = this.sysJobService.getById(id);
+		if (querySysJob == null) {
+			return R.failed("无此定时任务,请确认");
+		}
 		if (BixiQuartzEnum.JOB_STATUS_NOT_RUNNING.getType().equals(querySysJob.getStatus())) {
 			this.taskUtil.removeJob(querySysJob, scheduler);
-			this.sysJobService.removeById(id);
+			return R.ok(this.sysJobService.removeById(id));
 		}
 		else if (BixiQuartzEnum.JOB_STATUS_RELEASE.getType().equals(querySysJob.getStatus())) {
-			this.sysJobService.removeById(id);
+			return R.ok(this.sysJobService.removeById(id));
 		}
-		return R.ok();
+		return R.failed("运行中的定时任务不能删除,请先暂停");
 	}
 
 	/**
@@ -176,11 +206,11 @@ public class SysJobController {
 	@HasPermission("job_sys_job_start_job")
 	@Operation(description = "启动全部暂停的定时任务")
 	public R startJobs() {
+		taskUtil.startJobs(scheduler);
 		// 更新定时任务状态条件，暂停状态3更新为运行状态2
 		this.sysJobService.update(SysJob.builder().status(BixiQuartzEnum.JOB_STATUS_RUNNING.getType()).build(),
 				new UpdateWrapper<SysJob>().lambda()
 					.eq(SysJob::getStatus, BixiQuartzEnum.JOB_STATUS_NOT_RUNNING.getType()));
-		taskUtil.startJobs(scheduler);
 		return R.ok();
 	}
 
@@ -249,6 +279,9 @@ public class SysJobController {
 	@Operation(description = "立刻执行定时任务")
 	public R runJob(@PathVariable("id") Long jobId) throws SchedulerException {
 		SysJob querySysJob = this.sysJobService.getById(jobId);
+		if (querySysJob == null) {
+			return R.failed("无此定时任务,请确认");
+		}
 
 		// 执行定时任务前判定任务是否在quartz中
 		if (!scheduler.checkExists(TaskUtil.getKey(querySysJob))) {
@@ -270,10 +303,13 @@ public class SysJobController {
 	@Operation(description = "暂停定时任务")
 	public R shutdownJob(@PathVariable("id") Long id) {
 		SysJob querySysJob = this.sysJobService.getById(id);
+		if (querySysJob == null) {
+			return R.failed("无此定时任务,请确认");
+		}
+		taskUtil.pauseJob(querySysJob, scheduler);
 		querySysJob.setStatus(BixiQuartzEnum.JOB_STATUS_NOT_RUNNING.getType());
 		// 更新定时任务状态条件，运行状态2更新为暂停状态3
 		this.sysJobService.updateById(querySysJob);
-		taskUtil.pauseJob(querySysJob, scheduler);
 		return R.ok();
 	}
 
@@ -282,6 +318,7 @@ public class SysJobController {
 	 * @return
 	 */
 	@GetMapping("/job-record")
+	@HasPermission("job_sys_job_view")
 	@Operation(description = "唯一标识查询定时执行日志")
 	public R getLog(Page page, SysJobRecord sysJobRecord) {
 		return R.ok(sysJobRecordService.page(page, Wrappers.query(sysJobRecord)));
@@ -292,6 +329,7 @@ public class SysJobController {
 	 * @return
 	 */
 	@GetMapping("/is-valid-task-name")
+	@HasPermission("job_sys_job_view")
 	@Operation(description = "检验任务名称和任务组联合是否唯一")
 	public R isValidTaskName(@RequestParam String name, @RequestParam String group) {
 		return this.sysJobService
@@ -306,6 +344,7 @@ public class SysJobController {
 	 */
 	@ResponseExcel
 	@GetMapping("/export")
+	@HasPermission("job_sys_job_export")
 	@Operation(description = "导出任务")
 	public List<SysJob> export(SysJob sysJob) {
 		return sysJobService.list(Wrappers.query(sysJob));

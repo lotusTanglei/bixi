@@ -61,12 +61,12 @@ class RabbitOwnerEndpointIntegrationTest extends MysqlInboxTestSupport {
                 new RabbitDurableTransport.Route("workflow", "upms", workflowExchange, "upms.workflow"),
                 new RabbitDurableTransport.Route("upms", "workflow", upmsExchange, "workflow.upms"),
                 workflowQueue, workflowExecutor, workflowInbox,
-                new JdbcQuarantineStore(dataSource, manager), delivery, () -> true);
+                new JdbcQuarantineStore(dataSource, manager, "workflow"), delivery, () -> true);
         var upmsEndpoint = new RabbitOwnerEndpoint(settings,
                 new RabbitDurableTransport.Route("upms", "workflow", upmsExchange, "workflow.upms"),
                 new RabbitDurableTransport.Route("workflow", "upms", workflowExchange, "upms.workflow"),
                 upmsQueue, upmsExecutor, upmsInbox,
-                new JdbcQuarantineStore(dataSource, manager), delivery, () -> true);
+                new JdbcQuarantineStore(dataSource, manager, "upms"), delivery, () -> true);
         try {
             workflowEndpoint.start();
             upmsEndpoint.start();
@@ -109,12 +109,12 @@ class RabbitOwnerEndpointIntegrationTest extends MysqlInboxTestSupport {
                 new RabbitDurableTransport.Route("workflow", "upms", workflowExchange, "missing.route"),
                 new RabbitDurableTransport.Route("upms", "workflow", upmsExchange, "workflow.upms"),
                 "bixi.workflow.inbox.test." + suffix, workflowExecutor, workflowInbox,
-                new JdbcQuarantineStore(dataSource, manager), delivery, () -> true);
+                new JdbcQuarantineStore(dataSource, manager, "workflow"), delivery, () -> true);
         var upmsEndpoint = new RabbitOwnerEndpoint(settings,
                 new RabbitDurableTransport.Route("upms", "workflow", upmsExchange, "workflow.upms"),
                 new RabbitDurableTransport.Route("workflow", "upms", workflowExchange, "upms.workflow"),
                 "bixi.upms.inbox.test." + suffix, upmsExecutor, upmsInbox,
-                new JdbcQuarantineStore(dataSource, manager), delivery, () -> true);
+                new JdbcQuarantineStore(dataSource, manager, "upms"), delivery, () -> true);
         try {
             workflowEndpoint.start();
             upmsEndpoint.start();
@@ -151,7 +151,7 @@ class RabbitOwnerEndpointIntegrationTest extends MysqlInboxTestSupport {
                 new RabbitDurableTransport.Route("upms", "workflow", upmsExchange, "workflow.upms"),
                 new RabbitDurableTransport.Route("workflow", "upms", workflowExchange, "upms.workflow"),
                 queue, upmsExecutor, upmsInbox,
-                new JdbcQuarantineStore(dataSource, manager), delivery, () -> true);
+                new JdbcQuarantineStore(dataSource, manager, "upms"), delivery, () -> true);
         String evidenceId = "bad-wire-" + suffix;
         try {
             endpoint.start();
@@ -205,12 +205,12 @@ class RabbitOwnerEndpointIntegrationTest extends MysqlInboxTestSupport {
                 new RabbitDurableTransport.Route("workflow", "upms", workflowExchange, "upms.workflow"),
                 new RabbitDurableTransport.Route("upms", "workflow", upmsExchange, "workflow.upms"),
                 workflowQueue, workflowExecutor, workflowInbox,
-                new JdbcQuarantineStore(dataSource, manager), delivery, () -> true);
+                new JdbcQuarantineStore(dataSource, manager, "workflow"), delivery, () -> true);
         var upmsEndpoint = new RabbitOwnerEndpoint(settings,
                 new RabbitDurableTransport.Route("upms", "workflow", upmsExchange, "workflow.upms"),
                 new RabbitDurableTransport.Route("workflow", "upms", workflowExchange, "upms.workflow"),
                 upmsQueue, upmsExecutor, upmsInbox,
-                new JdbcQuarantineStore(dataSource, manager), delivery, () -> true);
+                new JdbcQuarantineStore(dataSource, manager, "upms"), delivery, () -> true);
         try {
             workflowEndpoint.start();
             upmsEndpoint.start();

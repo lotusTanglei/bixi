@@ -4,12 +4,11 @@
 			<el-row>
 				<div class="mb8" style="width: 100%">
 					<el-button
-						formDialogRef
 						:disabled="multiple"
 						icon="Delete"
 						type="primary"
 						class="ml10"
-						v-auth="'sys_log_del'"
+						v-auth="'job_sys_job_record_del'"
 						@click="handleDelete(selectObjs)"
 					>
 						{{ $t('common.delBtn') }}
@@ -33,6 +32,14 @@
 			>
 				<el-table-column type="selection" width="40" align="center" />
 				<el-table-column type="index" :label="t('log.index')" width="80" />
+				<el-table-column prop="executionId" :label="t('log.executionId')" min-width="230" show-overflow-tooltip />
+				<el-table-column :label="t('log.attempt')" width="100" align="center">
+					<template #default="scope">{{ scope.row.attempt }}/{{ scope.row.maxAttempts }}</template>
+				</el-table-column>
+				<el-table-column prop="triggerType" :label="t('log.triggerType')" width="110" />
+				<el-table-column :label="t('log.recovered')" width="100" align="center">
+					<template #default="scope">{{ scope.row.recovered ? t('log.recoveredYes') : t('log.recoveredNo') }}</template>
+				</el-table-column>
 				<el-table-column prop="message" :label="t('log.jobMessage')" show-overflow-tooltip />
 				<el-table-column prop="status" :label="t('log.jobRecordStatus')" show-overflow-tooltip>
 					<template #default="scope">
@@ -42,12 +49,11 @@
 				<el-table-column prop="executeTime" :label="t('log.executeTime')" show-overflow-tooltip />
 				<el-table-column prop="exceptionInfo" :label="t('log.exceptionInfo')" show-overflow-tooltip />
 				<el-table-column prop="createTime" :label="t('log.createTime')" show-overflow-tooltip />
-				<el-table-column :label="$t('common.action')" width="150">
+				<el-table-column :label="$t('common.action')" width="100">
 					<template #default="scope">
-						<el-button text type="primary" v-auth="'pix_log_edit'" @click="formDialogRef.openDialog(scope.row.id)"
-							>{{ $t('common.editBtn') }}
+						<el-button text type="primary" v-auth="'job_sys_job_record_del'" @click="handleDelete([scope.row.id])"
+							>{{ $t('common.delBtn') }}
 						</el-button>
-						<el-button text type="primary" v-auth="'sys_log_del'" @click="handleDelete([scope.row.id])">{{ $t('common.delBtn') }} </el-button>
 					</template>
 				</el-table-column>
 			</el-table>
@@ -68,8 +74,6 @@ const visible = ref(false);
 
 const { job_execute_status } = useDict('job_type', 'job_execute_status');
 
-// 定义变量内容
-const formDialogRef = ref();
 // 搜索变量
 const showSearch = ref(true);
 // 多选变量

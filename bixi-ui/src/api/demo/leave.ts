@@ -20,7 +20,9 @@ export const fetchList = (params?: Record<string, unknown>) => request({ url: `$
 export const getObj = (id: string) => request({ url: `${base}/details/${id}` });
 export const save = (data: LeaveForm, id?: string) => request({ url: id ? `${base}/${id}` : base, method: id ? 'put' : 'post', data });
 export const remove = (id: string) => request({ url: `${base}/${id}`, method: 'delete' });
-export const submit = (id: string) => request({ url: `${base}/${id}/submit`, method: 'post' });
+export const submit = (id: string, requestId: string) => request({
+	url: `${base}/${id}/submit`, method: 'post', params: { requestId },
+});
 export const refresh = (id: string) => request({ url: `${base}/${id}/refresh`, method: 'post' });
 export const history = (id: string) => request({ url: `${base}/${id}/history` });
 export const approvers = (name = '') => request({ url: `${base}/approvers`, params: { name, current: 1, size: 100 } });

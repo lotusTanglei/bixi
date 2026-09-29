@@ -48,7 +48,9 @@ public class LeaveRequestController {
     public R<Void> delete(@PathVariable Long id) { leaves.delete(id); return R.ok(); }
 
     @PostMapping("/{id}/submit") @HasPermission("demo_leave_edit") @SysLog("提交请假申请")
-    public R<LeaveRequest> submit(@PathVariable Long id) { return R.ok(leaves.submit(id)); }
+    public R<LeaveRequest> submit(@PathVariable Long id, @RequestParam String requestId) {
+        return R.ok(leaves.submit(id, requestId));
+    }
 
     @PostMapping("/{id}/refresh") @HasPermission("demo_leave_edit") @SysLog("刷新请假状态")
     public R<LeaveRequest> refresh(@PathVariable Long id) { return R.ok(leaves.refresh(id)); }

@@ -22,7 +22,7 @@ class RabbitInboxListenerTest {
         var manager = new DataSourceTransactionManager(dataSource);
         var inbox = new JdbcInboxStore(dataSource, manager, ReliableDeliveryProperties.defaults());
         var executor = new InboxExecutor(inbox, "workflow", java.util.Map.of());
-        var quarantine = new JdbcQuarantineStore(dataSource, manager);
+        var quarantine = new JdbcQuarantineStore(dataSource, manager, "workflow");
         var route = new RabbitDurableTransport.Route("upms", "workflow", "bixi.workflow", "workflow.upms");
         var listener = new RabbitInboxListener(executor, inbox, quarantine, route);
         AtomicInteger acknowledgements = new AtomicInteger();

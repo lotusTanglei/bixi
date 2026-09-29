@@ -1,5 +1,6 @@
 package com.lotus.bixi.generator.service;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipOutputStream;
@@ -15,7 +16,7 @@ public interface GeneratorService {
 	 * @param tableId 表
 	 * @param zip 输出流
 	 */
-	void downloadCode(Long tableId, ZipOutputStream zip);
+	void downloadCode(Long tableId, String templateVersion, ZipOutputStream zip);
 
 	/**
 	 * 预览代码
@@ -28,6 +29,6 @@ public interface GeneratorService {
 	 * 目标目录写入渲染结果
 	 * @param tableId 表
 	 */
-	void generatorCode(Long tableId);
+	List<Path> generatorCode(List<Long> tableIds, String templateVersion, boolean overwrite);
 
 }

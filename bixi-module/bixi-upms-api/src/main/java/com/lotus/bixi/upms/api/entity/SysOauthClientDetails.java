@@ -2,6 +2,8 @@
 
 package com.lotus.bixi.upms.api.entity;
 
+import com.alibaba.excel.annotation.ExcelIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.lotus.bixi.common.mybatis.base.BaseEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -21,6 +23,9 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class SysOauthClientDetails extends BaseEntity<SysOauthClientDetails> {
 
+    public interface Create {
+    }
+
     /**
      * 客户端ID
      */
@@ -31,8 +36,10 @@ public class SysOauthClientDetails extends BaseEntity<SysOauthClientDetails> {
     /**
      * 客户端密钥
      */
-    @NotBlank(message = "client_secret 不能为空")
-    @Schema(description = "客户端密钥")
+    @NotBlank(message = "client_secret 不能为空", groups = Create.class)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @ExcelIgnore
+    @Schema(description = "客户端密钥", accessMode = Schema.AccessMode.WRITE_ONLY)
     private String clientSecret;
 
     /**

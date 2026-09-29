@@ -75,4 +75,14 @@ public class SysUserNoticeServiceImpl extends ServiceImpl<SysUserNoticeMapper, S
                 .eq(SysUserNotice::getId, userNoticeId)
                 .eq(SysUserNotice::getUserId, userId));
     }
+
+    @Override
+    public int retryFailedDeliveries(Long noticeId) {
+        if (noticeId == null) {
+            return 0;
+        }
+        LocalDateTime staleBefore = LocalDateTime.now()
+                .minusSeconds(SysUserNotice.DELIVERY_LEASE_SECONDS);
+        return baseMapper.resetFailedDeliveries(noticeId, staleBefore);
+    }
 }

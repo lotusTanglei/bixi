@@ -1,0 +1,22 @@
+package ${package}.${moduleName}.api.vo;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+#foreach($import in $importList)
+import ${import};
+#end
+import java.time.LocalDateTime;
+
+@Data
+@Schema(description = "${tableComment}")
+public class ${ClassName}VO {
+	private Long id;
+#foreach($field in $fieldList)
+#if($field.fieldName != 'id' && $field.fieldName != 'create_by' && $field.fieldName != 'update_by' && $field.fieldName != 'create_time' && $field.fieldName != 'update_time' && $field.fieldName != 'del_flag' && $field.fieldName != 'data_status' && $field.fieldName != 'tenant_id')
+	@Schema(description = "$!field.fieldComment")
+	private ${field.attrType} ${field.attrName};
+#end
+#end
+	private LocalDateTime createTime;
+	private LocalDateTime updateTime;
+}

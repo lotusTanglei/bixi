@@ -58,6 +58,7 @@ DROP TABLE IF EXISTS `gen_group`;
 CREATE TABLE `gen_group` (
   `id` bigint NOT NULL,
   `group_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '分组名称',
+  `active_group_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci GENERATED ALWAYS AS (IF(`del_flag` = '0', `group_name`, NULL)) STORED COMMENT '未删除分组唯一名称',
   `group_desc` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '分组描述',
   `create_by` bigint DEFAULT NULL COMMENT '创建人',
   `update_by` bigint DEFAULT NULL COMMENT '修改人',
@@ -68,7 +69,8 @@ CREATE TABLE `gen_group` (
   `data_status` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '0' COMMENT '数据状态（用来标识数据状态，可用于割接，特殊数据处理）',
   `tenant_id` bigint DEFAULT NULL COMMENT '租户id',
   `remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '备注',
-  PRIMARY KEY (`id`) USING BTREE
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE KEY `uk_gen_group_active_name` (`active_group_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='模板分组';
 
 -- ----------------------------

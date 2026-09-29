@@ -24,32 +24,65 @@ public class InboxExecutor {
 
     /** Return only after a PROCESSED/IGNORED transaction has committed, including a verified duplicate. */
     public DurableMessageHandler.Result receive(DurableMessage message) {
+        return receive(message, result -> { });
+    }
+
+    private DurableMessageHandler.Result receive(DurableMessage message,
+            java.util.function.Consumer<DurableMessageHandler.Result> afterHandler) {
         store.requireOutsideTransaction();
         handlerFor(message); // Validate routing BEFORE even looking up a previously successful event ID.
         JdbcInboxStore.Snapshot saved = store.accept(message);
         DurableMessageHandler.Result prior = committedResult(saved);
         if (prior != null) {
+            afterHandler.accept(prior);
             return prior;
         }
         JdbcInboxStore.Lease lease = store.claim(targetOwner, message.eventId());
         if (lease == null) {
             prior = committedResult(store.find(targetOwner, message.eventId()));
             if (prior != null) {
+                afterHandler.accept(prior);
                 return prior;
             }
             throw new InboxDeliveryException(InboxDeliveryException.Kind.RETRYABLE,
                     "Inbox message is awaiting retry or belongs to another active worker");
         }
-        return execute(lease);
+        return execute(lease, afterHandler);
+    }
+
+    /** Reopen an identical failed receipt, then execute through the normal durable receive path. */
+    public DurableMessageHandler.Result replay(DurableMessage message) {
+        return replay(message, result -> { });
+    }
+
+    /** Replay and commit the supplied audit/result callback with newly handled business work. */
+    public DurableMessageHandler.Result replay(DurableMessage message,
+            java.util.function.Consumer<DurableMessageHandler.Result> afterHandler) {
+        store.requireOutsideTransaction();
+        handlerFor(message);
+        JdbcInboxStore.Snapshot saved = store.find(targetOwner, message.eventId());
+        if (saved != null && saved.state() == JdbcInboxStore.State.FAILED) {
+            if (!message.equals(saved.message())) {
+                throw new InboxDeliveryException(InboxDeliveryException.Kind.CONFLICT,
+                        "Inbox identity conflicts with immutable message content");
+            }
+            store.retry(targetOwner, message.eventId());
+        }
+        return receive(message, Objects.requireNonNull(afterHandler, "Replay side effect is required"));
     }
 
     /** Old or expired leases are rejected before handler entry, including recovery caller mistakes. */
     public DurableMessageHandler.Result execute(JdbcInboxStore.Lease lease) {
+        return execute(lease, result -> { });
+    }
+
+    private DurableMessageHandler.Result execute(JdbcInboxStore.Lease lease,
+            java.util.function.Consumer<DurableMessageHandler.Result> afterHandler) {
         store.requireOutsideTransaction();
         Objects.requireNonNull(lease, "Lease is required");
         requireTarget(lease.message()); // Wrong-owner leases must not enter even the failure CAS path.
         try {
-            return store.process(lease, handlerFor(lease.message()));
+            return store.process(lease, handlerFor(lease.message()), afterHandler);
         }
         catch (RuntimeException failure) {
             // TransactionTemplate has already completed rollback/cleanup here. Do not swallow

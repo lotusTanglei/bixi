@@ -6,9 +6,6 @@
 					<el-form-item :label="$t('client.clientId')" prop="clientId">
 						<el-input :placeholder="$t('client.clientId')" style="max-width: 180px" v-model="state.queryForm.clientId" />
 					</el-form-item>
-					<el-form-item :label="$t('client.clientSecret')" prop="clientSecret">
-						<el-input :placeholder="$t('client.clientSecret')" style="max-width: 180px" v-model="state.queryForm.clientSecret" />
-					</el-form-item>
 					<el-form-item>
 						<el-button @click="getDataList" icon="search" type="primary">
 							{{ $t('common.queryBtn') }}
@@ -52,7 +49,6 @@
 				<el-table-column align="center" type="selection" width="40" />
 				<el-table-column :label="t('client.index')" type="index" width="60" />
 				<el-table-column :label="t('client.clientId')" prop="clientId" show-overflow-tooltip />
-				<el-table-column :label="t('client.clientSecret')" prop="clientSecret" show-overflow-tooltip />
 				<el-table-column :label="t('client.scope')" prop="scope" show-overflow-tooltip />
 				<el-table-column :label="t('client.authorizedGrantTypes')" prop="authorizedGrantTypes" show-overflow-tooltip width="400px">
 					<template #default="scope">

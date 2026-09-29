@@ -135,29 +135,57 @@ public class JdbcOutboxStore {
 
     /** Read bounded operator metadata without exposing payload contents to management APIs. */
     public List<AdminSnapshot> list(String sourceOwner, String status, int limit) {
+        return listPage(sourceOwner, status, limit, 0);
+    }
+
+    /** Read one page so callers can apply metadata filters without starving later matching rows. */
+    public List<AdminSnapshot> listPage(String sourceOwner, String status, int limit, long offset) {
         DurableMessage.requireOwner(sourceOwner);
         requireStatus(status);
         requireLimit(limit);
+        if (offset < 0) throw new IllegalArgumentException("Offset must not be negative");
         return independent.execute(transaction -> {
             String sql = status == null
-                    ? "SELECT * FROM reliable_outbox WHERE source_owner = ? ORDER BY created_at DESC LIMIT ?"
+                    ? "SELECT * FROM reliable_outbox WHERE source_owner = ? "
+                            + "ORDER BY created_at DESC, event_id DESC LIMIT ? OFFSET ?"
                     : "SELECT * FROM reliable_outbox WHERE source_owner = ? AND status = ? "
-                            + "ORDER BY created_at DESC LIMIT ?";
-            Object[] args = status == null ? new Object[] {sourceOwner, limit}
-                    : new Object[] {sourceOwner, status, limit};
+                            + "ORDER BY created_at DESC, event_id DESC LIMIT ? OFFSET ?";
+            Object[] args = status == null ? new Object[] {sourceOwner, limit, offset}
+                    : new Object[] {sourceOwner, status, limit, offset};
             return List.copyOf(jdbc.query(sql, (row, index) -> readAdminSnapshot(row), args));
         });
     }
 
-    /** Move one failed event back to the normal due queue; the status predicate is the CAS fence. */
-    public boolean retry(String sourceOwner, String eventId) {
+    /** Read one exact event for authorization before an operator mutation. */
+    public AdminSnapshot find(String sourceOwner, String eventId) {
         DurableMessage.requireOwner(sourceOwner);
         requireEventId(eventId);
-        return Boolean.TRUE.equals(independent.execute(transaction -> jdbc.update("""
-                UPDATE reliable_outbox SET status = 'PENDING', next_attempt_at = UTC_TIMESTAMP(6),
-                    lease_token = NULL, lease_until = NULL, last_error = NULL
-                WHERE source_owner = ? AND event_id = ? AND status = 'FAILED'
-                """, sourceOwner, eventId) == 1));
+        return independent.execute(transaction -> jdbc.query(
+                "SELECT * FROM reliable_outbox WHERE source_owner = ? AND event_id = ?",
+                (row, index) -> readAdminSnapshot(row), sourceOwner, eventId)
+                .stream().findFirst().orElse(null));
+    }
+
+    /** Move one failed event back to the normal due queue; the status predicate is the CAS fence. */
+    public boolean retry(String sourceOwner, String eventId) {
+        return retry(sourceOwner, eventId, changed -> { });
+    }
+
+    /** Commit the retry CAS and its required side effect, such as an audit row, atomically. */
+    public boolean retry(String sourceOwner, String eventId, java.util.function.Consumer<Boolean> afterUpdate) {
+        DurableMessage.requireOwner(sourceOwner);
+        requireEventId(eventId);
+        Objects.requireNonNull(afterUpdate, "Retry side effect is required");
+        return Boolean.TRUE.equals(independent.execute(transaction -> {
+            boolean changed = jdbc.update("""
+                    UPDATE reliable_outbox SET status = 'PENDING', attempts = 0,
+                        next_attempt_at = UTC_TIMESTAMP(6),
+                        lease_token = NULL, lease_until = NULL, last_error = NULL
+                    WHERE source_owner = ? AND event_id = ? AND status = 'FAILED'
+                    """, sourceOwner, eventId) == 1;
+            afterUpdate.accept(changed);
+            return changed;
+        }));
     }
 
     /** False means another worker owns this message, or its state already changed. */

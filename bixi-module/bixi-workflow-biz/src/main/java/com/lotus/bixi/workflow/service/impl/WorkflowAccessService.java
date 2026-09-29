@@ -25,6 +25,7 @@ public class WorkflowAccessService {
     private final WfApprovalRecordMapper approvals;
     private final TaskService tasks;
     private final HistoryService history;
+    private final WorkflowCandidateResolver candidates;
 
     public BixiUser currentUser() {
         BixiUser user = SecurityUtils.getUser();
@@ -50,11 +51,13 @@ public class WorkflowAccessService {
     }
 
     public WfProcessInstance requireProcessView(String processInstanceId) {
-        Long userId = currentUser().getId();
+        BixiUser user = currentUser();
+        Long userId = user.getId();
         WfProcessInstance instance = requireProcess(processInstanceId);
         String identity = userId.toString();
         if (userId.equals(instance.getStartUserId())
-                || tasks.createTaskQuery().processInstanceId(processInstanceId).taskCandidateOrAssigned(identity).count() > 0
+                || tasks.createTaskQuery().processInstanceId(processInstanceId).active().list().stream()
+                    .anyMatch(task -> candidates.isVisible(task, user, tasks.getIdentityLinksForTask(task.getId())))
                 || history.createHistoricTaskInstanceQuery().processInstanceId(processInstanceId).taskAssignee(identity).count() > 0
                 || approvals.selectCount(Wrappers.<WfApprovalRecord>lambdaQuery()
                     .eq(WfApprovalRecord::getProcessInstanceId, processInstanceId)

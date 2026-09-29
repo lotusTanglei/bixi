@@ -2,12 +2,14 @@ package com.lotus.bixi.common.log.util;
 
 import cn.hutool.extra.spring.SpringUtil;
 import com.lotus.bixi.common.core.util.SpringContextHolder;
+import com.lotus.bixi.common.core.context.TenantContextHolder;
 import com.lotus.bixi.common.log.config.BixiLogProperties;
 import com.lotus.bixi.common.log.event.SysLogEvent;
 import com.lotus.bixi.common.log.event.SysLogListener;
 import com.lotus.bixi.upms.api.entity.SysLog;
 import com.lotus.bixi.upms.api.service.OperationLogService;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -28,6 +30,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -46,6 +49,35 @@ class SysLogActorPropagationTest {
     void clearContexts() {
         SecurityContextHolder.clearContext();
         RequestContextHolder.resetRequestAttributes();
+        TenantContextHolder.clear();
+    }
+
+    @Test
+    void asyncListenerUsesEventTenantAndRestoresTheWorkerTenant() {
+        TenantContextHolder.set(42L);
+
+        runner.run(context -> {
+            assertThat(context).hasNotFailed();
+            OperationLogService persistence = context.getBean(OperationLogService.class);
+            AtomicReference<Long> persistedTenant = new AtomicReference<>();
+            org.mockito.Mockito.doAnswer(invocation -> {
+                persistedTenant.set(TenantContextHolder.get());
+                return null;
+            }).when(persistence).saveLog(org.mockito.ArgumentMatchers.any(SysLog.class));
+
+            var source = SysLogUtils.getSysLog();
+            source.setTitle("租户审计");
+            context.publishEvent(new SysLogEvent(source));
+
+            // A pooled async worker can retain the tenant of its previous task.
+            TenantContextHolder.set(99L);
+            DeferredExecutor executor = context.getBean(DeferredExecutor.class);
+            assertThat(executor.pending).hasSize(1);
+            executor.pending.remove(0).run();
+
+            assertThat(persistedTenant).hasValue(42L);
+            assertThat(TenantContextHolder.get()).isEqualTo(99L);
+        });
     }
 
     @ParameterizedTest

@@ -27,7 +27,7 @@ public class BixiQuartzFactory implements Job {
 	public void execute(JobExecutionContext jobExecutionContext) {
 		SysJob sysJob = (SysJob) jobExecutionContext.getMergedJobDataMap()
 			.get(BixiQuartzEnum.SCHEDULE_JOB_KEY.getType());
-		quartzInvokeFactory.init(sysJob, jobExecutionContext.getTrigger());
+		quartzInvokeFactory.init(sysJob, jobExecutionContext);
 	}
 
 }

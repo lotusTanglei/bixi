@@ -41,12 +41,35 @@
         <spring-ai-alibaba.version>1.0.0.2</spring-ai-alibaba.version>
         <lombok.version>1.18.38</lombok.version>
         <flowable.version>7.1.0</flowable.version>
+        <pdfbox.version>3.0.3</pdfbox.version>
+        <poi.version>5.4.1</poi.version>
 
     </properties>
 
     <!-- 定义全局jar版本,模块使用需要再次引入但不用写版本号-->
     <dependencyManagement>
         <dependencies>
+
+            <dependency>
+                <groupId>org.apache.pdfbox</groupId>
+                <artifactId>pdfbox</artifactId>
+                <version>${pdfbox.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.poi</groupId>
+                <artifactId>poi</artifactId>
+                <version>${poi.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.poi</groupId>
+                <artifactId>poi-ooxml</artifactId>
+                <version>${poi.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.poi</groupId>
+                <artifactId>poi-scratchpad</artifactId>
+                <version>${poi.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>com.lotus</groupId>

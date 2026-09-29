@@ -9,7 +9,6 @@ import org.flowable.engine.ProcessEngine;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.AfterEach;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -18,13 +17,11 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import javax.sql.DataSource;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -34,9 +31,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @SpringJUnitConfig(WorkflowApprovalIntegrationTest.Config.class)
 @TestPropertySource(locations = "classpath:workflow-test.properties", properties = {
         "workflow.enabled=true", "workflow.database-schema-update=true", "workflow.history-level=none",
-        "workflow.async-executor-activate=false", "flowable.check-process-definitions=false"})
+        "workflow.async-executor-activate=false", "workflow.public-start-models=approval",
+        "flowable.check-process-definitions=false"})
 class WorkflowResultWithoutHistoryTest {
     @Autowired ProcessEngine engine;
+    @Autowired TrustedProcessStarter trustedProcesses;
     @Autowired ProcessInstanceService processes;
     @Autowired WfTaskService tasks;
     @Autowired DataSource dataSource;
@@ -52,19 +51,14 @@ class WorkflowResultWithoutHistoryTest {
     @Test
     void businessResultDoesNotDependOnOptionalEngineHistory() throws Exception {
         var jdbc = new JdbcTemplate(dataSource);
-        WorkflowTestSchema.create(jdbc, "wf_command", "wf_process_instance", "wf_approval_record");
-        var deployment = engine.getRepositoryService().createDeployment()
+        WorkflowTestSchema.create(jdbc, "wf_process_definition", "wf_command", "wf_process_instance",
+                "wf_approval_record");
+        var deployment = engine.getRepositoryService().createDeployment().tenantId("1")
                 .addClasspathResource("processes/demo_leave_approval.bpmn20.xml").deploy();
         try {
             login(11L);
-            var request = new ProcessStartDTO();
-        request.setRequestId(java.util.UUID.randomUUID().toString());
-            request.setProcessKey("demo_leave_approval");
-            request.setBusinessKey("leave-without-history");
-            request.setBusinessTable("demo_leave_request");
-            request.setBusinessId(123L);
-            request.setVariables(Map.of("approverId", "22", "businessRound", 3));
-            var started = processes.start(request);
+            var started = WorkflowTrustedStartTestSupport.start(
+                    trustedProcesses, "leave-without-history", 123L, 3);
             login(22L);
             var task = engine.getTaskService().createTaskQuery().processInstanceId(started.getProcessInstanceId()).singleResult();
             var approval = new TaskCompleteDTO();
@@ -85,18 +79,14 @@ class WorkflowResultWithoutHistoryTest {
     @Test
     void sameRequestReplaysWhenWinnerCommitsAfterInitialMissAndRemovesTask() throws Exception {
         var jdbc = new JdbcTemplate(dataSource);
-        WorkflowTestSchema.create(jdbc, "wf_command", "wf_process_instance", "wf_approval_record");
-        var deployment = engine.getRepositoryService().createDeployment()
-                .addClasspathResource("processes/demo_leave_approval.bpmn20.xml").deploy();
+        WorkflowTestSchema.create(jdbc, "wf_process_definition", "wf_command", "wf_process_instance",
+                "wf_approval_record");
+        var deployment = engine.getRepositoryService().createDeployment().tenantId("1")
+                .addString("approval.bpmn20.xml", WorkflowApprovalIntegrationTest.model("approval", true)).deploy();
         var pool = Executors.newSingleThreadExecutor();
         try {
             login(11L);
-            var request = new ProcessStartDTO();
-            request.setRequestId(UUID.randomUUID().toString());
-            request.setProcessKey("demo_leave_approval");
-            request.setBusinessKey("replay-after-preflight-miss");
-            request.setVariables(Map.of("approverId", "22"));
-            var started = processes.start(request);
+            var started = startPublic("replay-after-preflight-miss");
             var task = engine.getTaskService().createTaskQuery()
                     .processInstanceId(started.getProcessInstanceId()).singleResult();
             var approval = new TaskCompleteDTO();
@@ -134,17 +124,13 @@ class WorkflowResultWithoutHistoryTest {
     @Test
     void differentTerminalRequestConflictsWithoutEngineHistory() throws Exception {
         var jdbc = new JdbcTemplate(dataSource);
-        WorkflowTestSchema.create(jdbc, "wf_command", "wf_process_instance", "wf_approval_record");
-        var deployment = engine.getRepositoryService().createDeployment()
-                .addClasspathResource("processes/demo_leave_approval.bpmn20.xml").deploy();
+        WorkflowTestSchema.create(jdbc, "wf_process_definition", "wf_command", "wf_process_instance",
+                "wf_approval_record");
+        var deployment = engine.getRepositoryService().createDeployment().tenantId("1")
+                .addString("approval.bpmn20.xml", WorkflowApprovalIntegrationTest.model("approval", true)).deploy();
         try {
             login(11L);
-            var request = new ProcessStartDTO();
-            request.setRequestId(UUID.randomUUID().toString());
-            request.setProcessKey("demo_leave_approval");
-            request.setBusinessKey("terminal-conflict-without-history");
-            request.setVariables(Map.of("approverId", "22"));
-            var started = processes.start(request);
+            var started = startPublic("terminal-conflict-without-history");
             var taskId = engine.getTaskService().createTaskQuery()
                     .processInstanceId(started.getProcessInstanceId()).singleResult().getId();
             login(22L);
@@ -167,6 +153,16 @@ class WorkflowResultWithoutHistoryTest {
             SecurityContextHolder.clearContext();
             engine.getRepositoryService().deleteDeployment(deployment.getId(), true);
         }
+    }
+
+    private com.lotus.bixi.workflow.api.vo.ProcessInstanceVO startPublic(String title) {
+        var request = new ProcessStartDTO();
+        request.setRequestId(UUID.randomUUID().toString());
+        request.setProcessKey("approval");
+        request.setBusinessKey(title);
+        request.setTitle(title);
+        request.setVariables(Map.of("approverId", "22"));
+        return processes.start(request);
     }
 
     private void login(long id) {

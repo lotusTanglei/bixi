@@ -19,11 +19,15 @@ public class WfForm extends BaseEntity<WfForm> {
     @Schema(description = "表单名称")
     private String formName;
 
+    @TableField("description")
     @Schema(description = "表单描述")
     private String formDesc;
 
-    @Schema(description = "分类ID")
-    private Long categoryId;
+    @Schema(description = "表单类型")
+    private String formType;
+
+    @Schema(description = "分类")
+    private String category;
 
     @Schema(description = "当前版本号")
     private Integer currentVersion;

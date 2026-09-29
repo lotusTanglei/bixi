@@ -12,9 +12,15 @@ public record CandidateIdentity(
         @Schema(description = "用户ID") Long userId,
         @Schema(description = "用户是否启用") boolean enabled,
         @Schema(description = "用户是否锁定") boolean locked,
-        @Schema(description = "租户ID") Long tenantId
+        @Schema(description = "租户ID") Long tenantId,
+        @Schema(description = "用户名") String username,
+        @Schema(description = "姓名") String name
 ) implements Serializable {
 
     private static final long serialVersionUID = 1L;
+
+    public CandidateIdentity(Long userId, boolean enabled, boolean locked, Long tenantId) {
+        this(userId, enabled, locked, tenantId, null, null);
+    }
 
 }

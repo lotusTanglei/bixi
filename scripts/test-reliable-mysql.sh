@@ -10,9 +10,28 @@ case "$reliable_test_selection" in
   *) echo "Usage: $0 [cloud|single|both]" >&2; exit 2 ;;
 esac
 cd "$(dirname "$0")/.."
+ROOT="$PWD"
 if [[ "$(uname -s)" == "Darwin" ]]; then
   export JAVA_HOME="$(/usr/libexec/java_home -v 17)"
 fi
+
+run_local_test_preflight() {
+  if [[ "${BIXI_LOCAL_PREFLIGHT_SKIP:-false}" == "true" ]]; then
+    echo 'WARNING: BIXI_LOCAL_PREFLIGHT_SKIP=true; local resource preflight was explicitly bypassed.' >&2
+    return 0
+  fi
+  if BIXI_LOCAL_PREFLIGHT_FAIL_ON_CONFLICT=true \
+      BIXI_LOCAL_PREFLIGHT_FAIL_ON_STORAGE_PRESSURE="${BIXI_LOCAL_PREFLIGHT_FAIL_ON_STORAGE_PRESSURE:-true}" \
+      bash "${ROOT}/scripts/local-test-preflight.sh" single; then
+    return 0
+  else
+    local status=$?
+    echo "Environment blocked: local resource preflight failed (status=${status}); no Docker resources were created." >&2
+    return "${status}"
+  fi
+}
+
+run_local_test_preflight single
 
 reliable_test_env="$(mktemp)"
 reliable_test_container="bixi-reliable-test-${reliable_test_selection}-$$"

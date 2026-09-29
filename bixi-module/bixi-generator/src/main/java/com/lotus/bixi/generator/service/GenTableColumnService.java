@@ -14,6 +14,14 @@ public interface GenTableColumnService extends IService<GenTableColumn> {
 
 	void initFieldList(List<GenTableColumn> tableFieldList);
 
+	/**
+	 * Persist only metadata derived from the physical column. Explicit assignments are
+	 * required so nullable metadata can clear stale database values.
+	 * @param column reconciled persisted column
+	 * @return whether the row was updated
+	 */
+	boolean updatePhysicalMetadataById(GenTableColumn column);
+
 	void updateTableField(String dsName, String tableName, List<GenTableColumn> tableFieldList);
 
 }

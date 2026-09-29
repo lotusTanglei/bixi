@@ -1,13 +1,5 @@
 import request from '/@/utils/request';
 
-export const pageList = (params?: Object) => {
-	return request({
-		url: '/admin/workflow/definition/page',
-		method: 'get',
-		params,
-	});
-};
-
 export const list = (params?: Object) => {
 	return request({
 		url: '/admin/workflow/definition/list',
@@ -16,18 +8,26 @@ export const list = (params?: Object) => {
 	});
 };
 
-export const getObj = (id: String) => {
+export const startable = (params?: Object) => {
 	return request({
-		url: '/admin/workflow/definition/details/' + id,
+		url: '/admin/workflow/definition/startable',
+		method: 'get',
+		params,
+	});
+};
+
+export const getStartForm = (processDefinitionId: string) => {
+	return request({
+		url: `/admin/workflow/definition/start-form/${encodeURIComponent(processDefinitionId)}`,
 		method: 'get',
 	});
 };
 
-export const deploy = (obj: Object) => {
+export const deploy = (data: FormData) => {
 	return request({
 		url: '/admin/workflow/definition/deploy',
 		method: 'post',
-		data: obj,
+		data,
 	});
 };
 
@@ -42,21 +42,6 @@ export const activate = (id: String) => {
 	return request({
 		url: '/admin/workflow/definition/activate/' + id,
 		method: 'put',
-	});
-};
-
-export const delObj = (ids: Object) => {
-	return request({
-		url: '/admin/workflow/definition',
-		method: 'delete',
-		data: ids,
-	});
-};
-
-export const getXml = (deploymentId: String) => {
-	return request({
-		url: '/admin/workflow/definition/xml/' + deploymentId,
-		method: 'get',
 	});
 };
 

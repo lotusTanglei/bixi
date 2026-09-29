@@ -13,6 +13,8 @@ import org.springframework.cache.annotation.Cacheable;
 import com.lotus.bixi.common.core.cache.TenantCacheInvalidator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.util.StringUtils;
 
 import java.io.Serializable;
@@ -43,19 +45,26 @@ public class SysTenantServiceImpl extends ServiceImpl<SysTenantMapper, SysTenant
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)
+	@CacheEvict(cacheNames = "tenant_status", key = "#tenant.id",
+			condition = "#tenant != null && #tenant.id != null")
 	public boolean updateById(SysTenant tenant) {
 		TenantContextHolder.assertWritable();
 		if (tenant == null || tenant.getId() == null || tenant.getId() == 1L) return false;
 		validateTenant(tenant, tenant.getId());
-		return super.updateById(tenant);
+		boolean updated = super.updateById(tenant);
+		if (updated && "1".equals(tenant.getStatus())) clearTenantAfterCommit(tenant.getId());
+		return updated;
 	}
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)
+	@CacheEvict(cacheNames = "tenant_status", key = "#id", condition = "#id != null")
 	public boolean removeById(Serializable id) {
 		TenantContextHolder.assertWritable();
 		if (id == null || Long.valueOf(id.toString()) == 1L) return false;
-		return super.removeById(id);
+		boolean removed = super.removeById(id);
+		if (removed) clearTenantAfterCommit(Long.valueOf(id.toString()));
+		return removed;
 	}
 
 	private void validateTenant(SysTenant tenant, Long currentId) {
@@ -81,8 +90,23 @@ public class SysTenantServiceImpl extends ServiceImpl<SysTenantMapper, SysTenant
 		}
 		boolean updated = tenantMapper.update(null, Wrappers.<SysTenant>lambdaUpdate()
 				.eq(SysTenant::getId, id).set(SysTenant::getStatus, status)) > 0;
-		if (updated && "1".equals(status)) tenantCacheInvalidator.clearTenant(id);
+		if (updated && "1".equals(status)) clearTenantAfterCommit(id);
 		return updated;
+	}
+
+	private void clearTenantAfterCommit(Long tenantId) {
+		Runnable clear = () -> tenantCacheInvalidator.clearTenant(tenantId);
+		if (TransactionSynchronizationManager.isSynchronizationActive()) {
+			TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+				@Override
+				public void afterCommit() {
+					clear.run();
+				}
+			});
+		}
+		else {
+			clear.run();
+		}
 	}
 
 }

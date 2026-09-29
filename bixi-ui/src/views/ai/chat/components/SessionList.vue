@@ -24,6 +24,7 @@ import { computed } from 'vue';
 import { useAiStore } from '/@/stores/ai';
 import { useMessage, useMessageBox } from '/@/hooks/message';
 import { useI18n } from 'vue-i18n';
+import { deleteSession, updateSession } from '/@/api/ai/chat';
 import SessionItem from './SessionItem.vue';
 
 const { t } = useI18n();
@@ -58,10 +59,17 @@ const handleSelectSession = (session: any) => {
 const handleDelete = async (id: string) => {
 	try {
 		await useMessageBox().confirm('确定要删除该会话吗？');
-		aiStore.removeSession(id);
-		useMessage().success('删除成功');
 	} catch {
 		// 用户取消
+		return;
+	}
+
+	try {
+		await deleteSession(id);
+		aiStore.removeSession(id);
+		useMessage().success('删除成功');
+	} catch (error: any) {
+		useMessage().error(error?.msg || '删除失败');
 	}
 };
 
@@ -73,13 +81,16 @@ const handleRename = (id: string) => {
 			inputPattern: /^.{1,50}$/,
 			inputErrorMessage: '标题长度为1-50个字符',
 		})
-		.then(({ value }) => {
-			aiStore.updateSessionTitle(id, value);
-			useMessage().success('重命名成功');
-		})
-		.catch(() => {
-			// 用户取消
-		});
+			.then(async ({ value }) => {
+				await updateSession({ id, title: value });
+				aiStore.updateSessionTitle(id, value);
+				useMessage().success('重命名成功');
+			})
+			.catch((error: any) => {
+				if (error?.action !== 'cancel' && error !== 'cancel' && error !== 'close') {
+					useMessage().error(error?.msg || '重命名失败');
+				}
+			});
 };
 </script>
 

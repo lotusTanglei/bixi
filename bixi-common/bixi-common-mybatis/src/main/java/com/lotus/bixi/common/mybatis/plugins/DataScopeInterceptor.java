@@ -1,5 +1,6 @@
 package com.lotus.bixi.common.mybatis.plugins;
 
+import com.baomidou.mybatisplus.core.toolkit.PluginUtils;
 import com.lotus.bixi.common.mybatis.annotation.DataScope;
 import com.lotus.bixi.common.mybatis.annotation.DataScopeType;
 import com.lotus.bixi.common.core.context.TenantContextHolder;
@@ -8,6 +9,8 @@ import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
+import net.sf.jsqlparser.statement.delete.Delete;
+import net.sf.jsqlparser.statement.update.Update;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.plugin.*;
@@ -27,7 +30,7 @@ public class DataScopeInterceptor implements Interceptor {
 	@Override
 	public Object intercept(Invocation invocation) throws Throwable {
 		if (TenantContextHolder.isAllTenantsReadOnly()) return invocation.proceed();
-		StatementHandler handler = (StatementHandler) invocation.getTarget();
+		StatementHandler handler = (StatementHandler) PluginUtils.realTarget(invocation.getTarget());
 		MetaObject handlerMeta = SystemMetaObject.forObject(handler);
 		Object mapped;
 		if (handlerMeta.hasGetter("delegate.mappedStatement")) {
@@ -47,15 +50,27 @@ public class DataScopeInterceptor implements Interceptor {
 		String condition = condition(dataScope, identity);
 		if (condition == null || condition.isBlank()) return invocation.proceed();
 		Statement parsed = CCJSqlParserUtil.parse(sql);
-		if (!(parsed instanceof Select select) || !(select.getSelectBody() instanceof PlainSelect plainSelect)) {
+		Expression extra = CCJSqlParserUtil.parseCondExpression(condition);
+		if (parsed instanceof Select select && select.getSelectBody() instanceof PlainSelect plainSelect) {
+			plainSelect.setWhere(withCondition(plainSelect.getWhere(), extra));
+		}
+		else if (parsed instanceof Update update) {
+			update.setWhere(withCondition(update.getWhere(), extra));
+		}
+		else if (parsed instanceof Delete delete) {
+			delete.setWhere(withCondition(delete.getWhere(), extra));
+		}
+		else {
 			return invocation.proceed();
 		}
-		Expression extra = CCJSqlParserUtil.parseCondExpression(condition);
-		plainSelect.setWhere(plainSelect.getWhere() == null ? extra
-				: new net.sf.jsqlparser.expression.operators.conditional.AndExpression(plainSelect.getWhere(), extra));
 		MetaObject metaObject = SystemMetaObject.forObject(boundSql);
 		metaObject.setValue("sql", parsed.toString());
 		return invocation.proceed();
+	}
+
+	private Expression withCondition(Expression existing, Expression extra) {
+		return existing == null ? extra
+				: new net.sf.jsqlparser.expression.operators.conditional.AndExpression(existing, extra);
 	}
 
 	private DataScope findAnnotation(String statementId) {
@@ -65,8 +80,12 @@ public class DataScopeInterceptor implements Interceptor {
 			Class<?> mapper = Class.forName(statementId.substring(0, separator));
 			String methodName = statementId.substring(separator + 1);
 			for (Method method : mapper.getMethods()) {
-				if (method.getName().equals(methodName)) return method.getAnnotation(DataScope.class);
+				if (method.getName().equals(methodName)) {
+					DataScope methodScope = method.getAnnotation(DataScope.class);
+					return methodScope != null ? methodScope : mapper.getAnnotation(DataScope.class);
+				}
 			}
+			return mapper.getAnnotation(DataScope.class);
 		}
 		catch (ClassNotFoundException ignored) {
 			// Non-interface mapped statements are not data-scoped by this interceptor.
@@ -76,12 +95,27 @@ public class DataScopeInterceptor implements Interceptor {
 
 	private String condition(DataScope annotation, UserIdentity identity) {
 		String user = annotation.userAlias();
+		String userPrefix = user == null || user.isBlank() ? "" : user + ".";
 		DataScopeType scope = annotation.value() == DataScopeType.SELF ? DataScopeType.fromCode(identity.dataScope) : annotation.value();
+		String userColumn = annotation.userColumn();
+		String deptColumn = annotation.deptColumn();
+		if (annotation.creatorScope()) {
+			String creator = userPrefix + userColumn;
+			return switch (scope) {
+				case ALL -> null;
+				case SELF -> creator + " = " + identity.id;
+				case DEPT -> creator + " IN (SELECT id FROM sys_user WHERE " + deptColumn + " = "
+						+ identity.deptId + ")";
+				case DEPT_AND_CHILD -> creator
+						+ " IN (SELECT id FROM sys_user WHERE " + deptColumn
+						+ " IN (SELECT descendant FROM sys_dept_relation WHERE ancestor = " + identity.deptId + "))";
+			};
+		}
 		return switch (scope) {
 			case ALL -> null;
-			case SELF -> user + ".id = " + identity.id;
-			case DEPT -> user + ".dept_id = " + identity.deptId;
-			case DEPT_AND_CHILD -> user + ".dept_id IN (SELECT descendant FROM sys_dept_relation WHERE ancestor = "
+			case SELF -> userPrefix + userColumn + " = " + identity.id;
+			case DEPT -> userPrefix + deptColumn + " = " + identity.deptId;
+			case DEPT_AND_CHILD -> userPrefix + deptColumn + " IN (SELECT descendant FROM sys_dept_relation WHERE ancestor = "
 					+ identity.deptId + ")";
 		};
 	}

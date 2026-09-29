@@ -1,0 +1,31 @@
+package ${package}.${moduleName}.api.dto;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+#if($hasRequiredFields)
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+#end
+import lombok.Data;
+#foreach($import in $importList)
+import ${import};
+#end
+
+@Data
+@Schema(description = "新增${tableComment}")
+public class ${ClassName}CreateDTO {
+
+#foreach($field in $formList)
+#if($field.fieldName != 'id')
+#if($field.formRequired == '1')
+#if($field.attrType == 'String')
+	@NotBlank(message = "$!field.fieldComment不能为空")
+#else
+	@NotNull(message = "$!field.fieldComment不能为空")
+#end
+#end
+	@Schema(description = "$!field.fieldComment")
+	private ${field.attrType} ${field.attrName};
+
+#end
+#end
+}

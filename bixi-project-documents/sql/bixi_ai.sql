@@ -4,6 +4,28 @@
 -- 说明: AI 会话、消息、文档、向量嵌入等表
 -- =====================================================
 
+-- AI 租户模型配置表。每个租户只有一份当前配置；provider 密钥不落库。
+DROP TABLE IF EXISTS `ai_model_config`;
+CREATE TABLE `ai_model_config` (
+    `id` BIGINT NOT NULL COMMENT '主键ID',
+    `current_model` VARCHAR(64) NOT NULL DEFAULT 'qwen-plus' COMMENT '当前模型',
+    `temperature` DECIMAL(4,3) NOT NULL DEFAULT 0.700 COMMENT '温度参数',
+    `max_tokens` INT NOT NULL DEFAULT 2000 COMMENT '最大token数',
+    `top_p` DECIMAL(4,3) NOT NULL DEFAULT 0.900 COMMENT 'topP参数',
+    `system_prompt` TEXT COMMENT '系统提示词',
+    `create_by` BIGINT DEFAULT NULL COMMENT '创建者',
+    `update_by` BIGINT DEFAULT NULL COMMENT '修改者',
+    `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    `del_flag` CHAR(1) DEFAULT '0' COMMENT '删除标记：0-正常，1-删除',
+    `status` CHAR(1) DEFAULT '0' COMMENT '业务状态',
+    `data_status` CHAR(1) DEFAULT '0' COMMENT '数据库状态',
+    `tenant_id` BIGINT NOT NULL COMMENT '租户ID',
+    `remark` VARCHAR(500) DEFAULT NULL COMMENT '备注',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_ai_model_config_tenant` (`tenant_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='AI租户模型配置表';
+
 -- AI 会话表
 CREATE TABLE `ai_session` (
     `id` BIGINT NOT NULL COMMENT '主键ID',
@@ -16,7 +38,9 @@ CREATE TABLE `ai_session` (
     `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `del_flag` CHAR(1) DEFAULT '0' COMMENT '删除标记：0-正常，1-删除',
+    `data_status` CHAR(1) DEFAULT '0' COMMENT '数据库状态',
     `tenant_id` bigint DEFAULT NULL COMMENT '租户ID',
+    `remark` VARCHAR(500) DEFAULT NULL COMMENT '备注',
     PRIMARY KEY (`id`),
     KEY `idx_user_id` (`user_id`),
     KEY `idx_create_time` (`create_time`)
@@ -35,7 +59,10 @@ CREATE TABLE `ai_message` (
     `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `del_flag` CHAR(1) DEFAULT '0' COMMENT '删除标记：0-正常，1-删除',
+    `status` CHAR(1) DEFAULT '0' COMMENT '业务状态',
+    `data_status` CHAR(1) DEFAULT '0' COMMENT '数据库状态',
     `tenant_id` bigint DEFAULT NULL COMMENT '租户ID',
+    `remark` VARCHAR(500) DEFAULT NULL COMMENT '备注',
     PRIMARY KEY (`id`),
     KEY `idx_session_id` (`session_id`),
     KEY `idx_create_time` (`create_time`)
@@ -56,7 +83,10 @@ CREATE TABLE `ai_conversation` (
     `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `del_flag` CHAR(1) DEFAULT '0' COMMENT '删除标记：0-正常，1-删除',
+    `status` CHAR(1) DEFAULT '0' COMMENT '业务状态',
+    `data_status` CHAR(1) DEFAULT '0' COMMENT '数据库状态',
     `tenant_id` bigint DEFAULT NULL COMMENT '租户ID',
+    `remark` VARCHAR(500) DEFAULT NULL COMMENT '备注',
     PRIMARY KEY (`id`),
     KEY `idx_session_id` (`session_id`),
     KEY `idx_user_id` (`user_id`),
@@ -77,7 +107,10 @@ CREATE TABLE `ai_document` (
     `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `del_flag` CHAR(1) DEFAULT '0' COMMENT '删除标记：0-正常，1-删除',
+    `status` CHAR(1) DEFAULT '0' COMMENT '业务状态',
+    `data_status` CHAR(1) DEFAULT '0' COMMENT '数据库状态',
     `tenant_id` bigint DEFAULT NULL COMMENT '租户ID',
+    `remark` VARCHAR(500) DEFAULT NULL COMMENT '备注',
     PRIMARY KEY (`id`),
     KEY `idx_user_id` (`user_id`),
     KEY `idx_vector_status` (`vector_status`),
@@ -90,15 +123,21 @@ CREATE TABLE `ai_embedding` (
     `document_id` BIGINT DEFAULT NULL COMMENT '文档ID',
     `vector_id` VARCHAR(128) DEFAULT NULL COMMENT '向量ID（向量数据库中的ID）',
     `embedding_model` VARCHAR(64) DEFAULT NULL COMMENT '嵌入模型',
+    `embedding` TEXT COMMENT '向量数据，JSON数组或逗号分隔数字',
     `dimension` INT DEFAULT NULL COMMENT '向量维度',
     `chunk_index` INT DEFAULT NULL COMMENT '分块索引',
+    `chunk_content` LONGTEXT COMMENT '分块原文，用于来源追溯',
     `create_by` BIGINT DEFAULT NULL COMMENT '创建者',
     `update_by` BIGINT DEFAULT NULL COMMENT '更新者',
     `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `del_flag` CHAR(1) DEFAULT '0' COMMENT '删除标记：0-正常，1-删除',
+    `status` CHAR(1) DEFAULT '0' COMMENT '业务状态',
+    `data_status` CHAR(1) DEFAULT '0' COMMENT '数据库状态',
     `tenant_id` bigint DEFAULT NULL COMMENT '租户ID',
+    `remark` VARCHAR(500) DEFAULT NULL COMMENT '备注',
     PRIMARY KEY (`id`),
     KEY `idx_document_id` (`document_id`),
-    KEY `idx_vector_id` (`vector_id`)
+    KEY `idx_vector_id` (`vector_id`),
+    KEY `idx_embedding_document_chunk` (`document_id`, `chunk_index`, `del_flag`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='AI向量嵌入表';

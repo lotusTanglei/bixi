@@ -22,3 +22,11 @@ spring:
       - optional:nacos:application-@profiles.active@.yml
       - optional:nacos:${spring.application.name}-@profiles.active@.yml
       - optional:nacos:${spring.application.name}-dtp-@profiles.active@.yml
+
+# Cloud Gateway validates opaque reference tokens against Auth before routing.
+# Compose overrides the URI with the internal `auth` service name.
+bixi:
+  gateway:
+    security:
+      introspection-uri: ${BIXI_GATEWAY_SECURITY_INTROSPECTION_URI:http://127.0.0.1:3000/token/check_token}
+      request-timeout: ${BIXI_GATEWAY_SECURITY_REQUEST_TIMEOUT:3s}

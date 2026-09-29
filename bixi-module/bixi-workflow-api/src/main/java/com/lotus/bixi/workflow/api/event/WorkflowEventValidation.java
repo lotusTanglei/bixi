@@ -32,4 +32,24 @@ final class WorkflowEventValidation {
         if (value == null) throw new IllegalArgumentException(field + "不能为空");
         return value;
     }
+
+    /** Accepts the legacy default alias and the canonical positive tenant id. */
+    static String tenantScope(String value) {
+        if ("default".equals(value)) return value;
+        if (value == null || !value.matches("[1-9][0-9]{0,18}")) {
+            throw new IllegalArgumentException("tenantScope无效");
+        }
+        return value;
+    }
+
+    static long tenantId(String value) {
+        tenantScope(value);
+        if ("default".equals(value)) return 1L;
+        try {
+            return Long.parseLong(value);
+        }
+        catch (NumberFormatException invalid) {
+            throw new IllegalArgumentException("tenantScope无效", invalid);
+        }
+    }
 }

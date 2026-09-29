@@ -3,6 +3,16 @@ spring:
     suffix: .ftl
     template-loader-path: classpath:/templates/
     request-context-attribute: request
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+  endpoints:
+    web:
+      exposure:
+        include: health
 
 security:
   micro: true
@@ -15,5 +25,12 @@ security:
       urls:
         - /token/**
         - /code/**
-        - /actuator/**
+        - /actuator/health
+        - /actuator/health/**
         - /error
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false

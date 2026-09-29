@@ -1,6 +1,7 @@
 package com.lotus.bixi.workflow.config;
 
 import com.lotus.bixi.workflow.api.config.ConditionalOnWorkflowEnabled;
+import com.lotus.bixi.workflow.listener.GlobalEventListener;
 import com.lotus.bixi.workflow.listener.WorkflowCompletionListener;
 import org.flowable.common.engine.api.delegate.event.FlowableEventListener;
 import org.flowable.spring.SpringProcessEngineConfiguration;
@@ -15,13 +16,15 @@ import java.util.List;
 @ConditionalOnWorkflowEnabled
 public class WorkflowEngineEventsConfiguration {
     @Bean
-    EngineConfigurationConfigurer<SpringProcessEngineConfiguration> workflowCompletionEvents(WorkflowCompletionListener listener) {
+    EngineConfigurationConfigurer<SpringProcessEngineConfiguration> workflowCompletionEvents(
+            WorkflowCompletionListener completionListener, GlobalEventListener globalListener) {
         return configuration -> {
             List<FlowableEventListener> listeners = new ArrayList<>();
             if (configuration.getEventListeners() != null) {
                 listeners.addAll(configuration.getEventListeners());
             }
-            listeners.add(listener);
+            listeners.add(completionListener);
+            listeners.add(globalListener);
             configuration.setEventListeners(listeners);
         };
     }

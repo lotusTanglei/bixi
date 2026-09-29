@@ -16,4 +16,8 @@ public class SysJobEvent {
 
 	private final Trigger trigger;
 
+	private final String executionId;
+
+	private final boolean recovering;
+
 }

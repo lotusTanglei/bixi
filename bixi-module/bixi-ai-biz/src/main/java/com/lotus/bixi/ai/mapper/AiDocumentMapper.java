@@ -1,6 +1,7 @@
 package com.lotus.bixi.ai.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.lotus.bixi.ai.api.config.ConditionalOnAiEnabled;
 import com.lotus.bixi.ai.api.entity.AiDocument;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -11,6 +12,7 @@ import org.apache.ibatis.annotations.Mapper;
  * @date 2025-01-01
  */
 @Mapper
+@ConditionalOnAiEnabled
 public interface AiDocumentMapper extends BaseMapper<AiDocument> {
 
 }

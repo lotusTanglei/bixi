@@ -4,6 +4,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import com.lotus.bixi.common.mybatis.base.BaseEntity;
+import com.lotus.bixi.common.core.context.TenantContextHolder;
+import com.baomidou.mybatisplus.annotation.FieldStrategy;
+import com.baomidou.mybatisplus.annotation.TableField;
 import org.apache.ibatis.reflection.SystemMetaObject;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -19,6 +22,7 @@ class MybatisPlusMetaObjectHandlerTest {
     @AfterEach
     void clearAuthentication() {
         SecurityContextHolder.clearContext();
+        TenantContextHolder.clear();
     }
 
     @Test
@@ -49,6 +53,25 @@ class MybatisPlusMetaObjectHandlerTest {
         assertThat(entity.getCreateBy()).isEqualTo(42L);
         assertThat(entity.getCreateTime()).isBetween(before, LocalDateTime.now());
         assertThat(entity.getDelFlag()).isEqualTo("0");
+    }
+
+    @Test
+    void insertAlwaysBindsTheAuthenticatedTenantInsteadOfAClientSuppliedTenant() {
+        TenantContextHolder.set(7L);
+        TestEntity entity = new TestEntity();
+        entity.setTenantId(99L);
+
+        handler.insertFill(SystemMetaObject.forObject(entity));
+
+        assertThat(entity.getTenantId()).isEqualTo(7L);
+    }
+
+    @Test
+    void tenantIdCannotBeMovedByAnEntityUpdate() throws Exception {
+        TableField field = BaseEntity.class.getDeclaredField("tenantId").getAnnotation(TableField.class);
+
+        assertThat(field).isNotNull();
+        assertThat(field.updateStrategy()).isEqualTo(FieldStrategy.NEVER);
     }
 
     @Test

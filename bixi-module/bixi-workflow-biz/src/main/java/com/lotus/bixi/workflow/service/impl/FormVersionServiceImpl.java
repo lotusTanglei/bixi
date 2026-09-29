@@ -7,8 +7,8 @@ import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lotus.bixi.workflow.api.entity.WfForm;
 import com.lotus.bixi.workflow.api.entity.WfFormVersion;
+import com.lotus.bixi.workflow.mapper.WfFormMapper;
 import com.lotus.bixi.workflow.mapper.WfFormVersionMapper;
-import com.lotus.bixi.workflow.service.FormService;
 import com.lotus.bixi.workflow.service.FormVersionService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,24 +25,19 @@ import java.util.Map;
 @AllArgsConstructor
 public class FormVersionServiceImpl extends ServiceImpl<WfFormVersionMapper, WfFormVersion> implements FormVersionService {
 
-    private final FormService formService;
+    private final WfFormMapper formMapper;
+    private final WorkflowFormSchema schemas;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public WfFormVersion createVersion(Long formId, String schemaJson, String changeLog) {
-        WfForm form = formService.getById(formId);
+        schemas.compile(schemaJson);
+        WfForm form = formMapper.selectByIdForUpdate(formId);
         if (form == null) {
             throw new RuntimeException("表单不存在");
         }
 
-        Integer maxVersion = this.lambdaQuery()
-                .eq(WfFormVersion::getFormId, formId)
-                .orderByDesc(WfFormVersion::getVersion)
-                .last("LIMIT 1")
-                .one()
-                .getVersion();
-
-        int newVersion = (maxVersion == null ? 0 : maxVersion) + 1;
+        int newVersion = baseMapper.selectMaxVersion(formId) + 1;
 
         WfFormVersion formVersion = new WfFormVersion();
         formVersion.setFormId(formId);
@@ -58,11 +53,10 @@ public class FormVersionServiceImpl extends ServiceImpl<WfFormVersionMapper, WfF
     @Override
     @Transactional(rollbackFor = Exception.class)
     public WfFormVersion activateVersion(Long formId, Integer version) {
-        this.lambdaUpdate()
-                .eq(WfFormVersion::getFormId, formId)
-                .set(WfFormVersion::getIsActive, "0")
-                .update();
-
+        WfForm form = formMapper.selectByIdForUpdate(formId);
+        if (form == null) {
+            throw new RuntimeException("表单不存在");
+        }
         WfFormVersion formVersion = this.lambdaQuery()
                 .eq(WfFormVersion::getFormId, formId)
                 .eq(WfFormVersion::getVersion, version)
@@ -71,13 +65,19 @@ public class FormVersionServiceImpl extends ServiceImpl<WfFormVersionMapper, WfF
         if (formVersion == null) {
             throw new RuntimeException("版本不存在");
         }
+        schemas.compile(formVersion.getSchemaJson());
+
+        this.lambdaUpdate()
+                .eq(WfFormVersion::getFormId, formId)
+                .set(WfFormVersion::getIsActive, "0")
+                .update();
 
         formVersion.setIsActive("1");
         this.updateById(formVersion);
 
-        WfForm form = formService.getById(formId);
         form.setCurrentVersion(version);
-        formService.updateById(form);
+        form.setStatus("1");
+        formMapper.updateById(form);
 
         return formVersion;
     }

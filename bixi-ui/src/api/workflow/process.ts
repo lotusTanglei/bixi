@@ -26,9 +26,12 @@ export const getObj = (id: String) => {
 export interface ProcessStartRequest {
 	requestId: string;
 	processKey: string;
+	processDefinitionId: string;
 	title: string;
 	remark: string;
 	variables: Record<string, unknown>;
+	formId?: string | number;
+	formDataJson?: string;
 }
 
 export const start = (obj: ProcessStartRequest) => {

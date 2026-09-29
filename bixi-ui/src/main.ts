@@ -7,8 +7,11 @@ import { i18n } from '/@/i18n';
 import other from '/@/utils/other';
 
 import ElementPlus from 'element-plus';
+import VForm3 from 'vform3-builds';
 import '/@/theme/tailwind.css';
 import 'element-plus/dist/index.css';
+import 'vform3-builds/dist/designer.style.css';
+import 'vform3-builds/dist/render.style.css';
 import '/@/theme/index.scss';
 
 import { ElementIcons, Pagination, RightToolbar, DictTag, UploadExcel, UploadFile, UploadImg, Editor, Tip, DelWrap } from '/@/components/index';
@@ -47,6 +50,7 @@ app
 	.use(pinia) // pinia 存储
 	.use(router) // 路由
 	.use(ElementPlus) // ElementPlus 全局引入
+	.use(VForm3) // VForm3 表单设计器和渲染器
 	.use(ElementIcons) // elementIcons 图标全局引入
 	.use(i18n) // 国际化
 	.mount('#app');

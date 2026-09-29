@@ -15,6 +15,9 @@ public class FormFieldPermissionVO implements Serializable {
     @Schema(description = "字段标签")
     private String fieldLabel;
 
+    @Schema(description = "表单组件类型")
+    private String fieldType;
+
     @Schema(description = "权限类型")
     private String permType;
 

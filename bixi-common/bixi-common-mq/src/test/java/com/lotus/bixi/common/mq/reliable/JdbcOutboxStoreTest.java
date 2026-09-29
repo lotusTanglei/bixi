@@ -273,7 +273,29 @@ class JdbcOutboxStoreTest extends MysqlOutboxTestSupport {
         assertThat(store.retry("upms", event.eventId())).isTrue();
         assertThat(state(event)).isEqualTo("PENDING");
         assertThat(jdbc.queryForObject("SELECT last_error FROM reliable_outbox", String.class)).isNull();
+        assertThat(jdbc.queryForObject("SELECT attempts FROM reliable_outbox", Integer.class)).isZero();
         assertThat(store.retry("upms", event.eventId())).isFalse();
+        assertThat(store.claim("upms", 1)).singleElement()
+                .extracting(JdbcOutboxStore.Lease::attempt).isEqualTo(1);
+    }
+
+    @Test
+    void operatorRetryAndItsAuditCallbackRollbackTogether() {
+        var event = message("upms", 1);
+        enqueue(event, "key");
+        jdbc.update("UPDATE reliable_outbox SET status='FAILED', attempts=12, last_error='boom'");
+        jdbc.execute("CREATE TABLE IF NOT EXISTS outbox_retry_audit_marker (id INT PRIMARY KEY)");
+        jdbc.execute("TRUNCATE TABLE outbox_retry_audit_marker");
+
+        assertThatThrownBy(() -> store.retry("upms", event.eventId(), changed -> {
+            assertThat(changed).isTrue();
+            jdbc.update("INSERT INTO outbox_retry_audit_marker VALUES (1)");
+            throw new IllegalStateException("audit write failed");
+        })).isInstanceOf(IllegalStateException.class);
+
+        assertThat(state(event)).isEqualTo("FAILED");
+        assertThat(jdbc.queryForObject("SELECT attempts FROM reliable_outbox", Integer.class)).isEqualTo(12);
+        assertThat(count("outbox_retry_audit_marker")).isZero();
     }
 
     @Test
@@ -288,6 +310,19 @@ class JdbcOutboxStoreTest extends MysqlOutboxTestSupport {
         assertThat(store.claim("other", 20)).singleElement().satisfies(lease -> assertThat(lease.message()).isEqualTo(other));
         assertThatThrownBy(() -> store.claim("upms", 21)).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> store.claim("upms", 0)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void findUsesTheExactOwnerAndEventIdentity() {
+        var upms = message("upms", 1);
+        var other = DurableMessage.create("other", "workflow", upms.eventId(), upms.type(), 1,
+                "{\"value\":2}");
+        enqueue(upms, "upms-key");
+        enqueue(other, "other-key");
+
+        assertThat(store.find("upms", upms.eventId()).message()).isEqualTo(upms);
+        assertThat(store.find("other", upms.eventId()).message()).isEqualTo(other);
+        assertThat(store.find("workflow", upms.eventId())).isNull();
     }
 
     @Test

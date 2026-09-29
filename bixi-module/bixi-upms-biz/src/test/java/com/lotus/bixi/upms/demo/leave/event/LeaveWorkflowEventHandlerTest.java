@@ -16,6 +16,7 @@ import com.lotus.bixi.workflow.api.event.WorkflowEventType;
 import com.lotus.bixi.workflow.api.event.WorkflowOutcome;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
+import org.springframework.jdbc.core.JdbcOperations;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -29,12 +30,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class LeaveWorkflowEventHandlerTest {
     private final LeaveRequestMapper leaves = mock(LeaveRequestMapper.class);
+    private final JdbcOperations commands = mock(JdbcOperations.class);
     private final WorkflowEventCodec codec = new WorkflowEventCodec();
-    private final LeaveWorkflowEventHandler handler = new LeaveWorkflowEventHandler(leaves, codec);
+    private final LeaveWorkflowEventHandler handler = new LeaveWorkflowEventHandler(leaves, codec, commands);
 
     @BeforeEach
     void initializeMybatisMetadata() {
         TableInfoHelper.initTableInfo(new MapperBuilderAssistant(new Configuration(), "leave-test"), LeaveRequest.class);
+        when(commands.update(any(String.class), any(Object[].class))).thenReturn(1);
     }
 
     @Test

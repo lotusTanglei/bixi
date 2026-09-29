@@ -1,7 +1,6 @@
 package com.lotus.bixi.upms.demo.leave.event;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.lotus.bixi.common.core.constant.SecurityConstants;
 import com.lotus.bixi.common.core.context.TenantContextHolder;
 import com.lotus.bixi.common.mq.reliable.DurableMessage;
 import com.lotus.bixi.common.mq.reliable.DurableMessageHandler;
@@ -15,6 +14,10 @@ import com.lotus.bixi.workflow.api.event.WorkflowEventType;
 import com.lotus.bixi.workflow.api.event.WorkflowStartRejected;
 import com.lotus.bixi.workflow.api.event.WorkflowStarted;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.jdbc.core.JdbcOperations;
+import org.springframework.jdbc.core.JdbcTemplate;
+
+import javax.sql.DataSource;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
@@ -28,11 +31,17 @@ public final class LeaveWorkflowEventHandler implements DurableMessageHandler {
 
     private final LeaveRequestMapper leaves;
     private final WorkflowEventCodec codec;
+    private final JdbcOperations commands;
 
     public LeaveWorkflowEventHandler(LeaveRequestMapper leaves,
-            @Qualifier("leaveWorkflowEventCodec") WorkflowEventCodec codec) {
+            @Qualifier("leaveWorkflowEventCodec") WorkflowEventCodec codec, DataSource dataSource) {
+        this(leaves, codec, new JdbcTemplate(dataSource));
+    }
+
+    LeaveWorkflowEventHandler(LeaveRequestMapper leaves, WorkflowEventCodec codec, JdbcOperations commands) {
         this.leaves = leaves;
         this.codec = codec;
+        this.commands = commands;
     }
 
     @Override
@@ -42,7 +51,7 @@ public final class LeaveWorkflowEventHandler implements DurableMessageHandler {
         validate(event);
         Long previousTenant = TenantContextHolder.get();
         try {
-            TenantContextHolder.set(SecurityConstants.DEFAULT_TENANT_ID);
+            TenantContextHolder.set(tenantId(event.tenantScope()));
             LeaveRequest leave = leaves.selectById(event.businessId());
             if (leave == null) {
                 throw new InboxDeliveryException(InboxDeliveryException.Kind.PERMANENT, "请假申请不存在");
@@ -90,7 +99,9 @@ public final class LeaveWorkflowEventHandler implements DurableMessageHandler {
                 .set(LeaveRequest::getStartCommandId, event.commandId())
                 .set(LeaveRequest::getStartRequestHash, started.requestHash())
                 .set(LeaveRequest::getLeaveStatus, "IN_REVIEW"));
-        return updated == 1 ? Result.PROCESSED : Result.IGNORED;
+        if (updated != 1) return Result.IGNORED;
+        markStarted(event);
+        return Result.PROCESSED;
     }
 
     private Result applyRejected(LeaveRequest leave, WorkflowEvent event) {
@@ -113,7 +124,9 @@ public final class LeaveWorkflowEventHandler implements DurableMessageHandler {
                 .set(LeaveRequest::getStartRequestHash, rejected.requestHash())
                 .set(LeaveRequest::getLeaveStatus, "REJECTED")
                 .set(LeaveRequest::getEndedAt, LocalDateTime.now()));
-        return updated == 1 ? Result.PROCESSED : Result.IGNORED;
+        if (updated != 1) return Result.IGNORED;
+        markRejected(event, rejected.errorCode());
+        return Result.PROCESSED;
     }
 
     private Result applyCompleted(LeaveRequest leave, WorkflowEvent event) {
@@ -144,7 +157,27 @@ public final class LeaveWorkflowEventHandler implements DurableMessageHandler {
                 .set(LeaveRequest::getStartRequestHash, completed.requestHash())
                 .set(LeaveRequest::getLeaveStatus, completed.outcome().name())
                 .set(LeaveRequest::getEndedAt, LocalDateTime.ofInstant(completed.endedAt(), ZoneId.systemDefault())));
-        return updated == 1 ? Result.PROCESSED : Result.IGNORED;
+        if (updated != 1) return Result.IGNORED;
+        if ("SUBMITTING".equals(leave.getLeaveStatus())) markStarted(event);
+        return Result.PROCESSED;
+    }
+
+    private void markStarted(WorkflowEvent event) {
+        int updated = commands.update("""
+                UPDATE demo_leave_command
+                SET status = 'STARTED', process_instance_id = ?, error_code = NULL
+                WHERE command_id = ? AND tenant_scope = ? AND status = 'ACCEPTED'
+                """, event.processInstanceId(), event.commandId(), event.tenantScope());
+        if (updated != 1) throw permanent("请假提交命令无法确认启动结果");
+    }
+
+    private void markRejected(WorkflowEvent event, String errorCode) {
+        int updated = commands.update("""
+                UPDATE demo_leave_command
+                SET status = 'REJECTED', error_code = ?
+                WHERE command_id = ? AND tenant_scope = ? AND status = 'ACCEPTED'
+                """, errorCode, event.commandId(), event.tenantScope());
+        if (updated != 1) throw permanent("请假提交命令无法确认拒绝结果");
     }
 
     private static void validate(WorkflowEvent event) {
@@ -203,5 +236,9 @@ public final class LeaveWorkflowEventHandler implements DurableMessageHandler {
 
     private static InboxDeliveryException permanent(String message) {
         return new InboxDeliveryException(InboxDeliveryException.Kind.PERMANENT, message);
+    }
+
+    private static long tenantId(String tenantScope) {
+        return "default".equals(tenantScope) ? 1L : Long.parseLong(tenantScope);
     }
 }

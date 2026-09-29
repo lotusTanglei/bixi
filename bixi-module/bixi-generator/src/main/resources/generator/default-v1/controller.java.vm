@@ -1,0 +1,157 @@
+package ${package}.${moduleName}.controller;
+
+import com.alibaba.excel.EasyExcel;
+import com.alibaba.excel.context.AnalysisContext;
+import com.alibaba.excel.event.AnalysisEventListener;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.lotus.bixi.common.core.util.R;
+import com.lotus.bixi.common.log.annotation.SysLog;
+import com.lotus.bixi.common.security.annotation.HasPermission;
+import ${package}.${moduleName}.api.dto.${ClassName}CreateDTO;
+import ${package}.${moduleName}.api.dto.${ClassName}ImportDTO;
+import ${package}.${moduleName}.api.dto.${ClassName}ImportResult;
+import ${package}.${moduleName}.api.dto.${ClassName}ImportRowError;
+import ${package}.${moduleName}.api.dto.${ClassName}QueryDTO;
+import ${package}.${moduleName}.api.dto.${ClassName}UpdateDTO;
+import ${package}.${moduleName}.api.entity.${ClassName};
+import ${package}.${moduleName}.api.vo.${ClassName}VO;
+import ${package}.${moduleName}.api.vo.${ClassName}ExportVO;
+import ${package}.${moduleName}.api.service.${ClassName}Service;
+import com.pig4cloud.plugin.excel.annotation.ResponseExcel;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+@RestController("${moduleName}${ClassName}Controller")
+@RequiredArgsConstructor
+@RequestMapping("/${functionName}")
+public class ${ClassName}Controller {
+	private static final long MAX_UPLOAD_BYTES = 5L * 1024 * 1024;
+	private static final long MAX_REQUEST_BYTES = MAX_UPLOAD_BYTES + 64 * 1024;
+	private static final int MAX_IMPORT_ROWS = 1000;
+
+	private final ${ClassName}Service service;
+
+	@GetMapping("/page")
+	@HasPermission("${permissionPrefix}_view")
+	public R<IPage<${ClassName}VO>> page(@ParameterObject Page<${ClassName}> page,
+			@ParameterObject ${ClassName}QueryDTO query) {
+		return R.ok(service.page${ClassName}(page, query));
+	}
+
+	@GetMapping("/details/{id}")
+	@HasPermission("${permissionPrefix}_view")
+	public R<${ClassName}VO> details(@PathVariable Long id) {
+		return R.ok(service.details(id));
+	}
+
+	@PostMapping
+	@HasPermission("${permissionPrefix}_add")
+	@SysLog("新增${tableComment}")
+	public R<Boolean> create(@Valid @RequestBody ${ClassName}CreateDTO dto) {
+		return R.ok(service.create(dto));
+	}
+
+	@PutMapping
+	@HasPermission("${permissionPrefix}_edit")
+	@SysLog("修改${tableComment}")
+	public R<Boolean> update(@Valid @RequestBody ${ClassName}UpdateDTO dto) {
+		return R.ok(service.update(dto));
+	}
+
+	@DeleteMapping
+	@HasPermission("${permissionPrefix}_del")
+	@SysLog("删除${tableComment}")
+	public R<Boolean> delete(@RequestBody List<Long> ids) {
+		return R.ok(service.delete(ids));
+	}
+
+	@PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	@HasPermission("${permissionPrefix}_import")
+	@SysLog("导入${tableComment}")
+	public R<${ClassName}ImportResult> importData(
+			@RequestPart(value = "file", required = false) MultipartFile file,
+			HttpServletRequest request) {
+		${ClassName}ImportResult uploadFailure = validateUpload(file, request);
+		if (uploadFailure != null) return R.ok(uploadFailure);
+		List<${ClassName}ImportDTO> rows = new ArrayList<>(Math.min(MAX_IMPORT_ROWS, 128));
+		try (var input = new BufferedInputStream(file.getInputStream())) {
+			if (!hasSupportedExcelSignature(input)) {
+				return R.ok(importFailure("INVALID_FILE", "导入文件无法解析"));
+			}
+			EasyExcel.read(input, ${ClassName}ImportDTO.class,
+				new AnalysisEventListener<${ClassName}ImportDTO>() {
+					@Override
+					public void invoke(${ClassName}ImportDTO row, AnalysisContext context) {
+						if (rows.size() >= MAX_IMPORT_ROWS) {
+							throw new ImportRowLimitException();
+						}
+						rows.add(row);
+					}
+
+					@Override
+					public void doAfterAllAnalysed(AnalysisContext context) {
+					}
+				}).autoCloseStream(false).sheet().doRead();
+		}
+		catch (ImportRowLimitException failure) {
+			return R.ok(importFailure("ROW_LIMIT_EXCEEDED", "导入行数不能超过" + MAX_IMPORT_ROWS));
+		}
+		catch (IOException | RuntimeException failure) {
+			return R.ok(importFailure("INVALID_FILE", "导入文件无法解析"));
+		}
+		if (rows.isEmpty()) {
+			return R.ok(importFailure("EMPTY_FILE", "导入文件不包含数据行"));
+		}
+		return R.ok(service.importRows(rows));
+	}
+
+	@GetMapping("/export")
+	@ResponseExcel(name = "${functionName}")
+	@HasPermission("${permissionPrefix}_export")
+	@SysLog("导出${tableComment}")
+	public List<${ClassName}ExportVO> export(@ParameterObject ${ClassName}QueryDTO query) {
+		return service.exportRows(query);
+	}
+
+	private static ${ClassName}ImportResult validateUpload(MultipartFile file, HttpServletRequest request) {
+		if (file == null || file.isEmpty()) return importFailure("EMPTY_FILE", "导入文件不能为空");
+		if (file.getSize() > MAX_UPLOAD_BYTES) {
+			return importFailure("FILE_TOO_LARGE", "导入文件不能超过5MB");
+		}
+		long requestBytes = request == null ? -1 : request.getContentLengthLong();
+		if (requestBytes > MAX_REQUEST_BYTES) return importFailure("REQUEST_TOO_LARGE", "导入请求过大");
+		return null;
+	}
+
+	private static ${ClassName}ImportResult importFailure(String code, String message) {
+		return ${ClassName}ImportResult.failure(code, 0,
+			List.of(new ${ClassName}ImportRowError(1, List.of(message))));
+	}
+
+	private static boolean hasSupportedExcelSignature(BufferedInputStream input) throws IOException {
+		input.mark(8);
+		byte[] signature = input.readNBytes(8);
+		input.reset();
+		boolean xlsx = signature.length >= 4 && signature[0] == 'P' && signature[1] == 'K'
+			&& signature[2] == 3 && signature[3] == 4;
+		boolean xls = signature.length >= 8 && signature[0] == (byte) 0xD0
+			&& signature[1] == (byte) 0xCF && signature[2] == 0x11 && signature[3] == (byte) 0xE0
+			&& signature[4] == (byte) 0xA1 && signature[5] == (byte) 0xB1
+			&& signature[6] == 0x1A && signature[7] == (byte) 0xE1;
+		return xlsx || xls;
+	}
+
+	private static final class ImportRowLimitException extends RuntimeException {
+	}
+}

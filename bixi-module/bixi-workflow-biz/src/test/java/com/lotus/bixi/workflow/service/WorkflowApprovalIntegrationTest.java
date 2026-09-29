@@ -18,6 +18,7 @@ import com.lotus.bixi.workflow.api.dto.TaskRejectDTO;
 import com.lotus.bixi.workflow.api.dto.TaskTransferDTO;
 import com.lotus.bixi.workflow.api.dto.TaskResolveDTO;
 import com.lotus.bixi.workflow.api.dto.TaskCommentDTO;
+import com.lotus.bixi.workflow.api.dto.FormDataDTO;
 import com.lotus.bixi.workflow.api.dto.WorkflowResultDTO;
 import com.lotus.bixi.workflow.api.exception.WorkflowCommandNotFoundException;
 import com.lotus.bixi.workflow.api.exception.WorkflowOperationConflictException;
@@ -27,7 +28,9 @@ import com.lotus.bixi.common.core.util.R;
 import com.lotus.bixi.workflow.api.vo.ProcessInstanceVO;
 import com.lotus.bixi.workflow.controller.TaskController;
 import com.lotus.bixi.workflow.controller.ProcessDefinitionController;
+import com.lotus.bixi.workflow.controller.FormDataController;
 import com.lotus.bixi.workflow.config.WorkflowEngineEventsConfiguration;
+import com.lotus.bixi.workflow.event.WorkflowTaskNotificationSink;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -72,6 +75,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -83,16 +89,28 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 @SpringJUnitConfig(WorkflowApprovalIntegrationTest.Config.class)
 @TestPropertySource(locations = "classpath:workflow-test.properties", properties = {"workflow.enabled=true",
         "workflow.database-schema-update=true", "workflow.async-executor-activate=false",
+        "workflow.public-start-models=approval,plain,candidate,immediate,terminate,parallel,leave_approval,expense_approval",
         "flowable.check-process-definitions=false"})
 class WorkflowApprovalIntegrationTest {
+    private static final String FORM_SCHEMA = """
+            {"widgetList":[
+              {"type":"number","options":{"name":"amount","required":true,"min":1}},
+              {"type":"input","options":{"name":"note","maxLength":20}},
+              {"type":"input","options":{"name":"secret"}}
+            ]}
+            """;
+
     @Autowired ProcessEngine engine;
     @Autowired ProcessInstanceService processes;
+    @Autowired TrustedProcessStarter trustedProcesses;
     @Autowired WfTaskService tasks;
     @Autowired ProcessDefinitionService definitions;
     @Autowired DataSource dataSource;
     @Autowired ResultReceiver resultReceiver;
     @Autowired ProcessDefinitionController definitionController;
+    @Autowired FormDataService formData;
     @Autowired CommandBarrier commandBarrier;
+    @Autowired WorkflowTaskNotificationSink taskNotifications;
     JdbcTemplate jdbc;
 
     @BeforeEach
@@ -103,7 +121,10 @@ class WorkflowApprovalIntegrationTest {
         commandBarrier.commandBarrier = null;
         commandBarrier.processBarrier = null;
         commandBarrier.clearReplayMiss();
-        WorkflowTestSchema.create(jdbc, "wf_command", "wf_process_instance", "wf_approval_record", "wf_process_definition");
+        reset(taskNotifications);
+        WorkflowTestSchema.create(jdbc, "wf_command", "wf_process_instance", "wf_approval_record", "wf_form",
+                "wf_form_version", "wf_process_definition", "wf_form_data", "sys_form_permission",
+                "sys_role_form_permission");
         engine.getRepositoryService().createDeployment().tenantId("1")
                 .addString("approval.bpmn20.xml", model("approval", true))
                 .addString("plain.bpmn20.xml", model("plain", true).replaceAll("(?s)<extensionElements>.*?</extensionElements>", ""))
@@ -137,6 +158,124 @@ class WorkflowApprovalIntegrationTest {
     }
 
     @Test
+    void taskCreationWithoutAnEmbeddedBpmnListenerStillRecordsItsNotification() {
+        ProcessInstanceVO started = start("plain", "global-task-notification");
+
+        org.mockito.ArgumentCaptor<WorkflowTaskNotificationSink.Context> captured =
+                org.mockito.ArgumentCaptor.forClass(WorkflowTaskNotificationSink.Context.class);
+        verify(taskNotifications).record(captured.capture());
+        assertThat(captured.getValue().processInstanceId()).isEqualTo(started.getProcessInstanceId());
+        assertThat(captured.getValue().recipientUserIds()).containsExactly(22L);
+    }
+
+    @Test
+    void candidateTaskCreationRecordsTheFlowableCandidatePool() {
+        ProcessInstanceVO started = start("candidate", "candidate-task-notification");
+
+        org.mockito.ArgumentCaptor<WorkflowTaskNotificationSink.Context> captured =
+                org.mockito.ArgumentCaptor.forClass(WorkflowTaskNotificationSink.Context.class);
+        verify(taskNotifications).record(captured.capture());
+        assertThat(captured.getValue().processInstanceId()).isEqualTo(started.getProcessInstanceId());
+        assertThat(captured.getValue().recipientUserIds()).containsExactly(22L, 33L);
+        assertThat(captured.getValue().recipientRoleIds()).isEmpty();
+    }
+
+    @Test
+    void taskCompletionUsesTheFrozenFormAndMergesOnlyEditableFields() {
+        bindApprovalForm();
+        ProcessInstanceVO started = startWithForm("form-merge");
+        String taskId = taskId(started);
+        loginWithRole(22L, 9L);
+
+        TaskCompleteDTO complete = approve(taskId, "通过");
+        complete.setFormId(7L);
+        complete.setFormDataJson("{\"note\":\"updated\"}");
+        tasks.complete(complete);
+
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM wf_form_data WHERE process_instance_id = ?",
+                Long.class, started.getProcessInstanceId())).isEqualTo(1L);
+        assertThat(jdbc.queryForObject("SELECT data_json FROM wf_form_data WHERE process_instance_id = ?",
+                String.class, started.getProcessInstanceId()))
+                .isEqualTo("{\"amount\":10,\"note\":\"updated\",\"secret\":\"classified\"}");
+        assertThat(jdbc.queryForObject("SELECT form_version_id FROM wf_form_data WHERE process_instance_id = ?",
+                Long.class, started.getProcessInstanceId())).isEqualTo(71L);
+        assertThat(jdbc.queryForObject("SELECT task_id FROM wf_form_data WHERE process_instance_id = ?",
+                String.class, started.getProcessInstanceId())).isEqualTo(taskId);
+        assertThat(processes.getById(started.getProcessInstanceId()).getStatus()).isEqualTo("completed");
+    }
+
+    @Test
+    void taskCompletionRejectsClientBindingAndProtectedFieldWritesBeforeMutation() {
+        bindApprovalForm();
+        ProcessInstanceVO forgedInstance = startWithForm("forged-form");
+        ProcessInstanceVO readonlyInstance = startWithForm("readonly-field");
+        ProcessInstanceVO hiddenInstance = startWithForm("hidden-field");
+        ProcessInstanceVO invalidInstance = startWithForm("invalid-field");
+        loginWithRole(22L, 9L);
+
+        TaskCompleteDTO forged = completionWithForm(taskId(forgedInstance), 8L, "{\"note\":\"changed\"}");
+        TaskCompleteDTO readonly = completionWithForm(taskId(readonlyInstance), 7L, "{\"amount\":20}");
+        TaskCompleteDTO hidden = completionWithForm(taskId(hiddenInstance), 7L, "{\"secret\":\"changed\"}");
+        TaskCompleteDTO invalid = completionWithForm(taskId(invalidInstance), 7L,
+                "{\"note\":\"this value is longer than twenty characters\"}");
+
+        for (TaskCompleteDTO rejected : List.of(forged, readonly, hidden, invalid)) {
+            assertThatThrownBy(() -> tasks.complete(rejected)).isInstanceOf(IllegalArgumentException.class);
+            assertThat(engine.getTaskService().createTaskQuery().taskId(rejected.getTaskId()).count()).isEqualTo(1L);
+        }
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM wf_approval_record", Long.class)).isZero();
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM wf_command WHERE operation = 'COMPLETE'", Long.class))
+                .isZero();
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM wf_form_data", Long.class)).isEqualTo(4L);
+    }
+
+    @Test
+    void formSnapshotFailureRollsBackTaskApprovalAndCommandTogether() {
+        bindApprovalForm();
+        ProcessInstanceVO started = startWithForm("form-rollback");
+        String taskId = taskId(started);
+        loginWithRole(22L, 9L);
+        TaskCompleteDTO complete = completionWithForm(taskId, 7L, "{\"note\":\"updated\"}");
+        jdbc.execute("ALTER TABLE wf_form_data ADD CONSTRAINT reject_form_update "
+                + "CHECK (data_json NOT LIKE '%updated%')");
+
+        assertThatThrownBy(() -> tasks.complete(complete)).isInstanceOf(RuntimeException.class);
+        assertThat(engine.getTaskService().createTaskQuery().taskId(taskId).count()).isEqualTo(1L);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM wf_approval_record", Long.class)).isZero();
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM wf_command WHERE operation = 'COMPLETE'", Long.class))
+                .isZero();
+        assertThat(jdbc.queryForObject("SELECT data_json FROM wf_form_data WHERE process_instance_id = ?",
+                String.class, started.getProcessInstanceId()))
+                .isEqualTo("{\"amount\":10,\"note\":\"old\",\"secret\":\"classified\"}");
+
+        dropCheck("wf_form_data", "reject_form_update");
+        assertThatCode(() -> tasks.complete(complete)).doesNotThrowAnyException();
+        assertThat(engine.getTaskService().createTaskQuery().taskId(taskId).count()).isZero();
+    }
+
+    @Test
+    void formDataReadsArePermissionFilteredAndDirectWritesAreRejected() {
+        bindApprovalForm();
+        ProcessInstanceVO started = startWithForm("filtered-render");
+        String taskId = taskId(started);
+        loginWithRole(22L, 9L);
+
+        var byTask = formData.renderByTaskId(taskId);
+        var byProcess = formData.renderByProcessInstanceId(started.getProcessInstanceId());
+        assertThat(byTask.getSchemaJson()).contains("amount", "note").doesNotContain("secret");
+        assertThat(byTask.getDataJson()).contains("amount", "note").doesNotContain("secret", "classified");
+        assertThat(byProcess).usingRecursiveComparison().isEqualTo(byTask);
+
+        FormDataDTO direct = new FormDataDTO();
+        direct.setFormId(7L);
+        direct.setProcessInstanceId(started.getProcessInstanceId());
+        direct.setDataJson("{\"secret\":\"exposed\"}");
+        assertThatThrownBy(() -> new FormDataController(formData).save(direct))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("流程发起或任务办理");
+    }
+
+    @Test
     void bundledDefinitionCanBeDeployedRepeatedlyThroughTheSharedEndpoint() throws Exception {
         var mvc = MockMvcBuilders.standaloneSetup(definitionController).build();
         mvc.perform(post("/workflow/definition/deploy-demo")).andExpect(status().isOk());
@@ -149,6 +288,41 @@ class WorkflowApprovalIntegrationTest {
     void definitionListUsesTheSamePermissionAsItsFrontend() throws Exception {
         var mvc = MockMvcBuilders.standaloneSetup(definitionController).build();
         mvc.perform(get("/workflow/definition/list")).andExpect(status().isOk());
+    }
+
+    @Test
+    void startableCatalogIsLatestActiveCategoryScopedAndDoesNotExposeTheAdminList() {
+        var repository = engine.getRepositoryService();
+        var firstDeployment = repository.createDeployment().tenantId("1")
+                .addString("catalog-v1.bpmn20.xml", model("catalog", true)).deploy();
+        var first = repository.createProcessDefinitionQuery().deploymentId(firstDeployment.getId()).singleResult();
+        repository.setProcessDefinitionCategory(first.getId(), "finance");
+        var secondDeployment = repository.createDeployment().tenantId("1")
+                .addString("catalog-v2.bpmn20.xml", model("catalog", true)).deploy();
+        var second = repository.createProcessDefinitionQuery().deploymentId(secondDeployment.getId()).singleResult();
+        repository.setProcessDefinitionCategory(second.getId(), "finance");
+        var officeDeployment = repository.createDeployment().tenantId("1")
+                .addString("office.bpmn20.xml", model("office", true)).deploy();
+        var office = repository.createProcessDefinitionQuery().deploymentId(officeDeployment.getId()).singleResult();
+        repository.setProcessDefinitionCategory(office.getId(), "office");
+
+        ProcessQueryDTO finance = new ProcessQueryDTO();
+        finance.setCategory(" finance ");
+        login(77L, List.of("workflow_process_add"));
+
+        repository.suspendProcessDefinitionById(second.getId());
+        assertThat(definitions.listStartableDefinitions(finance)).isEmpty();
+        repository.activateProcessDefinitionById(second.getId());
+        assertThat(definitions.listStartableDefinitions(finance))
+                .extracting(definition -> definition.getProcessDefinitionId())
+                .containsExactly(second.getId());
+        assertThatThrownBy(() -> definitions.listDefinitions(new ProcessQueryDTO()))
+                .isInstanceOf(AccessDeniedException.class);
+
+        login(77L, List.of("workflow_definition_view"));
+        assertThat(definitions.listDefinitions(finance))
+                .extracting(definition -> definition.getProcessDefinitionId())
+                .containsExactly(second.getId(), first.getId());
     }
 
     @Test
@@ -202,19 +376,18 @@ class WorkflowApprovalIntegrationTest {
         reject.setRejectReason("不符合条件");
         tasks.reject(reject);
         login(11L);
-        var canceled = startBusiness("approval");
+        var canceled = startBusiness("approval", 3);
         processes.terminate(canceled.getProcessInstanceId(), "申请人取消", UUID.randomUUID().toString());
         assertThat(resultReceiver.results).extracting(WorkflowResultDTO::getStatus)
                 .containsExactly("rejected", "terminated");
     }
 
     @Test
-    void synchronousCompletionNotifiesAfterExtensionHasCommitted() {
+    void synchronousTrustedStartReturnsTheCommittedTerminalExtension() {
         var started = startBusiness("immediate");
-        assertThat(resultReceiver.results).singleElement().satisfies(result -> {
-            assertThat(result.getStatus()).isEqualTo("completed");
-            assertThat(result.getProcessInstanceId()).isEqualTo(started.getProcessInstanceId());
-        });
+        assertThat(started.getStatus()).isEqualTo("completed");
+        assertThat(jdbc.queryForObject("SELECT status FROM wf_process_instance WHERE process_instance_id = ?",
+                String.class, started.getProcessInstanceId())).isEqualTo("completed");
     }
 
     @Test
@@ -632,7 +805,7 @@ class WorkflowApprovalIntegrationTest {
     @Test
     void leaveDemoCanBeDeployedRepeatedlyAndApproved() {
         for (int i = 0; i < 2; i++) {
-            engine.getRepositoryService().createDeployment().name("bixi-leave-demo")
+            engine.getRepositoryService().createDeployment().tenantId("1").name("bixi-leave-demo")
                     .enableDuplicateFiltering()
                     .addClasspathResource("processes/demo_leave_approval.bpmn20.xml").deploy();
         }
@@ -928,13 +1101,58 @@ class WorkflowApprovalIntegrationTest {
     }
 
     private ProcessInstanceVO start(String key, String title) {
+        if ("demo_leave_approval".equals(key)) {
+            return WorkflowTrustedStartTestSupport.start(trustedProcesses, title, 123L, 1);
+        }
         ProcessStartDTO dto = new ProcessStartDTO();
         dto.setRequestId(java.util.UUID.randomUUID().toString());
         dto.setProcessKey(key);
         dto.setTitle(title);
         dto.setBusinessKey(UUID.randomUUID().toString());
-        dto.setVariables(Map.of("approverId", "22", "applicant", "untrusted"));
+        dto.setVariables(Map.of("approverId", "22"));
         return processes.start(dto);
+    }
+
+    private ProcessInstanceVO startWithForm(String title) {
+        ProcessStartDTO dto = new ProcessStartDTO();
+        dto.setRequestId(UUID.randomUUID().toString());
+        dto.setProcessKey("approval");
+        dto.setTitle(title);
+        dto.setBusinessKey(UUID.randomUUID().toString());
+        dto.setVariables(Map.of("approverId", "22"));
+        dto.setFormId(7L);
+        dto.setFormDataJson("{\"amount\":10,\"note\":\"old\",\"secret\":\"classified\"}");
+        return processes.start(dto);
+    }
+
+    private void bindApprovalForm() {
+        var definition = engine.getRepositoryService().createProcessDefinitionQuery()
+                .processDefinitionKey("approval").latestVersion().singleResult();
+        jdbc.update("INSERT INTO wf_form "
+                + "(id, form_key, form_name, current_version, status, del_flag, data_status, tenant_id) "
+                + "VALUES (7, 'expense', 'Expense', 1, '1', '0', '0', 1)");
+        jdbc.update("INSERT INTO wf_form_version "
+                + "(id, form_id, version, schema_json, is_active, del_flag, status, data_status, tenant_id) "
+                + "VALUES (71, 7, 1, ?, '1', '0', '0', '0', 1)", FORM_SCHEMA);
+        jdbc.update("INSERT INTO wf_process_definition "
+                + "(id, process_definition_id, process_key, version, form_key, form_version_id, "
+                + "suspension_state, del_flag, status, data_status, tenant_id) "
+                + "VALUES (81, ?, 'approval', ?, 'expense', 71, 1, '0', '0', '0', 1)",
+                definition.getId(), definition.getVersion());
+        insertFieldPermission(101L, definition.getId(), "amount", "readonly");
+        insertFieldPermission(102L, definition.getId(), "note", "edit");
+        insertFieldPermission(103L, definition.getId(), "secret", "hidden");
+    }
+
+    private void insertFieldPermission(long id, String definitionId, String field, String permission) {
+        jdbc.update("INSERT INTO sys_form_permission "
+                + "(id, form_id, form_version_id, process_definition_id, task_definition_key, field_code, "
+                + "permission, perm_type, del_flag, status, data_status, tenant_id) "
+                + "VALUES (?, 7, 71, ?, 'review', ?, ?, ?, '0', '0', '0', 1)",
+                id, definitionId, field, permission, permission);
+        jdbc.update("INSERT INTO sys_role_form_permission "
+                + "(id, role_id, form_perm_id, del_flag, status, data_status, tenant_id) "
+                + "VALUES (?, 9, ?, '0', '0', '0', 1)", 1000L + id, id);
     }
 
     private String taskId(ProcessInstanceVO started) {
@@ -942,14 +1160,15 @@ class WorkflowApprovalIntegrationTest {
     }
 
     private ProcessInstanceVO startBusiness(String key) {
-        var dto = new ProcessStartDTO();
-        dto.setRequestId(java.util.UUID.randomUUID().toString());
-        dto.setProcessKey(key);
-        dto.setBusinessKey("leave-" + UUID.randomUUID());
-        dto.setBusinessTable("demo_leave_request");
-        dto.setBusinessId(123L);
-        dto.setVariables(Map.of("approverId", "22", "businessRound", 2));
-        return processes.start(dto);
+        return startBusiness(key, 2);
+    }
+
+    private ProcessInstanceVO startBusiness(String key, int round) {
+        engine.getRepositoryService().createDeployment().tenantId("1")
+                .addString("demo_leave_approval.bpmn20.xml",
+                        model("demo_leave_approval", !"immediate".equals(key)))
+                .deploy();
+        return WorkflowTrustedStartTestSupport.start(trustedProcesses, key, 123L, round);
     }
 
     static class ResultReceiver implements WorkflowResultReceiver {
@@ -989,6 +1208,13 @@ class WorkflowApprovalIntegrationTest {
         return dto;
     }
 
+    private static TaskCompleteDTO completionWithForm(String taskId, Long formId, String dataJson) {
+        TaskCompleteDTO dto = approve(taskId, "通过");
+        dto.setFormId(formId);
+        dto.setFormDataJson(dataJson);
+        return dto;
+    }
+
     static void login(long id) {
         login(id, List.of("workflow_process_add", "workflow_process_view", "workflow_process_edit",
                 "workflow_task_view", "workflow_task_edit", "workflow_definition_view", "workflow_definition_edit"));
@@ -999,6 +1225,10 @@ class WorkflowApprovalIntegrationTest {
         var authorities = permissions.stream().map(SimpleGrantedAuthority::new).toList();
         var user = new BixiUser(id, 1L, 1L, "user-" + id, "unused", null, true, true, true, true, authorities);
         SecurityContextHolder.getContext().setAuthentication(UsernamePasswordAuthenticationToken.authenticated(user, null, authorities));
+    }
+
+    private static void loginWithRole(long id, long roleId) {
+        login(id, List.of("workflow_process_view", "workflow_task_view", "workflow_task_edit", "ROLE_" + roleId));
     }
 
     private static Object runAs(long userId, Runnable action, String success) {
@@ -1110,6 +1340,7 @@ class WorkflowApprovalIntegrationTest {
         @Bean DataSourceTransactionManager transactionManager(DataSource source) { return new DataSourceTransactionManager(source); }
         @Bean ResultReceiver resultReceiver(DataSource source) { return new ResultReceiver(source); }
         @Bean CommandBarrier commandBarrier() { return new CommandBarrier(); }
+        @Bean WorkflowTaskNotificationSink taskNotifications() { return mock(WorkflowTaskNotificationSink.class); }
         @Bean CandidateIdentityQueryService candidateIdentityQueryService() {
             return userId -> userId == null || userId <= 0 ? null : new CandidateIdentity(userId, true, false, 1L);
         }

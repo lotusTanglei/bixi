@@ -44,3 +44,10 @@ export const sendNotice = (id: String) => {
 		method: 'post',
 	});
 };
+
+export const retryDelivery = (id: String) => {
+	return request({
+		url: '/admin/notice/' + id + '/delivery/retry',
+		method: 'post',
+	});
+};

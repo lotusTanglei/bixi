@@ -5,6 +5,7 @@ import com.lotus.bixi.workflow.api.dto.ProcessQueryDTO;
 import com.lotus.bixi.workflow.api.entity.WfProcessDefinition;
 import com.lotus.bixi.workflow.api.vo.FormRenderVO;
 import com.lotus.bixi.workflow.api.vo.ProcessDefinitionVO;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -15,7 +16,11 @@ public interface ProcessDefinitionService extends IService<WfProcessDefinition> 
     /** Explicitly deploys the next demo definition version; existing instances are untouched. */
     ProcessDefinitionVO deployDemoV3();
 
+    ProcessDefinitionVO deploy(MultipartFile file, String name, String category, String formKey);
+
     List<ProcessDefinitionVO> listDefinitions(ProcessQueryDTO query);
+
+    List<ProcessDefinitionVO> listStartableDefinitions(ProcessQueryDTO query);
 
     List<ProcessDefinitionVO> listLatestVersions();
 
@@ -32,5 +37,7 @@ public interface ProcessDefinitionService extends IService<WfProcessDefinition> 
     FormRenderVO getFormByProcessKey(String processKey);
 
     FormRenderVO getFormByDefinitionId(String processDefinitionId);
+
+    FormRenderVO getStartForm(String processDefinitionId);
 
 }

@@ -1,0 +1,35 @@
+{
+  "version": "bixi-default-v1",
+  "source": "classpath:generator/default-v1",
+  "templates": [
+    { "kind": "entity", "outputPath": "${apiPath}/src/main/java/${packagePath}/${moduleName}/api/entity/${ClassName}.java", "resource": "entity.java.vm" },
+    { "kind": "create-dto", "outputPath": "${apiPath}/src/main/java/${packagePath}/${moduleName}/api/dto/${ClassName}CreateDTO.java", "resource": "create-dto.java.vm" },
+    { "kind": "update-dto", "outputPath": "${apiPath}/src/main/java/${packagePath}/${moduleName}/api/dto/${ClassName}UpdateDTO.java", "resource": "update-dto.java.vm" },
+    { "kind": "query-dto", "outputPath": "${apiPath}/src/main/java/${packagePath}/${moduleName}/api/dto/${ClassName}QueryDTO.java", "resource": "query-dto.java.vm" },
+    { "kind": "import-dto", "outputPath": "${apiPath}/src/main/java/${packagePath}/${moduleName}/api/dto/${ClassName}ImportDTO.java", "resource": "import-dto.java.vm" },
+    { "kind": "import-result", "outputPath": "${apiPath}/src/main/java/${packagePath}/${moduleName}/api/dto/${ClassName}ImportResult.java", "resource": "import-result.java.vm" },
+    { "kind": "import-row-error", "outputPath": "${apiPath}/src/main/java/${packagePath}/${moduleName}/api/dto/${ClassName}ImportRowError.java", "resource": "import-row-error.java.vm" },
+    { "kind": "vo", "outputPath": "${apiPath}/src/main/java/${packagePath}/${moduleName}/api/vo/${ClassName}VO.java", "resource": "vo.java.vm" },
+    { "kind": "export-vo", "outputPath": "${apiPath}/src/main/java/${packagePath}/${moduleName}/api/vo/${ClassName}ExportVO.java", "resource": "export-vo.java.vm" },
+    { "kind": "mapper", "outputPath": "${backendPath}/src/main/java/${packagePath}/${moduleName}/mapper/${ClassName}Mapper.java", "resource": "mapper.java.vm" },
+    { "kind": "service", "outputPath": "${apiPath}/src/main/java/${packagePath}/${moduleName}/api/service/${ClassName}Service.java", "resource": "service.java.vm" },
+    { "kind": "service-impl", "outputPath": "${backendPath}/src/main/java/${packagePath}/${moduleName}/service/impl/${ClassName}ServiceImpl.java", "resource": "service-impl.java.vm" },
+    { "kind": "controller", "outputPath": "${backendPath}/src/main/java/${packagePath}/${moduleName}/controller/${ClassName}Controller.java", "resource": "controller.java.vm" },
+    { "kind": "menu-sql", "outputPath": "bixi-project-documents/sql/generated/${moduleName}_${functionName}_menu.sql", "resource": "menu.sql.vm" },
+    { "kind": "frontend-api", "outputPath": "${frontendPath}/src/api/${moduleName}/${functionName}.ts", "resource": "api.ts.vm" },
+    { "kind": "frontend-list", "outputPath": "${frontendPath}/src/views/${moduleName}/${functionName}/index.vue", "resource": "index.vue.vm" },
+    { "kind": "frontend-form", "outputPath": "${frontendPath}/src/views/${moduleName}/${functionName}/form.vue", "resource": "form.vue.vm" }
+  ],
+  "parentChildTemplates": [
+    { "kind": "create-dto", "outputPath": "${apiPath}/src/main/java/${packagePath}/${moduleName}/api/dto/${ClassName}CreateDTO.java", "resource": "parent-child-create-dto.java.vm" },
+    { "kind": "update-dto", "outputPath": "${apiPath}/src/main/java/${packagePath}/${moduleName}/api/dto/${ClassName}UpdateDTO.java", "resource": "parent-child-update-dto.java.vm" },
+    { "kind": "vo", "outputPath": "${apiPath}/src/main/java/${packagePath}/${moduleName}/api/vo/${ClassName}VO.java", "resource": "parent-child-vo.java.vm" },
+    { "kind": "service-impl", "outputPath": "${backendPath}/src/main/java/${packagePath}/${moduleName}/service/impl/${ClassName}ServiceImpl.java", "resource": "parent-child-service-impl.java.vm" },
+    { "kind": "child-entity", "outputPath": "${apiPath}/src/main/java/${packagePath}/${moduleName}/api/entity/${ChildClassName}.java", "resource": "child-entity.java.vm" },
+    { "kind": "child-dto", "outputPath": "${apiPath}/src/main/java/${packagePath}/${moduleName}/api/dto/${ChildClassName}DTO.java", "resource": "child-dto.java.vm" },
+    { "kind": "child-vo", "outputPath": "${apiPath}/src/main/java/${packagePath}/${moduleName}/api/vo/${ChildClassName}VO.java", "resource": "child-vo.java.vm" },
+    { "kind": "child-mapper", "outputPath": "${backendPath}/src/main/java/${packagePath}/${moduleName}/mapper/${ChildClassName}Mapper.java", "resource": "child-mapper.java.vm" },
+    { "kind": "frontend-api", "outputPath": "${frontendPath}/src/api/${moduleName}/${functionName}.ts", "resource": "parent-child-api.ts.vm" },
+    { "kind": "frontend-form", "outputPath": "${frontendPath}/src/views/${moduleName}/${functionName}/form.vue", "resource": "parent-child-form.vue.vm" }
+  ]
+}

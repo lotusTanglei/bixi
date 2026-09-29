@@ -33,6 +33,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.*;
 
@@ -46,6 +47,7 @@ import java.util.List;
  */
 @RestController
 @RequiredArgsConstructor
+@ConditionalOnProperty(prefix = "generator", name = "enabled", havingValue = "true", matchIfMissing = true)
 @RequestMapping("/template")
 @Tag(description = "template", name = "模板管理")
 @SecurityRequirement(name = HttpHeaders.AUTHORIZATION)
@@ -152,8 +154,9 @@ public class GenTemplateController {
 	 * @return R
 	 */
 	@Operation(summary = "在线更新模板", description = "在线更新模板")
-	@GetMapping("/online")
-	@HasPermission("codegen_template_view")
+	@SysLog("在线更新模板")
+	@PostMapping("/online")
+	@HasPermission("codegen_template_edit")
 	public R online() {
 		return genTemplateService.onlineUpdate();
 	}

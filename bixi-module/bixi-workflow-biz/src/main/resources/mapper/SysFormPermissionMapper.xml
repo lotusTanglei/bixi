@@ -5,10 +5,13 @@
     <resultMap id="baseResultMap" type="com.lotus.bixi.workflow.api.entity.SysFormPermission">
         <id column="id" property="id"/>
         <result column="form_id" property="formId"/>
-        <result column="field_name" property="fieldName"/>
-        <result column="field_label" property="fieldLabel"/>
+        <result column="form_version_id" property="formVersionId"/>
+        <result column="process_definition_id" property="processDefinitionId"/>
+        <result column="task_definition_key" property="taskDefinitionKey"/>
+        <result column="field_code" property="fieldCode"/>
+        <result column="permission" property="permission"/>
         <result column="perm_type" property="permType"/>
-        <result column="role_id" property="roleId"/>
+        <result column="description" property="description"/>
         <result column="create_by" property="createBy"/>
         <result column="update_by" property="updateBy"/>
         <result column="create_time" property="createTime"/>

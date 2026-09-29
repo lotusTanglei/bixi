@@ -190,6 +190,8 @@ CREATE TABLE `sys_job` (
   `method_params_value` varchar(2000) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '参数值',
   `cron_expression` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'cron执行表达式',
   `misfire_policy` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '3' COMMENT '错失执行策略（1错失周期立即执行 2错失周期执行一次 3下周期执行）',
+  `retry_count` int NOT NULL DEFAULT 0 COMMENT '失败重试次数，不包含首次执行',
+  `retry_interval_seconds` int NOT NULL DEFAULT 5 COMMENT '重试间隔（秒）',
   `tenant_type` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '1' COMMENT '1、多租户任务;2、非多租户任务',
   `execute_status` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '0' COMMENT '状态（0正常 1异常）',
   `start_time` timestamp NULL DEFAULT NULL COMMENT '初次执行时间',
@@ -205,7 +207,7 @@ CREATE TABLE `sys_job` (
   `tenant_id` bigint DEFAULT NULL COMMENT '租户id',
   `remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE KEY `job_name_group_idx` (`name`,`group`) USING BTREE
+  UNIQUE KEY `uk_job_tenant_name_group` (`tenant_id`,`name`,`group`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='定时任务调度表';
 
 -- ----------------------------
@@ -215,6 +217,11 @@ DROP TABLE IF EXISTS `sys_job_record`;
 CREATE TABLE `sys_job_record` (
   `id` bigint NOT NULL COMMENT '任务日志ID',
   `job_id` bigint NOT NULL COMMENT '任务id',
+  `execution_id` varchar(128) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL COMMENT '单次触发执行标识',
+  `attempt` int NOT NULL DEFAULT 1 COMMENT '当前尝试序号',
+  `max_attempts` int NOT NULL DEFAULT 1 COMMENT '最大尝试次数',
+  `trigger_type` varchar(16) NOT NULL DEFAULT 'LEGACY' COMMENT 'CRON、MANUAL或RECOVERY',
+  `recovered` tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否由节点故障恢复触发',
   `message` varchar(500) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT NULL COMMENT '日志信息',
   `execute_time` varchar(30) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT NULL COMMENT '执行时间',
   `exception_info` varchar(2000) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT '' COMMENT '异常信息',

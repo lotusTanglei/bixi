@@ -11,20 +11,19 @@ import com.lotus.bixi.common.security.annotation.HasPermission;
 import com.lotus.bixi.common.security.util.SecurityUtils;
 import com.lotus.bixi.upms.demo.leave.dto.LeaveRequestDTO;
 import com.lotus.bixi.upms.demo.leave.dto.LeaveApproverVO;
+import com.lotus.bixi.upms.demo.leave.command.LeaveSubmitCommandExecutor;
 import com.lotus.bixi.upms.demo.leave.entity.LeaveRequest;
 import com.lotus.bixi.upms.demo.leave.mapper.LeaveRequestMapper;
 import com.lotus.bixi.upms.demo.leave.event.LeaveWorkflowEventPublisher;
 import com.lotus.bixi.upms.service.SysUserService;
 import com.lotus.bixi.upms.api.entity.SysUser;
 import com.lotus.bixi.workflow.api.config.ConditionalOnWorkflowEnabled;
-import com.lotus.bixi.workflow.api.dto.ProcessStartDTO;
 import com.lotus.bixi.workflow.api.dto.WorkflowResultDTO;
 import com.lotus.bixi.workflow.api.service.WorkflowService;
 import com.lotus.bixi.workflow.api.vo.ApprovalRecordVO;
 import com.lotus.bixi.workflow.api.vo.ProcessInstanceVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
@@ -33,12 +32,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.StringUtils;
 
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.UUID;
 
 /** One leave implementation for cloud and single; only workflow-api crosses the module boundary. */
 @Slf4j
@@ -52,16 +48,19 @@ public class LeaveRequestService {
     private final LeaveRequestMapper mapper;
     private final WorkflowService workflows;
     private final SysUserService users;
-    private final ObjectProvider<LeaveWorkflowEventPublisher> reliablePublisher;
+    private final LeaveWorkflowEventPublisher reliablePublisher;
+    private final LeaveSubmitCommandExecutor submitCommands;
     private final TransactionTemplate transaction;
 
     public LeaveRequestService(LeaveRequestMapper mapper, WorkflowService workflows, SysUserService users,
                                PlatformTransactionManager transactionManager,
-                               ObjectProvider<LeaveWorkflowEventPublisher> reliablePublisher) {
+                               LeaveWorkflowEventPublisher reliablePublisher,
+                               LeaveSubmitCommandExecutor submitCommands) {
         this.mapper = mapper;
         this.workflows = workflows;
         this.users = users;
         this.reliablePublisher = reliablePublisher;
+        this.submitCommands = submitCommands;
         this.transaction = new TransactionTemplate(transactionManager);
         this.transaction.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
     }
@@ -148,74 +147,33 @@ public class LeaveRequestService {
         return leave;
     }
 
-    /** Suspend any ambient transaction: the start call must follow a committed reservation. */
+    /** The command executor owns an independent transaction and its immutable replay snapshot. */
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     @HasPermission("demo_leave_edit")
-    public LeaveRequest submit(Long id) {
+    public LeaveRequest submit(Long id, String requestId) {
         Long applicant = caller();
-        LeaveWorkflowEventPublisher publisher = reliablePublisher.getIfAvailable();
-        if (publisher != null) {
-            var actor = SecurityUtils.getUser();
-            return transaction.execute(status -> {
-                LeaveRequest leave = ownedDraft(id, applicant);
-                validateApprover(leave.getApproverId(), applicant);
-                requireChanged(mapper.update(null, draftUpdate(leave, applicant)
-                        .set(LeaveRequest::getLeaveStatus, "SUBMITTING")
-                        .set(LeaveRequest::getSubmittedAt, LocalDateTime.now())));
-                LeaveRequest reserved = required(id);
-                LeaveWorkflowEventPublisher.Published published = publisher.publishStart(reserved, actor);
-                requireChanged(mapper.update(null, identityUpdate(reserved)
-                        .eq(LeaveRequest::getLeaveStatus, "SUBMITTING")
-                        .set(LeaveRequest::getStartCommandId, published.commandId())
-                        .set(LeaveRequest::getStartRequestHash, published.requestHash())));
-                return required(id);
-            });
+        LeaveRequest intent = required(id);
+        if (!Objects.equals(intent.getApplicantId(), applicant)) {
+            throw new AccessDeniedException("只能提交自己的请假申请");
         }
-        LeaveRequest reserved = transaction.execute(status -> {
-            LeaveRequest leave = ownedDraft(id, applicant);
-            validateApprover(leave.getApproverId(), applicant);
-            requireChanged(mapper.update(null, draftUpdate(leave, applicant)
-                    .set(LeaveRequest::getLeaveStatus, "SUBMITTING")
-                    .set(LeaveRequest::getSubmittedAt, LocalDateTime.now())));
-            return required(id);
-        });
-        ProcessStartDTO start = new ProcessStartDTO();
-        start.setRequestId(UUID.nameUUIDFromBytes(("upms:leave:start:" + reserved.getId() + ":" + reserved.getRound())
-                .getBytes(StandardCharsets.UTF_8)).toString());
-        start.setProcessKey(PROCESS_KEY);
-        start.setBusinessTable(BUSINESS_TABLE);
-        start.setBusinessId(reserved.getId());
-        start.setBusinessKey(reserved.getBusinessKey());
-        start.setTitle("请假申请 " + reserved.getStartDate() + " 至 " + reserved.getEndDate());
-        start.setVariables(Map.of("approverId", reserved.getApproverId().toString(), "businessRound", reserved.getRound()));
-        // Any exception here is ambiguous. Keep SUBMITTING; stage 2 adds durable reconciliation.
-        ProcessInstanceVO process = response(workflows.startProcess(start));
-        validateIdentity(reserved, process);
-        LeaveRequest bound = transaction.execute(status -> {
-            requireChanged(mapper.update(null, identityUpdate(reserved)
-                    .eq(LeaveRequest::getLeaveStatus, "SUBMITTING")
-                    .isNull(LeaveRequest::getProcessInstanceId)
-                    .set(LeaveRequest::getProcessInstanceId, process.getProcessInstanceId())
-                    .set(LeaveRequest::getLeaveStatus, "IN_REVIEW")
-                    .set(LeaveRequest::getUpdateBy, applicant)
-                    .set(LeaveRequest::getUpdateTime, LocalDateTime.now())));
-            applyProcess(required(id), process);
-            return required(id);
-        });
-        // A callback can run before binding or the response can predate a fast completion.
-        // A failed read leaves the confirmed binding available to the explicit refresh endpoint.
-        ProcessInstanceVO latest;
-        try {
-            latest = response(workflows.getProcessInstance(process.getProcessInstanceId()));
-        }
-        catch (RuntimeException ex) {
-            log.warn("请假流程已绑定，后续状态查询失败，请通过刷新核查: leaveId={}, processInstanceId={}", id, process.getProcessInstanceId());
-            return bound;
-        }
-        return transaction.execute(status -> {
-            applyProcess(required(id), latest);
-            return required(id);
-        });
+        var actor = SecurityUtils.getUser();
+        return submitCommands.execute(actor, requestId, intent,
+                (commandId, requestHash) -> submitOnce(intent, applicant, actor, commandId, requestHash));
+    }
+
+    private LeaveRequest submitOnce(LeaveRequest intent, Long applicant, com.lotus.bixi.common.security.service.BixiUser actor,
+            String commandId, String requestHash) {
+        LeaveRequest leave = ownedDraft(intent.getId(), applicant);
+        requireUnchanged(intent, leave);
+        validateApprover(leave.getApproverId(), applicant);
+        requireChanged(mapper.update(null, draftUpdate(leave, applicant)
+                .set(LeaveRequest::getLeaveStatus, "SUBMITTING")
+                .set(LeaveRequest::getStartCommandId, commandId)
+                .set(LeaveRequest::getStartRequestHash, requestHash)
+                .set(LeaveRequest::getSubmittedAt, LocalDateTime.now())));
+        LeaveRequest reserved = required(intent.getId());
+        reliablePublisher.publishStart(reserved, actor, commandId, requestHash);
+        return reserved;
     }
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
@@ -331,7 +289,23 @@ public class LeaveRequestService {
     private LambdaUpdateWrapper<LeaveRequest> draftUpdate(LeaveRequest leave, Long applicant) {
         return identityUpdate(leave).eq(LeaveRequest::getApplicantId, applicant)
                 .eq(LeaveRequest::getLeaveStatus, "DRAFT")
+                .eq(LeaveRequest::getApproverId, leave.getApproverId())
+                .eq(LeaveRequest::getStartDate, leave.getStartDate())
+                .eq(LeaveRequest::getEndDate, leave.getEndDate())
+                .eq(LeaveRequest::getReason, leave.getReason())
                 .set(LeaveRequest::getUpdateBy, applicant).set(LeaveRequest::getUpdateTime, LocalDateTime.now());
+    }
+
+    private static void requireUnchanged(LeaveRequest intended, LeaveRequest current) {
+        if (!Objects.equals(intended.getApplicantId(), current.getApplicantId())
+                || !Objects.equals(intended.getApproverId(), current.getApproverId())
+                || !Objects.equals(intended.getStartDate(), current.getStartDate())
+                || !Objects.equals(intended.getEndDate(), current.getEndDate())
+                || !Objects.equals(intended.getReason(), current.getReason())
+                || !Objects.equals(intended.getBusinessKey(), current.getBusinessKey())
+                || !Objects.equals(intended.getRound(), current.getRound())) {
+            throw new IllegalArgumentException("请假内容已变化，请刷新后使用新的requestId提交");
+        }
     }
 
     private LambdaUpdateWrapper<LeaveRequest> identityUpdate(LeaveRequest leave) {

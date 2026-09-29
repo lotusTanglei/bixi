@@ -50,4 +50,10 @@ public class SysNotice extends BaseEntity<SysNotice> {
      */
     @Schema(description = "优先级（0普通 1重要 2紧急）")
     private String priority;
+
+    /**
+     * Recipient delivery channel. Existing rows default to IN_APP/SSE.
+     */
+    @Schema(description = "投递渠道（IN_APP、EMAIL、SMS、WECHAT、WEBHOOK）")
+    private String deliveryChannel;
 }

@@ -15,6 +15,7 @@ import com.lotus.bixi.generator.service.GenDatasourceConfigService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jasypt.encryption.StringEncryptor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
@@ -31,6 +32,7 @@ import java.sql.SQLException;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@ConditionalOnProperty(prefix = "generator", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class GenDatasourceConfigServiceImpl extends ServiceImpl<GenDatasourceConfigMapper, GenDatasourceConfig>
 		implements GenDatasourceConfigService {
 
@@ -66,20 +68,24 @@ public class GenDatasourceConfigServiceImpl extends ServiceImpl<GenDatasourceCon
 	 */
 	@Override
 	public Boolean updateDsByEnc(GenDatasourceConfig config) {
+		GenDatasourceConfig stored = baseMapper.selectById(config.getId());
+		String submittedPassword = config.getPassword();
+		boolean replacingPassword = StrUtil.isNotBlank(submittedPassword);
+		if (!replacingPassword) {
+			config.setPassword(stringEncryptor.decrypt(stored.getPassword()));
+		}
 		if (!checkDataSource(config)) {
 			return Boolean.FALSE;
 		}
 		// 先移除
 		DynamicRoutingDataSource dynamicRoutingDataSource = SpringContextHolder.getBean(DynamicRoutingDataSource.class);
-		dynamicRoutingDataSource.removeDataSource(baseMapper.selectById(config.getId()).getName());
+		dynamicRoutingDataSource.removeDataSource(stored.getName());
 
 		// 再添加
 		addDynamicDataSource(config);
 
 		// 更新数据库配置
-		if (StrUtil.isNotBlank(config.getPassword())) {
-			config.setPassword(stringEncryptor.encrypt(config.getPassword()));
-		}
+		config.setPassword(replacingPassword ? stringEncryptor.encrypt(submittedPassword) : stored.getPassword());
 		this.baseMapper.updateById(config);
 		return Boolean.TRUE;
 	}

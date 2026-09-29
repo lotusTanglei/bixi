@@ -36,7 +36,7 @@ public final class WorkflowEventRecorder implements WorkflowTerminalEventSink {
     public void recordStarted(WorkflowEvent requested, ProcessInstanceVO process) {
         WorkflowEvent event = new WorkflowEvent(
                 eventId(process.getProcessInstanceId(), "started"), WorkflowEventType.WORKFLOW_STARTED, 1,
-                SOURCE_OWNER, TARGET_OWNER, "default", process.getProcessInstanceId(), PROCESS_KEY,
+                SOURCE_OWNER, TARGET_OWNER, requested.tenantScope(), process.getProcessInstanceId(), PROCESS_KEY,
                 BUSINESS_TABLE, process.getBusinessId(), process.getBusinessKey(), requested.round(),
                 requested.commandId(), 1, Instant.now(), requested.correlationId(), requested.eventId(),
                 requested.actor(), new WorkflowStarted(requested.payload().requestHash()));
@@ -46,7 +46,7 @@ public final class WorkflowEventRecorder implements WorkflowTerminalEventSink {
     public void recordRejected(WorkflowEvent requested, String errorCode) {
         WorkflowEvent event = new WorkflowEvent(
                 eventId(requested.businessKey(), "rejected"), WorkflowEventType.WORKFLOW_START_REJECTED, 1,
-                SOURCE_OWNER, TARGET_OWNER, "default", null, PROCESS_KEY, BUSINESS_TABLE,
+                SOURCE_OWNER, TARGET_OWNER, requested.tenantScope(), null, PROCESS_KEY, BUSINESS_TABLE,
                 requested.businessId(), requested.businessKey(), requested.round(), requested.commandId(), 1,
                 Instant.now(), requested.correlationId(), requested.eventId(), requested.actor(),
                 new WorkflowStartRejected(requested.payload().requestHash(), errorCode));
@@ -55,12 +55,12 @@ public final class WorkflowEventRecorder implements WorkflowTerminalEventSink {
 
     @Override
     public void recordCompleted(String processInstanceId, long businessId, String businessKey, int round,
-            String commandId, long actorId, String actorName, String requestHash, WorkflowOutcome outcome,
+            String commandId, long actorId, String actorName, String tenantScope, String requestHash, WorkflowOutcome outcome,
             Instant endedAt, String correlationId, String causationId) {
-        WorkflowActorSnapshot actor = new WorkflowActorSnapshot(actorId, actorName, "default", "upms", endedAt);
+        WorkflowActorSnapshot actor = new WorkflowActorSnapshot(actorId, actorName, tenantScope, "upms", endedAt);
         WorkflowEvent event = new WorkflowEvent(
                 eventId(processInstanceId, "terminal"), WorkflowEventType.WORKFLOW_COMPLETED, 1,
-                SOURCE_OWNER, TARGET_OWNER, "default", processInstanceId, PROCESS_KEY, BUSINESS_TABLE,
+                SOURCE_OWNER, TARGET_OWNER, tenantScope, processInstanceId, PROCESS_KEY, BUSINESS_TABLE,
                 businessId, businessKey, round, commandId, 2, endedAt, correlationId, causationId, actor,
                 new WorkflowCompleted(requestHash, outcome, endedAt));
         enqueue(event, "process:" + processInstanceId + ":terminal");

@@ -15,6 +15,8 @@ import threading
 import time
 import unittest
 
+from local_test_preflight import ensure_local_test_preflight
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -38,6 +40,7 @@ class Upstream(BaseHTTPRequestHandler):
 class AuthProxyTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        ensure_local_test_preflight("single")
         cls.backend = ThreadingHTTPServer(('0.0.0.0', 0), Upstream)
         cls.backend.daemon_threads = True
         threading.Thread(target=cls.backend.serve_forever, daemon=True).start()

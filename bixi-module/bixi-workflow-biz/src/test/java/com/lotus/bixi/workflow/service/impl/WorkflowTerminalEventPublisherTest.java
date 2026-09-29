@@ -33,6 +33,7 @@ class WorkflowTerminalEventPublisherTest {
         verify(recorder).recordCompleted(
                 eq("process-1"), eq(7L), eq("leave:7:2"), eq(2),
                 eq("11111111-1111-1111-1111-111111111111"), eq(22L), eq("reviewer"),
+                eq("1"),
                 eq("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
                 eq(WorkflowOutcome.REJECTED), any(), eq("11111111-1111-1111-1111-111111111111"),
                 eq(causationId));
@@ -51,16 +52,36 @@ class WorkflowTerminalEventPublisherTest {
         verify(compatibility).afterCommit("process-1");
     }
 
+    @Test
+    void nonDemoProcessUsesCompatibilityNotificationEvenWhenReliableMessagingIsEnabled() {
+        WorkflowTerminalEventSink recorder = mock(WorkflowTerminalEventSink.class);
+        ObjectProvider<WorkflowTerminalEventSink> provider = mock(ObjectProvider.class);
+        when(provider.getIfAvailable()).thenReturn(recorder);
+        WorkflowResultNotifier compatibility = mock(WorkflowResultNotifier.class);
+        WfProcessInstance instance = instance();
+        instance.setProcessKey("purchase_approval");
+        instance.setBusinessTable("purchase_order");
+
+        new WorkflowTerminalEventPublisher(provider, compatibility)
+                .publish(instance, WorkflowOutcome.APPROVED, 22L, "reviewer", UUID.randomUUID().toString());
+
+        verify(compatibility).afterCommit("process-1");
+        verifyNoInteractions(recorder);
+    }
+
     private static WfProcessInstance instance() {
         WfProcessInstance instance = new WfProcessInstance();
         instance.setProcessInstanceId("process-1");
         instance.setBusinessId(7L);
         instance.setBusinessKey("leave:7:2");
         instance.setBusinessRound(2);
+        instance.setProcessKey("demo_leave_approval");
+        instance.setBusinessTable("demo_leave_request");
         instance.setStartRequestId("11111111-1111-1111-1111-111111111111");
         instance.setStartRequestHash("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
         instance.setStartUserId(11L);
         instance.setStartUserName("applicant");
+        instance.setTenantId(1L);
         instance.setEndTime(LocalDateTime.of(2026, 9, 22, 10, 0));
         return instance;
     }

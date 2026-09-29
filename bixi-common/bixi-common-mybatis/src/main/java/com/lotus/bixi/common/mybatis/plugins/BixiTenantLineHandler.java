@@ -5,7 +5,6 @@ import com.lotus.bixi.common.core.context.TenantContextHolder;
 import com.lotus.bixi.common.core.exception.TenantNotSetException;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.LongValue;
-
 import java.util.Set;
 
 /**

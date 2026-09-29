@@ -70,7 +70,82 @@ class InboxExecutorTest extends MysqlInboxTestSupport {
                 .extracting(JdbcInboxStore.AdminSnapshot::status).isEqualTo("FAILED");
         assertThat(inbox.retry("workflow", event.eventId())).isTrue();
         assertThat(inboxState(event)).isEqualTo("RECEIVED");
+        assertThat(jdbc.queryForObject("SELECT attempts FROM reliable_inbox", Integer.class)).isZero();
         assertThat(inbox.retry("workflow", event.eventId())).isFalse();
+        assertThat(inbox.claim("workflow", event.eventId()).attempt()).isOne();
+    }
+
+    @Test
+    void operatorRetryAndItsAuditCallbackRollbackTogether() {
+        var event = message("upms", 1);
+        inbox.accept(event);
+        jdbc.update("UPDATE reliable_inbox SET status='FAILED', attempts=12, last_error='boom'");
+
+        assertThatThrownBy(() -> inbox.retry("workflow", event.eventId(), changed -> {
+            assertThat(changed).isTrue();
+            jdbc.update("INSERT INTO inbox_test_business VALUES (?, ?, 1)",
+                    event.targetOwner(), event.eventId());
+            throw new IllegalStateException("audit write failed");
+        })).isInstanceOf(IllegalStateException.class);
+
+        assertThat(inboxState(event)).isEqualTo("FAILED");
+        assertThat(jdbc.queryForObject("SELECT attempts FROM reliable_inbox", Integer.class)).isEqualTo(12);
+        assertThat(count("inbox_test_business")).isZero();
+    }
+
+    @Test
+    void quarantineReplayReopensMatchingFailedReceiptAndProcessesItOnce() {
+        var event = message("upms", 1);
+        inbox.accept(event);
+        jdbc.update("UPDATE reliable_inbox SET status='FAILED', attempts=12, last_error='permanent'");
+        var calls = new AtomicInteger();
+        var current = executor(message -> {
+            calls.incrementAndGet();
+            return effect(message);
+        });
+
+        assertThat(current.replay(event)).isEqualTo(DurableMessageHandler.Result.PROCESSED);
+        assertThat(current.replay(event)).isEqualTo(DurableMessageHandler.Result.PROCESSED);
+
+        assertThat(calls).hasValue(1);
+        assertThat(inboxState(event)).isEqualTo("PROCESSED");
+        assertThat(jdbc.queryForObject("SELECT attempts FROM reliable_inbox", Integer.class)).isOne();
+        assertThat(count("inbox_test_business")).isOne();
+    }
+
+    @Test
+    void quarantineReplayRollsBackBusinessAndInboxWhenAuditFails() {
+        var event = message("upms", 1);
+        inbox.accept(event);
+        jdbc.update("UPDATE reliable_inbox SET status='FAILED', attempts=12, last_error='permanent'");
+        var current = executor(this::effect);
+
+        assertThatThrownBy(() -> current.replay(event, result -> {
+            assertThat(result).isEqualTo(DurableMessageHandler.Result.PROCESSED);
+            throw new IllegalStateException("audit write failed");
+        })).isInstanceOf(InboxDeliveryException.class);
+
+        assertThat(inboxState(event)).isEqualTo("RECEIVED");
+        assertThat(count("inbox_test_business")).isZero();
+        assertThat(count("reliable_outbox")).isZero();
+    }
+
+    @Test
+    void quarantineReplayCannotReopenAFailedReceiptWithDifferentImmutableContent() {
+        var original = message("upms", 1);
+        inbox.accept(original);
+        jdbc.update("UPDATE reliable_inbox SET status='FAILED', attempts=12, last_error='permanent'");
+        var changed = DurableMessage.create(original.sourceOwner(), original.targetOwner(), original.eventId(),
+                original.type(), original.schemaVersion(), "{\"changed\":true}");
+
+        assertThatThrownBy(() -> executor(this::effect).replay(changed))
+                .isInstanceOf(InboxDeliveryException.class)
+                .satisfies(error -> assertThat(((InboxDeliveryException) error).kind())
+                        .isEqualTo(InboxDeliveryException.Kind.CONFLICT));
+
+        assertThat(inboxState(original)).isEqualTo("FAILED");
+        assertThat(jdbc.queryForObject("SELECT attempts FROM reliable_inbox", Integer.class)).isEqualTo(12);
+        assertThat(count("inbox_test_business")).isZero();
     }
 
     @Test

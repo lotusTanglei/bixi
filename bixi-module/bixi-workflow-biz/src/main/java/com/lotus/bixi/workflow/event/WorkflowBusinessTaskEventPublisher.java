@@ -37,7 +37,7 @@ public final class WorkflowBusinessTaskEventPublisher {
                 context.operationId(), context.executionId(), context.activityId(), context.activityOccurrence(),
                 context.deadline());
         WorkflowEvent event = new WorkflowEvent(eventId(context.operationId(), "requested"),
-                WorkflowEventType.WORKFLOW_BUSINESS_TASK_REQUESTED, 1, "workflow", "upms", "default",
+                WorkflowEventType.WORKFLOW_BUSINESS_TASK_REQUESTED, 1, "workflow", "upms", context.actor().tenantScope(),
                 context.processInstanceId(), PROCESS_KEY, BUSINESS_TABLE, context.businessId(), context.businessKey(),
                 context.round(), context.commandId(), 2, Instant.now(), context.correlationId(),
                 context.causationId(), context.actor(), payload);
@@ -50,7 +50,7 @@ public final class WorkflowBusinessTaskEventPublisher {
         WorkflowCompensationRequested payload = new WorkflowCompensationRequested(context.requestHash(),
                 context.operationId(), compensationId);
         WorkflowEvent event = new WorkflowEvent(eventId(compensationId, "requested"),
-                WorkflowEventType.WORKFLOW_COMPENSATION_REQUESTED, 1, "workflow", "upms", "default",
+                WorkflowEventType.WORKFLOW_COMPENSATION_REQUESTED, 1, "workflow", "upms", context.actor().tenantScope(),
                 context.processInstanceId(), PROCESS_KEY, BUSINESS_TABLE, context.businessId(), context.businessKey(),
                 context.round(), context.commandId(), 4, Instant.now(), context.correlationId(),
                 context.causationId(), context.actor(), payload);

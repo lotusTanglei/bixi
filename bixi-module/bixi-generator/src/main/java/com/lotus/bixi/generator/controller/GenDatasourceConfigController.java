@@ -9,7 +9,9 @@ import com.baomidou.dynamic.datasource.toolkit.DynamicDataSourceContextHolder;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lotus.bixi.common.core.util.R;
+import com.lotus.bixi.common.log.annotation.SysLog;
 import com.lotus.bixi.common.core.util.SpringContextHolder;
+import com.lotus.bixi.common.security.annotation.HasPermission;
 import com.lotus.bixi.common.security.annotation.Inner;
 import com.lotus.bixi.common.xss.core.XssCleanIgnore;
 import com.lotus.bixi.generator.entity.GenDatasourceConfig;
@@ -17,6 +19,7 @@ import com.lotus.bixi.generator.service.GenDatasourceConfigService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,6 +33,7 @@ import javax.sql.DataSource;
  */
 @RestController
 @RequiredArgsConstructor
+@ConditionalOnProperty(prefix = "generator", name = "enabled", havingValue = "true", matchIfMissing = true)
 @RequestMapping("/dsconfig")
 public class GenDatasourceConfigController {
 
@@ -44,6 +48,7 @@ public class GenDatasourceConfigController {
 	 * @return
 	 */
 	@GetMapping("/page")
+	@HasPermission("codegen_datasource_view")
 	public R getSysDatasourceConfPage(Page page, GenDatasourceConfig datasourceConf) {
 
 		return R.ok(datasourceConfigService.page(page,
@@ -58,6 +63,7 @@ public class GenDatasourceConfigController {
 	 */
 	@GetMapping("/list")
 	@Inner(value = false)
+	@HasPermission("codegen_datasource_view")
 	public R list() {
 
 		return R.ok(datasourceConfigService.list());
@@ -69,6 +75,7 @@ public class GenDatasourceConfigController {
 	 * @return R
 	 */
 	@GetMapping("/{id}")
+	@HasPermission("codegen_datasource_view")
 	public R getById(@PathVariable("id") Long id) {
 
 		return R.ok(datasourceConfigService.getById(id));
@@ -81,6 +88,8 @@ public class GenDatasourceConfigController {
 	 */
 	@PostMapping
 	@XssCleanIgnore
+	@HasPermission("codegen_datasource_add")
+	@SysLog("新增数据源")
 	public R save(@RequestBody GenDatasourceConfig datasourceConf) {
 
 		return R.ok(datasourceConfigService.saveDsByEnc(datasourceConf));
@@ -93,6 +102,8 @@ public class GenDatasourceConfigController {
 	 */
 	@PutMapping
 	@XssCleanIgnore
+	@HasPermission("codegen_datasource_edit")
+	@SysLog("修改数据源")
 	public R updateById(@RequestBody GenDatasourceConfig conf) {
 
 		return R.ok(datasourceConfigService.updateDsByEnc(conf));
@@ -104,6 +115,8 @@ public class GenDatasourceConfigController {
 	 * @return R
 	 */
 	@DeleteMapping
+	@HasPermission("codegen_datasource_del")
+	@SysLog("删除数据源")
 	public R removeById(@RequestBody Long[] ids) {
 
 //		// 使用默认数据源
@@ -118,21 +131,27 @@ public class GenDatasourceConfigController {
 	 */
 	@SneakyThrows
 	@GetMapping("/doc")
+	@HasPermission("codegen_datasource_view")
 	public void generatorDoc(String dsName, HttpServletResponse response) {
 		// 设置指定的数据源
 		DynamicRoutingDataSource dynamicRoutingDataSource = SpringContextHolder.getBean(DynamicRoutingDataSource.class);
 		DynamicDataSourceContextHolder.push(dsName);
-		DataSource dataSource = dynamicRoutingDataSource.determineDataSource();
+		try {
+			DataSource dataSource = dynamicRoutingDataSource.determineDataSource();
 
-		// 设置指定的目标表
-		ScrewProperties screwProperties = SpringContextHolder.getBean(ScrewProperties.class);
+			// 设置指定的目标表
+			ScrewProperties screwProperties = SpringContextHolder.getBean(ScrewProperties.class);
 
-		// 生成
-		byte[] data = screw.documentGeneration(dsName, dataSource, screwProperties).toByteArray();
-		response.reset();
-		response.addHeader(HttpHeaders.CONTENT_LENGTH, String.valueOf(data.length));
-		response.setContentType("application/octet-stream");
-		IoUtil.write(response.getOutputStream(), Boolean.FALSE, data);
+			// 生成
+			byte[] data = screw.documentGeneration(dsName, dataSource, screwProperties).toByteArray();
+			response.reset();
+			response.addHeader(HttpHeaders.CONTENT_LENGTH, String.valueOf(data.length));
+			response.setContentType("application/octet-stream");
+			IoUtil.write(response.getOutputStream(), Boolean.FALSE, data);
+		}
+		finally {
+			DynamicDataSourceContextHolder.poll();
+		}
 	}
 
 }

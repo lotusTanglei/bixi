@@ -3,8 +3,10 @@ package com.lotus.bixi.upms.service.impl;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.lotus.bixi.common.core.context.TenantContextHolder;
+import com.lotus.bixi.common.core.exception.TenantNotSetException;
 import com.lotus.bixi.common.security.util.SecurityUtils;
-import com.lotus.bixi.upms.api.constant.MQConstants;
+import com.lotus.bixi.upms.api.constant.NoticeChannel;
 import com.lotus.bixi.upms.api.dto.NoticeMessageDTO;
 import com.lotus.bixi.upms.api.entity.SysNotice;
 import com.lotus.bixi.upms.api.entity.SysUser;
@@ -12,12 +14,13 @@ import com.lotus.bixi.upms.api.entity.SysUserNotice;
 import com.lotus.bixi.upms.api.entity.SysUserRole;
 import com.lotus.bixi.upms.api.vo.SysNoticeVO;
 import com.lotus.bixi.upms.mapper.SysNoticeMapper;
+import com.lotus.bixi.upms.mapper.SysUserMapper;
+import com.lotus.bixi.upms.mq.NoticeDelivery;
 import com.lotus.bixi.upms.service.SysNoticeService;
 import com.lotus.bixi.upms.service.SysUserNoticeService;
 import com.lotus.bixi.upms.service.SysUserRoleService;
 import com.lotus.bixi.upms.service.SysUserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,8 +41,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class SysNoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice> implements SysNoticeService {
 
-    private final RabbitTemplate rabbitTemplate;
+    private final NoticeDelivery noticeDelivery;
     private final SysUserService userService;
+    private final SysUserMapper userMapper;
     private final SysUserRoleService userRoleService;
     private final SysUserNoticeService userNoticeService;
 
@@ -94,6 +98,7 @@ public class SysNoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice
         notice.setContent(vo.getContent());
         notice.setType(vo.getType());
         notice.setPriority(vo.getPriority());
+        notice.setDeliveryChannel(NoticeChannel.parse(vo.getDeliveryChannel()).name());
         notice.setRemark(vo.getRemark());
         return notice;
     }
@@ -130,10 +135,12 @@ public class SysNoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice
                         .select(SysUserRole::getUserId)
                         .in(SysUserRole::getRoleId, ids));
                 if (userRoles != null) {
-                    receiverIds.addAll(userRoles.stream().map(SysUserRole::getUserId).collect(Collectors.toList()));
+                    receiverIds.addAll(resolveCurrentTenantUsers(
+                            userRoles.stream().map(SysUserRole::getUserId).toList()));
                 }
             } else if ("3".equals(targetType)) { // 指定用户
-                receiverIds.addAll(ids.stream().map(Long::valueOf).collect(Collectors.toList()));
+                List<Long> requestedIds = ids.stream().map(this::parseTargetId).toList();
+                receiverIds.addAll(resolveCurrentTenantUsers(requestedIds));
             }
         }
 
@@ -145,10 +152,39 @@ public class SysNoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice
                 userNotice.setNoticeId(noticeId);
                 userNotice.setUserId(userId);
                 userNotice.setIsRead("0");
+                userNotice.setDeliveryStatus(SysUserNotice.DELIVERY_PENDING);
+                userNotice.setDeliveryAttempts(0);
                 userNotices.add(userNotice);
             }
             userNoticeService.saveBatch(userNotices);
         }
+    }
+
+    private List<Long> resolveCurrentTenantUsers(List<Long> requestedIds) {
+        if (requestedIds == null || requestedIds.isEmpty()) {
+            return List.of();
+        }
+        // sys_user_role has no tenant column, so every candidate produced by a
+        // role lookup must cross this tenant-aware user boundary before insert.
+        List<SysUser> users = userMapper.selectList(Wrappers.<SysUser>lambdaQuery()
+                .select(SysUser::getId)
+                .eq(SysUser::getDelFlag, "0")
+                .in(SysUser::getId, requestedIds));
+        return users == null ? List.of() : users.stream().map(SysUser::getId).toList();
+    }
+
+    private Long parseTargetId(String raw) {
+        try {
+            long value = Long.parseLong(raw.trim());
+            if (value > 0) {
+                return value;
+            }
+        }
+        catch (NumberFormatException ignored) {
+            // Convert malformed target input into a stable client error rather
+            // than allowing a partially resolved recipient set.
+        }
+        throw new IllegalArgumentException("通知收件人ID无效");
     }
 
     /**
@@ -169,17 +205,36 @@ public class SysNoticeServiceImpl extends ServiceImpl<SysNoticeMapper, SysNotice
             return false;
         }
 
-        // Build DTO
+        deliverNotice(notice);
+        return true;
+    }
+
+    @Override
+    public boolean retryNoticeDelivery(Long id) {
+        SysNotice notice = this.getById(id);
+        if (notice == null || !"1".equals(notice.getStatus())) {
+            return false;
+        }
+        userNoticeService.retryFailedDeliveries(id);
+        deliverNotice(notice);
+        return true;
+    }
+
+    private void deliverNotice(SysNotice notice) {
+        Long tenantId = TenantContextHolder.get();
+        if (tenantId == null || tenantId <= 0) {
+            throw new TenantNotSetException();
+        }
         NoticeMessageDTO dto = new NoticeMessageDTO();
         dto.setNoticeId(notice.getId());
+        dto.setTenantId(tenantId);
         dto.setTitle(notice.getTitle());
         dto.setContent(notice.getContent());
         dto.setType(notice.getType());
         dto.setSenderId(notice.getSenderId());
+        dto.setDeliveryChannel(NoticeChannel.parse(notice.getDeliveryChannel()).name());
         // Target info is not stored in DB anymore, and resolution is done.
         // Consumer just needs to notify.
-
-        rabbitTemplate.convertAndSend(MQConstants.SYS_NOTICE_FANOUT_EXCHANGE, "", dto);
-        return true;
+        noticeDelivery.deliver(dto);
     }
 }

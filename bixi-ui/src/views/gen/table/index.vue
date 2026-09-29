@@ -23,7 +23,7 @@
       <el-row>
         <div class="mb8" style="width: 100%">
           <right-toolbar
-              :export="true"
+			  :export="'codegen_table_export'"
               @exportExcel="exportExcel"
               @queryTable="getDataList"
               class="ml10"
@@ -46,10 +46,10 @@
         <el-table-column :label="t('table.createTime')" prop="createTime" show-overflow-tooltip/>
         <el-table-column :label="$t('common.action')" width="250">
           <template #default="scope">
-            <el-button icon="Refresh" @click="syncTable(scope.row)" text type="primary">
+			<el-button v-auth="'codegen_table_sync'" icon="Refresh" @click="syncTable(scope.row)" text type="primary">
               {{ $t('gen.syncBtn') }}
             </el-button>
-            <el-button icon="FolderOpened" @click="openGen(scope.row)" text type="primary">{{
+			<el-button v-auth-all="['codegen_table_generate', 'codegen_table_edit']" icon="FolderOpened" @click="openGen(scope.row)" text type="primary">{{
                 $t('gen.genBtn')
               }}
             </el-button>

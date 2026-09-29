@@ -27,4 +27,7 @@ public interface SysUserNoticeService extends IService<SysUserNotice> {
     int deleteAll(Long userId);
 
     boolean deleteOne(Long userNoticeId, Long userId);
+
+    /** Reset failed recipient deliveries so the notice transport can try them again. */
+    int retryFailedDeliveries(Long noticeId);
 }

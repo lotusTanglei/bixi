@@ -63,6 +63,10 @@ service.interceptors.request.use(
  * @returns 如果响应成功，则返回响应的data属性；否则，抛出错误或者执行其他操作
  */
 const handleResponse = (response: AxiosResponse<any>) => {
+	if (response.config.responseType === 'stream') {
+		return response;
+	}
+
 	if (response.data.code === 1) {
 		throw response.data;
 	}
@@ -81,7 +85,8 @@ const handleResponse = (response: AxiosResponse<any>) => {
  * 添加 Axios 的响应拦截器，用于全局响应结果处理
  */
 service.interceptors.response.use(handleResponse, (error) => {
-	const status = Number(error.response.status) || 200;
+	const response = error.response;
+	const status = Number(response?.status) || 0;
 	if (status === 424) {
 		useMessageBox()
 			.confirm('令牌状态已过期，请点击重新登录')
@@ -91,7 +96,7 @@ service.interceptors.response.use(handleResponse, (error) => {
 				return;
 			});
 	}
-	return Promise.reject(error.response.data);
+	return Promise.reject(response?.config?.responseType === 'stream' ? response : response?.data ?? error);
 });
 
 // 常用header

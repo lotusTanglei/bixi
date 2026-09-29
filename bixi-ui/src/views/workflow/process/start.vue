@@ -12,7 +12,7 @@
 							</template>
 							<el-tree
 								:data="categoryTree"
-								:props="{ label: 'name', children: 'children' }"
+								:props="{ label: 'categoryName', children: 'children' }"
 								default-expand-all
 								highlight-current
 								@node-click="handleNodeClick"
@@ -23,7 +23,7 @@
 				<el-col :span="18">
 					<div class="process-list">
 						<el-row :gutter="20">
-							<el-col v-for="item in definitionList" :key="item.id" :span="8" class="mb20">
+							<el-col v-for="item in definitionList" :key="item.processDefinitionId" :span="8" class="mb20">
 								<el-card shadow="hover" class="process-card" @click="handleStart(item)">
 									<div class="process-card-content">
 										<div class="process-icon">
@@ -32,7 +32,7 @@
 											</el-icon>
 										</div>
 										<div class="process-info">
-											<h3>{{ item.name }}</h3>
+											<h3>{{ item.processName }}</h3>
 											<p>版本: v{{ item.version }}</p>
 										</div>
 									</div>
@@ -50,7 +50,7 @@
 </template>
 
 <script lang="ts" name="workflowProcessStart" setup>
-import { list as definitionListApi } from '/@/api/workflow/definition';
+import { startable as definitionListApi } from '/@/api/workflow/definition';
 import { tree as categoryTreeApi } from '/@/api/workflow/category';
 import { useMessage } from '/@/hooks/message';
 import { useRouter } from 'vue-router';

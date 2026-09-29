@@ -502,6 +502,10 @@ const adaptationUrl = (originUrl?: string) => {
         return originUrl;
     }
 
+    if (originUrl?.startsWith('/ai/')) {
+        return `/admin${originUrl}`;
+    }
+
     // 转为 /admin 路由前缀的请求
     return `/admin/${originUrl?.split('/').splice(2).join('/')}`;
 };

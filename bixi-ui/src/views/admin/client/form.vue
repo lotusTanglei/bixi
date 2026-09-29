@@ -105,7 +105,12 @@ const dataRules = ref({
   ],
   clientSecret: [
     {validator: rule.overLength, trigger: 'blur'},
-    {required: true, message: '密钥不能为空', trigger: 'blur'},
+    {
+      validator: (_rule: any, value: string, callback: any) => {
+        !form.id && !value ? callback(new Error('密钥不能为空')) : callback();
+      },
+      trigger: 'blur',
+    },
     {validator: rule.validatorLower, trigger: 'blur'},
   ],
   scope: [{validator: rule.overLength, trigger: 'blur'},{required: true, message: '域不能为空', trigger: 'blur'}],

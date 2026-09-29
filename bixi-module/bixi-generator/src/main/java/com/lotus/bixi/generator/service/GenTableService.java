@@ -20,6 +20,7 @@ package com.lotus.bixi.generator.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.lotus.bixi.generator.dto.GenTableImportResult;
 import com.lotus.bixi.generator.entity.GenTable;
 import org.anyline.metadata.Table;
 
@@ -48,6 +49,39 @@ public interface GenTableService extends IService<GenTable> {
 	 * @return GenTable
 	 */
 	GenTable queryOrBuildTable(String dsName, String tableName);
+
+	/**
+	 * 精确查询已导入的生成配置，不触发导入
+	 * @param dsName 数据源名称
+	 * @param tableName 表名
+	 * @return 已存在的生成配置，不存在时返回 null
+	 */
+	GenTable findConfiguredTable(String dsName, String tableName);
+
+	/**
+	 * 精确查询已导入的完整生成配置，不存在时返回 null，且绝不触发导入
+	 * @param dsName 数据源名称
+	 * @param tableName 表名
+	 * @return 包含字段和模板组的配置，不存在时返回 null
+	 */
+	GenTable findConfiguredTableDetails(String dsName, String tableName);
+
+	/**
+	 * 导入物理表并在创建时写入调用方归属标记
+	 * @param dsName 数据源名称
+	 * @param tableName 表名
+	 * @param author 归属标记
+	 * @return 创建结果；已存在时不修改原配置
+	 */
+	GenTableImportResult importTable(String dsName, String tableName, String author);
+
+	/**
+	 * 将已导入的生成配置与物理表结构同步
+	 * @param dsName 数据源名称
+	 * @param tableName 表名
+	 * @return 同步后的生成配置
+	 */
+	GenTable syncTable(String dsName, String tableName);
 
 	/**
 	 * 查询表ddl 语句

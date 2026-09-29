@@ -31,17 +31,20 @@ public class BixiInitQuartzJob implements InitializingBean {
 	public void afterPropertiesSet() throws Exception {
 		Long previousTenantId = TenantContextHolder.get();
 		boolean previousReadOnly = TenantContextHolder.isReadOnlySwitch();
+		boolean previousAllTenantsReadOnly = TenantContextHolder.isAllTenantsReadOnly();
 		TenantContextHolder.set(SecurityConstants.DEFAULT_TENANT_ID);
+		// Startup reconciliation is a read-only platform operation. Keep the
+		// default tenant as the SQL fallback while explicitly bypassing the
+		// tenant predicate so every tenant's persisted job is restored.
+		TenantContextHolder.setAllTenantsReadOnly(true);
 		try {
 			sysJobService.list().forEach(sysjob -> {
 				if (BixiQuartzEnum.JOB_STATUS_RELEASE.getType().equals(sysjob.getStatus())) {
 					taskUtil.removeJob(sysjob, scheduler);
 				}
-				else if (BixiQuartzEnum.JOB_STATUS_RUNNING.getType().equals(sysjob.getStatus())) {
-					taskUtil.resumeJob(sysjob, scheduler);
-				}
-				else if (BixiQuartzEnum.JOB_STATUS_NOT_RUNNING.getType().equals(sysjob.getStatus())) {
-					taskUtil.pauseJob(sysjob, scheduler);
+					else if (BixiQuartzEnum.JOB_STATUS_RUNNING.getType().equals(sysjob.getStatus())
+							|| BixiQuartzEnum.JOB_STATUS_NOT_RUNNING.getType().equals(sysjob.getStatus())) {
+						taskUtil.addOrUpateJob(sysjob, scheduler);
 				}
 				else {
 					taskUtil.removeJob(sysjob, scheduler);
@@ -49,13 +52,10 @@ public class BixiInitQuartzJob implements InitializingBean {
 			});
 		}
 		finally {
-			if (previousTenantId == null) {
-				TenantContextHolder.clear();
-			}
-			else {
-				TenantContextHolder.set(previousTenantId);
-				TenantContextHolder.setReadOnlySwitch(previousReadOnly);
-			}
+			TenantContextHolder.clear();
+			if (previousTenantId != null) TenantContextHolder.set(previousTenantId);
+			if (previousReadOnly) TenantContextHolder.setReadOnlySwitch(true);
+			if (previousAllTenantsReadOnly) TenantContextHolder.setAllTenantsReadOnly(true);
 		}
 	}
 

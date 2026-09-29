@@ -2,6 +2,7 @@ package com.lotus.bixi.ai.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.lotus.bixi.ai.api.config.ConditionalOnAiEnabled;
 import com.lotus.bixi.ai.api.dto.ChatDTO;
 import com.lotus.bixi.ai.api.dto.DocumentDTO;
 import com.lotus.bixi.ai.api.dto.SearchDTO;
@@ -11,6 +12,7 @@ import com.lotus.bixi.ai.api.vo.DocumentVO;
 import com.lotus.bixi.ai.service.ChatService;
 import com.lotus.bixi.ai.service.VectorStoreService;
 import com.lotus.bixi.common.core.util.R;
+import com.lotus.bixi.common.log.annotation.SysLog;
 import com.lotus.bixi.common.security.annotation.HasPermission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -35,6 +37,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/ai")
 @RequiredArgsConstructor
+@ConditionalOnAiEnabled
 @Tag(description = "ai", name = "AI服务模块")
 @SecurityRequirement(name = HttpHeaders.AUTHORIZATION)
 public class AiController {
@@ -44,28 +47,32 @@ public class AiController {
 
     @PostMapping("/chat")
     @Operation(summary = "同步对话")
-    @HasPermission("ai:chat:add")
+    @HasPermission("ai_chat_add")
+    @SysLog("AI同步对话")
     public R<ChatVO> chat(@RequestBody @Valid ChatDTO dto) {
         return R.ok(chatService.chat(dto));
     }
 
     @GetMapping(value = "/stream/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     @Operation(summary = "流式对话")
-    @HasPermission("ai:chat:add")
+    @HasPermission("ai_chat_add")
+    @SysLog("AI流式对话")
     public Flux<String> streamChat(@Valid ChatDTO dto) {
         return chatService.streamChat(dto);
     }
 
     @PostMapping("/rag")
     @Operation(summary = "RAG对话")
-    @HasPermission("ai:rag:add")
+    @HasPermission("ai_rag_add")
+    @SysLog("AI知识库对话")
     public R<ChatVO> ragChat(@RequestBody @Valid ChatDTO dto) {
         return R.ok(chatService.ragChat(dto));
     }
 
     @PostMapping("/documents")
     @Operation(summary = "添加文档")
-    @HasPermission("ai:document:add")
+    @HasPermission("ai_document_add")
+    @SysLog("新增AI文档")
     public R<Void> addDocument(@RequestBody @Valid DocumentDTO dto) {
         vectorStoreService.addDocument(dto);
         return R.ok();
@@ -73,7 +80,8 @@ public class AiController {
 
     @PostMapping("/documents/batch")
     @Operation(summary = "批量添加文档")
-    @HasPermission("ai:document:add")
+    @HasPermission("ai_document_add")
+    @SysLog("批量新增AI文档")
     public R<Void> addDocuments(@RequestBody @Valid List<DocumentDTO> dtos) {
         vectorStoreService.addDocuments(dtos);
         return R.ok();
@@ -81,7 +89,7 @@ public class AiController {
 
     @GetMapping("/documents/page")
     @Operation(summary = "分页查询文档")
-    @HasPermission("ai:document:view")
+    @HasPermission("ai_document_view")
     public R<IPage<DocumentVO>> pageDocuments(Page<AiDocument> page,
                                               @RequestParam(value = "name", required = false) String name,
                                               @RequestParam(value = "title", required = false) String title) {
@@ -90,7 +98,7 @@ public class AiController {
 
     @GetMapping("/documents/list")
     @Operation(summary = "查询文档列表")
-    @HasPermission("ai:document:view")
+    @HasPermission("ai_document_view")
     public R<List<DocumentVO>> listDocuments(@RequestParam(value = "name", required = false) String name,
                                              @RequestParam(value = "title", required = false) String title) {
         return R.ok(vectorStoreService.listDocuments(title != null ? title : name));
@@ -98,21 +106,23 @@ public class AiController {
 
     @PostMapping("/documents/upload")
     @Operation(summary = "上传文档")
-    @HasPermission("ai:document:add")
+    @HasPermission("ai_document_add")
+    @SysLog("上传AI文档")
     public R<DocumentVO> uploadDocument(@RequestParam("file") MultipartFile file) throws IOException {
         return R.ok(vectorStoreService.uploadDocument(file));
     }
 
     @PostMapping("/search")
     @Operation(summary = "相似度搜索")
-    @HasPermission("ai:document:view")
+    @HasPermission("ai_document_view")
     public R<List<DocumentVO>> search(@RequestBody @Valid SearchDTO dto) {
         return R.ok(vectorStoreService.similaritySearch(dto));
     }
 
     @DeleteMapping("/documents/{id}")
     @Operation(summary = "删除文档")
-    @HasPermission("ai:document:del")
+    @HasPermission("ai_document_del")
+    @SysLog("删除AI文档")
     public R<Void> deleteDocument(@PathVariable Long id) {
         vectorStoreService.deleteDocument(id);
         return R.ok();

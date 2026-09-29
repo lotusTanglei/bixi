@@ -18,7 +18,7 @@
 						<el-option
 							v-for="doc in documentList"
 							:key="doc.id"
-							:label="doc.name"
+							:label="doc.title"
 							:value="doc.id"
 						/>
 					</el-select>
@@ -101,8 +101,8 @@ interface KnowledgeMessage {
 
 interface Document {
 	id: string;
-	name: string;
-	status: string;
+	title: string;
+	vectorStatus: string;
 }
 
 const { error } = useMessage();

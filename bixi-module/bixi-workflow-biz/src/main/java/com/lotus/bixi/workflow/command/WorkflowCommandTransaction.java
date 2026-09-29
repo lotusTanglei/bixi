@@ -64,6 +64,17 @@ public class WorkflowCommandTransaction {
 
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     public <T> T executeNew(WorkflowCommandExecutor.CommandInput input, Class<T> resultType, Supplier<T> work) {
+        return executeInCurrentTransaction(input, resultType, work);
+    }
+
+    /** Reliable inbox handlers already own the transaction that must include the command and engine writes. */
+    @Transactional(propagation = Propagation.MANDATORY, rollbackFor = Exception.class)
+    public <T> T executeJoined(WorkflowCommandExecutor.CommandInput input, Class<T> resultType, Supplier<T> work) {
+        return executeInCurrentTransaction(input, resultType, work);
+    }
+
+    private <T> T executeInCurrentTransaction(WorkflowCommandExecutor.CommandInput input, Class<T> resultType,
+            Supplier<T> work) {
         String id = UUID.randomUUID().toString();
         try {
             jdbc.update("""

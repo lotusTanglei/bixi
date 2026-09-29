@@ -21,5 +21,8 @@ public class SourceVO implements Serializable {
     @Schema(description = "相似度分数")
     private Double score;
 
+    @Schema(description = "命中的分块索引")
+    private Integer chunkIndex;
+
     private static final long serialVersionUID = 1L;
 }

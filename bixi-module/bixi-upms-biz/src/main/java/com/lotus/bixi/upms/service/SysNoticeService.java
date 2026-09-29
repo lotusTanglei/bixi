@@ -19,6 +19,9 @@ public interface SysNoticeService extends IService<SysNotice> {
      */
     boolean sendNotice(Long id);
 
+    /** Explicitly retry failed recipient delivery for an already published notice. */
+    boolean retryNoticeDelivery(Long id);
+
     /**
      * 保存通知（包含目标用户解析）
      * @param vo 通知VO

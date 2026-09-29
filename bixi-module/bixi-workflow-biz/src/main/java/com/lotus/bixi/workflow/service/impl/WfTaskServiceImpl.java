@@ -22,6 +22,8 @@ import com.lotus.bixi.workflow.api.entity.WfApprovalRecord;
 import com.lotus.bixi.workflow.api.entity.WfProcessInstance;
 import com.lotus.bixi.workflow.mapper.WfProcessInstanceMapper;
 import com.lotus.bixi.workflow.api.vo.TaskVO;
+import com.lotus.bixi.workflow.api.vo.FormRenderVO;
+import com.lotus.bixi.upms.api.dto.CandidateIdentity;
 import com.lotus.bixi.workflow.command.WorkflowCommandExecutor;
 import com.lotus.bixi.workflow.command.WorkflowRequestHasher;
 import com.lotus.bixi.workflow.service.ApprovalRecordService;
@@ -79,6 +81,7 @@ public class WfTaskServiceImpl implements WfTaskService {
     private final WorkflowCommandExecutor commands;
     private final WorkflowRequestHasher hasher;
     private final WorkflowCandidateResolver candidates;
+    private final WorkflowFormRuntimeService runtimeForms;
 
     private static final Set<String> IDENTITY_VARIABLES = Set.of("applicant", "initiator", "startUserId",
             "approverId", "tenantId", "businessKey", "businessId", "businessTable", "round", "businessRound", "requestId");
@@ -162,6 +165,10 @@ public class WfTaskServiceImpl implements WfTaskService {
         if (dto.getVariables() != null && dto.getVariables().keySet().stream().anyMatch(IDENTITY_VARIABLES::contains)) {
             throw new IllegalArgumentException("审批不能改写流程身份或业务关联变量");
         }
+        WfProcessInstance instance = instances.selectByProcessInstanceId(task.getProcessInstanceId());
+        if (instance == null) throw new IllegalArgumentException("流程实例不存在");
+        WorkflowFormRuntimeService.PreparedForm preparedForm = runtimeForms.prepareTask(instance,
+                task.getProcessDefinitionId(), task.getTaskDefinitionKey(), dto.getFormId(), dto.getFormDataJson());
         if (dto.getVariables() != null) {
             taskService.complete(dto.getTaskId(), dto.getVariables());
         } else {
@@ -180,12 +187,14 @@ public class WfTaskServiceImpl implements WfTaskService {
         record.setApprovalTime(LocalDateTime.now());
         approvalRecordService.saveRecord(record);
 
-        if (dto.getFormId() != null && StrUtil.isNotBlank(dto.getFormDataJson())) {
+        if (preparedForm != null && StrUtil.isNotBlank(dto.getFormDataJson())) {
             FormDataDTO formDataDTO = new FormDataDTO();
-            formDataDTO.setFormId(dto.getFormId());
+            formDataDTO.setId(preparedForm.dataId());
+            formDataDTO.setFormId(preparedForm.formId());
+            formDataDTO.setFormVersionId(preparedForm.formVersionId());
             formDataDTO.setProcessInstanceId(task.getProcessInstanceId());
             formDataDTO.setTaskId(dto.getTaskId());
-            formDataDTO.setDataJson(dto.getFormDataJson());
+            formDataDTO.setDataJson(preparedForm.dataJson());
             formDataDTO.setSubmitUserId(user.getId());
             formDataDTO.setSubmitUserName(user.getUsername());
             formDataDTO.setSubmitTime(LocalDateTime.now());
@@ -254,6 +263,7 @@ public class WfTaskServiceImpl implements WfTaskService {
                 || user.getId().equals(dto.getTransferUserId())) {
             throw new IllegalArgumentException("请选择其他有效办理人");
         }
+        CandidateIdentity target = candidates.requireActiveIdentity(dto.getTransferUserId(), user.getTenantId());
         if (task.getDelegationState() == DelegationState.PENDING) {
             throw new IllegalArgumentException("委派任务须先解决委派");
         }
@@ -281,7 +291,7 @@ public class WfTaskServiceImpl implements WfTaskService {
         record.setApprovalUserName(user.getUsername());
         record.setApprovalComment(dto.getTransferReason());
         record.setDelegateUserId(dto.getTransferUserId());
-        record.setDelegateUserName(dto.getTransferUserName());
+        record.setDelegateUserName(trustedDisplayName(target));
         record.setApprovalTime(LocalDateTime.now());
         approvalRecordService.saveRecord(record);
     }
@@ -314,6 +324,24 @@ public class WfTaskServiceImpl implements WfTaskService {
 
         access.requireProcessView(task.getProcessInstanceId());
         return convertToVO(task);
+    }
+
+    @Override
+    @HasPermission("workflow_task_view")
+    public FormRenderVO getForm(String taskId) {
+        Task task = taskService.createTaskQuery().taskId(taskId).active().singleResult();
+        if (task == null) {
+            throw new IllegalArgumentException("任务不存在或已结束");
+        }
+        BixiUser user = access.currentUser();
+        if (!candidates.isVisible(task, user, taskService.getIdentityLinksForTask(taskId))) {
+            throw new AccessDeniedException("无权查看此任务表单");
+        }
+        WfProcessInstance instance = instances.selectByProcessInstanceId(task.getProcessInstanceId());
+        if (instance == null) {
+            throw new IllegalArgumentException("流程实例不存在");
+        }
+        return runtimeForms.render(instance, task.getProcessDefinitionId(), task.getTaskDefinitionKey());
     }
 
     @Override
@@ -386,8 +414,8 @@ public class WfTaskServiceImpl implements WfTaskService {
 
     private void unclaimOnce(String taskId) {
         Task task = access.requireAssignee(taskId);
-        if (task.getDelegationState() == DelegationState.PENDING || taskService.getIdentityLinksForTask(taskId).stream()
-                .noneMatch(link -> "candidate".equals(link.getType()) && link.getUserId() != null)) {
+        if (task.getDelegationState() == DelegationState.PENDING
+                || !candidates.hasCandidateLink(task, access.currentUser(), taskService.getIdentityLinksForTask(taskId))) {
             throw new IllegalArgumentException("只有候选人认领的任务可取消认领");
         }
         taskService.unclaim(taskId);
@@ -430,7 +458,7 @@ public class WfTaskServiceImpl implements WfTaskService {
             JsonNode payload, String terminalTaskId, boolean requireAssignee, java.util.function.Consumer<Task> work) {
         WorkflowRequestDTO.requireRequestId(requestId);
         WorkflowRequestHasher.Actor actor = new WorkflowRequestHasher.Actor(
-                WorkflowCommandExecutor.TENANT_SCOPE, user.getId());
+                tenantScope(user), user.getId());
         commands.executeWithProcessLookup(new WorkflowCommandExecutor.CommandInput(requestId, operation, taskId, "workflow",
                         user.getId(), user.getUsername(), actor.tenantScope(), payload,
                         hasher.hash(operation, taskId, "workflow", actor, payload), terminalTaskId, null),
@@ -459,6 +487,13 @@ public class WfTaskServiceImpl implements WfTaskService {
         return historic.getProcessInstanceId();
     }
 
+    private static String tenantScope(BixiUser user) {
+        if (user.getTenantId() == null || user.getTenantId() <= 0) {
+            throw new IllegalArgumentException("租户上下文缺失");
+        }
+        return user.getTenantId().toString();
+    }
+
     private JsonNode taskPayload(Object dto) {
         Map<String, Object> payload = new HashMap<>();
         if (dto instanceof TaskCompleteDTO value) {
@@ -472,7 +507,6 @@ public class WfTaskServiceImpl implements WfTaskService {
             payload.put("targetActivityId", value.getTargetActivityId());
         } else if (dto instanceof TaskTransferDTO value) {
             payload.put("transferUserId", value.getTransferUserId());
-            payload.put("transferUserName", value.getTransferUserName());
             payload.put("transferReason", value.getTransferReason());
         } else if (dto instanceof TaskResolveDTO value) {
             payload.put("comment", value.getComment());
@@ -480,6 +514,16 @@ public class WfTaskServiceImpl implements WfTaskService {
             payload.put("message", value.getMessage());
         }
         return hasher.normalize(payload);
+    }
+
+    private static String trustedDisplayName(CandidateIdentity identity) {
+        if (StrUtil.isNotBlank(identity.name())) {
+            return identity.name().trim();
+        }
+        if (StrUtil.isNotBlank(identity.username())) {
+            return identity.username().trim();
+        }
+        return String.valueOf(identity.userId());
     }
 
     private TaskCompleteDTO normalizeComplete(TaskCompleteDTO dto) {
@@ -493,8 +537,8 @@ public class WfTaskServiceImpl implements WfTaskService {
         if (dto.getVariables() != null && !dto.getVariables().isEmpty()) {
             normalized.setVariables(hasher.variables(hasher.normalize(dto.getVariables())));
         }
-        if (dto.getFormId() != null && StrUtil.isNotBlank(dto.getFormDataJson())) {
-            normalized.setFormId(dto.getFormId());
+        normalized.setFormId(dto.getFormId());
+        if (StrUtil.isNotBlank(dto.getFormDataJson())) {
             normalized.setFormDataJson(hasher.canonical(hasher.parse(dto.getFormDataJson())));
         }
         return normalized;

@@ -33,7 +33,7 @@
             {{ $t('common.delBtn') }}
           </el-button>
           <el-button @click="onlineUpdate" class="ml10" icon="download" plain :disabled="updateDisabled"
-                     v-auth="'codegen_template_add'">
+                     v-auth="'codegen_template_edit'">
             更新
           </el-button>
           <right-toolbar
@@ -154,7 +154,8 @@ const onlineUpdate = async () => {
     updateDisabled.value = true;
     const {data} = await online();
     getDataList();
-    useMessage().success(data);
+    const status = data.installed ? '模板更新成功' : '模板版本已存在';
+    useMessage().success(`${status}：${data.revision.slice(0, 12)} / ${data.manifestDigest.slice(0, 12)}`);
   } catch (err: any) {
     useMessage().error(err.msg);
   } finally {

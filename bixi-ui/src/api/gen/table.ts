@@ -39,11 +39,11 @@ export function putObj(obj?: Object) {
 }
 
 export const useSyncTableApi = (dsName: string, tableName: string) => {
-	return request.get('/gen/table/sync/' + dsName + '/' + tableName);
+	return request.post('/gen/table/sync/' + dsName + '/' + tableName);
 };
 
 export const useTableApi = (dsName: string, tableName: string) => {
-	return request.get('/gen/table/' + dsName + '/' + tableName);
+	return request.post('/gen/table/' + dsName + '/' + tableName);
 };
 
 export const useListTableApi = (dsName: string) => {
@@ -58,11 +58,11 @@ export const useTableFieldSubmitApi = (dsName: string, tableName: string, fieldL
 	return request.put('/gen/table/field/' + dsName + '/' + tableName, fieldList);
 };
 
-export const useGeneratorCodeApi = (tableIds: any) => {
+export const useGeneratorCodeApi = (data: { tableIds: Array<string | number>; templateVersion: string; overwrite: boolean }) => {
 	return request({
 		url: '/gen/generator/code',
-		method: 'get',
-		params: { tableIds: tableIds },
+		method: 'post',
+		data,
 	});
 };
 

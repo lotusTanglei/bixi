@@ -79,6 +79,8 @@ public class SysFileController {
      * @return R(/ admin / bucketName / filename)
      */
     @PostMapping(value = "/upload")
+    @SysLog("上传文件")
+    @HasPermission("sys_file_add")
     public R upload(@RequestPart("file") MultipartFile file) {
         return sysFileService.uploadFile(file);
     }

@@ -9,6 +9,8 @@
         <result column="start_request_hash" property="startRequestHash"/>
         <result column="process_definition_id" property="processDefinitionId"/>
         <result column="process_key" property="processKey"/>
+        <result column="form_id" property="formId"/>
+        <result column="form_version_id" property="formVersionId"/>
         <result column="business_key" property="businessKey"/>
         <result column="business_table" property="businessTable"/>
         <result column="business_id" property="businessId"/>

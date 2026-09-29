@@ -12,21 +12,21 @@
 -- =====================================================
 
 -- 用户表唯一约束
-ALTER TABLE sys_user ADD CONSTRAINT uk_username UNIQUE (username);
-ALTER TABLE sys_user ADD CONSTRAINT uk_phone UNIQUE (phone);
-ALTER TABLE sys_user ADD CONSTRAINT uk_email UNIQUE (email);
+ALTER TABLE sys_user ADD CONSTRAINT uk_user_tenant_username UNIQUE (tenant_id, username);
+ALTER TABLE sys_user ADD CONSTRAINT uk_user_tenant_phone UNIQUE (tenant_id, phone);
+ALTER TABLE sys_user ADD CONSTRAINT uk_user_tenant_email UNIQUE (tenant_id, email);
 
 -- 字典表唯一约束
-ALTER TABLE sys_dict ADD CONSTRAINT uk_dict_type UNIQUE (type);
+ALTER TABLE sys_dict ADD CONSTRAINT uk_dict_tenant_type UNIQUE (tenant_id, type);
 
 -- 角色表唯一约束
-ALTER TABLE sys_role ADD CONSTRAINT uk_role_code UNIQUE (code);
+ALTER TABLE sys_role ADD CONSTRAINT uk_role_tenant_code UNIQUE (tenant_id, code);
 
 -- 菜单表唯一约束
-ALTER TABLE sys_menu ADD CONSTRAINT uk_menu_perm UNIQUE (permission);
+ALTER TABLE sys_menu ADD CONSTRAINT uk_menu_tenant_perm UNIQUE (tenant_id, permission);
 
 -- 部门表唯一约束
-ALTER TABLE sys_dept ADD CONSTRAINT uk_dept_code UNIQUE (code);
+ALTER TABLE sys_dept ADD CONSTRAINT uk_dept_tenant_code UNIQUE (tenant_id, code);
 
 -- 工作流分类唯一约束
 ALTER TABLE wf_category ADD CONSTRAINT uk_category_code UNIQUE (category_code);
@@ -109,6 +109,40 @@ ALTER TABLE wf_form_version
 ADD CONSTRAINT fk_form_version_form
 FOREIGN KEY (form_id) REFERENCES wf_form(id)
 ON DELETE CASCADE
+ON UPDATE CASCADE;
+
+-- 流程定义-已发布表单版本关联
+ALTER TABLE wf_process_definition
+ADD CONSTRAINT fk_wf_definition_form_version
+FOREIGN KEY (form_version_id) REFERENCES wf_form_version(id)
+ON DELETE RESTRICT
+ON UPDATE CASCADE;
+
+-- 流程实例-固定表单及版本关联
+ALTER TABLE wf_process_instance
+ADD CONSTRAINT fk_wf_instance_form
+FOREIGN KEY (form_id) REFERENCES wf_form(id)
+ON DELETE RESTRICT
+ON UPDATE CASCADE;
+
+ALTER TABLE wf_process_instance
+ADD CONSTRAINT fk_wf_instance_form_version
+FOREIGN KEY (form_version_id) REFERENCES wf_form_version(id)
+ON DELETE RESTRICT
+ON UPDATE CASCADE;
+
+-- 表单快照-固定版本关联
+ALTER TABLE wf_form_data
+ADD CONSTRAINT fk_form_data_form_version
+FOREIGN KEY (form_version_id) REFERENCES wf_form_version(id)
+ON DELETE RESTRICT
+ON UPDATE CASCADE;
+
+-- 字段权限-可选版本作用域
+ALTER TABLE sys_form_permission
+ADD CONSTRAINT fk_form_permission_version
+FOREIGN KEY (form_version_id) REFERENCES wf_form_version(id)
+ON DELETE RESTRICT
 ON UPDATE CASCADE;
 
 -- =====================================================

@@ -3,12 +3,19 @@ package com.lotus.bixi.generator.controller;
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.util.StrUtil;
 import com.lotus.bixi.common.core.util.R;
+import com.lotus.bixi.common.log.annotation.SysLog;
+import com.lotus.bixi.common.security.annotation.HasPermission;
+import com.lotus.bixi.generator.dto.GenerateCodeRequest;
 import com.lotus.bixi.generator.service.GeneratorService;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,6 +33,7 @@ import java.util.zip.ZipOutputStream;
  */
 @RestController
 @RequiredArgsConstructor
+@ConditionalOnProperty(prefix = "generator", name = "enabled", havingValue = "true", matchIfMissing = true)
 @RequestMapping("/generator")
 public class GeneratorController {
 
@@ -38,14 +46,15 @@ public class GeneratorController {
 	 */
 	@SneakyThrows
 	@GetMapping("/download")
-	public void download(String tableIds, HttpServletResponse response) {
+	@HasPermission("codegen_table_generate")
+	public void download(String tableIds, String templateVersion, HttpServletResponse response) {
+		if (tableIds == null || tableIds.contains(StrUtil.COMMA)) {
+			throw new IllegalArgumentException("ZIP 下载必须逐表预览并下载");
+		}
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		ZipOutputStream zip = new ZipOutputStream(outputStream);
 
-		// 生成代码
-		for (String tableId : tableIds.split(StrUtil.COMMA)) {
-			generatorService.downloadCode(Long.parseLong(tableId), zip);
-		}
+		generatorService.downloadCode(Long.parseLong(tableIds), templateVersion, zip);
 
 		IoUtil.close(zip);
 
@@ -63,13 +72,11 @@ public class GeneratorController {
 	 * 目标目录生成代码
 	 */
 	@ResponseBody
-	@GetMapping("/code")
-	public R<String> code(String tableIds) throws Exception {
-		// 生成代码
-		for (String tableId : tableIds.split(StrUtil.COMMA)) {
-			generatorService.generatorCode(Long.valueOf(tableId));
-		}
-
+	@PostMapping("/code")
+	@HasPermission("codegen_table_generate")
+	@SysLog("生成代码到项目目录")
+	public R<String> code(@Valid @RequestBody GenerateCodeRequest request) {
+		generatorService.generatorCode(request.tableIds(), request.templateVersion(), request.overwrite());
 		return R.ok();
 	}
 
@@ -80,6 +87,7 @@ public class GeneratorController {
 	 */
 	@SneakyThrows
 	@GetMapping("/preview")
+	@HasPermission("codegen_table_view")
 	public List<Map<String, String>> preview(Long tableId) {
 		return generatorService.preview(tableId);
 	}

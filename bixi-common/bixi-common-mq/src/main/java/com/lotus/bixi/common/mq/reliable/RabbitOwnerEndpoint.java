@@ -78,6 +78,8 @@ public final class RabbitOwnerEndpoint implements DurableTransport, SmartLifecyc
         Map<String, RabbitDurableTransport.Route> routes = new HashMap<>();
         if (routes.put(outbound.targetOwner(), outbound) != null)
             throw new IllegalArgumentException("Two routes share the same target owner");
+        if (!inbound.targetOwner().equals(outbound.sourceOwner()))
+            throw new IllegalArgumentException("Outbound route source must match inbound target");
         if (!inbound.targetOwner().equals(executor.targetOwner()))
             throw new IllegalArgumentException("Inbound route target must match the inbox executor owner");
         if (inbound.sourceOwner().equals(inbound.targetOwner()))
@@ -95,6 +97,8 @@ public final class RabbitOwnerEndpoint implements DurableTransport, SmartLifecyc
         RabbitDurableTransport.Route route = routesByTarget.get(message.targetOwner());
         if (route == null)
             throw new IllegalArgumentException("No outbound route for target " + message.targetOwner());
+        if (!route.sourceOwner().equals(message.sourceOwner()))
+            throw new IllegalArgumentException("Message source owner does not match outbound route");
 
         var props = new MessageProperties();
         props.setDeliveryMode(MessageDeliveryMode.PERSISTENT);

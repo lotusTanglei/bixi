@@ -78,6 +78,7 @@ public abstract class BaseEntity<T extends Model<?>> extends Model<T> {
      * 租户ID
      */
     @Schema(description = "租户id")
+    @TableField(updateStrategy = FieldStrategy.NEVER)
     private Long tenantId;
 
     /**

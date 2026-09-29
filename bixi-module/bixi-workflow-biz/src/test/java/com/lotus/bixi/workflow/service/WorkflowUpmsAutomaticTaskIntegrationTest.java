@@ -18,6 +18,8 @@ import com.lotus.bixi.workflow.api.dto.TaskCompleteDTO;
 import com.lotus.bixi.workflow.api.event.WorkflowEvent;
 import com.lotus.bixi.workflow.api.event.WorkflowEventCodec;
 import com.lotus.bixi.workflow.api.event.WorkflowEventType;
+import com.lotus.bixi.workflow.api.event.WorkflowActorSnapshot;
+import com.lotus.bixi.workflow.api.event.WorkflowStartRequested;
 import com.lotus.bixi.workflow.event.LeaveBusinessTaskRequestDelegate;
 import com.lotus.bixi.workflow.event.WorkflowBusinessTaskEventPublisher;
 import com.lotus.bixi.workflow.event.WorkflowBusinessTaskResultHandler;
@@ -37,11 +39,13 @@ import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
-import org.springframework.test.util.AopTestUtils;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.sql.DataSource;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -70,14 +74,17 @@ class WorkflowUpmsAutomaticTaskIntegrationTest {
     @Autowired @Qualifier("workflowOutboxCapture") OutboxCapture workflowOutbox;
     @Autowired @Qualifier("upmsOutboxCapture") OutboxCapture upmsOutbox;
     @Autowired DataSource source;
+    @Autowired TrustedProcessStarter trustedProcesses;
+    @Autowired PlatformTransactionManager transactionManager;
 
     private JdbcTemplate jdbc;
 
     @BeforeEach
     void setup() throws Exception {
         jdbc = new JdbcTemplate(source);
-        WorkflowTestSchema.create(jdbc, "wf_command", "wf_process_instance", "wf_approval_record",
-                "wf_form_data", "demo_leave_request", "demo_leave_booking");
+        WorkflowTestSchema.create(jdbc, "wf_process_definition", "wf_command", "wf_process_instance",
+                "wf_approval_record", "wf_form_data", "demo_leave_request", "demo_leave_command",
+                "demo_leave_booking");
         workflowOutbox.messages.clear();
         upmsOutbox.messages.clear();
         engine.getRepositoryService().createDeployment().tenantId("1")
@@ -114,17 +121,29 @@ class WorkflowUpmsAutomaticTaskIntegrationTest {
         LeaveWorkflowEventPublisher.Published published = startPublisher.publishStart(leave, actor(11L));
         jdbc.update("UPDATE demo_leave_request SET start_command_id = ?, start_request_hash = ? WHERE id = 101",
                 published.commandId(), published.requestHash());
+        jdbc.update("""
+                INSERT INTO demo_leave_command
+                    (command_id, tenant_scope, actor_id, actor_name, client_request_id, operation,
+                     leave_id, round, request_hash, hash_version, payload_json, status, created_at)
+                VALUES (?, '1', 11, 'user-11', ?, 'START', 101, 1, ?, 1, '{}', 'ACCEPTED', CURRENT_TIMESTAMP)
+                """, published.commandId(), UUID.randomUUID().toString(), published.requestHash());
 
         WorkflowEvent start = codec.decode(message(upmsOutbox, "WORKFLOW_START_REQUESTED").payloadJson()
                 .getBytes(StandardCharsets.UTF_8));
-        assertThat(workflowStartHandler().handle(message(upmsOutbox, "WORKFLOW_START_REQUESTED")))
+        assertThat(handleStartMessage(message(upmsOutbox, "WORKFLOW_START_REQUESTED")))
                 .isEqualTo(com.lotus.bixi.common.mq.reliable.DurableMessageHandler.Result.PROCESSED);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM wf_command WHERE request_id = ?", Long.class,
+                published.commandId())).isEqualTo(1L);
         DurableMessage startedMessage = message(workflowOutbox, "WORKFLOW_STARTED");
-        assertThat(lifecycleHandler.handle(startedMessage))
+        assertThat(handleLifecycleMessage(startedMessage))
                 .isEqualTo(com.lotus.bixi.common.mq.reliable.DurableMessageHandler.Result.PROCESSED);
         String processId = start.processInstanceId() == null
                 ? codec.decode(startedMessage.payloadJson().getBytes(StandardCharsets.UTF_8)).processInstanceId()
                 : start.processInstanceId();
+        assertThat(jdbc.queryForObject("SELECT status FROM demo_leave_command WHERE command_id = ?", String.class,
+                published.commandId())).isEqualTo("STARTED");
+        assertThat(jdbc.queryForObject("SELECT process_instance_id FROM demo_leave_command WHERE command_id = ?",
+                String.class, published.commandId())).isEqualTo(processId);
 
         String taskId = engine.getTaskService().createTaskQuery().processInstanceId(processId).singleResult().getId();
         assertThat(engine.getTaskService().createTaskQuery().taskId(taskId).singleResult().getTenantId())
@@ -143,7 +162,7 @@ class WorkflowUpmsAutomaticTaskIntegrationTest {
         assertThat(resultHandler.handle(resultMessage))
                 .isEqualTo(com.lotus.bixi.common.mq.reliable.DurableMessageHandler.Result.PROCESSED);
         DurableMessage terminalMessage = message(workflowOutbox, "WORKFLOW_COMPLETED");
-        assertThat(lifecycleHandler.handle(terminalMessage))
+        assertThat(handleLifecycleMessage(terminalMessage))
                 .isEqualTo(com.lotus.bixi.common.mq.reliable.DurableMessageHandler.Result.PROCESSED);
 
         assertThat(jdbc.queryForObject("SELECT booking_state FROM demo_leave_booking WHERE leave_id = 101",
@@ -155,13 +174,60 @@ class WorkflowUpmsAutomaticTaskIntegrationTest {
                 .isZero();
     }
 
-    private WorkflowStartRequestedHandler workflowStartHandler() {
-        try {
-            return new WorkflowStartRequestedHandler(codec, AopTestUtils.getTargetObject(processes), recorder);
-        }
-        catch (Exception proxyFailure) {
-            throw new IllegalStateException("无法获取 trusted workflow service", proxyFailure);
-        }
+    @Test
+    void invalidTrustedStartRejectsThePersistedLeaveCommandWithoutStartingAProcess() {
+        String commandId = UUID.randomUUID().toString();
+        String requestHash = "a".repeat(64);
+        jdbc.update("UPDATE demo_leave_request SET start_command_id = ?, start_request_hash = ? WHERE id = 101",
+                commandId, requestHash);
+        jdbc.update("""
+                INSERT INTO demo_leave_command
+                    (command_id, tenant_scope, actor_id, actor_name, client_request_id, operation,
+                     leave_id, round, request_hash, hash_version, payload_json, status, response_json, created_at)
+                VALUES (?, '1', 11, 'user-11', ?, 'START', 101, 1, ?, 1, '{}', 'ACCEPTED', '{}', CURRENT_TIMESTAMP)
+                """, commandId, UUID.randomUUID().toString(), requestHash);
+        jdbc.update("""
+                INSERT INTO wf_command
+                    (id, tenant_scope, actor_id, actor_name, request_id, source_owner, operation,
+                     resource_id, request_hash, hash_version, status, response_json, result_code,
+                     created_at, completed_at)
+                VALUES (?, '1', 11, 'user-11', ?, 'upms', 'START', 'demo_leave_approval', ?, 1,
+                        'SUCCEEDED', '{}', 'SUCCESS', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                """, UUID.randomUUID().toString(), commandId, "b".repeat(64));
+
+        WorkflowEvent invalid = new WorkflowEvent(UUID.randomUUID().toString(),
+                WorkflowEventType.WORKFLOW_START_REQUESTED, 1, "upms", "workflow", "1", null,
+                "demo_leave_approval", "demo_leave_request", 101L, "demo_leave:101:1", 1,
+                commandId, 0, Instant.now(), commandId, null,
+                new WorkflowActorSnapshot(11L, "user-11", "1", "upms", Instant.now()),
+                new WorkflowStartRequested("invalid trusted start", 22L, requestHash));
+        DurableMessage message = DurableMessage.create("upms", "workflow", invalid.eventId(),
+                invalid.type().name(), invalid.schemaVersion(),
+                new String(codec.encode(invalid), StandardCharsets.UTF_8));
+
+        assertThat(handleStartMessage(message))
+                .isEqualTo(com.lotus.bixi.common.mq.reliable.DurableMessageHandler.Result.PROCESSED);
+        assertThat(engine.getRuntimeService().createProcessInstanceQuery().count()).isZero();
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM wf_process_instance", Long.class)).isZero();
+
+        DurableMessage rejected = message(workflowOutbox, "WORKFLOW_START_REJECTED");
+        assertThat(handleLifecycleMessage(rejected))
+                .isEqualTo(com.lotus.bixi.common.mq.reliable.DurableMessageHandler.Result.PROCESSED);
+        assertThat(jdbc.queryForObject("SELECT leave_status FROM demo_leave_request WHERE id = 101", String.class))
+                .isEqualTo("REJECTED");
+        assertThat(jdbc.queryForObject("SELECT status FROM demo_leave_command WHERE command_id = ?", String.class,
+                commandId)).isEqualTo("REJECTED");
+        assertThat(jdbc.queryForObject("SELECT error_code FROM demo_leave_command WHERE command_id = ?", String.class,
+                commandId)).isEqualTo("INVALID_START");
+    }
+
+    private com.lotus.bixi.common.mq.reliable.DurableMessageHandler.Result handleStartMessage(DurableMessage message) {
+        return new TransactionTemplate(transactionManager).execute(status ->
+                new WorkflowStartRequestedHandler(codec, trustedProcesses, recorder).handle(message));
+    }
+
+    private com.lotus.bixi.common.mq.reliable.DurableMessageHandler.Result handleLifecycleMessage(DurableMessage message) {
+        return new TransactionTemplate(transactionManager).execute(status -> lifecycleHandler.handle(message));
     }
 
     private BixiUser actor(long id) {
@@ -226,8 +292,8 @@ class WorkflowUpmsAutomaticTaskIntegrationTest {
         }
 
         @Bean LeaveWorkflowEventHandler leaveWorkflowEventHandler(LeaveRequestMapper leaves,
-                @Qualifier("leaveWorkflowEventCodec") WorkflowEventCodec codec) {
-            return new LeaveWorkflowEventHandler(leaves, codec);
+                @Qualifier("leaveWorkflowEventCodec") WorkflowEventCodec codec, DataSource dataSource) {
+            return new LeaveWorkflowEventHandler(leaves, codec, dataSource);
         }
 
         @Bean LeaveBusinessTaskEventHandler leaveBusinessTaskEventHandler(LeaveRequestMapper leaves,

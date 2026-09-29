@@ -16,6 +16,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Set;
+import java.util.stream.LongStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -26,7 +27,9 @@ class WorkflowCandidateResolverTest {
 
     private final CandidateIdentityQueryService identities = userId -> userId == 7L
             ? new CandidateIdentity(7L, true, false, 42L)
-            : userId == 8L ? new CandidateIdentity(8L, true, false, 43L) : null;
+            : userId == 8L ? new CandidateIdentity(8L, true, false, 43L)
+            : userId == 9L ? new CandidateIdentity(9L, false, false, 42L)
+            : userId == 10L ? new CandidateIdentity(10L, true, true, 42L) : null;
     private final CandidateRoleQueryService roles = id -> id == 11L ? new CandidateRole(11L, true, 42L)
             : id == 12L ? new CandidateRole(12L, false, 42L) : null;
     private final WorkflowCandidateResolver resolver = new WorkflowCandidateResolver(identities, roles);
@@ -117,6 +120,28 @@ class WorkflowCandidateResolverTest {
         UserTask task = new UserTask();
         task.setCandidateUsers(List.of(value));
         assertInvalid(task, 42L);
+    }
+
+    @Test
+    void bpmUserTaskValidationRejectsDisabledOrLockedCandidateUsers() {
+        UserTask task = new UserTask();
+        task.setCandidateUsers(List.of("9"));
+        assertInvalid(task, 42L);
+
+        task.setCandidateUsers(List.of("10"));
+        assertInvalid(task, 42L);
+    }
+
+    @Test
+    void bpmUserTaskValidationRejectsMoreRecipientsThanTheNotificationContractAllows() {
+        WorkflowCandidateResolver broadResolver = new WorkflowCandidateResolver(
+                id -> new CandidateIdentity(id, true, false, 42L), id -> null);
+        UserTask task = new UserTask();
+        task.setCandidateUsers(LongStream.rangeClosed(1, 129).mapToObj(Long::toString).toList());
+
+        assertThatThrownBy(() -> broadResolver.validate(task, 42L))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("数量");
     }
 
     private void assertInvalid(UserTask task, Long tenantId) {

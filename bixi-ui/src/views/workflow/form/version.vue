@@ -9,7 +9,9 @@
 							<span class="form-name">{{ formName }} - 版本管理</span>
 						</div>
 						<div class="header-right">
-							<el-button type="primary" icon="Plus" @click="handleCreateVersion">创建新版本</el-button>
+							<el-button v-auth="'workflow_form_edit'" type="primary" icon="Plus" @click="handleCreateVersion">
+								创建新版本
+							</el-button>
 						</div>
 					</div>
 				</template>
@@ -23,18 +25,18 @@
 				>
 					<el-table-column label="版本号" prop="version" width="120">
 						<template #default="scope">
-							<el-tag :type="scope.row.isActive ? 'success' : 'info'">
+							<el-tag :type="scope.row.isActive === '1' ? 'success' : 'info'">
 								v{{ scope.row.version }}
 							</el-tag>
 						</template>
 					</el-table-column>
 					<el-table-column label="状态" width="100">
 						<template #default="scope">
-							<el-tag v-if="scope.row.isActive" type="success">当前版本</el-tag>
+							<el-tag v-if="scope.row.isActive === '1'" type="success">当前版本</el-tag>
 							<el-tag v-else type="info">历史版本</el-tag>
 						</template>
 					</el-table-column>
-					<el-table-column label="版本说明" prop="remark" show-overflow-tooltip></el-table-column>
+					<el-table-column label="版本说明" prop="changeLog" show-overflow-tooltip></el-table-column>
 					<el-table-column label="创建人" prop="createBy" width="120"></el-table-column>
 					<el-table-column label="创建时间" prop="createTime" width="180"></el-table-column>
 					<el-table-column label="操作" width="280" fixed="right">
@@ -43,7 +45,8 @@
 								查看
 							</el-button>
 							<el-button
-								v-if="!scope.row.isActive"
+								v-if="scope.row.isActive !== '1'"
+								v-auth="'workflow_form_edit'"
 								icon="Check"
 								text
 								type="primary"
@@ -52,7 +55,8 @@
 								激活
 							</el-button>
 							<el-button
-								v-if="!scope.row.isActive"
+								v-if="scope.row.isActive !== '1'"
+								v-auth="'workflow_form_edit'"
 								icon="RefreshLeft"
 								text
 								type="primary"
@@ -126,6 +130,7 @@ const router = useRouter();
 const formRendererRef = ref();
 
 const formId = ref('');
+const formKey = ref('');
 const formName = ref('');
 const loading = ref(false);
 const versionList = ref<any[]>([]);
@@ -141,7 +146,8 @@ const diffData = reactive({
 
 onMounted(async () => {
 	formId.value = route.query.formId as string;
-	formName.value = route.query.formName as string || '未命名表单';
+	formKey.value = route.query.formKey as string;
+	formName.value = (route.query.formName as string) || '未命名表单';
 	await loadVersionList();
 });
 
@@ -164,7 +170,7 @@ const loadVersionList = async () => {
 };
 
 const handleBack = () => {
-	router.push('/workflow/form');
+	router.push('/workflow/form/index');
 };
 
 const handleCreateVersion = () => {
@@ -172,15 +178,19 @@ const handleCreateVersion = () => {
 		path: '/workflow/form/designer',
 		query: {
 			formId: formId.value,
+			formKey: formKey.value,
 			formName: formName.value,
 		},
 	});
 };
 
 const handleViewVersion = (row: any) => {
-	if (row.schemaContent) {
-		currentSchema.value = JSON.parse(row.schemaContent);
+	if (!row.schemaJson) return;
+	try {
+		currentSchema.value = JSON.parse(row.schemaJson);
 		viewVisible.value = true;
+	} catch {
+		useMessage().error('版本 Schema 不是合法 JSON');
 	}
 };
 
@@ -221,8 +231,8 @@ const loadDiffData = async () => {
 
 	try {
 		const res = await diffVersions(formId.value, diffVersion1.value, diffVersion2.value);
-		diffData.version1 = JSON.stringify(res.data.version1, null, 2);
-		diffData.version2 = JSON.stringify(res.data.version2, null, 2);
+		diffData.version1 = JSON.stringify(res.data.v1Schema, null, 2);
+		diffData.version2 = JSON.stringify(res.data.v2Schema, null, 2);
 	} catch (err: any) {
 		useMessage().error(err.msg || '加载对比数据失败');
 	}

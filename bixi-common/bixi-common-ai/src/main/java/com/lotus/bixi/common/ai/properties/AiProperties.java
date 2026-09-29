@@ -10,7 +10,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @date 2025-01-01
  */
 @Data
-@ConfigurationProperties(prefix = "spring.ai.alibaba.dashscope")
+@ConfigurationProperties(prefix = "spring.ai.dashscope")
 public class AiProperties {
 
     /**

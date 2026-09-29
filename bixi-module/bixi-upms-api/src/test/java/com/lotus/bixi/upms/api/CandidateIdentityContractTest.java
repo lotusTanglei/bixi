@@ -15,7 +15,7 @@ class CandidateIdentityContractTest {
         assertThat(Arrays.stream(CandidateIdentity.class.getRecordComponents())
                 .map(RecordComponent::getName)
                 .toList())
-                .containsExactly("userId", "enabled", "locked", "tenantId");
+                .containsExactly("userId", "enabled", "locked", "tenantId", "username", "name");
     }
 
 }

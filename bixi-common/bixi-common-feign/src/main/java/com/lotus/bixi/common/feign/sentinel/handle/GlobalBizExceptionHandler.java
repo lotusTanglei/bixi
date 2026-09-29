@@ -15,6 +15,7 @@ import org.springframework.util.Assert;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -46,11 +47,34 @@ public class GlobalBizExceptionHandler {
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public R handleGlobalException(Exception e) {
+        if (isClientDisconnect(e)) {
+            log.debug("Response stream closed before the error response could be written: {}", e.getMessage());
+            return null;
+        }
         log.error("全局异常信息 ex={}", e.getMessage(), e);
 
         // 业务异常交由 sentinel 记录
         Tracer.trace(e);
         return R.failed(e.getLocalizedMessage());
+    }
+
+    private static boolean isClientDisconnect(Throwable failure) {
+        for (Throwable current = failure; current != null; current = current.getCause()) {
+            if (current instanceof AsyncRequestNotUsableException) {
+                return true;
+            }
+            String message = current.getMessage();
+            if (message == null) {
+                continue;
+            }
+            String normalized = message.toLowerCase(java.util.Locale.ROOT);
+            if (normalized.contains("broken pipe")
+                    || normalized.contains("connection reset by peer")
+                    || normalized.contains("connection aborted")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

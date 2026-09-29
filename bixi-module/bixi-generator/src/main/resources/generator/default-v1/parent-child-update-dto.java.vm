@@ -1,0 +1,39 @@
+package ${package}.${moduleName}.api.dto;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+#if($hasRequiredStringFields)
+import jakarta.validation.constraints.NotBlank;
+#end
+import lombok.Data;
+#foreach($import in $importList)
+import ${import};
+#end
+import java.util.List;
+
+@Data
+@Schema(description = "修改${tableComment}")
+public class ${ClassName}UpdateDTO {
+
+	@NotNull(message = "ID不能为空")
+	private Long id;
+
+#foreach($field in $formList)
+#if($field.fieldName != 'id')
+#if($field.formRequired == '1')
+#if($field.attrType == 'String')
+	@NotBlank(message = "$!field.fieldComment不能为空")
+#else
+	@NotNull(message = "$!field.fieldComment不能为空")
+#end
+#end
+	@Schema(description = "$!field.fieldComment")
+	private ${field.attrType} ${field.attrName};
+
+#end
+#end
+	@Valid
+	@NotNull(message = "明细集合不能为空")
+	private List<${ChildClassName}DTO> children;
+}

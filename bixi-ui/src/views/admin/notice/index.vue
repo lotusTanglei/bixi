@@ -68,6 +68,15 @@
 						<el-tag v-else type="danger">紧急</el-tag>
 					</template>
 				</el-table-column>
+				<el-table-column label="投递渠道" prop="deliveryChannel" show-overflow-tooltip width="150">
+					<template #default="scope">
+						<span v-if="scope.row.deliveryChannel === 'EMAIL'">邮件</span>
+						<span v-else-if="scope.row.deliveryChannel === 'WEBHOOK'">Webhook</span>
+						<span v-else-if="scope.row.deliveryChannel === 'SMS'">短信</span>
+						<span v-else-if="scope.row.deliveryChannel === 'WECHAT'">微信</span>
+						<span v-else>站内</span>
+					</template>
+				</el-table-column>
 				<el-table-column :label="t('notice.status')" prop="status" show-overflow-tooltip>
 					<template #default="scope">
 						<el-tag v-if="scope.row.status === '0'" type="info">待发送</el-tag>
@@ -76,11 +85,14 @@
 					</template>
 				</el-table-column>
 				<el-table-column :label="t('notice.createTime')" prop="createTime" show-overflow-tooltip width="180" />
-				<el-table-column :label="t('common.action')" width="280" fixed="right">
-					<template #default="scope">
-						<el-button v-auth="'sys_notice_send'" v-if="scope.row.status === '0' || scope.row.status === '1'" icon="promotion" text type="primary" @click="handleSend(scope.row.id, scope.row.status === '1')">
-							{{ scope.row.status === '1' ? '重发提醒' : '发送' }}
-						</el-button>
+					<el-table-column :label="t('common.action')" width="390" fixed="right">
+						<template #default="scope">
+							<el-button v-auth="'sys_notice_send'" v-if="scope.row.status === '0' || scope.row.status === '1'" icon="promotion" text type="primary" @click="handleSend(scope.row.id, scope.row.status === '1')">
+								{{ scope.row.status === '1' ? '重发提醒' : '发送' }}
+							</el-button>
+							<el-button v-auth="'sys_notice_send'" v-if="scope.row.status === '1'" icon="Refresh" text type="primary" @click="handleRetry(scope.row.id)">
+								重试失败投递
+							</el-button>
 						<el-button v-auth="'sys_notice_view'" icon="list" text type="primary" @click="recordRef.openDialog(scope.row.id)">
 							发送记录
 						</el-button>
@@ -101,7 +113,7 @@
 </template>
 
 <script lang="ts" setup name="sysNotice">
-import { delObj, pageList, sendNotice } from '/@/api/admin/notice';
+import { delObj, pageList, retryDelivery, sendNotice } from '/@/api/admin/notice';
 import { BasicTableProps, useTable } from '/@/hooks/table';
 import { useMessage, useMessageBox } from '/@/hooks/message';
 import { useI18n } from 'vue-i18n';
@@ -153,6 +165,23 @@ const handleSend = async (id: string, reminder: boolean) => {
 	try {
 		await sendNotice(id);
 		useMessage().success(reminder ? '已请求重发提醒' : '通知已发布，已请求发送提醒');
+		getDataList();
+	} catch (err: any) {
+		useMessage().error(err.msg);
+		getDataList();
+	}
+};
+
+const handleRetry = async (id: string) => {
+	try {
+		await useMessageBox().confirm('确认重试该通知的失败投递吗？');
+	} catch {
+		return;
+	}
+
+	try {
+		await retryDelivery(id);
+		useMessage().success('已请求重试失败投递');
 		getDataList();
 	} catch (err: any) {
 		useMessage().error(err.msg);
