@@ -1,0 +1,36 @@
+package com.lotus.bixi.acceptance.api.dto;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Getter;
+
+import java.util.List;
+import java.util.Objects;
+
+@Getter
+@Schema(description = "字典表导入行错误")
+public final class SysDictImportRowError {
+	public static final int MAX_ROW_NUMBER = 1001;
+	public static final int MAX_MESSAGES = 8;
+	public static final int MAX_MESSAGE_LENGTH = 256;
+
+	private final int rowNumber;
+	private final List<String> errors;
+
+	public SysDictImportRowError(int rowNumber, List<String> errors) {
+		if (rowNumber < 1 || rowNumber > MAX_ROW_NUMBER) {
+			throw new IllegalArgumentException("导入错误行号超出范围");
+		}
+		this.rowNumber = rowNumber;
+		this.errors = List.copyOf(Objects.requireNonNull(errors, "errors").stream()
+			.filter(Objects::nonNull).map(SysDictImportRowError::normalizeMessage)
+			.filter(message -> !message.isBlank())
+			.limit(MAX_MESSAGES).toList());
+		if (this.errors.isEmpty()) throw new IllegalArgumentException("导入错误不能为空");
+	}
+
+	private static String normalizeMessage(String value) {
+		String normalized = value.replace("\r\n", " ").replace('\r', ' ').replace('\n', ' ').strip();
+		if (normalized.codePointCount(0, normalized.length()) <= MAX_MESSAGE_LENGTH) return normalized;
+		return normalized.substring(0, normalized.offsetByCodePoints(0, MAX_MESSAGE_LENGTH));
+	}
+}
