@@ -213,7 +213,7 @@ class NoticeLocalDeliveryIntegrationTest {
     }
 
     private void recreateCanonicalTable(String table) throws Exception {
-        String schema = new ClassPathResource("sql/01_init_all_tables.sql")
+        String schema = new ClassPathResource("sql/01_schema.sql")
                 .getContentAsString(StandardCharsets.UTF_8);
         var matcher = Pattern.compile("CREATE TABLE `" + table + "` \\([\\s\\S]*?\\) ENGINE[^;]*;")
                 .matcher(schema);

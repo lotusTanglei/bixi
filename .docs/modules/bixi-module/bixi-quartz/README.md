@@ -45,7 +45,7 @@ allowlist 会绕过地址范围拒绝，只应填写经过审查的固定主机�
 
 ## 数据库升级
 
-新建数据库使用 `bixi-project-documents/sql/01_init_all_tables.sql` 和 `03_add_indexes.sql`。既有数据库先执行 `20260925_quartz_tenant_scope.sql`，再在停止调度节点和任务管理写入的维护窗口执行 `20260926_quartz_retry_history.sql`。增量脚本会拒绝不兼容的同名列或索引，不会覆盖自定义结构。
+新建数据库使用 `bixi-project-documents/sql/01_schema.sql` 和 `04_indexes.sql`。既有数据库先执行 `20260925_quartz_tenant_scope.sql`，再在停止调度节点和任务管理写入的维护窗口执行 `20260926_quartz_retry_history.sql`。增量脚本会拒绝不兼容的同名列或索引，不会覆盖自定义结构。
 
 旧执行记录保留为空的 `executionId`，并标记为一次 `LEGACY` 尝试；新记录才具备完整的触发和恢复证据。应用回退时可以保留新增列与索引，但旧版本不会写入这些字段。
 

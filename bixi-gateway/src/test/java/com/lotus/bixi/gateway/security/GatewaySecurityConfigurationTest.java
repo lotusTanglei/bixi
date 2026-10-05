@@ -83,6 +83,11 @@ class GatewaySecurityConfigurationTest {
     }
 
     @Test
+    void browserLogoutReachesAuthWithoutBearerForDownstreamCsrfCheck() {
+        client.post().uri("/auth/logout").exchange().expectStatus().isOk();
+    }
+
+    @Test
     void noticeProviderReceiptReachesUpmsWithoutBearerToken() {
         client.post().uri("/admin/notice/delivery/receipt")
                 .bodyValue("{}").exchange().expectStatus().isOk();
@@ -140,6 +145,11 @@ class GatewaySecurityConfigurationTest {
 
         @org.springframework.web.bind.annotation.PostMapping("/auth/oauth2/token")
         String tokenEndpoint() {
+            return "ok";
+        }
+
+        @org.springframework.web.bind.annotation.PostMapping("/auth/logout")
+        String logoutEndpoint() {
             return "ok";
         }
 

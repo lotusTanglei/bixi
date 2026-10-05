@@ -1,6 +1,7 @@
 package com.lotus.bixi.acceptance.api.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import java.time.LocalDateTime;
 
@@ -9,12 +10,15 @@ import java.time.LocalDateTime;
 public class SysPublicParamCreateDTO {
 
 	@Schema(description = "名称")
+	@NotBlank(message = "名称不能为空")
 	private String name;
 
 	@Schema(description = "键")
+	@NotBlank(message = "键不能为空")
 	private String key;
 
 	@Schema(description = "值")
+	@NotBlank(message = "值不能为空")
 	private String value;
 
 	@Schema(description = "校验码")

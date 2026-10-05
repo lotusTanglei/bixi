@@ -1,6 +1,7 @@
 package com.lotus.bixi.acceptance.api.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import java.time.LocalDateTime;
 
@@ -15,9 +16,11 @@ public class SysDictItemDTO {
 	private Long dictId;
 
 	@Schema(description = "字典项值")
+	@NotBlank(message = "字典项值不能为空")
 	private String value;
 
 	@Schema(description = "字典项标签")
+	@NotBlank(message = "字典项标签不能为空")
 	private String label;
 
 	@Schema(description = "字典类型")

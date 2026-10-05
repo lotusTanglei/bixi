@@ -2,6 +2,15 @@
 	<div class="layout-padding">
 		<div class="layout-padding-auto layout-padding-view">
 			<el-form v-show="showSearch" ref="queryRef" :inline="true" :model="state.queryForm" @keyup.enter="getDataList">
+				<el-form-item label="字典类型" prop="type">
+					<el-input v-model="state.queryForm.type" clearable placeholder="输入字典类型" />
+				</el-form-item>
+				<el-form-item label="字典名称" prop="name">
+					<el-input v-model="state.queryForm.name" clearable placeholder="输入字典名称" />
+				</el-form-item>
+				<el-form-item label="系统标志" prop="systemFlag">
+					<el-input v-model="state.queryForm.systemFlag" clearable placeholder="输入系统标志" />
+				</el-form-item>
 				<el-form-item>
 					<el-button icon="Search" type="primary" @click="getDataList">查询</el-button>
 					<el-button icon="Refresh" @click="resetQuery">重置</el-button>
@@ -68,7 +77,7 @@ const loadError = ref('');
 const fileInputRef = ref<HTMLInputElement>();
 const importResult = ref<SysDictImportResult>();
 const importResultVisible = ref(false);
-const state = reactive<BasicTableProps>({ queryForm: {}, pageList: fetchList });
+const state = reactive<BasicTableProps>({ queryForm: { type: '', name: '', systemFlag: '' }, pageList: fetchList });
 const { getDataList, currentChangeHandle, sizeChangeHandle } = useTable(state);
 
 const loadPage = async () => {

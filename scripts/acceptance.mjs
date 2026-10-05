@@ -7,6 +7,7 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 import { generateStrongPassword } from './acceptance-password.mjs';
+import { extractWorkbookText } from './tenant-isolation-support.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const mode = process.env.BIXI_MODE || 'cloud';
@@ -62,12 +63,24 @@ try {
 	const permissions = Array.isArray(userInfo.permissions) ? userInfo.permissions : [];
 	const roles = Array.isArray(userInfo.roles) ? userInfo.roles.map(String) : [];
 	assert(roles.includes('1'), 'administrator role was not returned', userInfo.roles);
-	for (const permission of ['demo_task_view', 'demo_task_add', 'demo_task_edit', 'demo_task_del']) {
+	for (const permission of [
+		'demo_task_view', 'demo_task_add', 'demo_task_edit', 'demo_task_del',
+		'acceptance_dict_aggregate_view', 'acceptance_dict_aggregate_add',
+		'acceptance_dict_aggregate_edit', 'acceptance_dict_aggregate_del',
+		'acceptance_dict_aggregate_import', 'acceptance_dict_aggregate_export',
+		'acceptance_sys_dict_item_add', 'acceptance_sys_dict_item_edit',
+		'acceptance_sys_dict_item_del', 'acceptance_public_param_view',
+		'acceptance_public_param_add', 'acceptance_public_param_edit',
+		'acceptance_public_param_del', 'acceptance_public_param_import',
+		'acceptance_public_param_export',
+	]) {
 		assert(permissions.includes(permission), `missing permission: ${permission}`, permissions);
 	}
 
 	const menu = assertApi(await authorized('/admin/menu'), 'load menu');
 	assert(containsMenuPath(menu, '/demo/task/index'), 'sample task menu is not visible', menu);
+	assert(containsMenuPath(menu, '/acceptance/dictAggregate/index'), 'Acceptance dictionary menu is not visible', menu);
+	assert(containsMenuPath(menu, '/acceptance/publicParam/index'), 'Acceptance public parameter menu is not visible', menu);
 	const auditLogBaseline = new Set((await loadAuditLogs()).map((record) => String(record.id)));
 
 	const suffix = `${mode}-${Date.now()}`;
@@ -130,6 +143,7 @@ try {
 	assert(!deletedPage.records?.some((record) => String(record.id) === taskId), 'deleted task is still visible', deletedPage);
 
 	const auditLogs = await waitForAuditLogs(auditLogBaseline, title, taskId);
+	const acceptance = await verifyAcceptanceResources();
 	const workflow = await verifyWorkflow(menu, currentUser);
 	console.log(
 		JSON.stringify(
@@ -143,6 +157,7 @@ try {
 				menu: '/demo/task/index',
 				crud: ['create', 'page', 'details', 'update', 'invalid-request', 'delete'],
 				auditLogs,
+				acceptance,
 				workflow,
 			},
 			null,
@@ -153,6 +168,151 @@ try {
 	if (token && taskId && !deleted) {
 		await authorized('/admin/demo/task', { method: 'DELETE', body: [taskId] }).catch(() => undefined);
 	}
+}
+
+async function verifyAcceptanceResources() {
+	const suffix = `${mode}-${Date.now()}-${randomBytes(3).toString('hex')}`;
+	const dictPath = '/admin/dictAggregate';
+	const paramPath = '/admin/publicParam';
+	const auditBaseline = new Set((await loadAuditLogs()).map((record) => String(record.id)));
+	const auditExpected = [];
+	let dictId;
+	let publicParamId;
+	const dictMarker = `acceptance-dict-${suffix}`;
+	const paramMarker = `acceptance-param-${suffix}`;
+	try {
+		const dictPayload = {
+			type: dictMarker,
+			name: `Acceptance 字典 ${suffix}`,
+			description: 'black-box acceptance dictionary',
+			sn: 1,
+			systemFlag: '0',
+			children: [
+				{ value: `${dictMarker}-one`, label: 'One', dictType: dictMarker, description: 'first', sn: 1 },
+				{ value: `${dictMarker}-two`, label: 'Two', dictType: dictMarker, description: 'second', sn: 2 },
+			],
+		};
+		assertDenied(await authorized(dictPath, {
+			method: 'POST',
+			body: { ...dictPayload, type: '', name: '', children: [{ value: '', label: '' }] },
+		}), 'invalid Acceptance dictionary create');
+		assertApi(await authorized(dictPath, { method: 'POST', body: dictPayload }), 'create Acceptance dictionary');
+		auditExpected.push({ title: '新增字典表', method: 'POST', path: dictPath, marker: dictMarker });
+		const dictPage = assertApi(await authorized(`${dictPath}/page?current=1&size=20&type=${encodeURIComponent(dictMarker)}`), 'query Acceptance dictionary');
+		const dict = dictPage.records?.find((record) => record.type === dictMarker);
+		assert(dict?.id, 'created Acceptance dictionary was not returned by its filter', dictPage);
+		dictId = String(dict.id);
+		const dictDetails = assertApi(await authorized(`${dictPath}/details/${dictId}`), 'load Acceptance dictionary details');
+		assert(dictDetails.type === dictMarker && dictDetails.children?.length === 2, 'Acceptance dictionary details are incomplete', dictDetails);
+
+		const dictUpdate = {
+			...dictDetails,
+			name: `${dictPayload.name} updated`,
+			children: [
+				{ ...dictDetails.children[0], value: `${dictMarker}-updated`, label: 'Updated' },
+				{ value: `${dictMarker}-three`, label: 'Three', dictType: dictMarker, description: 'third', sn: 3 },
+			],
+		};
+		assertApi(await authorized(dictPath, { method: 'PUT', body: dictUpdate }), 'update Acceptance dictionary');
+		auditExpected.push({ title: '修改字典表', method: 'PUT', path: dictPath, marker: dictMarker });
+		const updatedDict = assertApi(await authorized(`${dictPath}/details/${dictId}`), 'reload Acceptance dictionary');
+		assert(updatedDict.name === dictUpdate.name && updatedDict.children?.some((child) => child.value === `${dictMarker}-three`), 'Acceptance dictionary update was not persisted', updatedDict);
+
+		const invalidDictUpdate = await authorized(dictPath, {
+			method: 'PUT',
+			body: { ...dictUpdate, name: 'must-not-persist', children: [{ ...updatedDict.children[0], dictId: '999999999999999999' }] },
+		});
+		assertDenied(invalidDictUpdate, 'invalid Acceptance dictionary child relationship');
+		const afterInvalidDict = assertApi(await authorized(`${dictPath}/details/${dictId}`), 'verify Acceptance dictionary rollback');
+		assert(afterInvalidDict.name === updatedDict.name, 'invalid Acceptance dictionary update changed the parent', afterInvalidDict);
+
+		assertDenied(await authorized(`${dictPath}/details/999999999999999999`), 'unknown Acceptance dictionary details');
+		assertDenied(await authorized(dictPath, { method: 'DELETE', body: [] }), 'empty Acceptance dictionary delete');
+		const dictExport = await authorized(`${dictPath}/export?type=${encodeURIComponent(dictMarker)}`, { expectBinary: true });
+		const dictExportText = await assertWorkbook(dictExport, 'export Acceptance dictionary');
+		assert(dictExportText.includes(dictMarker), 'Acceptance dictionary export omitted the filter marker');
+		const invalidDictImport = await invalidImport(`${dictPath}/import`, 'dict-invalid.xlsx');
+		assert(invalidDictImport.code === 'INVALID_FILE' && invalidDictImport.success === false, 'invalid Acceptance dictionary import was accepted', invalidDictImport);
+
+		const deletedDictId = dictId;
+		assertApi(await authorized(dictPath, { method: 'DELETE', body: [dictId] }), 'delete Acceptance dictionary');
+		auditExpected.push({ title: '删除字典表', method: 'DELETE', path: dictPath, marker: deletedDictId });
+		dictId = undefined;
+		const deletedDictPage = assertApi(await authorized(`${dictPath}/page?current=1&size=20&type=${encodeURIComponent(dictMarker)}`), 'query deleted Acceptance dictionary');
+		assert(!deletedDictPage.records?.some((record) => String(record.id) === deletedDictId), 'deleted Acceptance dictionary is still visible', deletedDictPage);
+
+		const paramPayload = {
+			name: `Acceptance parameter ${suffix}`,
+			key: paramMarker,
+			value: 'initial',
+			validateCode: 'acceptance',
+			type: '2',
+			systemFlag: '0',
+			sn: 1,
+		};
+		assertDenied(await authorized(paramPath, {
+			method: 'POST',
+			body: { ...paramPayload, name: '', key: '', value: '' },
+		}), 'invalid Acceptance public parameter create');
+		assertApi(await authorized(paramPath, { method: 'POST', body: paramPayload }), 'create Acceptance public parameter');
+		auditExpected.push({ title: '新增公共参数配置表', method: 'POST', path: paramPath, marker: paramMarker });
+		const paramPage = assertApi(await authorized(`${paramPath}/page?current=1&size=20&key=${encodeURIComponent(paramMarker)}`), 'query Acceptance public parameter');
+		const param = paramPage.records?.find((record) => record.key === paramMarker);
+		assert(param?.id, 'created Acceptance public parameter was not returned by its filter', paramPage);
+		publicParamId = String(param.id);
+		const paramDetails = assertApi(await authorized(`${paramPath}/details/${publicParamId}`), 'load Acceptance public parameter details');
+		assert(paramDetails.key === paramMarker && paramDetails.value === 'initial', 'Acceptance public parameter details are incomplete', paramDetails);
+		assertApi(await authorized(paramPath, { method: 'PUT', body: { ...paramDetails, value: 'updated' } }), 'update Acceptance public parameter');
+		auditExpected.push({ title: '修改公共参数配置表', method: 'PUT', path: paramPath, marker: paramMarker });
+		const updatedParam = assertApi(await authorized(`${paramPath}/details/${publicParamId}`), 'reload Acceptance public parameter');
+		assert(updatedParam.value === 'updated', 'Acceptance public parameter update was not persisted', updatedParam);
+		assertDenied(await authorized(`${paramPath}/details/999999999999999999`), 'unknown Acceptance public parameter details');
+		assertDenied(await authorized(paramPath, { method: 'DELETE', body: [] }), 'empty Acceptance public parameter delete');
+		const paramExport = await authorized(`${paramPath}/export?key=${encodeURIComponent(paramMarker)}`, { expectBinary: true });
+		const paramExportText = await assertWorkbook(paramExport, 'export Acceptance public parameter');
+		assert(paramExportText.includes(paramMarker), 'Acceptance public parameter export omitted the key');
+		const invalidParamImport = await invalidImport(`${paramPath}/import`, 'param-invalid.xlsx');
+		assert(invalidParamImport.code === 'INVALID_FILE' && invalidParamImport.success === false, 'invalid Acceptance public parameter import was accepted', invalidParamImport);
+		const deletedPublicParamId = publicParamId;
+		assertApi(await authorized(paramPath, { method: 'DELETE', body: [publicParamId] }), 'delete Acceptance public parameter');
+		auditExpected.push({ title: '删除公共参数配置表', method: 'DELETE', path: paramPath, marker: deletedPublicParamId });
+		publicParamId = undefined;
+		return {
+			resources: ['dictAggregate', 'publicParam'],
+			checks: ['menu', 'permissions', 'crud', 'filters', 'details', 'invalid-request', 'empty-delete', 'unknown-id', 'invalid-import', 'xlsx-export'],
+			auditLogs: await waitForAcceptanceAuditLogs(auditBaseline, auditExpected),
+		};
+	}
+	finally {
+		if (dictId) await authorized(dictPath, { method: 'DELETE', body: [dictId] }).catch(() => undefined);
+		if (publicParamId) await authorized(paramPath, { method: 'DELETE', body: [publicParamId] }).catch(() => undefined);
+	}
+}
+
+async function invalidImport(path, filename) {
+	const body = new FormData();
+	body.append('file', new Blob(['this is not an Excel archive'], { type: 'application/octet-stream' }), filename);
+	return assertApi(await authorized(path, { method: 'POST', body }), `invalid import ${filename}`);
+}
+
+async function assertWorkbook(response, action) {
+	assert(response.status === 200 && response.binary?.length > 4, `${action} did not return a binary workbook`, response);
+	return extractWorkbookText(response.binary);
+}
+
+async function waitForAcceptanceAuditLogs(baselineIds, expected) {
+	for (let attempt = 1; attempt <= 30; attempt += 1) {
+		const records = (await loadAuditLogs()).filter((record) => !baselineIds.has(String(record.id)));
+		const matches = expected.map((item) => records.find((record) =>
+			record.title === item.title && record.method === item.method
+			&& String(record.requestUri || '').endsWith(item.path.replace(/^\/admin/, ''))
+			&& String(record.params || '').includes(item.marker)));
+		if (matches.every(Boolean)) {
+			return matches.map(({ id, title, method, requestUri }) => ({ id: String(id), title, method, requestUri }));
+		}
+		await sleep(1000);
+	}
+	throw new Error(`Acceptance operation logs were not persisted: ${expected.map((item) => item.title).join(', ')}`);
 }
 
 async function verifyWorkflow(menu, currentUser) {
@@ -541,7 +701,17 @@ async function request(path, options = {}) {
 
 async function fetchResponse(url, options = {}) {
 	try {
-		const response = await fetch(url, { ...options, signal: AbortSignal.timeout(10_000) });
+		const { expectBinary = false, ...fetchOptions } = options;
+		const response = await fetch(url, { ...fetchOptions, signal: AbortSignal.timeout(10_000) });
+		const contentType = response.headers.get('content-type') || '';
+		if (expectBinary || (contentType && !contentType.toLowerCase().includes('json') && !contentType.toLowerCase().startsWith('text/'))) {
+			return {
+				status: response.status,
+				body: null,
+				binary: Buffer.from(await response.arrayBuffer()),
+				contentType,
+			};
+		}
 		const text = await response.text();
 		let body = text;
 		if (text) {
@@ -551,9 +721,9 @@ async function fetchResponse(url, options = {}) {
 				// Health endpoints may intentionally return plain text.
 			}
 		}
-		return { status: response.status, body };
+		return { status: response.status, body, contentType };
 	} catch (error) {
-		return { status: 0, body: String(error) };
+		return { status: 0, body: String(error), contentType: '' };
 	}
 }
 

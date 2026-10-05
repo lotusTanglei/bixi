@@ -39,7 +39,7 @@ export interface SysDictImportResult {
 	errors: SysDictImportRowError[];
 }
 
-const baseUrl = '/acceptance/dictAggregate';
+const baseUrl = '/admin/dictAggregate';
 
 export const fetchList = (query?: Record<string, unknown>) => request({ url: baseUrl + '/page', method: 'get', params: query });
 export const getObj = (id: string) => request({ url: baseUrl + '/details/' + id, method: 'get' });

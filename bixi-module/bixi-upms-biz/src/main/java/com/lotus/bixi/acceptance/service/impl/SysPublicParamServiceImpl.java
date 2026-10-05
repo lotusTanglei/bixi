@@ -18,6 +18,7 @@ import com.lotus.bixi.acceptance.api.vo.SysPublicParamVO;
 import com.lotus.bixi.acceptance.api.vo.SysPublicParamExportVO;
 import com.lotus.bixi.acceptance.mapper.SysPublicParamMapper;
 import com.lotus.bixi.acceptance.api.service.SysPublicParamService;
+import com.lotus.bixi.common.core.context.TenantContextHolder;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -54,40 +55,52 @@ public class SysPublicParamServiceImpl extends ServiceImpl<SysPublicParamMapper,
 
 	private LambdaQueryWrapper<SysPublicParam> queryWrapper(SysPublicParamQueryDTO query) {
 		if (query == null) query = new SysPublicParamQueryDTO();
-		LambdaQueryWrapper<SysPublicParam> wrapper = Wrappers.lambdaQuery();
-		return wrapper;
+		return Wrappers.<SysPublicParam>lambdaQuery()
+			.eq(SysPublicParam::getTenantId, requireCurrentTenant())
+			.like(StrUtil.isNotBlank(query.getName()), SysPublicParam::getName, query.getName())
+			.like(StrUtil.isNotBlank(query.getKey()), SysPublicParam::getKey, query.getKey())
+			.eq(StrUtil.isNotBlank(query.getType()), SysPublicParam::getType, query.getType())
+			.eq(StrUtil.isNotBlank(query.getSystemFlag()), SysPublicParam::getSystemFlag, query.getSystemFlag());
 	}
 
 	@Override
 	public SysPublicParamVO details(Long id) {
-		SysPublicParam entity = getById(id);
-		if (entity == null) throw new IllegalArgumentException("公共参数配置表不存在");
+		SysPublicParam entity = requireOwned(id);
 		return BeanUtil.copyProperties(entity, SysPublicParamVO.class);
 	}
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)
 	public boolean create(SysPublicParamCreateDTO dto) {
-		return save(BeanUtil.copyProperties(dto, SysPublicParam.class));
+		SysPublicParam entity = BeanUtil.copyProperties(dto, SysPublicParam.class);
+		entity.setTenantId(requireCurrentTenant());
+		return save(entity);
 	}
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)
 	public boolean update(SysPublicParamUpdateDTO dto) {
-		if (getById(dto.getId()) == null) throw new IllegalArgumentException("公共参数配置表不存在");
-		return updateById(BeanUtil.copyProperties(dto, SysPublicParam.class));
+		SysPublicParam current = requireOwned(dto.getId());
+		SysPublicParam update = BeanUtil.copyProperties(dto, SysPublicParam.class);
+		update.setId(current.getId());
+		update.setTenantId(current.getTenantId());
+		return updateById(update);
 	}
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)
 	public boolean delete(List<Long> ids) {
 		if (ids == null || ids.isEmpty()) throw new IllegalArgumentException("至少选择一条数据");
-		return removeBatchByIds(ids);
+		List<Long> distinctIds = ids.stream().filter(java.util.Objects::nonNull).distinct().toList();
+		if (distinctIds.isEmpty()) throw new IllegalArgumentException("至少选择一条数据");
+		distinctIds.forEach(this::requireOwned);
+		return removeBatchByIds(distinctIds);
 	}
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)
 	public SysPublicParamImportResult importRows(List<SysPublicParamImportDTO> rows) {
+		requireCurrentTenant();
 		if (rows == null || rows.isEmpty()) {
 			return SysPublicParamImportResult.failure("EMPTY_IMPORT", 0,
 				List.of(new SysPublicParamImportRowError(1, List.of("导入文件不包含数据行"))));
@@ -124,11 +137,13 @@ public class SysPublicParamServiceImpl extends ServiceImpl<SysPublicParamMapper,
 			for (SysPublicParamImportDTO row : rows) {
 				SysPublicParam entity = new SysPublicParam();
 				entity.setName(row.getName());
+				entity.setKey(row.getKey());
 				entity.setValue(row.getValue());
 				entity.setValidateCode(row.getValidateCode());
 				entity.setType(row.getType());
 				entity.setSystemFlag(row.getSystemFlag());
 				entity.setSn(row.getSn());
+				entity.setTenantId(requireCurrentTenant());
 				if (baseMapper.insert(entity) != 1) throw new ImportWriteException(currentRow);
 				currentRow++;
 			}
@@ -154,6 +169,7 @@ public class SysPublicParamServiceImpl extends ServiceImpl<SysPublicParamMapper,
 	private SysPublicParamExportVO toExportVO(SysPublicParam entity) {
 		SysPublicParamExportVO result = new SysPublicParamExportVO();
 		result.setName(entity.getName());
+		result.setKey(entity.getKey());
 		result.setValue(entity.getValue());
 		result.setValidateCode(entity.getValidateCode());
 		result.setType(entity.getType());
@@ -172,6 +188,7 @@ public class SysPublicParamServiceImpl extends ServiceImpl<SysPublicParamMapper,
 	private static String fingerprint(SysPublicParamImportDTO row) {
 		StringBuilder normalized = new StringBuilder();
 		appendFingerprint(normalized, row.getName());
+		appendFingerprint(normalized, row.getKey());
 		appendFingerprint(normalized, row.getValue());
 		appendFingerprint(normalized, row.getValidateCode());
 		appendFingerprint(normalized, row.getType());
@@ -229,5 +246,23 @@ public class SysPublicParamServiceImpl extends ServiceImpl<SysPublicParamMapper,
 		private ImportWriteException(int rowNumber) {
 			super("import write failed at row " + rowNumber);
 		}
+	}
+
+	private SysPublicParam requireOwned(Long id) {
+		if (id == null) throw new IllegalArgumentException("公共参数配置表ID不能为空");
+		Long tenantId = requireCurrentTenant();
+		SysPublicParam entity = getOne(Wrappers.<SysPublicParam>lambdaQuery()
+			.eq(SysPublicParam::getId, id)
+			.eq(SysPublicParam::getTenantId, tenantId));
+		if (entity == null || !tenantId.equals(entity.getTenantId())) {
+			throw new IllegalArgumentException("公共参数配置表不存在或不属于当前租户");
+		}
+		return entity;
+	}
+
+	private static Long requireCurrentTenant() {
+		Long tenantId = TenantContextHolder.get();
+		if (tenantId == null) throw new IllegalStateException("当前租户不能为空");
+		return tenantId;
 	}
 }

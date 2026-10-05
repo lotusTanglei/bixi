@@ -18,9 +18,10 @@ const projectReferences = [
   ['bixi-module/bixi-upms-biz/src/main/java/com/lotus/bixi/upms/demo', 'directory'],
   ['bixi-ui/src/views/demo/task', 'directory'],
   ['bixi-ui/src/api/demo/task.ts', 'file'],
-  ['bixi-project-documents/sql/01_init_all_tables.sql', 'file'],
-  ['bixi-project-documents/sql/03_add_indexes.sql', 'file'],
-  ['bixi-project-documents/sql/04_init_data.sql', 'file'],
+  ['bixi-project-documents/sql/01_schema.sql', 'file'],
+  ['bixi-project-documents/sql/02_data.sql', 'file'],
+  ['bixi-project-documents/sql/03_constraints.sql', 'file'],
+  ['bixi-project-documents/sql/04_indexes.sql', 'file'],
   ['scripts/acceptance.mjs', 'file'],
 ];
 const requiredTargets = [

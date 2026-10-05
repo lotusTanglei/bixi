@@ -19,6 +19,19 @@ make phase2-schema-migrate
 
 脚本只在每个 SQL 成功后写入迁移账本；任一文件失败立即停止，已完成的账本记录和数据库结构保留供修复后继续。`make workflow-schema-migrate` 保留原有仅 Workflow/Rabbit 批次语义，适合只维护工作流的窗口。全量批次包含安全权限、生成器、Quartz、AI/RAG、通知以及 Workflow 迁移，避免只执行 Workflow 批次而遗漏运行时所需字段。迁移脚本不会启动或重启应用，也不会自动清理 Redis 权限缓存；按各模块下文的缓存和回滚说明操作。
 
+### 不使用 Docker 的执行方式
+
+`scripts/migrate-workflow-schema.sh` 和 `make phase2-schema-migrate` 使用 `docker compose exec mysql`，只适用于 Compose。直接部署时先停止所有 JAR、Workflow/UPMS 消费者、通知消费者、Generator 写入和 Quartz 调度节点，完成数据库备份，并保持 `WORKFLOW_SCHEMA_UPDATE=false`；然后使用本机或数据库主机的 MySQL CLI，按 `make phase2-migration-list` 输出的文件名顺序逐个执行迁移 SQL。每个文件成功后在 `bixi_schema_migration` 写入文件名，失败时保留已执行的 DDL 和账本记录，修复后从下一个未登记文件继续。迁移 SQL 可能包含 `DELIMITER` 和过程 DDL，不能改用应用启动自动建表。
+
+单个迁移的执行形式如下：
+
+```bash
+mysql --default-character-set=utf8mb4 -u <username> -p <database> \
+  < bixi-project-documents/sql/migrations/<migration-file>.sql
+```
+
+迁移前置条件、权限、缓存清理和回退边界仍以本文件各模块章节为准。
+
 ## 通知投递状态
 
 启用通知实时投递状态、失败原因和人工重试前，已有库先执行
@@ -41,7 +54,7 @@ cloud 模式的 Rabbit 通知消息还必须携带发布租户的 `tenantId`。�
 
 启用租户级 Quartz 调度前，已有数据库先在暂停任务管理写入和调度节点的维护窗口执行 `20260925_quartz_tenant_scope.sql`。该脚本要求先完成 `20260921_phase1b_tenant_backfill.sql`，拒绝空租户、非法租户和租户内同名同组任务，然后将全局 `(name, group)` 唯一键替换为 `(tenant_id, name, group)`。结构冲突不会被覆盖，脚本可重复执行。
 
-升级后的应用在首次启动对账时会将旧的全局 Quartz identity 删除并按租户重新创建。应用回退前必须停止调度节点并清理已创建的租户前缀 Quartz identity，避免旧版本无法管理这些任务。新建数据库已由 `01_init_all_tables.sql` 使用租户级唯一键，无需执行本迁移。
+升级后的应用在首次启动对账时会将旧的全局 Quartz identity 删除并按租户重新创建。应用回退前必须停止调度节点并清理已创建的租户前缀 Quartz identity，避免旧版本无法管理这些任务。新建数据库已由 `01_schema.sql` 使用租户级唯一键，无需执行本迁移。
 
 ## Quartz 重试与执行历史
 
@@ -59,11 +72,11 @@ cloud 模式的 Rabbit 通知消息还必须携带发布租户的 `tenantId`。�
 
 已有数据库升级生成器和 Quartz 的方法级权限前，执行 `20260924_phase2_permissions.sql`。它补齐代码生成查看、同步、编辑、生成、导出，以及 Quartz 任务查看、执行记录查看和记录删除权限，并仅授权未删除的管理员角色 1；普通角色继续由管理员按需授权。脚本可重复执行，兼容记录的展示字段保持不变，菜单 ID、权限、父菜单或类型冲突会停止迁移而不会覆盖自定义数据。
 
-迁移完成后按 `menu_details`、`role_details`、`user_details` 顺序清理对应权限缓存，再验证管理员入口与低权限拒绝行为。新建数据库已由 `04_init_data.sql` 提供相同菜单和授权，无需重复执行。
+迁移完成后按 `menu_details`、`role_details`、`user_details` 顺序清理对应权限缓存，再验证管理员入口与低权限拒绝行为。新建数据库已由 `02_data.sql` 提供相同菜单和授权，无需重复执行。
 
 ## 管理与通知安全权限
 
-升级到新增管理查询、导入/导出及通知权限的版本前，已有库先执行 `20260921_security_permissions.sql`。它补齐 18 个权限菜单及管理员 `role_id=1` 的授权；新建库已由 `04_init_data.sql` 提供相同数据，无需重复迁移。普通角色不会自动扩权，应由管理员按业务需要显式分配新增权限。
+升级到新增管理查询、导入/导出及通知权限的版本前，已有库先执行 `20260921_security_permissions.sql`。它补齐 18 个权限菜单及管理员 `role_id=1` 的授权；新建库已由 `02_data.sql` 提供相同数据，无需重复迁移。普通角色不会自动扩权，应由管理员按业务需要显式分配新增权限。
 
 在维护窗口停止该库对应的应用和菜单/授权写入，备份 `sys_menu`、`sys_role`、`sys_role_menu`，使用支持 `DELIMITER` 的独立 MySQL 8.0+ 连接执行：
 
@@ -87,7 +100,7 @@ python3 scripts/test-security-menu-migration.py
 
 ## AI 菜单与权限
 
-已有数据库启用 AI 对话、RAG、文档和模型配置接口前，执行 `20260926_ai_menus.sql`。脚本新增 `/ai` 菜单树及 `ai_chat_add`、`ai_rag_add`、`ai_session_*`、`ai_message_*`、`ai_document_*`、`ai_config_*` 权限，并只授予未删除的管理员角色 1；新建数据库由 `04_init_data.sql` 提供相同菜单和授权。脚本会在写入前校验菜单 ID、路由、权限、父 ID、类型和管理员角色，兼容记录的展示字段保持不变，冲突时回滚且不会覆盖自定义菜单。迁移可重复执行；执行后按 `menu_details` → `role_details` → `user_details` 顺序清理权限缓存，再验证低权限账号无法调用 AI 接口。
+已有数据库启用 AI 对话、RAG、文档和模型配置接口前，执行 `20260926_ai_menus.sql`。脚本新增 `/ai` 菜单树及 `ai_chat_add`、`ai_rag_add`、`ai_session_*`、`ai_message_*`、`ai_document_*`、`ai_config_*` 权限，并只授予未删除的管理员角色 1；新建数据库由 `02_data.sql` 提供相同菜单和授权。脚本会在写入前校验菜单 ID、路由、权限、父 ID、类型和管理员角色，兼容记录的展示字段保持不变，冲突时回滚且不会覆盖自定义菜单。迁移可重复执行；执行后按 `menu_details` → `role_details` → `user_details` 顺序清理权限缓存，再验证低权限账号无法调用 AI 接口。
 
 启用 AI 模型配置的持久化前，已有数据库还要执行 `20260928_ai_model_config.sql`。迁移会创建或补齐按 `tenant_id` 唯一的 `ai_model_config` 表，并校验已有列和唯一索引的类型；发现结构冲突或租户重复数据时停止，不覆盖配置。模型默认值和系统提示词写入业务数据库，服务重启及 cloud 多副本从同一行读取；DashScope/API provider 密钥仍只从部署环境注入，不写入数据库或配置接口响应。迁移可重复执行，应用写入期间应暂停 AI 配置编辑，完成后用两个租户分别更新并重新启动一个实例验证恢复和隔离。
 
@@ -107,7 +120,7 @@ python3 scripts/test-security-menu-migration.py
 
 前三段上游脚本是一次性的空库初始化资源，第四段是可用于既有库的 Bixi 补充迁移；它保留已经存在的属性值，运行配置仍固定使用 Flowable 7.1.0 默认值 `true`。这些脚本必须在没有 Workflow 副本连接数据库的维护窗口执行。若任一段在执行中失败，先保留并检查已经创建的 `ACT_*` 表和 `bixi_schema_migration` 记录，修复原因后再重试，不要并发启动 Workflow。
 
-`20260921_workflow_base_entity_columns.sql` 用于已有 MySQL 8.0+ 数据库，补齐九张工作流、表单及表单权限表继承的 `BaseEntity` 字段。新建数据库使用更新后的 `01_init_all_tables.sql`。
+`20260921_workflow_base_entity_columns.sql` 用于已有 MySQL 8.0+ 数据库，补齐九张工作流、表单及表单权限表继承的 `BaseEntity` 字段。新建数据库使用更新后的 `01_schema.sql`。
 
 升级时选中业务数据库并执行增量脚本：
 

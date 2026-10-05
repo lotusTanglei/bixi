@@ -3,7 +3,6 @@ package com.lotus.bixi.acceptance.api.vo;
 import com.alibaba.excel.annotation.ExcelProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-import java.time.LocalDateTime;
 
 @Data
 @Schema(description = "导出公共参数配置表")
@@ -12,6 +11,10 @@ public class SysPublicParamExportVO {
 	@ExcelProperty("名称")
 	@Schema(description = "名称")
 	private String name;
+
+	@ExcelProperty("键")
+	@Schema(description = "键")
+	private String key;
 
 	@ExcelProperty("值")
 	@Schema(description = "值")

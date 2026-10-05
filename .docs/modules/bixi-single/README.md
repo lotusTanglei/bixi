@@ -1,24 +1,25 @@
 # bixi-single — 单体部署聚合模块
 
-单体模式部署聚合器，通过 Maven Profile `-Psingle` 激活，将 Auth、UPMS、Generator 和 Quartz 打包为单个 Spring Boot 应用。同一 Workflow 业务模块也包含在制品中，默认关闭，通过 `workflow.enabled=true` 按需装配。`bixi-ai-biz` 业务实现同样包含在制品中，由默认值为 `false` 的 `AI_ENABLED` 控制；设置为 `true` 后按需装配。cloud 中 AI 作为独立服务运行，Monitor 始终独立运行。工作流基础审批已通过阶段一双模验收，可靠协作和恢复仍在实施，见 [交付清单](../../workflow/PROGRESS.md)。
+`bixi-single` 是 single 模式的组合根。Maven Profile `-Psingle` 将 Auth、UPMS、Generator、Quartz、Workflow 和 AI 的业务实现装入一个 Spring Boot 可执行 JAR；业务 Controller、Service、Mapper 和前端页面仍由各自共享模块提供。
 
-## 核心职责
+## 聚合内容
 
-- 聚合 Auth、UPMS、Generator 和 Quartz，并提供可选的 `bixi-ai-biz` 与 Workflow 业务实现，为单一可执行 JAR 服务
-- 无需 Spring Cloud Gateway 网关和 Nacos 注册中心
-- 简化开发环境搭建和小规模部署场景
+| 依赖 | 运行边界 |
+|------|----------|
+| `bixi-auth` | OAuth2.1 认证和令牌端点 |
+| `bixi-upms-biz` | 用户权限、通知、文件、验收资源等业务实现 |
+| `bixi-generator` | 由 `GENERATOR_ENABLED` 控制，默认开启 |
+| `bixi-quartz` | 定时任务业务实现 |
+| `bixi-workflow-biz` | 由 `WORKFLOW_ENABLED` 控制，默认关闭，使用进程内适配器 |
+| `bixi-ai-biz` | 由 `AI_ENABLED` 控制，默认关闭；开启时需要 `DASHSCOPE_API_KEY` |
 
-## 目录结构
+## 运行边界
 
-```
-bixi-single/
-├── src/
-│   └── main/
-│       ├── java/        # 单体模式启动类
-│       └── resources/   # 单体模式专用配置
-├── pom.xml              # 声明当前单体聚合模块依赖
-└── target/              # 构建产物
-```
+- `application.yml` 关闭 Nacos config/discovery，并排除 Spring Boot 的 RabbitMQ 自动配置；标准 single Compose 只启动 MySQL、Redis、single 和 single 前端。
+- 应用进程监听 `9999`，上下文路径为 `/admin`。Compose 默认将宿主机 `${SINGLE_PORT:-9998}` 映射到容器 `9999`；健康检查地址为 `/admin/actuator/health`。
+- Workflow 启用后必须同时设置 `BIXI_RELIABLE_ENABLED=true`；single 的可靠投递使用本地持久化适配，`BIXI_RELIABLE_RABBIT_ENABLED` 可保持关闭。
+- `WORKFLOW_SCHEMA_UPDATE=true` 只适用于可丢弃的新库；存量数据库按 SQL 增量迁移说明执行。
+- 开发配置将 S3 兼容对象存储设为可选外部服务（`file.oss.enable=true`）。Compose 不创建 MinIO，需通过 `MINIO_ENDPOINT`、`MINIO_ACCESS_KEY` 和 `MINIO_SECRET_KEY` 提供服务连接信息。
 
 ## 使用方式
 
@@ -30,7 +31,13 @@ mvn -Psingle -pl bixi-single -am clean package
 java -jar bixi-single/target/bixi-single.jar
 ```
 
-## 与微服务模式的区别
+常用环境变量：`GENERATOR_ENABLED`、`WORKFLOW_ENABLED`、`AI_ENABLED`、`DASHSCOPE_API_KEY`、`BIXI_RELIABLE_ENABLED`、`WORKFLOW_SCHEMA_UPDATE`。配置修改后需要重启应用。
 
-- 微服务模式（`-Pcloud`，默认）：各模块独立部署，依赖 Nacos + Gateway
-- 单体模式（`-Psingle`）：Auth、UPMS、Generator、Quartz 合并为一个应用；AI 通过 `AI_ENABLED=true` 显式启用后直接使用，默认关闭
+## 与 cloud 模式的区别
+
+- cloud 由 Gateway、Auth、UPMS、Generator、Quartz 等独立应用组成，使用 Nacos 和 Feign；Workflow/AI 通过独立服务和开关运行。
+- single 不运行 Gateway、Nacos 或 RabbitMQ，直接由一个应用提供 `/admin` 下的认证和业务接口；通知和 Workflow 的跨模块调用使用进程内适配器。
+
+## 包路径
+
+`com.lotus.bixi`

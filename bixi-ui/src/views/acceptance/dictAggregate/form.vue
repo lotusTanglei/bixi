@@ -134,6 +134,8 @@ const writePermissions = computed(() => form.id
 	? ['acceptance_dict_aggregate_edit', 'acceptance_sys_dict_item_edit']
 	: ['acceptance_dict_aggregate_add', 'acceptance_sys_dict_item_add']);
 const rules = {
+	type: [{ required: true, message: '请输入字典类型', trigger: 'blur' }],
+	name: [{ required: true, message: '请输入字典名称', trigger: 'blur' }],
 };
 const addChild = () => form.children.push(emptyChild());
 const removeChild = (index: number) => form.children.splice(index, 1);
@@ -149,6 +151,10 @@ const openDialog = async (id?: string) => {
 };
 const submit = async () => {
 	if (!(await dataFormRef.value?.validate().catch(() => false))) return;
+	if (form.children.length === 0 || form.children.some((child) => !child.value?.trim() || !child.label?.trim())) {
+		useMessage().error('请至少添加一条完整的字典明细');
+		return;
+	}
 	try {
 		loading.value = true;
 		await (form.id ? putObj({ ...form }) : addObj({ ...form }));

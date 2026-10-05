@@ -61,6 +61,9 @@ const emptyForm = (): SysPublicParamForm => ({
 });
 const form = reactive<SysPublicParamForm>(emptyForm());
 const rules = {
+	name: [{ required: true, message: '请输入名称', trigger: 'blur' }],
+	key: [{ required: true, message: '请输入键', trigger: 'blur' }],
+	value: [{ required: true, message: '请输入值', trigger: 'blur' }],
 };
 const openDialog = async (id?: string) => {
 	Object.assign(form, emptyForm());

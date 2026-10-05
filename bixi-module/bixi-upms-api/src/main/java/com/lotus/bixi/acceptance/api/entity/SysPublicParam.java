@@ -1,5 +1,6 @@
 package com.lotus.bixi.acceptance.api.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.lotus.bixi.common.mybatis.base.BaseEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -17,9 +18,11 @@ public class SysPublicParam extends BaseEntity<SysPublicParam> {
 	private String name;
 
 	@Schema(description = "键")
+	@TableField("`key`")
 	private String key;
 
 	@Schema(description = "值")
+	@TableField("`value`")
 	private String value;
 
 	@Schema(description = "校验码")

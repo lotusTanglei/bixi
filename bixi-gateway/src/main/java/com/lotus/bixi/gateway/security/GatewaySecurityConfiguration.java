@@ -74,7 +74,7 @@ public class GatewaySecurityConfiguration {
                         // OAuth endpoints required to obtain or start a login flow.
                         .pathMatchers("/auth/oauth2/token", "/auth/oauth2/authorize", "/auth/oauth2/jwks",
                                 "/auth/.well-known/**", "/auth/token/login", "/auth/token/form",
-                                "/auth/token/confirm_access", "/auth/code/**", "/auth/css/**",
+                                "/auth/token/confirm_access", "/auth/logout", "/auth/code/**", "/auth/css/**",
                                 "/auth/error")
                         .permitAll()
                         // Provider callbacks are authenticated by the UPMS HMAC

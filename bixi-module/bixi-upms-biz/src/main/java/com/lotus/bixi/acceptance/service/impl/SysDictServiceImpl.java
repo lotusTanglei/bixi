@@ -66,8 +66,11 @@ public class SysDictServiceImpl extends ServiceImpl<SysDictMapper, SysDict> impl
 
 	private LambdaQueryWrapper<SysDict> queryWrapper(SysDictQueryDTO query) {
 		if (query == null) query = new SysDictQueryDTO();
-		LambdaQueryWrapper<SysDict> wrapper = Wrappers.lambdaQuery();
-		return wrapper;
+		return Wrappers.<SysDict>lambdaQuery()
+			.eq(SysDict::getTenantId, requireCurrentTenant())
+			.like(StrUtil.isNotBlank(query.getType()), SysDict::getType, query.getType())
+			.like(StrUtil.isNotBlank(query.getName()), SysDict::getName, query.getName())
+			.eq(StrUtil.isNotBlank(query.getSystemFlag()), SysDict::getSystemFlag, query.getSystemFlag());
 	}
 
 	@Override
@@ -89,6 +92,7 @@ public class SysDictServiceImpl extends ServiceImpl<SysDictMapper, SysDict> impl
 		requirePermissions("acceptance_dict_aggregate_add", "acceptance_sys_dict_item_add");
 		validateNewChildren(dto.getChildren());
 		SysDict parent = BeanUtil.copyProperties(dto, SysDict.class);
+		parent.setTenantId(requireCurrentTenant());
 		requireWrite(save(parent), "新增主表");
 		replaceChildren(parent, dto.getChildren());
 		return true;
@@ -102,6 +106,7 @@ public class SysDictServiceImpl extends ServiceImpl<SysDictMapper, SysDict> impl
 		validateRequestedChildren(current, dto.getChildren());
 		SysDict parentUpdate = BeanUtil.copyProperties(dto, SysDict.class);
 		parentUpdate.setId(current.getId());
+		parentUpdate.setTenantId(current.getTenantId());
 		requireWrite(updateById(parentUpdate), "修改主表");
 		replaceChildren(requireOwnedParent(dto.getId()), dto.getChildren());
 		return true;
@@ -123,6 +128,7 @@ public class SysDictServiceImpl extends ServiceImpl<SysDictMapper, SysDict> impl
 	@Override
 	@Transactional(rollbackFor = Exception.class)
 	public SysDictImportResult importRows(List<SysDictImportDTO> rows) {
+		requireCurrentTenant();
 		if (rows == null || rows.isEmpty()) {
 			return SysDictImportResult.failure("EMPTY_IMPORT", 0,
 				List.of(new SysDictImportRowError(1, List.of("导入文件不包含数据行"))));
@@ -160,6 +166,7 @@ public class SysDictServiceImpl extends ServiceImpl<SysDictMapper, SysDict> impl
 				entity.setDescription(row.getDescription());
 				entity.setSn(row.getSn());
 				entity.setSystemFlag(row.getSystemFlag());
+				entity.setTenantId(requireCurrentTenant());
 				if (baseMapper.insert(entity) != 1) throw new ImportWriteException(currentRow);
 				currentRow++;
 			}
@@ -299,7 +306,9 @@ public class SysDictServiceImpl extends ServiceImpl<SysDictMapper, SysDict> impl
 				.eq(SysDictItem::getDictId, relationshipKey)
 				.eq(SysDictItem::getTenantId, requireCurrentTenant())
 			);
-			if (existing == null) throw new IllegalArgumentException("明细不存在或不属于当前主表");
+			if (existing == null || !Objects.equals(existing.getTenantId(), requireCurrentTenant())) {
+				throw new IllegalArgumentException("明细不存在或不属于当前主表");
+			}
 		}
 	}
 

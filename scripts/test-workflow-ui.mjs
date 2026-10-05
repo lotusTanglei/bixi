@@ -96,7 +96,7 @@ test('workflow form administration follows the immutable backend contract', () =
 	const versionController = readFileSync(new URL('../bixi-module/bixi-workflow-biz/src/main/java/com/lotus/bixi/workflow/controller/FormVersionController.java', import.meta.url), 'utf8');
 	const permissionController = readFileSync(new URL('../bixi-module/bixi-workflow-biz/src/main/java/com/lotus/bixi/workflow/controller/FormPermissionController.java', import.meta.url), 'utf8');
 	const dataController = readFileSync(new URL('../bixi-module/bixi-workflow-biz/src/main/java/com/lotus/bixi/workflow/controller/FormDataController.java', import.meta.url), 'utf8');
-	const seed = readFileSync(new URL('../bixi-project-documents/sql/04_init_data.sql', import.meta.url), 'utf8');
+	const seed = readFileSync(new URL('../bixi-project-documents/sql/02_data.sql', import.meta.url), 'utf8');
 
 	assert.match(api, /url:\s*['"]\/admin\/workflow\/form\/list['"]/);
 	assert.doesNotMatch(api, /\/workflow\/form\/page/);

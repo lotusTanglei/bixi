@@ -2,20 +2,28 @@ package com.lotus.bixi.acceptance.api.dto;
 
 import com.alibaba.excel.annotation.ExcelProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
-import java.time.LocalDateTime;
 
 @Data
 @Schema(description = "导入公共参数配置表")
 public class SysPublicParamImportDTO {
 
 	@Size(max = 512, message = "名称长度不能超过512")
+	@NotBlank(message = "名称不能为空")
 	@ExcelProperty("名称")
 	@Schema(description = "名称")
 	private String name;
 
+	@Size(max = 512, message = "键长度不能超过512")
+	@NotBlank(message = "键不能为空")
+	@ExcelProperty("键")
+	@Schema(description = "键")
+	private String key;
+
 	@Size(max = 512, message = "值长度不能超过512")
+	@NotBlank(message = "值不能为空")
 	@ExcelProperty("值")
 	@Schema(description = "值")
 	private String value;

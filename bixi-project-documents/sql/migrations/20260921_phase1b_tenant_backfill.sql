@@ -1,5 +1,5 @@
 -- Phase 1B tenant backfill.
--- Run after 01_init_all_tables.sql and before application traffic is enabled.
+-- Run after 01_schema.sql and before application traffic is enabled.
 -- Existing rows without an owner are assigned to the default tenant (1).
 
 INSERT INTO sys_tenant (id, name, code, status, max_user_count, del_flag)

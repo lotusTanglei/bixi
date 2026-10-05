@@ -10,6 +10,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.context.annotation.ComponentScan;
 
 /**
  * @author 唐磊
@@ -24,6 +26,13 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 @EnableDiscoveryClient
 @ConditionalOnProperty(name = "bixi.deployment.mode", havingValue = "cloud", matchIfMissing = true)
 @SpringBootApplication
+@ComponentScan(basePackages = {"com.lotus.bixi.upms", "com.lotus.bixi.acceptance"})
+@MapperScan({
+        "com.lotus.bixi.upms.mapper",
+        "com.lotus.bixi.upms.demo.mapper",
+        "com.lotus.bixi.upms.demo.leave.mapper",
+        "com.lotus.bixi.acceptance.mapper"
+})
 public class BixiUPMSApplication {
 
     public static void main(String[] args) {

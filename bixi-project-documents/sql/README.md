@@ -18,15 +18,15 @@
 | 代码生成 | `gen_*` | 5 | 数据源、字段配置、模板等 |
 | 定时任务 | `sys_job*`, `QRTZ_*` | 13 | 系统任务表和 Quartz 原生表 |
 
-当前完整建表脚本 `01_init_all_tables.sql` 包含 50 张表，其中包含系统基础表、代码生成表、表单表、工作流表、AI 表、定时任务表以及 Quartz 原生表。
+当前完整建表脚本 `01_schema.sql` 包含 50 张表，其中包含系统基础表、代码生成表、表单表、工作流表、AI 表、定时任务表以及 Quartz 原生表。
 
 推荐执行顺序：
 
 1. 创建数据库：`CREATE DATABASE bixi DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;`
-2. 执行 `01_init_all_tables.sql`
-3. 执行 `04_init_data.sql`
-4. 执行修正后的 `02_add_constraints.sql`
-5. 执行修正后的 `03_add_indexes.sql`
+2. 执行 `01_schema.sql`
+3. 执行 `02_data.sql`
+4. 执行修正后的 `03_constraints.sql`
+5. 执行修正后的 `04_indexes.sql`
 
 部署步骤只以本目录实际存在的 SQL 和 Markdown 文件为准，不引用未随仓库提交的模板更新指南或模板更新脚本。
 
@@ -36,21 +36,24 @@
 
 ### ⚡ 一键初始化（推荐）
 
+以下 SQL 命令在 `bixi-project-documents/sql` 目录执行；运行时密钥脚本在仓库根目录执行。
+
 ```bash
 # 1. 创建数据库
 mysql -u root -p -e "CREATE DATABASE bixi CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
-# 2. 导入表结构
-mysql -u root -p bixi < 01_init_all_tables.sql
-
-# 3. 导入初始数据（重要！）
-mysql -u root -p bixi < 04_init_data.sql
+# 2. 按编号导入表结构、基础数据、约束和索引
+mysql -u root -p bixi < 01_schema.sql
+mysql -u root -p bixi < 02_data.sql
+mysql -u root -p bixi < 03_constraints.sql
+mysql -u root -p bixi < 04_indexes.sql
 ```
 
 **⚠️ 重要提示**：
-- ✅ **必须执行 `04_init_data.sql`**，否则系统无法正常使用
-- ✅ 初始数据包含：默认管理员、角色、菜单、字典、代码生成器模板
-- ✅ 默认管理员账号：`admin` / `admin123`（首次登录后请立即修改）
+- ✅ **必须按 `01` → `02` → `03` → `04` 执行**，文件名就是执行顺序
+- ✅ `02_data.sql` 只写入基础数据和 `RUNTIME_*` 占位值，不包含固定管理员密码
+- ✅ 新库导入后还要执行 `deploy/mysql/05_runtime_secrets.sh`，写入管理员密码、租户默认密码和 OAuth client secret
+- ✅ 生产环境不要使用示例密码；请先设置外部 Secret，再执行运行时密钥脚本
 
 ### 📝 分步初始化（可选）
 
@@ -59,10 +62,16 @@ mysql -u root -p bixi < 04_init_data.sql
 mysql -u root -p -e "CREATE DATABASE bixi CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
 # 2. 导入表结构和初始化数据（按顺序）
-mysql -u root -p bixi < 01_init_all_tables.sql   # 所有表结构
-mysql -u root -p bixi < 04_init_data.sql        # 系统初始数据
-mysql -u root -p bixi < 02_add_constraints.sql  # 约束（可选）
-mysql -u root -p bixi < 03_add_indexes.sql      # 索引（可选）
+mysql -u root -p bixi < 01_schema.sql       # 所有表结构
+mysql -u root -p bixi < 02_data.sql         # 系统初始数据
+mysql -u root -p bixi < 03_constraints.sql  # 约束
+mysql -u root -p bixi < 04_indexes.sql      # 索引
+
+# 3. 在数据库主机设置以下变量后执行运行时密钥写入
+#    MYSQL_ROOT_PASSWORD、MYSQL_DATABASE、ADMIN_PASSWORD_BCRYPT_B64、
+#    OAUTH_PASSWORD_CLIENT_SECRET、OAUTH_MOBILE_CLIENT_SECRET、
+#    OAUTH_INTERNAL_SEED、TENANT_DEFAULT_PASSWORD
+sh ../../deploy/mysql/05_runtime_secrets.sh
 ```
 
 ---
@@ -74,10 +83,10 @@ sql/
 ├── README.md                      # 本文件（数据库概览和初始化指南）
 ├── DATABASE.md                    # 数据库设计文档
 ├── DATA_DICTIONARY.md             # 数据字典
-├── 01_init_all_tables.sql        # 完整初始化脚本（表结构）
-├── 02_add_constraints.sql        # 约束优化（可选）
-├── 03_add_indexes.sql            # 索引优化（可选）
-├── 04_init_data.sql              # ⭐ 初始数据（必须执行！）
+├── 01_schema.sql                 # 完整初始化脚本（表结构）
+├── 02_data.sql                   # ⭐ 初始数据（必须执行！）
+├── 03_constraints.sql            # 约束
+├── 04_indexes.sql                # 索引
 ├── bixi.sql                      # 核心系统模块（16 个表）
 ├── bixi_ai.sql                   # AI 模块（5 个表）
 ├── bixi_workflow.sql             # 工作流模块（4 个表）
@@ -85,6 +94,8 @@ sql/
 ├── bixi_gen.sql                  # 代码生成器（5 个表）
 └── bixi_job.sql                  # 定时任务（系统任务表和 Quartz 表）
 ```
+
+运行时密钥脚本：`deploy/mysql/05_runtime_secrets.sh`（Compose/直装共用）。
 
 ---
 
@@ -257,7 +268,7 @@ spring:
 
 ## 🔍 索引优化
 
-**基础索引已包含在初始化脚本中**，更多性能优化请查看：[03_add_indexes.sql](03_add_indexes.sql)
+**基础索引已包含在初始化脚本中**，更多性能优化请查看：[04_indexes.sql](04_indexes.sql)
 
 **常用查询索引**：
 ```sql
@@ -276,7 +287,7 @@ CREATE INDEX idx_msg_session_time ON ai_message(session_id, create_time DESC);
 
 ## 🔒 约束说明
 
-**唯一约束**（可选执行，见 [02_add_constraints.sql](02_add_constraints.sql)）：
+**唯一约束**（可选执行，见 [03_constraints.sql](03_constraints.sql)）：
 ```sql
 -- 用户表唯一约束
 ALTER TABLE sys_user ADD CONSTRAINT uk_username UNIQUE (username);
@@ -289,7 +300,7 @@ ALTER TABLE sys_dict ADD CONSTRAINT uk_dict_type UNIQUE (type);
 
 **外键约束**：
 - 当前版本未启用外键约束（由应用层保证数据完整性）
-- 如需启用，请参考 [02_add_constraints.sql](02_add_constraints.sql)
+- 如需启用，请参考 [03_constraints.sql](03_constraints.sql)
 
 ---
 

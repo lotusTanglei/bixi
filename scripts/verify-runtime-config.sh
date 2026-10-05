@@ -156,8 +156,8 @@ awk '
     || { echo 'Single image preparation must not require a RabbitMQ image' >&2; exit 1; }
 
 for contract in biz_demo_task demo_task_view demo_task_add demo_task_edit demo_task_del; do
-    grep -F "${contract}" "${ROOT}/bixi-project-documents/sql/01_init_all_tables.sql" \
-        "${ROOT}/bixi-project-documents/sql/04_init_data.sql" >/dev/null 2>&1 \
+    grep -F "${contract}" "${ROOT}/bixi-project-documents/sql/01_schema.sql" \
+        "${ROOT}/bixi-project-documents/sql/02_data.sql" >/dev/null 2>&1 \
         || { echo "Missing sample business contract: ${contract}" >&2; exit 1; }
 done
 
@@ -196,7 +196,7 @@ done
 grep -F "SET value = '\${TENANT_DEFAULT_PASSWORD}'" "${ROOT}/deploy/mysql/05_runtime_secrets.sh" >/dev/null
 
 if grep -F 'gen_datasource_config' "${ROOT}/deploy/mysql/05_runtime_secrets.sh" \
-    "${ROOT}/bixi-project-documents/sql/04_init_data.sql" >/dev/null; then
+    "${ROOT}/bixi-project-documents/sql/02_data.sql" >/dev/null; then
     echo 'Default dynamic datasource seed must not bypass Jasypt encryption' >&2
     exit 1
 fi
@@ -207,8 +207,8 @@ if grep -E 'RABBITMQ_PASSWORD:guest|MYSQL_PASSWORD:(bixi|123456)|MINIO_SECRET_KE
     exit 1
 fi
 
-if grep -F "'TENANT_DEFAULT_PASSWORD', '123456'" "${ROOT}/bixi-project-documents/sql/04_init_data.sql" >/dev/null \
-    || grep -F "'root', '123456', 'mysql'" "${ROOT}/bixi-project-documents/sql/04_init_data.sql" >/dev/null; then
+if grep -F "'TENANT_DEFAULT_PASSWORD', '123456'" "${ROOT}/bixi-project-documents/sql/02_data.sql" >/dev/null \
+    || grep -F "'root', '123456', 'mysql'" "${ROOT}/bixi-project-documents/sql/02_data.sql" >/dev/null; then
     echo 'Database seed contains a known default password' >&2
     exit 1
 fi
@@ -306,7 +306,7 @@ if [ -n "${legacy_docker}" ]; then
     exit 1
 fi
 
-if grep -En "https?://(127\\.0\\.0\\.1|localhost)" "${ROOT}/bixi-project-documents/sql/04_init_data.sql" >/dev/null; then
+if grep -En "https?://(127\\.0\\.0\\.1|localhost)" "${ROOT}/bixi-project-documents/sql/02_data.sql" >/dev/null; then
     echo 'Database seed contains a hard-coded local HTTP address' >&2
     exit 1
 fi

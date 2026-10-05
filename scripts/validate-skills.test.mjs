@@ -12,8 +12,9 @@ const validatorPath = fileURLToPath(validatorUrl);
 const skillNames = ['context', 'feature', 'debug', 'architecture', 'verify'].map(name => `bixi-${name}`);
 const projectFiles = [
   'AGENTS.md', '.docs/1_ARCHITECTURE.md', '.docs/5_AI_DEVELOPMENT.md',
-  'bixi-ui/src/api/demo/task.ts', 'bixi-project-documents/sql/01_init_all_tables.sql',
-  'bixi-project-documents/sql/03_add_indexes.sql', 'bixi-project-documents/sql/04_init_data.sql',
+  'bixi-ui/src/api/demo/task.ts', 'bixi-project-documents/sql/01_schema.sql',
+  'bixi-project-documents/sql/02_data.sql', 'bixi-project-documents/sql/03_constraints.sql',
+  'bixi-project-documents/sql/04_indexes.sql',
   'scripts/acceptance.mjs',
 ];
 const projectDirectories = [

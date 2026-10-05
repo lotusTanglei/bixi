@@ -28,7 +28,7 @@ description: "当用户要求在 Bixi 新增或扩展业务功能、CRUD、接�
 - 模块归属：检查实际模块与组合根。依赖为 `deployment → biz → api/common`；公共模块和 API 不反向依赖 biz。业务实现只放一处，single 只组合；跨模块消费者只注入 `*-api/service` 契约，cloud 用 Feign 适配器，single 用本地适配器，禁止 localhost Feign 回环。
 - 后端：以 `bixi-module/bixi-upms-biz/src/main/java/com/lotus/bixi/upms/demo` 为首阶段参考，完成 Entity、按需 DTO/VO、Mapper、Service、Controller、分页筛选与详情；Java 17、Jakarta Validation 和 `@Valid`。核对继承字段及逻辑删除，不让业务状态覆盖公共 `status`。不要为清单机械增加无用途类。
 - 权限与审计：查询/详情 `@HasPermission("<domain>_<resource>_view")`；写入分别 `add/edit/del`。每个写操作加稳定标题的 `@SysLog`；前端 `v-auth` 与菜单 SQL 使用同名权限。
-- SQL：表写入 `bixi-project-documents/sql/01_init_all_tables.sql`，过滤/排序索引写入 `03_add_indexes.sql`，菜单、按钮、角色关联及必要数据写入 `04_init_data.sql`。核对既有初始化顺序；持久环境另考虑迁移，不能为导入新表重置用户数据。
+- SQL：表写入 `bixi-project-documents/sql/01_schema.sql`，过滤/排序索引写入 `04_indexes.sql`，菜单、按钮、角色关联及必要数据写入 `02_data.sql`。核对既有初始化顺序；持久环境另考虑迁移，不能为导入新表重置用户数据。
 - 开发环境也不能默认清卷或执行 `make reset`；优先增量迁移或新建隔离项目。只有明确可丢弃且已获授权的环境才可重置，不能把删除数据列作一般开发的必需前置。
 - 前端：参考 `bixi-ui/src/api/demo/task.ts` 与 `bixi-ui/src/views/demo/task`，复用请求、分页和消息工具；API 走 `/admin/...`，菜单驱动动态路由。完成列表、详情/表单、校验、按钮权限、加载/错误/空态与响应式布局。
 - 生成器仅在模板存在且合适时采用，审查结果是否符合上述契约；模板不可用直接参考现有实现。
@@ -36,9 +36,9 @@ description: "当用户要求在 Bixi 新增或扩展业务功能、CRUD、接�
 <!-- bixi-ref: bixi-module/bixi-upms-biz/src/main/java/com/lotus/bixi/upms/demo -->
 <!-- bixi-ref: bixi-ui/src/api/demo/task.ts -->
 <!-- bixi-ref: bixi-ui/src/views/demo/task -->
-<!-- bixi-ref: bixi-project-documents/sql/01_init_all_tables.sql -->
-<!-- bixi-ref: bixi-project-documents/sql/03_add_indexes.sql -->
-<!-- bixi-ref: bixi-project-documents/sql/04_init_data.sql -->
+<!-- bixi-ref: bixi-project-documents/sql/01_schema.sql -->
+<!-- bixi-ref: bixi-project-documents/sql/04_indexes.sql -->
+<!-- bixi-ref: bixi-project-documents/sql/02_data.sql -->
 
 ## 验证与交付
 

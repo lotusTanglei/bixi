@@ -2,6 +2,18 @@
 	<div class="layout-padding">
 		<div class="layout-padding-auto layout-padding-view">
 			<el-form v-show="showSearch" ref="queryRef" :inline="true" :model="state.queryForm" @keyup.enter="getDataList">
+				<el-form-item label="名称" prop="name">
+					<el-input v-model="state.queryForm.name" clearable placeholder="输入名称" />
+				</el-form-item>
+				<el-form-item label="键" prop="key">
+					<el-input v-model="state.queryForm.key" clearable placeholder="输入键" />
+				</el-form-item>
+				<el-form-item label="类型" prop="type">
+					<el-input v-model="state.queryForm.type" clearable placeholder="输入类型" />
+				</el-form-item>
+				<el-form-item label="系统标志" prop="systemFlag">
+					<el-input v-model="state.queryForm.systemFlag" clearable placeholder="输入系统标志" />
+				</el-form-item>
 				<el-form-item>
 					<el-button icon="Search" type="primary" @click="getDataList">查询</el-button>
 					<el-button icon="Refresh" @click="resetQuery">重置</el-button>
@@ -70,7 +82,7 @@ const loadError = ref('');
 const fileInputRef = ref<HTMLInputElement>();
 const importResult = ref<SysPublicParamImportResult>();
 const importResultVisible = ref(false);
-const state = reactive<BasicTableProps>({ queryForm: {}, pageList: fetchList });
+const state = reactive<BasicTableProps>({ queryForm: { name: '', key: '', type: '', systemFlag: '' }, pageList: fetchList });
 const { getDataList, currentChangeHandle, sizeChangeHandle } = useTable(state);
 
 const loadPage = async () => {

@@ -1,29 +1,40 @@
 # SQL 脚本
 
-数据库初始化与模块 SQL 脚本集合，包含建表、约束、索引和初始数据。
+本目录包含新库初始化脚本、模块独立脚本和既有数据库增量迁移。初始化脚本与迁移脚本的适用场景不同，执行前先确认数据库是否已有业务数据。
 
-## 目录说明
+## 新库初始化
 
-本目录包含 Bixi 项目所有数据库脚本，按执行顺序和模块组织。
+| 顺序 | 文件 | 作用 |
+|---:|---|---|
+| 1 | `01_schema.sql` | 创建所有模块的基础表 |
+| 2 | `02_data.sql` | 写入菜单、字典、角色授权和其他基础数据 |
+| 3 | `03_constraints.sql` | 添加外键、唯一约束等约束 |
+| 4 | `04_indexes.sql` | 添加查询和唯一索引 |
 
-## 脚本清单
+新库按上表顺序执行。Compose 会在这四个脚本之后执行 `deploy/mysql/05_runtime_secrets.sh`，将 `.env` 中生成的管理员密码、租户默认密码和 OAuth client secret 写入数据库。`bixi.sql`、`bixi_ai.sql`、`bixi_form.sql`、`bixi_gen.sql`、`bixi_job.sql` 和 `bixi_workflow.sql` 是按模块拆分的独立脚本，按需使用时应先确认与目标库的表结构兼容。
 
-| 文件 | 说明 |
-|------|------|
-| `01_init_all_tables.sql` | 全量建表脚本 |
-| `02_add_constraints.sql` | 添加约束（外键、唯一等） |
-| `03_add_indexes.sql` | 添加索引 |
-| `04_init_data.sql` | 初始化基础数据 |
-| `bixi.sql` | UPMS 核心模块表结构 |
-| `bixi_ai.sql` | AI 模块表结构 |
-| `bixi_gen.sql` | 代码生成器表结构 |
-| `bixi_job.sql` | 定时任务表结构 |
-| `bixi_workflow.sql` | 工作流模块表结构 |
-| `bixi_form.sql` | 表单引擎表结构 |
-| `DATABASE.md` | 数据库设计文档 |
-| `DATA_DICTIONARY.md` | 数据字典 |
+文件名就是执行顺序：先建表，再装载种子数据，然后添加约束，最后创建索引。`03_constraints.sql` 会校验已有数据；其中菜单和部门使用 `-1`、`0` 等根节点哨兵值，所以脚本不会添加可能拒绝这些根记录的自引用外键。
 
-## 使用方式
+## 既有库迁移
 
-1. 首次部署：按 `01` → `02` → `03` → `04` 顺序执行
-2. 单模块部署：直接执行对应模块的 SQL 文件（如 `bixi_ai.sql`）
+`migrations/` 保存按日期和名称排序的增量脚本，覆盖租户、权限、Workflow/Flowable、可靠投递、Quartz、生成器、AI/RAG、通知和示例业务等演进。迁移脚本按文件登记到 `bixi_schema_migration`，同一文件成功后可跳过重复执行。
+
+完整前置条件、迁移顺序和各模块的维护窗口要求见 [`migrations/README.md`](../../../../bixi-project-documents/sql/migrations/README.md)。常用入口：
+
+```bash
+make phase2-migration-list
+
+BIXI_ENV_FILE=/path/to/maintenance.env \
+BIXI_SCHEMA_MAINTENANCE=true \
+BIXI_MIGRATION_CONFIRM=APPLY_PHASE2_MIGRATIONS \
+make phase2-schema-migrate
+```
+
+已有数据库不要重新执行 `01_schema.sql` 到 `04_indexes.sql`。迁移失败时保留已执行的 DDL 和迁移账本，修复报告的结构冲突后按迁移说明重试。
+
+`make phase2-schema-migrate` 和 `make workflow-schema-migrate` 通过 Docker Compose 执行；直接打包部署时停止应用和消费者，使用 MySQL CLI 按 [`migrations/README.md`](../../../../bixi-project-documents/sql/migrations/README.md) 的文件名顺序逐个执行，并在 `bixi_schema_migration` 登记成功文件。
+
+## 设计文档
+
+- [`DATABASE.md`](../../../../bixi-project-documents/sql/DATABASE.md)：数据库结构和模块关系。
+- [`DATA_DICTIONARY.md`](../../../../bixi-project-documents/sql/DATA_DICTIONARY.md)：表、字段和取值说明。

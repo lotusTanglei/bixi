@@ -45,7 +45,7 @@ A complete CRUD change includes:
 
 - Entity validation, Mapper, Service, Controller, pagination, and details.
 - `@HasPermission` on reads and writes; `@SysLog` on every write.
-- Table definition in `01_init_all_tables.sql`, menu/role data in `04_init_data.sql`, and query indexes in `03_add_indexes.sql`.
+- Table definition in `01_schema.sql`, menu/role data in `02_data.sql`, and query indexes in `04_indexes.sql`.
 - Frontend API, page, form validation, button permissions, loading/error/empty states, and responsive layout.
 - Focused backend tests plus the shared runtime flow in `scripts/acceptance.mjs` when behavior changes.
 

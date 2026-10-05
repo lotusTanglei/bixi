@@ -24,7 +24,7 @@ description: "当用户需要查询 Bixi 的代码位置、调用链、架构、
 ## 检索与输出
 
 1. 依据问题选择入口，经 CodeGraph、权威文档和模块 README 后补充定向源码。对完整业务链追踪 `前端页面 → API → 路由 → Controller → Service → Mapper → SQL`，同时核对测试、权限与日志；允许继承实现，不虚构不存在的 Mapper XML。
-2. 示例后端在 `bixi-module/bixi-upms-biz/src/main/java/com/lotus/bixi/upms/demo`；前端为 `bixi-ui/src/api/demo/task.ts` 与 `bixi-ui/src/views/demo/task`。SQL 在 `bixi-project-documents/sql/01_init_all_tables.sql`、`03_add_indexes.sql`、`04_init_data.sql`；共享黑盒验收是 `scripts/acceptance.mjs`。
+2. 示例后端在 `bixi-module/bixi-upms-biz/src/main/java/com/lotus/bixi/upms/demo`；前端为 `bixi-ui/src/api/demo/task.ts` 与 `bixi-ui/src/views/demo/task`。SQL 在 `bixi-project-documents/sql/01_schema.sql`、`02_data.sql`、`03_constraints.sql`、`04_indexes.sql`；共享黑盒验收是 `scripts/acceptance.mjs`。
 3. 跨模块沿 `*-api/service` 传输无关契约追踪实际装配；cloud 的 Feign 与 single 的本地实现复用业务逻辑。文档与当前源码有差异时分别说明。
 4. 先给结论，再给核实过的文件与行号、调用关系和相关命令，最后说明未找到项及证据边界。源码、注解或测试代码的存在不代表测试已经运行，更不代表权限拒绝、审计落库已得到验证。
 
@@ -35,9 +35,9 @@ description: "当用户需要查询 Bixi 的代码位置、调用链、架构、
 <!-- bixi-ref: bixi-module/bixi-upms-biz/src/main/java/com/lotus/bixi/upms/demo -->
 <!-- bixi-ref: bixi-ui/src/api/demo/task.ts -->
 <!-- bixi-ref: bixi-ui/src/views/demo/task -->
-<!-- bixi-ref: bixi-project-documents/sql/01_init_all_tables.sql -->
-<!-- bixi-ref: bixi-project-documents/sql/03_add_indexes.sql -->
-<!-- bixi-ref: bixi-project-documents/sql/04_init_data.sql -->
+<!-- bixi-ref: bixi-project-documents/sql/01_schema.sql -->
+<!-- bixi-ref: bixi-project-documents/sql/04_indexes.sql -->
+<!-- bixi-ref: bixi-project-documents/sql/02_data.sql -->
 <!-- bixi-ref: scripts/acceptance.mjs -->
 
 ## 停止与交接

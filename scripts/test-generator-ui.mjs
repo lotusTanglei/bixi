@@ -50,7 +50,7 @@ test('template source updates use edit permission and display verified source me
 });
 
 test('phase-two generator and Quartz permissions are seeded and migratable', () => {
-	const seed = readFileSync(new URL('../bixi-project-documents/sql/04_init_data.sql', import.meta.url), 'utf8');
+	const seed = readFileSync(new URL('../bixi-project-documents/sql/02_data.sql', import.meta.url), 'utf8');
 	const migrationUrl = new URL('../bixi-project-documents/sql/migrations/20260924_phase2_permissions.sql', import.meta.url);
 	assert.ok(existsSync(migrationUrl), 'existing databases need an additive phase-two permission migration');
 	const migration = readFileSync(migrationUrl, 'utf8');
@@ -72,7 +72,7 @@ test('phase-two generator and Quartz permissions are seeded and migratable', () 
 });
 
 test('fixed-source updates have a clean-schema uniqueness guard and operator contract', () => {
-	const schema = readFileSync(new URL('../bixi-project-documents/sql/01_init_all_tables.sql', import.meta.url), 'utf8');
+	const schema = readFileSync(new URL('../bixi-project-documents/sql/01_schema.sql', import.meta.url), 'utf8');
 	const migrationUrl = new URL('../bixi-project-documents/sql/migrations/20260924_generator_template_group_uniqueness.sql', import.meta.url);
 	const operationsUrl = new URL('../.docs/generator/FIXED-SOURCE-UPDATES.md', import.meta.url);
 	const manifestUrl = new URL('../.docs/generator/examples/template-update-manifest.json.template', import.meta.url);

@@ -98,7 +98,7 @@ Evidence: [EVIDENCE-STAGE2.md](EVIDENCE-STAGE2.md#task-6-fixed-source-template-u
 ### Task 7: Clean-Database And Four-Mode Acceptance
 
 **Files:**
-- Modify: `bixi-project-documents/sql/04_init_data.sql` and migrations only for stable catalog metadata/permissions.
+- Modify: `bixi-project-documents/sql/02_data.sql` and migrations only for stable catalog metadata/permissions.
 - Modify: `scripts/acceptance.mjs`.
 - Create: `scripts/generator-acceptance.mjs` and `.docs/generator/EVIDENCE-STAGE2.md`.
 

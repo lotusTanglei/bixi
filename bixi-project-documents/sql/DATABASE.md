@@ -274,7 +274,7 @@ ai_document (文档)
 - 避免回表查询，提升性能
 - 示例：`idx_user_login_cover(username, password, status, del_flag)`
 
-**优化脚本**：详见 [03_add_indexes.sql](03_add_indexes.sql)
+**优化脚本**：详见 [04_indexes.sql](04_indexes.sql)
 
 ### 查询优化
 
@@ -470,9 +470,10 @@ bixi-gateway/src/main/resources/db/migration/
 
 - [README.md](README.md) - 数据库概览和快速开始
 - [DATA_DICTIONARY.md](DATA_DICTIONARY.md) - 详细的数据字典
-- [01_init_all_tables.sql](01_init_all_tables.sql) - 完整初始化脚本
-- [02_add_constraints.sql](02_add_constraints.sql) - 约束优化脚本
-- [03_add_indexes.sql](03_add_indexes.sql) - 索引优化脚本
+- [01_schema.sql](01_schema.sql) - 完整初始化脚本
+- [02_data.sql](02_data.sql) - 初始数据脚本
+- [03_constraints.sql](03_constraints.sql) - 约束优化脚本
+- [04_indexes.sql](04_indexes.sql) - 索引优化脚本
 
 ---
 

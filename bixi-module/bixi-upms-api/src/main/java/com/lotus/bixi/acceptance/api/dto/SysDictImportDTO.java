@@ -2,6 +2,7 @@ package com.lotus.bixi.acceptance.api.dto;
 
 import com.alibaba.excel.annotation.ExcelProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import java.time.LocalDateTime;
@@ -11,11 +12,13 @@ import java.time.LocalDateTime;
 public class SysDictImportDTO {
 
 	@Size(max = 512, message = "字典类型长度不能超过512")
+	@NotBlank(message = "字典类型不能为空")
 	@ExcelProperty("字典类型")
 	@Schema(description = "字典类型")
 	private String type;
 
 	@Size(max = 512, message = "字典名称长度不能超过512")
+	@NotBlank(message = "字典名称不能为空")
 	@ExcelProperty("字典名称")
 	@Schema(description = "字典名称")
 	private String name;

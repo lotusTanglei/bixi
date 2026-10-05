@@ -75,10 +75,10 @@ services:
       - "127.0.0.1:${MYSQL_PORT:-3306}:3306"
     volumes:
       - mysql-data:/var/lib/mysql
-      - ./bixi-project-documents/sql/01_init_all_tables.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
-      - ./bixi-project-documents/sql/04_init_data.sql:/docker-entrypoint-initdb.d/02_data.sql:ro
-      - ./bixi-project-documents/sql/02_add_constraints.sql:/docker-entrypoint-initdb.d/03_constraints.sql:ro
-      - ./bixi-project-documents/sql/03_add_indexes.sql:/docker-entrypoint-initdb.d/04_indexes.sql:ro
+      - ./bixi-project-documents/sql/01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ./bixi-project-documents/sql/02_data.sql:/docker-entrypoint-initdb.d/02_data.sql:ro
+      - ./bixi-project-documents/sql/03_constraints.sql:/docker-entrypoint-initdb.d/03_constraints.sql:ro
+      - ./bixi-project-documents/sql/04_indexes.sql:/docker-entrypoint-initdb.d/04_indexes.sql:ro
       - ./deploy/mysql/05_runtime_secrets.sh:/docker-entrypoint-initdb.d/05_runtime_secrets.sh:ro
     healthcheck:
       test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$${MYSQL_ROOT_PASSWORD} --silent"]

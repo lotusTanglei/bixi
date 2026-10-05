@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import test from 'node:test';
 
-const rootSchema = readFileSync(new URL('../bixi-project-documents/sql/01_init_all_tables.sql', import.meta.url), 'utf8');
+const rootSchema = readFileSync(new URL('../bixi-project-documents/sql/01_schema.sql', import.meta.url), 'utf8');
 const jobSchema = readFileSync(new URL('../bixi-project-documents/sql/bixi_job.sql', import.meta.url), 'utf8');
-const indexes = readFileSync(new URL('../bixi-project-documents/sql/03_add_indexes.sql', import.meta.url), 'utf8');
+const indexes = readFileSync(new URL('../bixi-project-documents/sql/04_indexes.sql', import.meta.url), 'utf8');
 const migrationUrl = new URL('../bixi-project-documents/sql/migrations/20260926_quartz_retry_history.sql', import.meta.url);
 
 const assertColumns = source => {

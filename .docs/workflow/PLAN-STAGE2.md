@@ -40,7 +40,7 @@
 
 ### 2.2 数据所有权及表
 
-所有表写入 `bixi-project-documents/sql/01_init_all_tables.sql`，查询索引写入 `03_add_indexes.sql`；已有库的增量脚本放 `bixi-project-documents/sql/migrations/20260921_workflow_stage2_*.sql`。新的可靠性表不继承 `BaseEntity`，不用逻辑删除，也不自动清除去重记录。UUID 使用 ASCII binary 排序规则，hash 固定 CHAR(64)，时间使用 UTC `DATETIME(6)`；现有业务展示时间维持项目约定，在事件边界显式转换。
+所有表写入 `bixi-project-documents/sql/01_schema.sql`，查询索引写入 `04_indexes.sql`；已有库的增量脚本放 `bixi-project-documents/sql/migrations/20260921_workflow_stage2_*.sql`。新的可靠性表不继承 `BaseEntity`，不用逻辑删除，也不自动清除去重记录。UUID 使用 ASCII binary 排序规则，hash 固定 CHAR(64)，时间使用 UTC `DATETIME(6)`；现有业务展示时间维持项目约定，在事件边界显式转换。
 
 | 表 / 所有者 | 核心列 | 唯一性、状态及约束 |
 | --- | --- | --- |
@@ -249,7 +249,7 @@ Workflow 完成事件增加明确 outcome（APPROVED/REJECTED/CANCELED/EXECUTION
 - `bixi-module/bixi-workflow-biz/src/test/java/com/lotus/bixi/workflow/command/WorkflowRequestHasherTest.java`
 - `bixi-project-documents/sql/migrations/20260921_workflow_stage2_2a.sql`
 
-**修改文件**：API 下 `dto/ProcessStartDTO.java`、`TaskCompleteDTO.java`、`TaskRejectDTO.java`、`TaskTransferDTO.java`、`TaskResolveDTO.java`、`TaskCommentDTO.java` 继承 WorkflowRequestDTO；`entity/WfProcessInstance.java` 增加请求及业务归属字段；API `service/WorkflowService.java`、`feign/RemoteWorkflowService.java` 增只读 `getCommand(requestId)`；`01_init_all_tables.sql`、`03_add_indexes.sql` 加表/约束。保持接口参数验证只在父契约声明，避免实现覆盖重定义约束。
+**修改文件**：API 下 `dto/ProcessStartDTO.java`、`TaskCompleteDTO.java`、`TaskRejectDTO.java`、`TaskTransferDTO.java`、`TaskResolveDTO.java`、`TaskCommentDTO.java` 继承 WorkflowRequestDTO；`entity/WfProcessInstance.java` 增加请求及业务归属字段；API `service/WorkflowService.java`、`feign/RemoteWorkflowService.java` 增只读 `getCommand(requestId)`；`01_schema.sql`、`04_indexes.sql` 加表/约束。保持接口参数验证只在父契约声明，避免实现覆盖重定义约束。
 
 - [x] 先写规范化测试，精确覆盖键排序/嵌套对象、数组顺序、JSON 数字、表单字符串内容、Unicode、拒绝不可序列化值，以及 operation/actor/round 变化导致 hash 变化。
 - [x] 给请求基类实现以下字段；其他字段继续使用现有 DTO 命名，首次请求缺少 requestId 返回明确参数错误，不悄悄生成随机 ID：

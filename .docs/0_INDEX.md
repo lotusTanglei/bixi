@@ -15,6 +15,8 @@
 | 5_AI_DEVELOPMENT.md | AI 架构上下文、编码规则、命令和任务模板 | 人工维护，AI 辅助更新 |
 | 6_RELEASE_BASELINE.md | 第一阶段安全、启动、验收、升级回滚与已知限制 | 随发布基线更新 |
 | [7_MAIN_INTEGRATION.md](7_MAIN_INTEGRATION.md) | 本次 main 整合范围、验证、升级与未完成边界 | 随整合验收更新 |
+| [PROJECT_STATUS.md](PROJECT_STATUS.md) | 当前冻结范围、Acceptance 切片状态和实际证据 | 每轮范围冻结时更新 |
+| [BLACKBOX_TEST_PLAN.md](BLACKBOX_TEST_PLAN.md) | HTTP、迁移和浏览器黑盒测试矩阵与退出条件 | 按测试切片更新 |
 | [workflow/PROGRESS.md](workflow/PROGRESS.md) | Flowable 双模四阶段需求、差距、实施与验收证据 | 按实际测试结果更新 |
 | [security/PROGRESS.md](security/PROGRESS.md) | 第一阶段认证、权限、Token、审计连续开发与双模验收证据 | 按实际测试结果更新 |
 | users/@{{username}}/ | 个人空间 | 个人维护 |

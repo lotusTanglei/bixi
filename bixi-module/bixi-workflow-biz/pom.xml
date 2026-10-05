@@ -115,7 +115,7 @@
             <testResource>
                 <directory>${project.basedir}/../../bixi-project-documents/sql</directory>
                 <targetPath>sql</targetPath>
-                <includes><include>01_init_all_tables.sql</include></includes>
+                <includes><include>01_schema.sql</include></includes>
             </testResource>
         </testResources>
         <resources>

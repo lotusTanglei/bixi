@@ -1,5 +1,7 @@
 # Bixi Completion Validation Implementation Plan
 
+> **历史实施计划**：当前开发范围和状态以 [项目状态总账](../../.docs/PROJECT_STATUS.md) 为准；本文保留原始验证计划，不作为当前切片清单。
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Verify and complete unfinished or inconsistent Bixi implementation chains, with database schema/document consistency as the first-class validation target, then fix confirmed AI-related frontend/backend contract gaps and run end-to-end regression checks.
@@ -18,9 +20,9 @@
   - Align schema descriptions with actual table definitions and remove inaccurate universal field claims.
 - Modify: `bixi-project-documents/sql/DATA_DICTIONARY.md`
   - Align `sys_role` and generator table field names with current SQL/entities.
-- Modify: `bixi-project-documents/sql/02_add_constraints.sql`
+- Modify: `bixi-project-documents/sql/03_constraints.sql`
   - Fix or defer self-referential foreign keys that conflict with root `parent_id` values.
-- Modify: `bixi-project-documents/sql/03_add_indexes.sql`
+- Modify: `bixi-project-documents/sql/04_indexes.sql`
   - Replace stale column names and avoid duplicate/wrong indexes.
 - Modify: `bixi-module/bixi-upms-biz/src/main/resources/mapper/SysUserMapper.xml`
   - Replace stale `sys_role` column names in user role joins.
@@ -59,10 +61,10 @@ Add this structure:
 
 ## Verified Inputs
 
-- `bixi-project-documents/sql/01_init_all_tables.sql`
-- `bixi-project-documents/sql/02_add_constraints.sql`
-- `bixi-project-documents/sql/03_add_indexes.sql`
-- `bixi-project-documents/sql/04_init_data.sql`
+- `bixi-project-documents/sql/01_schema.sql`
+- `bixi-project-documents/sql/03_constraints.sql`
+- `bixi-project-documents/sql/04_indexes.sql`
+- `bixi-project-documents/sql/02_data.sql`
 - `bixi-project-documents/sql/README.md`
 - `bixi-project-documents/sql/DATABASE.md`
 - `bixi-project-documents/sql/DATA_DICTIONARY.md`
@@ -110,15 +112,15 @@ In `README.md`, replace the stale summary with:
 ```markdown
 ## 数据库脚本总览
 
-当前完整建表脚本 `01_init_all_tables.sql` 包含 50 张表，其中包含系统基础表、代码生成表、表单表、工作流表、AI 表、定时任务表以及 Quartz 原生表。
+当前完整建表脚本 `01_schema.sql` 包含 50 张表，其中包含系统基础表、代码生成表、表单表、工作流表、AI 表、定时任务表以及 Quartz 原生表。
 
 推荐执行顺序：
 
 1. 创建数据库：`CREATE DATABASE bixi DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;`
-2. 执行 `01_init_all_tables.sql`
-3. 执行 `04_init_data.sql`
-4. 执行修正后的 `02_add_constraints.sql`
-5. 执行修正后的 `03_add_indexes.sql`
+2. 执行 `01_schema.sql`
+3. 执行 `02_data.sql`
+4. 执行修正后的 `03_constraints.sql`
+5. 执行修正后的 `04_indexes.sql`
 
 本目录未包含 `update_generator_templates.sql` 或 `UPDATE_TEMPLATES_GUIDE.md`，不要在部署步骤中引用这两个文件。
 ```
@@ -165,8 +167,8 @@ git commit -m "docs: align database documentation with schema"
 
 **Files:**
 - Modify: `bixi-module/bixi-upms-biz/src/main/resources/mapper/SysUserMapper.xml`
-- Modify: `bixi-project-documents/sql/02_add_constraints.sql`
-- Modify: `bixi-project-documents/sql/03_add_indexes.sql`
+- Modify: `bixi-project-documents/sql/03_constraints.sql`
+- Modify: `bixi-project-documents/sql/04_indexes.sql`
 
 - [ ] **Step 1: Update mapper role column references**
 
@@ -183,7 +185,7 @@ Keep result aliases unchanged if downstream DTOs expect `roleName`, `roleCode`, 
 
 - [ ] **Step 2: Update constraint script role references**
 
-In `02_add_constraints.sql`, replace:
+In `03_constraints.sql`, replace:
 
 ```sql
 ALTER TABLE sys_role ADD CONSTRAINT uk_sys_role_code UNIQUE (role_code);
@@ -197,21 +199,21 @@ ALTER TABLE sys_role ADD CONSTRAINT uk_sys_role_code UNIQUE (code);
 
 - [ ] **Step 3: Update index script role references**
 
-In `03_add_indexes.sql`, replace stale role indexes with:
+In `04_indexes.sql`, replace stale role indexes with:
 
 ```sql
 CREATE INDEX idx_sys_role_code_status ON sys_role(code, status, del_flag);
 CREATE INDEX idx_sys_role_name_status ON sys_role(name, status, del_flag);
 ```
 
-Do not create `idx_role_code` if `01_init_all_tables.sql` already defines that index name.
+Do not create `idx_role_code` if `01_schema.sql` already defines that index name.
 
 - [ ] **Step 4: Verify stale role columns are gone from executable files**
 
 Run:
 
 ```bash
-rg -n "role_name|role_code|role_desc" bixi-module bixi-project-documents/sql/02_add_constraints.sql bixi-project-documents/sql/03_add_indexes.sql
+rg -n "role_name|role_code|role_desc" bixi-module bixi-project-documents/sql/03_constraints.sql bixi-project-documents/sql/04_indexes.sql
 ```
 
 Expected: no executable SQL or mapper references to missing physical columns. Aliases like `AS role_name` are acceptable only in mapper `SELECT` clauses.
@@ -219,14 +221,14 @@ Expected: no executable SQL or mapper references to missing physical columns. Al
 - [ ] **Step 5: Commit**
 
 ```bash
-git add bixi-module/bixi-upms-biz/src/main/resources/mapper/SysUserMapper.xml bixi-project-documents/sql/02_add_constraints.sql bixi-project-documents/sql/03_add_indexes.sql
+git add bixi-module/bixi-upms-biz/src/main/resources/mapper/SysUserMapper.xml bixi-project-documents/sql/03_constraints.sql bixi-project-documents/sql/04_indexes.sql
 git commit -m "fix: align role SQL columns with schema"
 ```
 
 ### Task 4: Fix Generator Index Script
 
 **Files:**
-- Modify: `bixi-project-documents/sql/03_add_indexes.sql`
+- Modify: `bixi-project-documents/sql/04_indexes.sql`
 
 - [ ] **Step 1: Replace missing datasource column**
 
@@ -247,7 +249,7 @@ CREATE INDEX idx_gen_datasource_config_type_status ON gen_datasource_config(ds_t
 Run:
 
 ```bash
-rg -n "CREATE TABLE `gen_datasource_config`|`ds_type`|`db_type`" bixi-project-documents/sql/01_init_all_tables.sql bixi-project-documents/sql/03_add_indexes.sql
+rg -n "CREATE TABLE `gen_datasource_config`|`ds_type`|`db_type`" bixi-project-documents/sql/01_schema.sql bixi-project-documents/sql/04_indexes.sql
 ```
 
 Expected: `gen_datasource_config` contains `ds_type`; no index on `gen_datasource_config(db_type, status)` remains.
@@ -255,14 +257,14 @@ Expected: `gen_datasource_config` contains `ds_type`; no index on `gen_datasourc
 - [ ] **Step 3: Commit**
 
 ```bash
-git add bixi-project-documents/sql/03_add_indexes.sql
+git add bixi-project-documents/sql/04_indexes.sql
 git commit -m "fix: correct generator datasource indexes"
 ```
 
 ### Task 5: Make Foreign Key Constraints Executable
 
 **Files:**
-- Modify: `bixi-project-documents/sql/02_add_constraints.sql`
+- Modify: `bixi-project-documents/sql/03_constraints.sql`
 - Modify: `bixi-project-documents/sql/README.md`
 
 - [ ] **Step 1: Decide root parent strategy**
@@ -277,7 +279,7 @@ This is the lower-risk choice because existing data already uses `sys_menu.paren
 
 - [ ] **Step 2: Remove or comment conflicting self-FKs**
 
-In `02_add_constraints.sql`, remove or comment these constraints:
+In `03_constraints.sql`, remove or comment these constraints:
 
 ```sql
 ALTER TABLE sys_menu ADD CONSTRAINT fk_sys_menu_parent FOREIGN KEY (parent_id) REFERENCES sys_menu(id);
@@ -289,7 +291,7 @@ Add this explanation above the removed section:
 ```sql
 -- sys_menu and sys_dept use sentinel parent_id values for roots (`-1` and `0`).
 -- Self-referential foreign keys are intentionally not added here because they
--- would reject existing root records in 04_init_data.sql.
+-- would reject existing root records in 02_data.sql.
 ```
 
 - [ ] **Step 3: Document the constraint behavior**
@@ -305,7 +307,7 @@ In `README.md`, add:
 Run:
 
 ```bash
-rg -n "fk_sys_menu_parent|fk_sys_dept_parent" bixi-project-documents/sql/02_add_constraints.sql
+rg -n "fk_sys_menu_parent|fk_sys_dept_parent" bixi-project-documents/sql/03_constraints.sql
 ```
 
 Expected: no executable `ALTER TABLE ... FOREIGN KEY` statements for those two names.
@@ -313,7 +315,7 @@ Expected: no executable `ALTER TABLE ... FOREIGN KEY` statements for those two n
 - [ ] **Step 5: Commit**
 
 ```bash
-git add bixi-project-documents/sql/02_add_constraints.sql bixi-project-documents/sql/README.md
+git add bixi-project-documents/sql/03_constraints.sql bixi-project-documents/sql/README.md
 git commit -m "fix: make database constraints match root data"
 ```
 
@@ -664,10 +666,10 @@ Use a local MySQL instance or container. Execute:
 
 ```bash
 mysql -uroot -p -e "DROP DATABASE IF EXISTS bixi_verify; CREATE DATABASE bixi_verify DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;"
-mysql -uroot -p bixi_verify < bixi-project-documents/sql/01_init_all_tables.sql
-mysql -uroot -p bixi_verify < bixi-project-documents/sql/04_init_data.sql
-mysql -uroot -p bixi_verify < bixi-project-documents/sql/02_add_constraints.sql
-mysql -uroot -p bixi_verify < bixi-project-documents/sql/03_add_indexes.sql
+mysql -uroot -p bixi_verify < bixi-project-documents/sql/01_schema.sql
+mysql -uroot -p bixi_verify < bixi-project-documents/sql/02_data.sql
+mysql -uroot -p bixi_verify < bixi-project-documents/sql/03_constraints.sql
+mysql -uroot -p bixi_verify < bixi-project-documents/sql/04_indexes.sql
 ```
 
 Expected: every command exits with status 0.
@@ -712,10 +714,10 @@ Use this format:
 
 ## Database
 
-- `01_init_all_tables.sql`: PASS
-- `04_init_data.sql`: PASS
-- `02_add_constraints.sql`: PASS
-- `03_add_indexes.sql`: PASS
+- `01_schema.sql`: PASS
+- `02_data.sql`: PASS
+- `03_constraints.sql`: PASS
+- `04_indexes.sql`: PASS
 - Verified table count: 50
 
 ## Fixed In This Plan

@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /** MySQL runs verbatim canonical DDL. H2 adapts only dialect syntax, retaining named constraints. */
 final class WorkflowTestSchema {
     static void create(JdbcTemplate jdbc, String... tables) throws Exception {
-        String schema = new ClassPathResource("sql/01_init_all_tables.sql").getContentAsString(StandardCharsets.UTF_8);
+        String schema = new ClassPathResource("sql/01_schema.sql").getContentAsString(StandardCharsets.UTF_8);
         boolean mysql;
         try (var connection = jdbc.getDataSource().getConnection()) {
             mysql = "MySQL".equals(connection.getMetaData().getDatabaseProductName());

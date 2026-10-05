@@ -168,7 +168,7 @@ CREATE TABLE `sys_dept_relation` (
   `descendant` bigint NOT NULL COMMENT '后代部门ID',
   `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   PRIMARY KEY (`ancestor`, `descendant`)
-  -- The composite tenant/query index is created by 03_add_indexes.sql.
+  -- The composite tenant/query index is created by 04_indexes.sql.
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='部门闭包关系表';
 
 -- ----------------------------

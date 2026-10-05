@@ -27,7 +27,7 @@ export interface SysPublicParamImportResult {
 	errors: SysPublicParamImportRowError[];
 }
 
-const baseUrl = '/acceptance/publicParam';
+const baseUrl = '/admin/publicParam';
 
 export const fetchList = (query?: Record<string, unknown>) => request({ url: baseUrl + '/page', method: 'get', params: query });
 export const getObj = (id: string) => request({ url: baseUrl + '/details/' + id, method: 'get' });

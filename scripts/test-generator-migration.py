@@ -75,7 +75,7 @@ def query(sql):
 
 
 def legacy_table_ddl():
-    schema = (SQL_ROOT / "01_init_all_tables.sql").read_text()
+    schema = (SQL_ROOT / "01_schema.sql").read_text()
     match = re.search(r"CREATE TABLE `gen_group` \(.*?\n\) ENGINE=.*?;\n", schema, re.S)
     if not match:
         raise RuntimeError("gen_group DDL is missing from the canonical schema")

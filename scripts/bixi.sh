@@ -350,10 +350,10 @@ doctor() {
     check_ports "${mode}"
 
     for file in \
-        bixi-project-documents/sql/01_init_all_tables.sql \
-        bixi-project-documents/sql/02_add_constraints.sql \
-        bixi-project-documents/sql/03_add_indexes.sql \
-        bixi-project-documents/sql/04_init_data.sql; do
+        bixi-project-documents/sql/01_schema.sql \
+        bixi-project-documents/sql/02_data.sql \
+        bixi-project-documents/sql/03_constraints.sql \
+        bixi-project-documents/sql/04_indexes.sql; do
         [ -s "${ROOT}/${file}" ] || fail "missing database asset: ${file}"
     done
 

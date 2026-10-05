@@ -441,8 +441,8 @@ AES 密钥：前端硬编码（与 `PasswordEncoderFilter` 使用同一 `encodeK
 | `SysUser.java` | phone/email 加 `@Sensitive` |
 | `SysMenuServiceImpl.java` | 缓存键加租户前缀 |
 | `WebSecurityConfiguration.java` | 注册 `TenantContextFilter`、`EncryptionFilter` |
-| `01_init_all_tables.sql` | 新增 `sys_tenant`、`sys_sensitive_word`；统一 `tenant_id` 类型 |
-| `04_init_data.sql` | 新增默认租户数据 |
+| `01_schema.sql` | 新增 `sys_tenant`、`sys_sensitive_word`；统一 `tenant_id` 类型 |
+| `02_data.sql` | 新增默认租户数据 |
 | `SysRole.java` | 增加 `dataScope` 字段 |
 | `bixi_form.sql` / `bixi_ai.sql` / `bixi_workflow.sql` | `tenant_id` 类型统一为 `bigint` |
 

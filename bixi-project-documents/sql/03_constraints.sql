@@ -32,7 +32,7 @@ ALTER TABLE sys_dept ADD CONSTRAINT uk_dept_tenant_code UNIQUE (tenant_id, code)
 ALTER TABLE wf_category ADD CONSTRAINT uk_category_code UNIQUE (category_code);
 
 -- 表单定义唯一约束
--- wf_form.uk_form_key is already defined in 01_init_all_tables.sql.
+-- wf_form.uk_form_key is already defined in 01_schema.sql.
 
 -- =====================================================
 -- 2. 外键约束（可选执行）
@@ -41,7 +41,7 @@ ALTER TABLE wf_category ADD CONSTRAINT uk_category_code UNIQUE (category_code);
 
 -- sys_menu and sys_dept use sentinel parent_id values for roots (`-1` and `0`).
 -- Self-referential foreign keys are intentionally not added here because they
--- would reject existing root records in 04_init_data.sql.
+-- would reject existing root records in 02_data.sql.
 
 -- 用户-部门关联
 ALTER TABLE sys_user

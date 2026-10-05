@@ -41,7 +41,7 @@ class AiSchemaContractTest {
 
     @Test
     void canonicalAiSchemasContainEveryBaseEntityColumn() throws IOException {
-        assertSchema(Path.of("bixi-project-documents", "sql", "01_init_all_tables.sql"));
+        assertSchema(Path.of("bixi-project-documents", "sql", "01_schema.sql"));
         assertSchema(Path.of("bixi-project-documents", "sql", "bixi_ai.sql"));
     }
 

@@ -34,7 +34,7 @@ def query(sql):
 
 
 def table_ddl(name):
-    schema = (SQL / "01_init_all_tables.sql").read_text()
+    schema = (SQL / "01_schema.sql").read_text()
     return re.search(r"CREATE TABLE `" + name + r"` \(.*?;\n", schema, re.S)[0]
 
 

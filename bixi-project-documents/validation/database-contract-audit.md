@@ -2,10 +2,10 @@
 
 ## Verified Inputs
 
-- `bixi-project-documents/sql/01_init_all_tables.sql`
-- `bixi-project-documents/sql/02_add_constraints.sql`
-- `bixi-project-documents/sql/03_add_indexes.sql`
-- `bixi-project-documents/sql/04_init_data.sql`
+- `bixi-project-documents/sql/01_schema.sql`
+- `bixi-project-documents/sql/03_constraints.sql`
+- `bixi-project-documents/sql/04_indexes.sql`
+- `bixi-project-documents/sql/02_data.sql`
 - `bixi-project-documents/sql/README.md`
 - `bixi-project-documents/sql/DATABASE.md`
 - `bixi-project-documents/sql/DATA_DICTIONARY.md`

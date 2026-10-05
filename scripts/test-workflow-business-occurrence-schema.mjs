@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
-const schema = readFileSync(new URL('../bixi-project-documents/sql/01_init_all_tables.sql', import.meta.url), 'utf8');
+const schema = readFileSync(new URL('../bixi-project-documents/sql/01_schema.sql', import.meta.url), 'utf8');
 const migration = readFileSync(
 	new URL('../bixi-project-documents/sql/migrations/20260924_workflow_business_occurrence.sql', import.meta.url),
 	'utf8'

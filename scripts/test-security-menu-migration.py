@@ -55,9 +55,9 @@ def mysql(sql, force=False, check=True):
     )
 
 
-schema = (SQL / "01_init_all_tables.sql").read_text()
-constraint_sql = (SQL / "02_add_constraints.sql").read_text()
-seed = (SQL / "04_init_data.sql").read_text().splitlines()
+schema = (SQL / "01_schema.sql").read_text()
+constraint_sql = (SQL / "03_constraints.sql").read_text()
+seed = (SQL / "02_data.sql").read_text().splitlines()
 tables = "\n".join(
     re.search(r"CREATE TABLE `" + table + r"` \(.*?;\n", schema, re.S)[0]
     for table in ("sys_menu", "sys_role", "sys_role_menu")
