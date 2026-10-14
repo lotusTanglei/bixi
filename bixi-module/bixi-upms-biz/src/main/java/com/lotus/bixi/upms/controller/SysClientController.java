@@ -42,6 +42,8 @@ import java.util.List;
 @SecurityRequirement(name = HttpHeaders.AUTHORIZATION)
 public class SysClientController {
 
+    private static final String MANAGED_BROWSER_CLIENT_ID = "bixi-browser";
+
     private final SysOauthClientDetailsService clientDetailsService;
 
     private final ClientDetailsQueryService clientDetailsQueryService;
@@ -92,6 +94,10 @@ public class SysClientController {
     @HasPermission("sys_client_add")
     public R add(@Validated({Default.class, SysOauthClientDetails.Create.class})
                  @RequestBody SysOauthClientDetails clientDetails) {
+        if (isManagedBrowserClientId(clientDetails.getClientId()) ||
+                (clientDetails.getId() != null && isManagedBrowserClient(clientDetailsService.getById(clientDetails.getId())))) {
+            return R.failed("浏览器客户端由运行配置管理");
+        }
         return R.ok(clientDetailsService.saveClient(clientDetails));
     }
 
@@ -105,7 +111,11 @@ public class SysClientController {
     @DeleteMapping
     @HasPermission("sys_client_del")
     public R removeById(@RequestBody Long[] ids) {
-        clientDetailsService.removeBatchByIds(CollUtil.toList(ids));
+        List<Long> selectedIds = CollUtil.toList(ids);
+        if (clientDetailsService.listByIds(selectedIds).stream().anyMatch(SysClientController::isManagedBrowserClient)) {
+            return R.failed("浏览器客户端由运行配置管理");
+        }
+        clientDetailsService.removeBatchByIds(selectedIds);
         return R.ok();
     }
 
@@ -119,6 +129,10 @@ public class SysClientController {
     @PutMapping
     @HasPermission("sys_client_edit")
     public R update(@Valid @RequestBody SysOauthClientDetails clientDetails) {
+        if (isManagedBrowserClientId(clientDetails.getClientId()) ||
+                (clientDetails.getId() != null && isManagedBrowserClient(clientDetailsService.getById(clientDetails.getId())))) {
+            return R.failed("浏览器客户端由运行配置管理");
+        }
         return R.ok(clientDetailsService.updateClientById(clientDetails));
     }
 
@@ -160,6 +174,19 @@ public class SysClientController {
         if (details != null) {
             details.setClientSecret(null);
         }
+    }
+
+    private boolean isManagedBrowserClientId(String clientId) {
+        if (MANAGED_BROWSER_CLIENT_ID.equals(clientId)) {
+            return true;
+        }
+        return clientDetailsService.list(Wrappers.<SysOauthClientDetails>lambdaQuery()
+                        .eq(SysOauthClientDetails::getClientId, clientId))
+                .stream().anyMatch(SysClientController::isManagedBrowserClient);
+    }
+
+    private static boolean isManagedBrowserClient(SysOauthClientDetails details) {
+        return details != null && MANAGED_BROWSER_CLIENT_ID.equals(details.getClientId());
     }
 
 }

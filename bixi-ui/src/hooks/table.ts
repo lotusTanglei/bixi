@@ -23,6 +23,7 @@ export interface BasicTableProps {
 	pageList?: (...arg: any) => Promise<any>;
 	// loading标志，默认为false
 	loading?: Boolean;
+	loadError?: string;
 	// 多选结果数组
 	selectObjs?: any[];
 	// 排序字段数组
@@ -127,6 +128,7 @@ export function useTable(options?: BasicTableProps) {
 
 	// 覆盖默认值
 	const state = mergeDefaultOptions(defaultOptions, options);
+	let latestQuery = 0;
 
 	/**
 	 * 发起分页查询，并设置表格数据和分页信息
@@ -134,9 +136,11 @@ export function useTable(options?: BasicTableProps) {
 	const query = async () => {
 		// 判断是否存在state.pageList属性
 		if (state.pageList) {
+			const queryId = ++latestQuery;
 			try {
 				// 开始加载数据，设置state.loading为true
 				state.loading = true;
+				state.loadError = '';
 				// 参数排除空字段
 				for (let key in state.queryForm) {
 					if (state.queryForm[key] === "" || state.queryForm[key] === null) {
@@ -151,6 +155,7 @@ export function useTable(options?: BasicTableProps) {
 					descs: state.descs?.join(','),
 					ascs: state.ascs?.join(','),
 				});
+				if (queryId !== latestQuery) return;
 
 				// 设置表格展示的数据数组
 				state.dataList = state.isPage ? res.data[state.props.item] : res.data;
@@ -162,10 +167,13 @@ export function useTable(options?: BasicTableProps) {
 				state.pagination!.total = state.isPage ? res.data[state.props.totalCount] : 0;
 			} catch (err: any) {
 				// 捕获异常并显示错误提示
-				ElMessage.error(err.msg || err.data.msg);
+				if (queryId === latestQuery) {
+					state.loadError = err?.msg || err?.data?.msg || err?.message || '加载失败';
+					ElMessage.error(state.loadError);
+				}
 			} finally {
 				// 结束加载数据，设置state.loading为false
-				state.loading = false;
+				if (queryId === latestQuery) state.loading = false;
 			}
 		}
 	};

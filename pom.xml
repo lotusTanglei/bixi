@@ -12,7 +12,7 @@
 
     <properties>
         <!-- 项目版本号 -->
-        <revision>0.0.3</revision>
+        <revision>1.0.0</revision>
         <author>tanglei</author>
 
         <spring-boot.version>3.4.1</spring-boot.version>

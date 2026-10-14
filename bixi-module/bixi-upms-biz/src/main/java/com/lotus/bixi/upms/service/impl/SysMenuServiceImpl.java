@@ -26,10 +26,12 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.core.env.Environment;
 
 import java.util.HashMap;
@@ -55,10 +57,10 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
 
     private final SysRoleMenuMapper sysRoleMenuMapper;
     private final Environment environment;
+    private final CacheManager cacheManager;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @CacheEvict(value = CacheConstants.MENU_DETAILS, allEntries = true)
     public boolean save(SysMenu sysMenu) {
         boolean result = super.save(sysMenu);
         if (!result) {
@@ -67,6 +69,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
 
         List<Long> roleIds = SecurityUtils.getRoles();
         if (CollUtil.isEmpty(roleIds)) {
+            invalidateAuthorizationCaches();
             return true;
         }
 
@@ -86,6 +89,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
             sysRoleMenuMapper.insert(sysRoleMenu);
         }
 
+        invalidateAuthorizationCaches();
         return true;
     }
 
@@ -99,23 +103,29 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @CacheEvict(value = CacheConstants.MENU_DETAILS, allEntries = true)
     public R removeMenuById(Long id) {
+        if (id == null || this.count(Wrappers.<SysMenu>lambdaQuery().eq(SysMenu::getId, id)) != 1) {
+            return R.failed("菜单不存在或不属于当前租户");
+        }
         // 查询父节点为当前节点的节点
         List<SysMenu> menuList = this.list(Wrappers.<SysMenu>query().lambda().eq(SysMenu::getParentId, id));
         if (CollUtil.isNotEmpty(menuList)) {
             return R.failed(MsgUtils.getMessage(ErrorCodes.SYS_MENU_DELETE_EXISTING));
         }
 
+        if (!this.removeById(id)) {
+            return R.failed("菜单不存在或不属于当前租户");
+        }
         sysRoleMenuMapper.delete(Wrappers.<SysRoleMenu>query().lambda().eq(SysRoleMenu::getMenuId, id));
-        // 删除当前菜单及其子菜单
-        return R.ok(this.removeById(id));
+        invalidateAuthorizationCaches();
+        return R.ok(true);
     }
 
     @Override
-    @CacheEvict(value = CacheConstants.MENU_DETAILS, allEntries = true)
     public Boolean updateMenuById(SysMenu sysMenu) {
-        return this.updateById(sysMenu);
+        boolean updated = this.updateById(sysMenu);
+        if (updated) invalidateAuthorizationCaches();
+        return updated;
     }
 
     /**
@@ -152,9 +162,26 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
     }
 
     @Override
-    @CacheEvict(value = CacheConstants.MENU_DETAILS, allEntries = true)
     public void clearMenuCache() {
+        invalidateAuthorizationCaches();
+    }
 
+    private void invalidateAuthorizationCaches() {
+        Runnable clear = () -> {
+            cacheManager.getCache(CacheConstants.MENU_DETAILS).clear();
+            cacheManager.getCache(CacheConstants.USER_DETAILS).clear();
+        };
+        if (TransactionSynchronizationManager.isActualTransactionActive()
+                && TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    clear.run();
+                }
+            });
+        } else {
+            clear.run();
+        }
     }
 
     /**

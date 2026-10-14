@@ -29,7 +29,7 @@
 					<right-toolbar v-model:showSearch="showSearch" class="ml10" style="margin-left: auto" @queryTable="getDataList" />
 			</el-row>
 
-			<el-alert v-if="loadError" :closable="false" show-icon :title="loadError" type="error" />
+			<el-alert v-if="state.loadError" :closable="false" show-icon :title="state.loadError" type="error" />
 			<el-table v-loading="state.loading" :data="state.dataList" border empty-text="暂无数据" @selection-change="handleSelectionChange">
 				<el-table-column align="center" type="selection" width="44" />
 				<el-table-column label="名称" min-width="120" prop="name" show-overflow-tooltip />
@@ -78,17 +78,13 @@ const formDialogRef = ref();
 const queryRef = ref();
 const showSearch = ref(true);
 const selectedIds = ref<string[]>([]);
-const loadError = ref('');
 const fileInputRef = ref<HTMLInputElement>();
 const importResult = ref<SysPublicParamImportResult>();
 const importResultVisible = ref(false);
 const state = reactive<BasicTableProps>({ queryForm: { name: '', key: '', type: '', systemFlag: '' }, pageList: fetchList });
 const { getDataList, currentChangeHandle, sizeChangeHandle } = useTable(state);
 
-const loadPage = async () => {
-	loadError.value = '';
-	try { await getDataList(); } catch (error: any) { loadError.value = error?.msg || '加载失败'; }
-};
+const loadPage = () => getDataList();
 const resetQuery = () => { queryRef.value?.resetFields(); loadPage(); };
 const handleSelectionChange = (rows: Array<{ id: string }>) => { selectedIds.value = rows.map((row) => row.id); };
 const handleDelete = async (ids: string[]) => {

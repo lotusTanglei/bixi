@@ -40,6 +40,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.validation.BindingResult;
 
 import java.time.LocalDateTime;
@@ -84,6 +86,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Boolean saveUser(UserDTO userDto) {
+        if (StrUtil.isBlank(userDto.getUsername())) {
+            throw new IllegalArgumentException("用户名不能为空");
+        }
         Long tenantId = TenantContextHolder.get();
         if (tenantId == null) {
             throw new IllegalStateException("tenant_not_set");
@@ -99,6 +104,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         if (!PasswordPolicyValidator.isStrong(userDto.getPassword())) {
             throw new RuntimeException(MsgUtils.getMessage(ErrorCodes.SYS_PASSWORD_WEAK));
         }
+        requireOwnedRelations(userDto);
         SysUser sysUser = new SysUser();
         BeanUtils.copyProperties(userDto, sysUser);
         sysUser.setDelFlag(CommonConstants.STATUS_NORMAL);
@@ -200,18 +206,41 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Boolean deleteUserByIds(Long[] ids) {
-        // 删除 spring cache
-        List<SysUser> userList = baseMapper.selectBatchIds(CollUtil.toList(ids));
-        Cache cache = cacheManager.getCache(CacheConstants.USER_DETAILS);
-        for (SysUser sysUser : userList) {
-            // 立即删除
-            cache.evictIfPresent(CacheConstants.tenantKey(CacheConstants.USER_DETAILS, TenantContextHolder.get())
-                    + sysUser.getUsername());
+        if (ids == null || ids.length == 0 || Arrays.asList(ids).contains(null)) {
+            throw new IllegalArgumentException("用户ID不能为空");
         }
-
-        sysUserRoleMapper.delete(Wrappers.<SysUserRole>lambdaQuery().in(SysUserRole::getUserId, CollUtil.toList(ids)));
-        this.removeBatchByIds(CollUtil.toList(ids));
+        List<Long> requested = Arrays.stream(ids).distinct().toList();
+        List<SysUser> userList = baseMapper.selectByIds(requested);
+        if (userList.size() != requested.size()) {
+            throw new IllegalArgumentException("用户不存在或无权访问");
+        }
+        for (Long id : requested) {
+            if (baseMapper.deleteById(id) != 1) {
+                throw new IllegalArgumentException("用户不存在或无权访问");
+            }
+        }
+        sysUserRoleMapper.delete(Wrappers.<SysUserRole>lambdaQuery().in(SysUserRole::getUserId, requested));
+        evictUserDetailsAfterCommit(userList.stream().map(SysUser::getUsername).toList());
         return Boolean.TRUE;
+    }
+
+    private void evictUserDetailsAfterCommit(Collection<String> usernames) {
+        String prefix = CacheConstants.tenantKey(CacheConstants.USER_DETAILS, TenantContextHolder.get());
+        Runnable evict = () -> {
+            Cache cache = cacheManager.getCache(CacheConstants.USER_DETAILS);
+            usernames.forEach(username -> cache.evictIfPresent(prefix + username));
+        };
+        if (TransactionSynchronizationManager.isActualTransactionActive()
+                && TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    evict.run();
+                }
+            });
+        } else {
+            evict.run();
+        }
     }
 
     @Override
@@ -230,9 +259,18 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @CacheEvict(value = CacheConstants.USER_DETAILS,
-            key = "T(com.lotus.bixi.common.core.constant.CacheConstants).currentTenantKey('user_details') + #userDto.username")
     public Boolean updateUser(UserDTO userDto) {
+        if (StrUtil.isBlank(userDto.getUsername())) {
+            throw new IllegalArgumentException("用户名不能为空");
+        }
+        SysUser current = this.getById(userDto.getId());
+        if (current == null) {
+            throw new IllegalArgumentException("用户不存在或无权访问");
+        }
+        if (!Objects.equals(current.getUsername(), userDto.getUsername())) {
+            throw new IllegalArgumentException("用户名不能修改");
+        }
+        requireOwnedRelations(userDto);
         // 更新用户表信息
         SysUser sysUser = new SysUser();
         BeanUtils.copyProperties(userDto, sysUser);
@@ -243,7 +281,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
             }
             sysUser.setPassword(ENCODER.encode(userDto.getPassword()));
         }
-        this.updateById(sysUser);
+        if (!this.updateById(sysUser)) {
+            throw new IllegalArgumentException("用户不存在或无权访问");
+        }
 
         // 更新用户角色表
         if (Objects.nonNull(userDto.getRole())) {
@@ -269,7 +309,25 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
                 return userPost;
             }).forEach(SysUserPost::insert);
         }
+        evictUserDetailsAfterCommit(List.of(userDto.getUsername()));
         return Boolean.TRUE;
+    }
+
+    private void requireOwnedRelations(UserDTO userDto) {
+        if (CollUtil.isNotEmpty(userDto.getRole())) {
+            List<Long> roleIds = userDto.getRole().stream().distinct().toList();
+            if (roleIds.contains(null) || sysRoleService.count(Wrappers.<SysRole>lambdaQuery()
+                    .in(SysRole::getId, roleIds)) != roleIds.size()) {
+                throw new IllegalArgumentException("角色不存在或不属于当前租户");
+            }
+        }
+        if (CollUtil.isNotEmpty(userDto.getPost())) {
+            List<Long> postIds = userDto.getPost().stream().distinct().toList();
+            if (postIds.contains(null) || sysPostService.count(Wrappers.<SysPost>lambdaQuery()
+                    .in(SysPost::getId, postIds)) != postIds.size()) {
+                throw new IllegalArgumentException("岗位不存在或不属于当前租户");
+            }
+        }
     }
 
     /**

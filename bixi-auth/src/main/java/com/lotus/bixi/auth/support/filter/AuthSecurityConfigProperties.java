@@ -29,6 +29,8 @@ public class AuthSecurityConfigProperties {
      */
     private String encodeKey;
 
+    private String browserClientSecret;
+
     /**
      * 网关不需要校验验证码的客户端
      */

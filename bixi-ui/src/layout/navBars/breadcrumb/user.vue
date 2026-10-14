@@ -171,13 +171,14 @@ const onHandleCommandClick = (path: string) => {
 			},
 		})
 			.then(async () => {
-        // 关闭全部的标签页
-        mittBus.emit('onCurrentContextmenuClick', Object.assign({}, { contextMenuClickId: 3, ...router }));
-        // 调用注销token接口
-				await logout();
-				// 清除缓存/token等
+				try {
+					await logout();
+				} catch {
+					ElMessage.error('退出失败，请重试');
+					return;
+				}
+				mittBus.emit('onCurrentContextmenuClick', Object.assign({}, { contextMenuClickId: 3, ...router }));
 				Session.clear();
-				// 使用 reload 时，不需要调用 resetRoute() 重置路由
 				window.location.reload();
 			})
 			.catch(() => {});

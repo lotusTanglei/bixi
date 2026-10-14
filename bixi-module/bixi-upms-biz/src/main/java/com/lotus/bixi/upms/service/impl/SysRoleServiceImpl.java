@@ -19,12 +19,16 @@ import com.lotus.bixi.common.core.util.MsgUtils;
 import com.lotus.bixi.common.core.util.R;
 import com.pig4cloud.plugin.excel.vo.ErrorMessage;
 import lombok.AllArgsConstructor;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.validation.BindingResult;
 
 import java.util.HashSet;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -42,6 +46,14 @@ import java.util.stream.Collectors;
 public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> implements SysRoleService {
 
     private SysRoleMenuService roleMenuService;
+    private final CacheManager cacheManager;
+
+    @Override
+    public boolean updateById(SysRole role) {
+        boolean updated = super.updateById(role);
+        if (updated) invalidateAuthorizationCaches(false);
+        return updated;
+    }
 
     /**
      * 通过用户ID，查询角色信息
@@ -78,9 +90,39 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Boolean removeRoleByIds(Long[] ids) {
+        if (ids == null || ids.length == 0 || Arrays.asList(ids).contains(null)) {
+            throw new IllegalArgumentException("角色ID不能为空");
+        }
+        List<Long> requested = Arrays.stream(ids).distinct().toList();
+        if (this.count(Wrappers.<SysRole>lambdaQuery().in(SysRole::getId, requested)) != requested.size()) {
+            throw new IllegalArgumentException("角色不存在或不属于当前租户");
+        }
+        if (baseMapper.deleteByIds(requested) != requested.size()) {
+            throw new IllegalArgumentException("角色不存在或不属于当前租户");
+        }
         roleMenuService
-                .remove(Wrappers.<SysRoleMenu>update().lambda().in(SysRoleMenu::getRoleId, CollUtil.toList(ids)));
-        return this.removeBatchByIds(CollUtil.toList(ids));
+                .remove(Wrappers.<SysRoleMenu>update().lambda().in(SysRoleMenu::getRoleId, requested));
+        invalidateAuthorizationCaches(true);
+        return true;
+    }
+
+    private void invalidateAuthorizationCaches(boolean menusChanged) {
+        Runnable clear = () -> {
+            if (menusChanged) cacheManager.getCache(CacheConstants.MENU_DETAILS).clear();
+            cacheManager.getCache(CacheConstants.ROLE_DETAILS).clear();
+            cacheManager.getCache(CacheConstants.USER_DETAILS).clear();
+        };
+        if (TransactionSynchronizationManager.isActualTransactionActive()
+                && TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    clear.run();
+                }
+            });
+        } else {
+            clear.run();
+        }
     }
 
     /**

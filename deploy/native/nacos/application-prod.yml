@@ -1,0 +1,55 @@
+spring:
+  cache:
+    type: redis
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      password: ${REDIS_PASSWORD}
+      database: ${REDIS_DATABASE:0}
+  rabbitmq:
+    host: ${RABBITMQ_HOST}
+    port: ${RABBITMQ_PORT}
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
+    virtual-host: ${RABBITMQ_VIRTUAL_HOST}
+  boot:
+    admin:
+      client:
+        enabled: ${BIXI_SBA_CLIENT_ENABLED:true}
+        url: ${BIXI_SBA_CLIENT_URL}
+        username: ${BIXI_SBA_CLIENT_USERNAME}
+        password: ${BIXI_SBA_CLIENT_PASSWORD}
+        instance:
+          service-host-type: ip
+          metadata:
+            user.name: ${BIXI_SBA_CLIENT_USERNAME}
+            user.password: ${BIXI_SBA_CLIENT_PASSWORD}
+  main:
+    allow-bean-definition-overriding: true
+
+bixi:
+  sba:
+    actuator:
+      username: ${BIXI_SBA_CLIENT_USERNAME}
+      password: ${BIXI_SBA_CLIENT_PASSWORD}
+  reliable:
+    enabled: ${BIXI_RELIABLE_ENABLED:false}
+    rabbit:
+      enabled: ${BIXI_RELIABLE_RABBIT_ENABLED:false}
+      host: ${BIXI_RELIABLE_RABBIT_HOST:${RABBITMQ_HOST}}
+      port: ${BIXI_RELIABLE_RABBIT_PORT:${RABBITMQ_PORT}}
+      username: ${BIXI_RELIABLE_RABBIT_USERNAME:${RABBITMQ_USERNAME}}
+      password: ${BIXI_RELIABLE_RABBIT_PASSWORD:${RABBITMQ_PASSWORD}}
+      virtual-host: ${BIXI_RELIABLE_RABBIT_VIRTUAL_HOST:${RABBITMQ_VIRTUAL_HOST}}
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,loggers,logfile,dynamictp

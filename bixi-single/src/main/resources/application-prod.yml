@@ -1,0 +1,101 @@
+server:
+  port: 9999
+  servlet:
+    context-path: /admin
+
+security:
+  browser-client-secret: ${OAUTH_BROWSER_CLIENT_SECRET}
+  encode-key: ${BIXI_ENCODE_KEY}
+  oauth2:
+    ignore:
+      urls:
+        - /webjars/**
+        - /error
+        - /token/**
+        - /actuator/health
+        - /actuator/health/**
+        - /code/**
+  ignore-clients:
+    - bixi
+    - test
+
+spring:
+  cache:
+    type: redis
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      password: ${REDIS_PASSWORD}
+      database: ${REDIS_DATABASE:0}
+  ai:
+    dashscope:
+      api-key: ${DASHSCOPE_API_KEY:}
+      chat:
+        enabled: ${AI_CHAT_ENABLED:${AI_ENABLED:false}}
+        options:
+          model: ${AI_CHAT_MODEL:qwen-plus}
+          temperature: ${AI_TEMPERATURE:0.7}
+      embedding:
+        enabled: ${AI_EMBEDDING_ENABLED:${AI_ENABLED:false}}
+        options:
+          model: ${AI_EMBEDDING_MODEL:text-embedding-v2}
+  datasource:
+    dynamic:
+      primary: master
+      strict: true
+      datasource:
+        master:
+          type: com.alibaba.druid.pool.DruidDataSource
+          driver-class-name: com.mysql.cj.jdbc.Driver
+          username: ${MYSQL_USERNAME}
+          password: ${MYSQL_PASSWORD}
+          url: ${MYSQL_JDBC_URL}
+    druid:
+      initial-size: 5
+      min-idle: 5
+      max-active: 20
+      max-wait: 60000
+      time-between-eviction-runs-millis: 60000
+      min-evictable-idle-time-millis: 300000
+      validation-query: SELECT 1
+      validation-query-timeout: 10000
+      connection-error-retry-attempts: 5000
+      test-while-idle: true
+      test-on-borrow: false
+      test-on-return: false
+      filters: stat,wall,slf4j
+      web-stat-filter:
+        enabled: true
+        url-pattern: "/*"
+        exclusions: "*.js,*.gif,*.jpg,*.bmp,*.png,*.css,*.ico,/druid/*"
+      stat-view-servlet:
+        enabled: false
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+file:
+  bucket: bixi
+  local:
+    enable: true
+    base-path: /var/lib/bixi/files
+  oss:
+    enable: ${MINIO_ENABLED:false}
+    endpoint: ${MINIO_ENDPOINT:}
+    access-key: ${MINIO_ACCESS_KEY:}
+    secret-key: ${MINIO_SECRET_KEY:}
+
+jasypt:
+  encryptor:
+    password: ${JASYPT_ENCRYPTOR_PASSWORD}
+    algorithm: PBEWithMD5AndDES
+    iv-generator-classname: org.jasypt.iv.NoIvGenerator

@@ -2,77 +2,34 @@
 
 ## 数据库脚本总览
 
-**数据库类型**: MySQL 8.0+
+**数据库类型**: MySQL 8.0.16+（必须执行 `CHECK` 约束）
 **字符集**: utf8mb4
 **排序规则**: utf8mb4_unicode_ci
-**总表数**: 50 个
+**总表数**: 64 个
 
 ### 表分布
 
-| 模块 | 表前缀 | 表数量 | 说明 |
-|------|--------|--------|------|
-| 核心系统 | `sys_*` | 16 | 用户、角色、菜单、权限、字典等 |
-| 工作流 | `wf_*` | 4 | 流程定义、实例、审批记录等 |
-| 表单管理 | `wf_form`, `sys_form_permission` 等 | 5 | 动态表单、表单版本、表单权限等 |
-| AI 模块 | `ai_*` | 5 | 会话、消息、文档、向量等 |
-| 代码生成 | `gen_*` | 5 | 数据源、字段配置、模板等 |
-| 定时任务 | `sys_job*`, `QRTZ_*` | 13 | 系统任务表和 Quartz 原生表 |
+| 模块 | 表前缀 | 说明 |
+|------|--------|------|
+| 核心系统 | `sys_*` | 用户、角色、菜单、权限、字典等 |
+| 工作流 | `wf_*` | 流程定义、实例、审批记录等 |
+| 表单管理 | `wf_form`, `sys_form_permission` 等 | 动态表单、表单版本、表单权限等 |
+| AI 模块 | `ai_*` | 会话、消息、文档、向量等 |
+| 代码生成 | `gen_*` | 数据源、字段配置、模板等 |
+| 定时任务 | `sys_job*`, `QRTZ_*` | 系统任务表和 Quartz 原生表 |
 
-当前完整建表脚本 `01_schema.sql` 包含 50 张表，其中包含系统基础表、代码生成表、表单表、工作流表、AI 表、定时任务表以及 Quartz 原生表。
+当前完整建表脚本 `01_schema.sql` 包含 64 张表，其中包含系统基础表、代码生成表、表单表、工作流表、AI 表、定时任务表以及 Quartz 原生表。
 
-推荐执行顺序：
-
-1. 创建数据库：`CREATE DATABASE bixi DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;`
-2. 执行 `01_schema.sql`
-3. 执行 `02_data.sql`
-4. 执行修正后的 `03_constraints.sql`
-5. 执行修正后的 `04_indexes.sql`
-
-部署步骤只以本目录实际存在的 SQL 和 Markdown 文件为准，不引用未随仓库提交的模板更新指南或模板更新脚本。
+`01` 至 `04` 是**全新空库**的一次性初始化顺序，不是可重放的迁移。`01_schema.sql` 包含 `DROP TABLE`，严禁对已有数据或部分导入的数据库执行。
 
 ---
 
-## 🚀 快速开始
+## 快速开始
 
-### ⚡ 一键初始化（推荐）
+- Docker Compose：按[项目快速开始](../../README.md#快速开始)创建并验收新环境。
+- Ubuntu 原生部署：按[原生发行指南](../../deploy/native/README.md#fresh-database-only)创建空库，再用发行包内的 `ops/init-db.sh` 初始化。脚本会在导入任何 SQL 之前拒绝非空库。
 
-以下 SQL 命令在 `bixi-project-documents/sql` 目录执行；运行时密钥脚本在仓库根目录执行。
-
-```bash
-# 1. 创建数据库
-mysql -u root -p -e "CREATE DATABASE bixi CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-
-# 2. 按编号导入表结构、基础数据、约束和索引
-mysql -u root -p bixi < 01_schema.sql
-mysql -u root -p bixi < 02_data.sql
-mysql -u root -p bixi < 03_constraints.sql
-mysql -u root -p bixi < 04_indexes.sql
-```
-
-**⚠️ 重要提示**：
-- ✅ **必须按 `01` → `02` → `03` → `04` 执行**，文件名就是执行顺序
-- ✅ `02_data.sql` 只写入基础数据和 `RUNTIME_*` 占位值，不包含固定管理员密码
-- ✅ 新库导入后还要执行 `deploy/mysql/05_runtime_secrets.sh`，写入管理员密码、租户默认密码和 OAuth client secret
-- ✅ 生产环境不要使用示例密码；请先设置外部 Secret，再执行运行时密钥脚本
-
-### 📝 分步初始化（可选）
-
-```bash
-# 1. 创建数据库
-mysql -u root -p -e "CREATE DATABASE bixi CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-
-# 2. 导入表结构和初始化数据（按顺序）
-mysql -u root -p bixi < 01_schema.sql       # 所有表结构
-mysql -u root -p bixi < 02_data.sql         # 系统初始数据
-mysql -u root -p bixi < 03_constraints.sql  # 约束
-mysql -u root -p bixi < 04_indexes.sql      # 索引
-
-# 3. 在数据库主机设置以下变量后执行运行时密钥写入
-#    MYSQL_ROOT_PASSWORD、MYSQL_DATABASE、ADMIN_PASSWORD_BCRYPT_B64、
-#    OAUTH_PASSWORD_CLIENT_SECRET、OAUTH_MOBILE_CLIENT_SECRET、
-#    OAUTH_INTERNAL_SEED、TENANT_DEFAULT_PASSWORD
-sh ../../deploy/mysql/05_runtime_secrets.sh
-```
+不要手工重放 `01` 至 `04`，也不要把初始化脚本当作已有数据库的升级路径。Compose 仅在 `05_runtime_secrets.sh` 成功后将 MySQL 标记为健康；首次导入失败后，即使 MySQL 自动重启也不会继续启动应用。先查明原因；只有确认 `mysql-data` 是可丢弃的新卷时，才能执行 `make stop`、`docker volume rm bixi_mysql-data`，然后重试对应的 `make start-cloud` 或 `make start-single`。原生部署使用独立的空库检查和初始化脚本，部分导入后只能重建可丢弃的新库，不能重放初始化 SQL。
 
 ---
 
@@ -95,7 +52,7 @@ sql/
 └── bixi_job.sql                  # 定时任务（系统任务表和 Quartz 表）
 ```
 
-运行时密钥脚本：`deploy/mysql/05_runtime_secrets.sh`（Compose/直装共用）。
+Compose 的运行时密钥由 `deploy/mysql/05_runtime_secrets.sh` 写入；Ubuntu 原生首装使用发行包内的 `ops/init-db.sh`。
 
 ---
 
@@ -231,7 +188,7 @@ ai_document (文档)
 
 ### MySQL 配置要求
 
-**最低版本**: MySQL 8.0+
+**最低版本**: MySQL 8.0.16+
 
 **推荐配置** (`my.cnf`):
 ```ini
@@ -287,20 +244,19 @@ CREATE INDEX idx_msg_session_time ON ai_message(session_id, create_time DESC);
 
 ## 🔒 约束说明
 
-**唯一约束**（可选执行，见 [03_constraints.sql](03_constraints.sql)）：
+**唯一约束**（新库初始化必须执行 [03_constraints.sql](03_constraints.sql)）：
 ```sql
--- 用户表唯一约束
-ALTER TABLE sys_user ADD CONSTRAINT uk_username UNIQUE (username);
-ALTER TABLE sys_user ADD CONSTRAINT uk_phone UNIQUE (phone);
-ALTER TABLE sys_user ADD CONSTRAINT uk_email UNIQUE (email);
+-- 用户表按租户唯一；phone 和 email 为 NULL 时可有多条记录
+ALTER TABLE sys_user ADD CONSTRAINT uk_user_tenant_username UNIQUE (tenant_id, username);
+ALTER TABLE sys_user ADD CONSTRAINT uk_user_tenant_phone UNIQUE (tenant_id, phone);
+ALTER TABLE sys_user ADD CONSTRAINT uk_user_tenant_email UNIQUE (tenant_id, email);
 
--- 字典表唯一约束
-ALTER TABLE sys_dict ADD CONSTRAINT uk_dict_type UNIQUE (type);
+-- 未删除的字典类型按租户唯一；active_type 为 01_schema.sql 中的生成列
+ALTER TABLE sys_dict ADD CONSTRAINT uk_dict_tenant_active_type UNIQUE (tenant_id, active_type);
 ```
 
 **外键约束**：
-- 当前版本未启用外键约束（由应用层保证数据完整性）
-- 如需启用，请参考 [03_constraints.sql](03_constraints.sql)
+- `03_constraints.sql` 同时创建外键和检查约束，按初始化顺序完整执行。
 
 ---
 

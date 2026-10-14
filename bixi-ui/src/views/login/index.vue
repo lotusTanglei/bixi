@@ -275,8 +275,14 @@ onMounted(() => {
 }
 
 @media (max-width: 960px) {
+	.login-page {
+		height: 100%;
+		overflow-y: auto;
+		align-items: flex-start;
+	}
+
 	.login-shell {
-		grid-template-columns: 1fr;
+		grid-template-columns: minmax(0, 1fr);
 		min-height: auto;
 	}
 
@@ -297,6 +303,10 @@ onMounted(() => {
 @media (max-width: 640px) {
 	.login-page {
 		padding: 16px;
+	}
+
+	.hero-card {
+		display: none;
 	}
 
 	.login-hero,

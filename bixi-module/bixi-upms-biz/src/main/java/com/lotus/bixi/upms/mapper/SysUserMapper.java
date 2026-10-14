@@ -13,6 +13,8 @@ import com.lotus.bixi.common.mybatis.annotation.DataScope;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.io.Serializable;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -36,6 +38,10 @@ public interface SysUserMapper extends BaseMapper<SysUser> {
     @Override
     @DataScope(userAlias = "")
     int deleteById(java.io.Serializable id);
+
+    @Override
+    @DataScope(userAlias = "")
+    List<SysUser> selectByIds(@Param(Constants.COLL) Collection<? extends Serializable> ids);
 
     /**
      * 通过用户名查询用户信息（含有角色信息）

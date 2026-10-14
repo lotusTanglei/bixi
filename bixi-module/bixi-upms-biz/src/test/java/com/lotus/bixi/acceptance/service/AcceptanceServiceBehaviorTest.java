@@ -14,12 +14,15 @@ import com.lotus.bixi.acceptance.api.dto.SysPublicParamQueryDTO;
 import com.lotus.bixi.acceptance.api.entity.SysDict;
 import com.lotus.bixi.acceptance.api.entity.SysDictItem;
 import com.lotus.bixi.acceptance.api.entity.SysPublicParam;
+import com.lotus.bixi.acceptance.controller.SysDictController;
+import com.lotus.bixi.acceptance.controller.SysPublicParamController;
 import com.lotus.bixi.acceptance.mapper.SysDictItemMapper;
 import com.lotus.bixi.acceptance.mapper.SysDictMapper;
 import com.lotus.bixi.acceptance.mapper.SysPublicParamMapper;
 import com.lotus.bixi.acceptance.service.impl.SysDictServiceImpl;
 import com.lotus.bixi.acceptance.service.impl.SysPublicParamServiceImpl;
 import com.lotus.bixi.common.core.context.TenantContextHolder;
+import com.lotus.bixi.common.feign.sentinel.handle.GlobalBizExceptionHandler;
 import com.lotus.bixi.common.security.component.PermissionService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,7 +32,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.List;
 
@@ -41,6 +46,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
 class AcceptanceServiceBehaviorTest {
@@ -174,5 +183,84 @@ class AcceptanceServiceBehaviorTest {
 			.isInstanceOf(IllegalArgumentException.class)
 			.hasMessageContaining("不属于当前主表");
 		verify(dictMapper, never()).updateById(any(SysDict.class));
+	}
+
+	@Test
+	void duplicateDictionaryCreateReturnsSafeConflict() throws Exception {
+		when(dictMapper.insert(any(SysDict.class))).thenThrow(databaseDuplicate());
+		var http = MockMvcBuilders.standaloneSetup(new SysDictController(dictService))
+			.setControllerAdvice(new GlobalBizExceptionHandler()).build();
+
+		String body = http.perform(post("/dictAggregate").contentType("application/json")
+				.content("{\"type\":\"status\",\"name\":\"Status\",\"children\":[]}"))
+			.andExpect(status().isConflict())
+			.andExpect(jsonPath("$.code").value(1))
+			.andExpect(jsonPath("$.msg").value("字典类型已存在"))
+			.andReturn().getResponse().getContentAsString();
+		assertThat(body).doesNotContain("SQLIntegrityConstraintViolationException", "INSERT INTO", "uk_dict_tenant_type");
+		verify(dictItemMapper, never()).insert(any(SysDictItem.class));
+	}
+
+	@Test
+	void duplicateDictionaryUpdateReturnsSafeConflict() throws Exception {
+		SysDict parent = new SysDict();
+		parent.setId(7L);
+		parent.setTenantId(1L);
+		when(dictMapper.selectOne(any(), anyBoolean())).thenReturn(parent);
+		when(dictMapper.updateById(any(SysDict.class))).thenThrow(databaseDuplicate());
+		var http = MockMvcBuilders.standaloneSetup(new SysDictController(dictService))
+			.setControllerAdvice(new GlobalBizExceptionHandler()).build();
+
+		String body = http.perform(put("/dictAggregate").contentType("application/json")
+				.content("{\"id\":7,\"type\":\"status\",\"name\":\"Status\",\"children\":[]}"))
+			.andExpect(status().isConflict())
+			.andExpect(jsonPath("$.code").value(1))
+			.andExpect(jsonPath("$.msg").value("字典类型已存在"))
+			.andReturn().getResponse().getContentAsString();
+		assertThat(body).doesNotContain("SQLIntegrityConstraintViolationException", "INSERT INTO", "uk_dict_tenant_type");
+	}
+
+	@Test
+	void duplicatePublicParamCreateReturnsSafeConflict() throws Exception {
+		when(publicParamMapper.insert(any(SysPublicParam.class))).thenThrow(publicParamDatabaseDuplicate());
+		var http = MockMvcBuilders.standaloneSetup(new SysPublicParamController(publicParamService))
+			.setControllerAdvice(new GlobalBizExceptionHandler()).build();
+
+		String body = http.perform(post("/publicParam").contentType("application/json")
+				.content("{\"name\":\"Site title\",\"key\":\"site.title\",\"value\":\"Bixi\"}"))
+			.andExpect(status().isConflict())
+			.andExpect(jsonPath("$.code").value(1))
+			.andExpect(jsonPath("$.msg").value("公共参数键已存在"))
+			.andReturn().getResponse().getContentAsString();
+		assertThat(body).doesNotContain("SQLIntegrityConstraintViolationException", "INSERT INTO", "uk_public_param_tenant_active_key");
+	}
+
+	@Test
+	void duplicatePublicParamUpdateReturnsSafeConflict() throws Exception {
+		SysPublicParam current = new SysPublicParam();
+		current.setId(7L);
+		current.setTenantId(1L);
+		when(publicParamMapper.selectOne(any(), anyBoolean())).thenReturn(current);
+		when(publicParamMapper.updateById(any(SysPublicParam.class))).thenThrow(publicParamDatabaseDuplicate());
+		var http = MockMvcBuilders.standaloneSetup(new SysPublicParamController(publicParamService))
+			.setControllerAdvice(new GlobalBizExceptionHandler()).build();
+
+		String body = http.perform(put("/publicParam").contentType("application/json")
+				.content("{\"id\":7,\"name\":\"Site title\",\"key\":\"site.title\",\"value\":\"Bixi\"}"))
+			.andExpect(status().isConflict())
+			.andExpect(jsonPath("$.code").value(1))
+			.andExpect(jsonPath("$.msg").value("公共参数键已存在"))
+			.andReturn().getResponse().getContentAsString();
+		assertThat(body).doesNotContain("SQLIntegrityConstraintViolationException", "INSERT INTO", "uk_public_param_tenant_active_key");
+	}
+
+	private static DuplicateKeyException databaseDuplicate() {
+		return new DuplicateKeyException("SQLIntegrityConstraintViolationException: "
+			+ "Duplicate entry for key uk_dict_tenant_type; INSERT INTO sys_dict");
+	}
+
+	private static DuplicateKeyException publicParamDatabaseDuplicate() {
+		return new DuplicateKeyException("SQLIntegrityConstraintViolationException: "
+			+ "Duplicate entry for key uk_public_param_tenant_active_key; INSERT INTO sys_public_param");
 	}
 }

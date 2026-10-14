@@ -546,8 +546,9 @@ public class LeaveRequestIntegrationTest {
     @ImportAutoConfiguration(MybatisPlusAutoConfiguration.class)
     static class Config {
         @Bean org.springframework.mock.web.MockHttpServletRequest innerRequest() { return new org.springframework.mock.web.MockHttpServletRequest(); }
-        @Bean com.lotus.bixi.common.security.component.BixiSecurityInnerAspect innerAspect(org.springframework.mock.web.MockHttpServletRequest request) {
-            return new com.lotus.bixi.common.security.component.BixiSecurityInnerAspect(request);
+        @Bean com.lotus.bixi.common.security.component.BixiSecurityInnerAspect innerAspect(
+                org.springframework.mock.web.MockHttpServletRequest request, org.springframework.core.env.Environment environment) {
+            return new com.lotus.bixi.common.security.component.BixiSecurityInnerAspect(request, environment);
         }
         @Bean DataSource dataSource() {
             String mysqlUrl = System.getenv("WORKFLOW_TEST_JDBC_URL");

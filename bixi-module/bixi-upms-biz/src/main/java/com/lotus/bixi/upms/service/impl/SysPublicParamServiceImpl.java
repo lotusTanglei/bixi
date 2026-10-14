@@ -33,7 +33,9 @@ public class SysPublicParamServiceImpl extends ServiceImpl<SysPublicParamMapper,
         implements SysPublicParamService {
 
     @Override
-    @Cacheable(value = CacheConstants.PARAMS_DETAILS, key = "#publicKey", unless = "#result == null ")
+    @Cacheable(value = CacheConstants.PARAMS_DETAILS,
+            key = "T(com.lotus.bixi.common.core.constant.CacheConstants).currentTenantKey('params_details') + #publicKey",
+            unless = "#result == null ")
     public String getSysPublicParamKeyToValue(String publicKey) {
         SysPublicParam sysPublicParam = this.baseMapper
                 .selectOne(Wrappers.<SysPublicParam>lambdaQuery().eq(SysPublicParam::getKey, publicKey));
@@ -51,7 +53,7 @@ public class SysPublicParamServiceImpl extends ServiceImpl<SysPublicParamMapper,
      * @return
      */
     @Override
-    @CacheEvict(value = CacheConstants.PARAMS_DETAILS, key = "#sysPublicParam.key")
+    @CacheEvict(value = CacheConstants.PARAMS_DETAILS, allEntries = true)
     public R updateParam(SysPublicParam sysPublicParam) {
         SysPublicParam param = this.getById(sysPublicParam.getId());
         // 系统内置

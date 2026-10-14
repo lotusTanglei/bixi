@@ -1,9 +1,18 @@
 import { defineStore } from 'pinia';
 import { Session } from '/@/utils/storage';
 import { getUserInfo, login, loginByMobile, loginBySocial, refreshTokenApi } from '/@/api/login/index';
-import other from '/@/utils/other';
+import { isRejectedRefreshCredential, refreshAtFrom, refreshOnce } from '/@/utils/tokenRefresh';
 import { useMessage } from '/@/hooks/message';
 import mittBus from '/@/utils/mitt';
+
+const storeTokenResponse = (res: any, currentRefreshToken?: string) => {
+	const refreshAt = refreshAtFrom(res.expires_in);
+	const refreshToken = res.refresh_token || currentRefreshToken;
+	if (!res.access_token || !refreshToken) throw new Error('Invalid token response');
+	Session.set('token', res.access_token);
+	Session.set('refresh_token', refreshToken);
+	Session.set('refreshAt', refreshAt);
+};
 
 /**
  * @function useUserInfo
@@ -35,9 +44,7 @@ export const useUserInfo = defineStore('userInfo', {
 			return new Promise((resolve, reject) => {
 				login(data)
 					.then((res) => {
-						// 存储token 信息
-						Session.set('token', res.access_token);
-						Session.set('refresh_token', res.refresh_token);
+						storeTokenResponse(res);
 						resolve(res);
 					})
 					.catch((err) => {
@@ -58,9 +65,7 @@ export const useUserInfo = defineStore('userInfo', {
 			return new Promise((resolve, reject) => {
 				loginByMobile(data.mobile, data.code)
 					.then((res) => {
-						// 存储token 信息
-						Session.set('token', res.access_token);
-						Session.set('refresh_token', res.refresh_token);
+						storeTokenResponse(res);
 						resolve(res);
 					})
 					.catch((err) => {
@@ -82,9 +87,7 @@ export const useUserInfo = defineStore('userInfo', {
 			return new Promise((resolve, reject) => {
 				loginBySocial(state, code)
 					.then((res) => {
-						// 存储token 信息
-						Session.set('token', res.access_token);
-						Session.set('refresh_token', res.refresh_token);
+						storeTokenResponse(res);
 						resolve(res);
 					})
 					.catch((err) => {
@@ -101,19 +104,22 @@ export const useUserInfo = defineStore('userInfo', {
 		 * @returns {Promise<any>}
 		 */
 		async refreshToken() {
-			return new Promise((resolve, reject) => {
-				const refreshToken = Session.get('refresh_token');
-				refreshTokenApi(refreshToken)
-					.then((res) => {
-						// 存储token 信息
-						Session.set('token', res.access_token);
-						Session.set('refresh_token', res.refresh_token);
-						resolve(res);
-					})
-					.catch((err) => {
-						useMessage().error(err.msg);
-						reject(err);
-					});
+			return refreshOnce(async () => {
+				const currentRefreshToken = Session.get('refresh_token');
+				try {
+					if (!currentRefreshToken) throw new Error('Missing refresh token');
+					const res = await refreshTokenApi(currentRefreshToken);
+					if (Session.get('refresh_token') !== currentRefreshToken) throw new Error('Auth state changed');
+					storeTokenResponse(res, currentRefreshToken);
+					return res;
+				} catch (err: any) {
+					if (Session.get('refresh_token') === currentRefreshToken &&
+						(!currentRefreshToken || isRejectedRefreshCredential(err))) {
+						Session.clear();
+						useMessage().error(err?.msg || '登录已过期，请重新登录');
+					}
+					throw err;
+				}
 			});
 		},
 

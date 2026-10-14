@@ -34,6 +34,7 @@ x-backend-environment: &backend-environment
   MYSQL_DATABASE: ${MYSQL_DATABASE}
   MYSQL_USERNAME: ${MYSQL_USERNAME}
   MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+  MYSQL_JDBC_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?sslMode=REQUIRED&serverTimezone=Asia/Shanghai&characterEncoding=utf8&allowMultiQueries=true&nullCatalogMeansCurrent=true
   REDIS_HOST: redis
   REDIS_PORT: 6379
   REDIS_PASSWORD: ${REDIS_PASSWORD}
@@ -68,8 +69,8 @@ services:
       ADMIN_PASSWORD_BCRYPT_B64: ${ADMIN_PASSWORD_BCRYPT_B64}
       OAUTH_PASSWORD_CLIENT_SECRET: ${OAUTH_PASSWORD_CLIENT_SECRET}
       OAUTH_MOBILE_CLIENT_SECRET: ${OAUTH_MOBILE_CLIENT_SECRET}
+      OAUTH_BROWSER_CLIENT_SECRET: ${OAUTH_BROWSER_CLIENT_SECRET}
       OAUTH_INTERNAL_SEED: ${OAUTH_INTERNAL_SEED}
-      TENANT_DEFAULT_PASSWORD: ${TENANT_DEFAULT_PASSWORD}
       TZ: ${TIME_ZONE:-Asia/Shanghai}
     ports:
       - "127.0.0.1:${MYSQL_PORT:-3306}:3306"
@@ -81,7 +82,7 @@ services:
       - ./bixi-project-documents/sql/04_indexes.sql:/docker-entrypoint-initdb.d/04_indexes.sql:ro
       - ./deploy/mysql/05_runtime_secrets.sh:/docker-entrypoint-initdb.d/05_runtime_secrets.sh:ro
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      test: ["CMD-SHELL", "MYSQL_PWD=$${MYSQL_ROOT_PASSWORD} mysqladmin ping -h 127.0.0.1 -uroot --silent"]
       interval: 5s
       timeout: 5s
       retries: 40
@@ -270,6 +271,7 @@ services:
     environment:
       <<: *backend-environment
       BIXI_DEPLOYMENT_MODE: cloud
+      OAUTH_BROWSER_CLIENT_SECRET: ${OAUTH_BROWSER_CLIENT_SECRET}
       NACOS_HOST: nacos
       NACOS_PORT: 8848
       NACOS_NAMESPACE: ${NACOS_NAMESPACE:-bixi}
@@ -480,9 +482,6 @@ services:
       args:
         REGISTRY_MIRROR: ${BIXI_REGISTRY_MIRROR:-}
         PUBLIC_MICRO_MODE: "true"
-        PUBLIC_WEB_CLIENT: bixi:${OAUTH_PASSWORD_CLIENT_SECRET}
-        PUBLIC_MOBILE_CLIENT: app:${OAUTH_MOBILE_CLIENT_SECRET}
-        PUBLIC_CIPHER_CONFIG: ${BIXI_ENCODE_KEY}
         NGINX_CONFIG: cloud.conf
     restart: unless-stopped
     ports:
@@ -510,6 +509,7 @@ services:
     environment:
       <<: *backend-environment
       BIXI_DEPLOYMENT_MODE: single
+      OAUTH_BROWSER_CLIENT_SECRET: ${OAUTH_BROWSER_CLIENT_SECRET}
       BIXI_SBA_CLIENT_ENABLED: "false"
       MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health
       GENERATOR_ENABLED: ${GENERATOR_ENABLED:-true}
@@ -541,9 +541,6 @@ services:
       args:
         REGISTRY_MIRROR: ${BIXI_REGISTRY_MIRROR:-}
         PUBLIC_MICRO_MODE: "false"
-        PUBLIC_WEB_CLIENT: bixi:${OAUTH_PASSWORD_CLIENT_SECRET}
-        PUBLIC_MOBILE_CLIENT: app:${OAUTH_MOBILE_CLIENT_SECRET}
-        PUBLIC_CIPHER_CONFIG: ${BIXI_ENCODE_KEY}
         NGINX_CONFIG: single.conf
     restart: unless-stopped
     ports:

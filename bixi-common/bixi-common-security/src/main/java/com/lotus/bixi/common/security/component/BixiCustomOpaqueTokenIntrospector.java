@@ -94,7 +94,7 @@ public class BixiCustomOpaqueTokenIntrospector implements OpaqueTokenIntrospecto
             throw invalidToken();
         }
 
-        // Cached identities are shared across requests; client context belongs to this request only.
+        // Client context belongs to this request only.
         var principalUser = new BixiUser(currentUser.getId(), currentUser.getDeptId(), currentUser.getTenantId(),
                 currentUser.getUsername(),
                 currentUser.getPassword() == null ? "" : currentUser.getPassword(), currentUser.getPhone(),

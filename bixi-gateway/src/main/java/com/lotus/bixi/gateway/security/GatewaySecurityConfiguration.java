@@ -81,6 +81,8 @@ public class GatewaySecurityConfiguration {
                         // contract after the existing /admin route strips its prefix.
                         .pathMatchers(HttpMethod.POST, "/admin/notice/delivery/receipt")
                         .permitAll()
+                        .pathMatchers(HttpMethod.GET, "/admin/mobile/*")
+                        .permitAll()
                         .anyExchange().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .authenticationEntryPoint(entryPoint)

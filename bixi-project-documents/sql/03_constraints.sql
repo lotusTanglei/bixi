@@ -1,14 +1,14 @@
 -- =====================================================
--- 数据库约束优化脚本
+-- 数据库约束初始化脚本
 -- 版本: 1.0.0
 -- 日期: 2026-03-28
--- 说明: 添加唯一约束和外键约束（可选执行）
+-- 说明: 新库初始化时必须执行，添加唯一、外键和检查约束
 -- =====================================================
 
 -- 注意：执行前请确保数据符合约束条件，否则会失败
 
 -- =====================================================
--- 1. 唯一约束（推荐执行）
+-- 1. 唯一约束
 -- =====================================================
 
 -- 用户表唯一约束
@@ -17,7 +17,12 @@ ALTER TABLE sys_user ADD CONSTRAINT uk_user_tenant_phone UNIQUE (tenant_id, phon
 ALTER TABLE sys_user ADD CONSTRAINT uk_user_tenant_email UNIQUE (tenant_id, email);
 
 -- 字典表唯一约束
-ALTER TABLE sys_dict ADD CONSTRAINT uk_dict_tenant_type UNIQUE (tenant_id, type);
+ALTER TABLE sys_dict MODIFY COLUMN tenant_id bigint NOT NULL;
+ALTER TABLE sys_dict ADD CONSTRAINT uk_dict_tenant_active_type UNIQUE (tenant_id, active_type);
+
+-- 公共参数种子数据已在 02_data.sql 中归一到租户 1。
+ALTER TABLE sys_public_param MODIFY COLUMN tenant_id bigint NOT NULL;
+ALTER TABLE sys_public_param ADD CONSTRAINT uk_public_param_tenant_active_key UNIQUE (tenant_id, `active_key`);
 
 -- 角色表唯一约束
 ALTER TABLE sys_role ADD CONSTRAINT uk_role_tenant_code UNIQUE (tenant_id, code);
@@ -35,9 +40,9 @@ ALTER TABLE wf_category ADD CONSTRAINT uk_category_code UNIQUE (category_code);
 -- wf_form.uk_form_key is already defined in 01_schema.sql.
 
 -- =====================================================
--- 2. 外键约束（可选执行）
+-- 2. 外键约束
 -- =====================================================
--- 注意：外键约束会影响性能，请根据实际需求决定是否启用
+-- 外键随本脚本执行，初始化数据需先满足引用关系。
 
 -- sys_menu and sys_dept use sentinel parent_id values for roots (`-1` and `0`).
 -- Self-referential foreign keys are intentionally not added here because they
@@ -146,7 +151,7 @@ ON DELETE RESTRICT
 ON UPDATE CASCADE;
 
 -- =====================================================
--- 3. 检查约束（可选）
+-- 3. 检查约束
 -- =====================================================
 
 -- 用户状态检查

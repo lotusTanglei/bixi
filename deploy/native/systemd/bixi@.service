@@ -1,0 +1,28 @@
+[Unit]
+Description=Bixi %i service
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=bixi
+Group=bixi
+WorkingDirectory=/var/lib/bixi
+Environment=SPRING_PROFILES_ACTIVE=prod
+Environment=SERVER_ADDRESS=127.0.0.1
+EnvironmentFile=/etc/bixi/bixi.env
+EnvironmentFile=-/etc/bixi/%i.env
+ExecStartPre=/usr/local/libexec/bixi/preflight.sh %i
+ExecStart=/usr/bin/java -XX:MaxRAMPercentage=70.0 -jar /opt/bixi/current/jars/%i.jar
+Restart=on-failure
+RestartSec=10
+TimeoutStopSec=45
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/bixi
+PrivateTmp=true
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

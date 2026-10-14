@@ -9,7 +9,7 @@
 		</el-form-item>
 		<el-form-item class="login-animation2" prop="code">
 			<el-col :span="15">
-				<el-input text maxlength="6" :placeholder="$t('mobile.placeholder2')" v-model="loginForm.code" clearable autocomplete="off">
+				<el-input text maxlength="8" :placeholder="$t('mobile.placeholder2')" v-model="loginForm.code" clearable autocomplete="off">
 					<template #prefix>
 						<el-icon class="el-input__icon">
 							<ele-Position />
@@ -70,12 +70,16 @@ const handleSendCode = async () => {
 	const valid = await loginFormRef.value.validateField('mobile').catch(() => {});
 	if (!valid) return;
 
-	const response = await sendMobileCode(loginForm.mobile);
-	if (response.data) {
-		useMessage().success('验证码发送成功');
-		timeCacl();
-	} else {
-		useMessage().error(response.msg);
+	try {
+		const response = await sendMobileCode(loginForm.mobile);
+		if (response.data) {
+			useMessage().success('请求已受理，如手机号已注册请查收短信');
+			timeCacl();
+		} else {
+			useMessage().error(response.msg);
+		}
+	} catch (error: any) {
+		useMessage().error(error?.msg || '短信发送失败，请稍后再试');
 	}
 };
 

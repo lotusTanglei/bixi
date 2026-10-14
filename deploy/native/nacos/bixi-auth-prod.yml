@@ -1,0 +1,38 @@
+spring:
+  freemarker:
+    suffix: .ftl
+    template-loader-path: classpath:/templates/
+    request-context-attribute: request
+
+security:
+  micro: true
+  encode-key: ${BIXI_ENCODE_KEY}
+  browser-client-secret: ${OAUTH_BROWSER_CLIENT_SECRET}
+  ignore-clients:
+    - bixi
+    - test
+  oauth2:
+    ignore:
+      urls:
+        - /token/**
+        - /code/**
+        - /actuator/health
+        - /actuator/health/**
+        - /error
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false

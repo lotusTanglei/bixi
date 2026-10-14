@@ -2,7 +2,11 @@ package com.lotus.bixi.upms.service;
 
 import com.baomidou.mybatisplus.autoconfigure.MybatisPlusAutoConfiguration;
 import com.lotus.bixi.common.core.constant.CacheConstants;
+import com.lotus.bixi.upms.api.entity.SysMenu;
+import com.lotus.bixi.upms.api.entity.SysRole;
+import com.lotus.bixi.upms.service.impl.SysMenuServiceImpl;
 import com.lotus.bixi.upms.service.impl.SysRoleMenuServiceImpl;
+import com.lotus.bixi.upms.service.impl.SysRoleServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -52,6 +56,8 @@ class RoleMenuCacheIntegrationTest {
     private static final List<Long> ORIGINAL_MENUS = List.of(10L, 20L);
 
     @Autowired SysRoleMenuService roleMenus;
+    @Autowired SysRoleService roles;
+    @Autowired SysMenuService menus;
     @Autowired CachedAuthorizationReader authorizations;
     @Autowired CachedUserPermissionReader users;
     @Autowired RecordingCacheManager caches;
@@ -63,6 +69,26 @@ class RoleMenuCacheIntegrationTest {
     void seedDatabaseAndAuthorizationCaches() {
         jdbc = new JdbcTemplate(source);
         jdbc.execute("DROP TABLE IF EXISTS sys_role_menu");
+        jdbc.execute("DROP TABLE IF EXISTS sys_role");
+        jdbc.execute("DROP TABLE IF EXISTS sys_menu");
+        jdbc.execute("""
+                CREATE TABLE sys_role (
+                    id BIGINT PRIMARY KEY, name VARCHAR(64), code VARCHAR(64), sn INT,
+                    data_scope VARCHAR(8), del_flag VARCHAR(1) DEFAULT '0',
+                    update_by BIGINT, update_time TIMESTAMP
+                )
+                """);
+        jdbc.execute("""
+                CREATE TABLE sys_menu (
+                    id BIGINT PRIMARY KEY, name VARCHAR(64), en_name VARCHAR(64),
+                    permission VARCHAR(64), parent_id BIGINT, icon VARCHAR(64),
+                    path VARCHAR(128), visible VARCHAR(1), sn INT, type VARCHAR(1),
+                    keep_alive VARCHAR(1), embedded VARCHAR(1), create_by BIGINT,
+                    update_by BIGINT, create_time TIMESTAMP, update_time TIMESTAMP,
+                    del_flag VARCHAR(1) DEFAULT '0', status VARCHAR(1),
+                    data_status VARCHAR(1), tenant_id BIGINT, remark VARCHAR(128)
+                )
+                """);
         jdbc.execute("""
                 CREATE TABLE sys_role_menu (
                     role_id BIGINT NOT NULL,
@@ -72,6 +98,10 @@ class RoleMenuCacheIntegrationTest {
                 )
                 """);
         jdbc.update("INSERT INTO sys_role_menu(role_id, menu_id) VALUES (7, 10), (7, 20), (8, 40)");
+        jdbc.update("INSERT INTO sys_role(id, name, code, sn, data_scope) VALUES (7, 'editors', 'editors', 1, '1')");
+        jdbc.update("INSERT INTO sys_menu(id, name, permission, parent_id) VALUES "
+                + "(10, 'edit', 'old_permission', 0), (20, 'view', 'view_permission', 0), "
+                + "(30, 'export', 'export_permission', 0)");
         caches.afterClear = name -> {};
         CACHE_NAMES.forEach(name -> caches.getCache(name).clear());
         caches.clears.clear();
@@ -157,6 +187,100 @@ class RoleMenuCacheIntegrationTest {
         assertThat(databaseMenus()).isEqualTo(ORIGINAL_MENUS);
         assertThat(caches.clears).isEmpty();
         assertAuthorizationMenus(ORIGINAL_MENUS);
+    }
+
+    @Test
+    void assigningMenusToAnInvisibleRoleLeavesItsRelationsIntact() {
+        assertThatThrownBy(() -> roleMenus.saveRoleMenus(8L, ""))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        assertThat(jdbc.queryForList("SELECT menu_id FROM sys_role_menu WHERE role_id=8", Long.class))
+                .containsExactly(40L);
+    }
+
+    @Test
+    void assigningAnInvisibleMenuLeavesOwnRoleRelationsIntact() {
+        assertThatThrownBy(() -> roleMenus.saveRoleMenus(7L, "40"))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        assertThat(databaseMenus()).isEqualTo(ORIGINAL_MENUS);
+    }
+
+    @Test
+    void deletingAnInvisibleRoleLeavesItsMenuRelationsIntact() {
+        assertThatThrownBy(() -> roles.removeRoleByIds(new Long[]{8L}))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        assertThat(jdbc.queryForList("SELECT menu_id FROM sys_role_menu WHERE role_id=8", Long.class))
+                .containsExactly(40L);
+    }
+
+    @Test
+    void deletingAnInvisibleMenuLeavesItsRoleRelationsIntact() {
+        assertThat(menus.removeMenuById(40L).getCode()).isNotEqualTo(0);
+
+        assertThat(jdbc.queryForList("SELECT menu_id FROM sys_role_menu WHERE role_id=8", Long.class))
+                .containsExactly(40L);
+    }
+
+    @Test
+    void deletingRoleInvalidatesPermissionsOnlyAfterCommit() {
+        new TransactionTemplate(transactionManager).executeWithoutResult(status -> {
+            assertThat(roles.removeRoleByIds(new Long[]{7L})).isTrue();
+            assertThat(caches.clears).isEmpty();
+            assertAuthorizationMenus(ORIGINAL_MENUS);
+        });
+
+        assertThat(jdbc.queryForObject("SELECT del_flag FROM sys_role WHERE id=7", String.class)).isEqualTo("1");
+        assertThat(caches.clears).extracting(CacheClear::name)
+                .containsExactly(CacheConstants.MENU_DETAILS, CacheConstants.ROLE_DETAILS, CacheConstants.USER_DETAILS);
+        assertThat(users.userMenus("user-7")).isEmpty();
+    }
+
+    @Test
+    void rolledBackRoleDeletionPreservesAuthorizationCaches() {
+        new TransactionTemplate(transactionManager).executeWithoutResult(status -> {
+            assertThat(roles.removeRoleByIds(new Long[]{7L})).isTrue();
+            status.setRollbackOnly();
+        });
+
+        assertThat(jdbc.queryForObject("SELECT del_flag FROM sys_role WHERE id=7", String.class)).isEqualTo("0");
+        assertThat(databaseMenus()).isEqualTo(ORIGINAL_MENUS);
+        assertThat(caches.clears).isEmpty();
+        assertAuthorizationMenus(ORIGINAL_MENUS);
+    }
+
+    @Test
+    void changingRoleDataScopeInvalidatesUserDetailsOnlyAfterCommit() {
+        var changed = new SysRole();
+        changed.setId(7L);
+        changed.setDataScope("4");
+        new TransactionTemplate(transactionManager).executeWithoutResult(status -> {
+            assertThat(roles.updateById(changed)).isTrue();
+            assertThat(caches.clears).isEmpty();
+            assertAuthorizationMenus(ORIGINAL_MENUS);
+        });
+
+        assertThat(jdbc.queryForObject("SELECT data_scope FROM sys_role WHERE id=7", String.class)).isEqualTo("4");
+        assertThat(caches.clears).extracting(CacheClear::name)
+                .containsExactly(CacheConstants.ROLE_DETAILS, CacheConstants.USER_DETAILS);
+    }
+
+    @Test
+    void changingMenuPermissionInvalidatesUserDetailsOnlyAfterCommit() {
+        var changed = new SysMenu();
+        changed.setId(10L);
+        changed.setPermission("new_permission");
+        new TransactionTemplate(transactionManager).executeWithoutResult(status -> {
+            assertThat(menus.updateMenuById(changed)).isTrue();
+            assertThat(caches.clears).isEmpty();
+            assertAuthorizationMenus(ORIGINAL_MENUS);
+        });
+
+        assertThat(jdbc.queryForObject("SELECT permission FROM sys_menu WHERE id=10", String.class))
+                .isEqualTo("new_permission");
+        assertThat(caches.clears).extracting(CacheClear::name)
+                .containsExactly(CacheConstants.MENU_DETAILS, CacheConstants.USER_DETAILS);
     }
 
     private void assertCommittedChange(List<Long> expected) {
@@ -263,7 +387,7 @@ class RoleMenuCacheIntegrationTest {
     @Configuration(proxyBeanMethods = false)
     @EnableCaching
     @EnableTransactionManagement
-    @Import(SysRoleMenuServiceImpl.class)
+    @Import({SysRoleMenuServiceImpl.class, SysRoleServiceImpl.class, SysMenuServiceImpl.class})
     @MapperScan("com.lotus.bixi.upms.mapper")
     @ImportAutoConfiguration(MybatisPlusAutoConfiguration.class)
     static class Config {

@@ -509,17 +509,17 @@ svg {
 
 .el-table {
 	--el-table-border-color: var(--bixi-color-border);
-	--el-table-header-bg-color: transparent;
+	--el-table-header-bg-color: var(--el-table-bg-color);
 	--el-table-row-hover-bg-color: #fff0e9;
 	--el-table-current-row-bg-color: #ffe8e1;
-	--el-table-tr-bg-color: transparent;
+	--el-table-tr-bg-color: var(--el-table-bg-color);
 	background-color: transparent;
 	color: var(--bixi-color-text);
 
 	th.el-table__cell {
 		color: var(--bixi-color-muted);
 		font-weight: 700;
-		background: transparent;
+		background: var(--el-table-header-bg-color);
 	}
 
 	.el-table__cell {

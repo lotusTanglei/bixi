@@ -18,11 +18,13 @@ import com.lotus.bixi.acceptance.api.vo.SysPublicParamVO;
 import com.lotus.bixi.acceptance.api.vo.SysPublicParamExportVO;
 import com.lotus.bixi.acceptance.mapper.SysPublicParamMapper;
 import com.lotus.bixi.acceptance.api.service.SysPublicParamService;
+import com.lotus.bixi.common.core.constant.CacheConstants;
 import com.lotus.bixi.common.core.context.TenantContextHolder;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
@@ -71,6 +73,7 @@ public class SysPublicParamServiceImpl extends ServiceImpl<SysPublicParamMapper,
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)
+	@CacheEvict(value = CacheConstants.PARAMS_DETAILS, allEntries = true)
 	public boolean create(SysPublicParamCreateDTO dto) {
 		SysPublicParam entity = BeanUtil.copyProperties(dto, SysPublicParam.class);
 		entity.setTenantId(requireCurrentTenant());
@@ -79,6 +82,7 @@ public class SysPublicParamServiceImpl extends ServiceImpl<SysPublicParamMapper,
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)
+	@CacheEvict(value = CacheConstants.PARAMS_DETAILS, allEntries = true)
 	public boolean update(SysPublicParamUpdateDTO dto) {
 		SysPublicParam current = requireOwned(dto.getId());
 		SysPublicParam update = BeanUtil.copyProperties(dto, SysPublicParam.class);
@@ -89,6 +93,7 @@ public class SysPublicParamServiceImpl extends ServiceImpl<SysPublicParamMapper,
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)
+	@CacheEvict(value = CacheConstants.PARAMS_DETAILS, allEntries = true)
 	public boolean delete(List<Long> ids) {
 		if (ids == null || ids.isEmpty()) throw new IllegalArgumentException("至少选择一条数据");
 		List<Long> distinctIds = ids.stream().filter(java.util.Objects::nonNull).distinct().toList();
@@ -99,6 +104,7 @@ public class SysPublicParamServiceImpl extends ServiceImpl<SysPublicParamMapper,
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)
+	@CacheEvict(value = CacheConstants.PARAMS_DETAILS, allEntries = true)
 	public SysPublicParamImportResult importRows(List<SysPublicParamImportDTO> rows) {
 		requireCurrentTenant();
 		if (rows == null || rows.isEmpty()) {

@@ -23,7 +23,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -67,6 +69,11 @@ public class SysPublicParamController {
 	@SysLog("修改公共参数配置表")
 	public R<Boolean> update(@Valid @RequestBody SysPublicParamUpdateDTO dto) {
 		return R.ok(service.update(dto));
+	}
+
+	@ExceptionHandler(DuplicateKeyException.class)
+	public ResponseEntity<R<Void>> duplicateKey(DuplicateKeyException collision) {
+		return ResponseEntity.status(409).body(R.failed("公共参数键已存在"));
 	}
 
 	@DeleteMapping

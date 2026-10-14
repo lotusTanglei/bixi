@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { createCipheriv, createHash, randomBytes, randomUUID } from 'node:crypto';
+import { spawnSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import process from 'node:process';
@@ -21,9 +22,11 @@ const fileEnv = await readEnv(envFile);
 const env = { ...fileEnv, ...process.env };
 const origin = (env.BIXI_ORIGIN || `http://localhost:${env.BIXI_HTTP_PORT || '8080'}`).replace(/\/$/, '');
 const apiBase = (env.BIXI_API_BASE_URL || `${origin}/api`).replace(/\/$/, '');
+const browserAuthPath = mode === 'single' ? '/admin' : '/auth';
 const username = required('ADMIN_USERNAME');
 const password = required('ADMIN_PASSWORD');
 const clientSecret = required('OAUTH_PASSWORD_CLIENT_SECRET');
+const browserClientSecret = required('OAUTH_BROWSER_CLIENT_SECRET');
 const encodeKey = required('BIXI_ENCODE_KEY');
 const createdTitles = ['新增示例任务', '修改示例任务', '删除示例任务'];
 
@@ -39,27 +42,63 @@ try {
 		'backend'
 	);
 
-	const loginBody = new URLSearchParams({
-		username,
-		password: encryptPassword(password, encodeKey),
-		grant_type: 'password',
-		scope: 'server',
-	});
-	const login = await request('/auth/oauth2/token', {
+	const missingCaptcha = await browserToken({ username, password, grant_type: 'password', scope: 'server' });
+	assert(missingCaptcha.status === 401 && !missingCaptcha.body?.access_token,
+		'browser password login accepted a missing captcha', missingCaptcha.body);
+	const randomStr = randomUUID();
+	const captchaImage = await request(`${browserAuthPath}/code/image?type=arithmetic&randomStr=${randomStr}`,
+		{ expectBinary: true });
+	assert(captchaImage.status === 200 && captchaImage.binary?.subarray(0, 8)
+		.equals(Buffer.from('89504e470d0a1a0a', 'hex')),
+		'browser captcha image did not render as PNG', captchaImage.status);
+	seedAcceptanceCode(`DEFAULT_CODE_KEY:${randomStr}`, true);
+	const login = await browserToken({ username, password, code: '123456', randomStr,
+		grant_type: 'password', scope: 'server' });
+	assert(login.status === 200 && login.body?.access_token && login.body?.refresh_token && login.body?.expires_in > 0,
+		`browser login failed (${login.status})`, login.body);
+	const rejectedGrant = await browserToken({ grant_type: 'client_credentials', scope: 'server' });
+	assert(rejectedGrant.status !== 200 && !rejectedGrant.body?.access_token,
+		'browser client obtained a service token', rejectedGrant.body);
+	const privilegedGrant = await request('/auth/oauth2/token', {
 		method: 'POST',
-		headers: {
-			Authorization: `Basic ${Buffer.from(`bixi:${clientSecret}`).toString('base64')}`,
-			'Content-Type': 'application/x-www-form-urlencoded',
-		},
-		body: loginBody.toString(),
+		headers: { Authorization: `Basic ${Buffer.from(`bixi-browser:${browserClientSecret}`).toString('base64')}`,
+			'Content-Type': 'application/x-www-form-urlencoded' },
+		body: new URLSearchParams({ grant_type: 'client_credentials', scope: 'server' }).toString(),
 	});
-	assert(login.status === 200 && login.body?.access_token, `login failed (${login.status})`, login.body);
-	token = login.body.access_token;
+	assert(privilegedGrant.status !== 200 && !privilegedGrant.body?.access_token,
+		'browser client obtained a service token with Basic credentials', privilegedGrant.body);
+	const refresh = await browserToken({ grant_type: 'refresh_token', refresh_token: login.body.refresh_token, scope: 'server' });
+	assert(refresh.status === 200 && refresh.body?.access_token && refresh.body?.refresh_token,
+		`browser refresh failed (${refresh.status})`, refresh.body);
+	const foreignClient = await request('/auth/oauth2/token', {
+		method: 'POST',
+		headers: { Authorization: `Basic ${Buffer.from(`bixi:${clientSecret}`).toString('base64')}`,
+			'Content-Type': 'application/x-www-form-urlencoded' },
+		body: new URLSearchParams({ grant_type: 'refresh_token',
+			refresh_token: refresh.body.refresh_token, scope: 'server' }).toString(),
+	});
+	assert(foreignClient.status !== 200 && !foreignClient.body?.access_token,
+		'foreign client used the browser refresh token', foreignClient.body);
+	token = refresh.body.access_token;
 
 	const userInfo = assertApi(await authorized('/admin/user/info'), 'load user info');
 	const currentUser = userInfo.sysUser || userInfo;
 	assert(currentUser.username === username, 'user info returned an unexpected username', userInfo);
 	assert(!Object.hasOwn(currentUser, 'password'), 'user info exposed a password field', currentUser);
+	const managedClient = assertApi(await authorized('/admin/client/bixi-browser'), 'load managed browser client');
+	assert(managedClient.id && managedClient.clientId === 'bixi-browser',
+		'managed browser client was not found', managedClient);
+	const managedUpdate = await authorized('/admin/client', {
+		method: 'PUT', body: { id: managedClient.id, clientId: 'bixi-browser', scope: 'server' },
+	});
+	assert(managedUpdate.status === 200 && managedUpdate.body?.code === 1
+		&& managedUpdate.body?.msg === '浏览器客户端由运行配置管理',
+		'managed browser client could be edited', managedUpdate.body);
+	const managedDelete = await authorized('/admin/client', { method: 'DELETE', body: [managedClient.id] });
+	assert(managedDelete.status === 200 && managedDelete.body?.code === 1
+		&& managedDelete.body?.msg === '浏览器客户端由运行配置管理',
+		'managed browser client could be deleted', managedDelete.body);
+	const smsLogin = await verifySmsLogin(currentUser);
 	const permissions = Array.isArray(userInfo.permissions) ? userInfo.permissions : [];
 	const roles = Array.isArray(userInfo.roles) ? userInfo.roles.map(String) : [];
 	assert(roles.includes('1'), 'administrator role was not returned', userInfo.roles);
@@ -145,12 +184,24 @@ try {
 	const auditLogs = await waitForAuditLogs(auditLogBaseline, title, taskId);
 	const acceptance = await verifyAcceptanceResources();
 	const workflow = await verifyWorkflow(menu, currentUser);
+	const logout = assertApi(await authorized(`${browserAuthPath}/token/logout`, { method: 'DELETE' }), 'browser logout');
+	assert(logout !== false, 'browser logout did not revoke its token');
+	const afterLogout = await authorized('/admin/user/info');
+	assert(afterLogout.status !== 200, 'browser token remained usable after logout', afterLogout.body);
 	console.log(
 		JSON.stringify(
 			{
 				mode,
 				origin,
 				login: login.status,
+				missingCaptchaRejected: missingCaptcha.status,
+				browserRefresh: refresh.status,
+				managedBrowserClientProtected: true,
+				smsLogin,
+				serviceGrantRejected: rejectedGrant.status,
+				serviceGrantWithBasicRejected: privilegedGrant.status,
+				foreignClientRejected: foreignClient.status,
+				logoutRevokedAccess: true,
 				username: currentUser.username,
 				roles,
 				permissions: permissions.filter((value) => value.startsWith('demo_task_')).sort(),
@@ -167,6 +218,153 @@ try {
 } finally {
 	if (token && taskId && !deleted) {
 		await authorized('/admin/demo/task', { method: 'DELETE', body: [taskId] }).catch(() => undefined);
+	}
+}
+
+async function verifySmsLogin(currentUser) {
+	const mobiles = [];
+	for (let attempt = 0; attempt < 10 && mobiles.length < 2; attempt++) {
+		const candidate = `199${String(randomBytes(4).readUInt32BE() % 100_000_000).padStart(8, '0')}`;
+		if (mobiles.includes(candidate)) continue;
+		const users = assertApi(await authorized(`/admin/user/page?current=1&size=1&phone=${candidate}`),
+			'check SMS acceptance phone');
+		if (Number(users.total) === 0) mobiles.push(candidate);
+	}
+	assert(mobiles.length === 2, 'could not find two distinct unused SMS acceptance phones');
+	const [probeMobile, mobile] = mobiles;
+	const smsUsername = `acceptance-sms-${mode}-${randomBytes(4).toString('hex')}`;
+	const probeNamespace = `TENANT:${currentUser.tenantId || 1}:${probeMobile}`;
+	const probeSmsKey = `SMS_CODE_KEY:${probeNamespace}`;
+	const probeRateLimitKey = `SMS_RATE_LIMIT_KEY:${probeNamespace}`;
+	const smsNamespace = `TENANT:${currentUser.tenantId || 1}:${mobile}`;
+	const smsKey = `SMS_CODE_KEY:${smsNamespace}`;
+	const rateLimitKey = `SMS_RATE_LIMIT_KEY:${smsNamespace}`;
+	const smsTokens = new Set();
+	const smsBrowserToken = async (parameters) => {
+		const response = await browserToken(parameters);
+		if (response.body?.access_token) smsTokens.add(response.body.access_token);
+		return response;
+	};
+	let smsUserId;
+	let smsUserCreated = false;
+	let originalError;
+	try {
+		const unknownChallenge = await request(`/admin/mobile/${probeMobile}`);
+		const senderConfigured = unknownChallenge.status === 200 && unknownChallenge.body?.code === 0
+			&& unknownChallenge.body?.data === true;
+		const senderUnconfigured = unknownChallenge.status === 200 && unknownChallenge.body?.code === 1
+			&& unknownChallenge.body?.msg === '短信发送失败，请稍后再试';
+		assert(senderConfigured || senderUnconfigured,
+			'unregistered SMS challenge returned an unexpected response', unknownChallenge.body);
+		assertAcceptanceKeyState(probeSmsKey, false);
+		assertAcceptanceKeyState(probeRateLimitKey, senderConfigured);
+		assertAcceptanceKeyState(smsKey, false);
+		assertAcceptanceKeyState(rateLimitKey, false);
+		const added = assertApi(await authorized('/admin/user', {
+			method: 'POST',
+			body: { username: smsUsername, name: smsUsername, phone: mobile,
+				password: generateStrongPassword(), role: [1], post: [],
+				deptId: currentUser.deptId || 1, lockFlag: '0' },
+		}), 'create SMS acceptance user');
+		assert(added === true, 'SMS acceptance user was not created');
+		smsUserCreated = true;
+		const users = assertApi(await authorized(
+			`/admin/user/page?current=1&size=20&username=${encodeURIComponent(smsUsername)}`),
+		'find SMS acceptance user');
+		const smsUser = users.records?.find(user => user.username === smsUsername);
+		assert(smsUser?.id, 'SMS acceptance user was not found');
+		smsUserId = String(smsUser.id);
+		const blankUsername = await authorized('/admin/user', {
+			method: 'PUT', body: { id: smsUserId, username: ' ' },
+		});
+		assert(blankUsername.status === 200 && blankUsername.body?.code === 1
+			&& blankUsername.body?.msg === '用户名不能为空',
+			'blank username update did not return its validation error', blankUsername.body);
+		const renamedUsername = await authorized('/admin/user', {
+			method: 'PUT', body: { id: smsUserId, username: `${smsUsername}-changed` },
+		});
+		assert(renamedUsername.status === 200 && renamedUsername.body?.code === 1
+			&& renamedUsername.body?.msg === '用户名不能修改',
+			'username change was not rejected', renamedUsername.body);
+		const unchangedUsers = assertApi(await authorized(
+			`/admin/user/page?current=1&size=20&username=${encodeURIComponent(smsUsername)}`),
+		'check SMS acceptance username after rejected updates');
+		assert(unchangedUsers.records?.some(user => String(user.id) === smsUserId && user.username === smsUsername),
+			'rejected updates changed the SMS acceptance username');
+
+		const missingCode = await smsBrowserToken({ grant_type: 'mobile', mobile, scope: 'server' });
+		assert(missingCode.status === 401 && !missingCode.body?.access_token,
+			'browser SMS login accepted a missing code', missingCode.status);
+		seedAcceptanceCode(smsKey, false, '12345678');
+		const rejectedClient = await smsBrowserToken({ grant_type: 'mobile', mobile, code: '12345678',
+			client_secret: browserClientSecret, scope: 'server' });
+		assert(rejectedClient.status === 401 && !rejectedClient.body?.access_token,
+			'browser SMS login accepted a supplied client secret', rejectedClient.status);
+		const wrongCode = await smsBrowserToken({ grant_type: 'mobile', mobile, code: 'wrong', scope: 'server' });
+		assert(wrongCode.status === 401 && !wrongCode.body?.access_token,
+			'browser SMS login accepted an invalid code', wrongCode.status);
+		seedAcceptanceCode(smsKey, false, '12345678');
+		const login = await smsBrowserToken({ grant_type: 'mobile', mobile, code: '12345678', scope: 'server' });
+		assert(login.status === 200 && login.body?.access_token && login.body?.refresh_token,
+			`browser SMS login failed (${login.status})`, login.status);
+		const info = assertApi(await request('/admin/user/info', {
+			headers: { Authorization: `Bearer ${login.body.access_token}` },
+		}), 'load SMS acceptance user info');
+		assert((info.sysUser || info).username === smsUsername,
+			'SMS token belongs to an unexpected user');
+		const refresh = await smsBrowserToken({ grant_type: 'refresh_token',
+			refresh_token: login.body.refresh_token, scope: 'server' });
+		assert(refresh.status === 200 && refresh.body?.access_token && refresh.body?.refresh_token,
+			`browser SMS refresh failed (${refresh.status})`, refresh.status);
+		const refreshedInfo = assertApi(await request('/admin/user/info', {
+			headers: { Authorization: `Bearer ${refresh.body.access_token}` },
+		}), 'load refreshed SMS acceptance user info');
+		assert((refreshedInfo.sysUser || refreshedInfo).username === smsUsername,
+			'refreshed SMS token belongs to an unexpected user');
+		const replay = await smsBrowserToken({ grant_type: 'mobile', mobile, code: '12345678', scope: 'server' });
+		assert(replay.status === 401 && !replay.body?.access_token,
+			'browser SMS code was reusable', replay.status);
+		return { unknownMobileChallenge: senderConfigured ? 'accepted' : 'rejected',
+			fixtureLogin: login.status, fixtureRefresh: refresh.status,
+			missingCodeRejected: missingCode.status,
+			wrongCodeRejected: wrongCode.status, clientSecretRejected: rejectedClient.status,
+			replayRejected: replay.status };
+	} catch (error) {
+		originalError = error;
+		throw error;
+	} finally {
+		const cleanupErrors = [];
+		const cleanup = async (name, action) => {
+			try { await action(); } catch (error) { cleanupErrors.push(new Error(name, { cause: error })); }
+		};
+		for (const smsToken of smsTokens) await cleanup('revoke SMS token', async () => {
+			const revoked = await request(`${browserAuthPath}/token/logout`, {
+				method: 'DELETE', headers: { Authorization: `Bearer ${smsToken}` },
+			});
+			if (revoked.status !== 401) assertApi(revoked, 'revoke SMS acceptance token');
+		});
+		await cleanup('delete SMS user', async () => {
+			if (!smsUserId) {
+				const users = assertApi(await authorized(
+					`/admin/user/page?current=1&size=20&username=${encodeURIComponent(smsUsername)}`),
+				'find SMS acceptance user for cleanup');
+				smsUserId = String(users.records?.find(user => user.username === smsUsername)?.id || '');
+			}
+			if (smsUserId) {
+				const removed = assertApi(await authorized('/admin/user', { method: 'DELETE', body: [smsUserId] }),
+					'delete SMS acceptance user');
+				assert(removed === true, 'SMS acceptance user deletion was not confirmed');
+			}
+			else if (smsUserCreated) {
+				throw new Error('SMS acceptance user was created but could not be found for deletion');
+			}
+		});
+		await cleanup('delete SMS Redis keys', () => deleteAcceptanceKeys(
+			probeSmsKey, probeRateLimitKey, smsKey, rateLimitKey));
+		if (cleanupErrors.length) {
+			if (originalError) console.error(`SMS acceptance cleanup also failed: ${cleanupErrors.map(error => error.message).join(', ')}`);
+			else throw new AggregateError(cleanupErrors, 'SMS acceptance cleanup failed');
+		}
 	}
 }
 
@@ -687,6 +885,50 @@ async function authorized(path, options = {}) {
 			...options.headers,
 		},
 	});
+}
+
+async function browserToken(parameters) {
+	return request(`${browserAuthPath}/oauth2/token`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+		body: new URLSearchParams({ client_id: 'bixi-browser', ...parameters }).toString(),
+	});
+}
+
+function seedAcceptanceCode(key, expectChallenge = false, code = '123456') {
+	const args = ['-h', env.REDIS_HOST || '127.0.0.1', '-p', env.REDIS_PORT || '6379',
+		'-n', env.REDIS_DATABASE || '0', '--no-auth-warning'];
+	const cliEnv = { ...process.env, REDISCLI_AUTH: required('REDIS_PASSWORD') };
+	if (expectChallenge) assertAcceptanceKeyState(key, true);
+	// RedisTemplate stores challenge strings with Java serialization.
+	const result = spawnSync('redis-cli', [...args, '-x', 'SETEX', key, '90'], {
+		env: cliEnv, input: Buffer.concat([Buffer.from('aced000574', 'hex'), Buffer.from([0, code.length]), Buffer.from(code)]),
+		encoding: 'utf8', timeout: 5000,
+	});
+	assert(result.status === 0 && result.stdout?.trim() === 'OK',
+		'could not prepare acceptance code', result.error?.message || result.stderr);
+}
+
+function assertAcceptanceKeyState(key, expected) {
+	const args = ['-h', env.REDIS_HOST || '127.0.0.1', '-p', env.REDIS_PORT || '6379',
+		'-n', env.REDIS_DATABASE || '0', '--no-auth-warning', 'EXISTS', key];
+	const result = spawnSync('redis-cli', args, {
+		env: { ...process.env, REDISCLI_AUTH: required('REDIS_PASSWORD') },
+		encoding: 'utf8', timeout: 5000,
+	});
+	assert(result.status === 0 && result.stdout?.trim() === (expected ? '1' : '0'),
+		'acceptance challenge key had an unexpected state', result.error?.message || result.stderr);
+}
+
+function deleteAcceptanceKeys(...keys) {
+	const args = ['-h', env.REDIS_HOST || '127.0.0.1', '-p', env.REDIS_PORT || '6379',
+		'-n', env.REDIS_DATABASE || '0', '--no-auth-warning'];
+	const result = spawnSync('redis-cli', [...args, 'DEL', ...keys], {
+		env: { ...process.env, REDISCLI_AUTH: required('REDIS_PASSWORD') },
+		encoding: 'utf8', timeout: 5000,
+	});
+	assert(result.status === 0 && /^\d+$/.test(result.stdout?.trim()),
+		'could not clean up acceptance keys', result.error?.message || result.stderr);
 }
 
 async function request(path, options = {}) {
