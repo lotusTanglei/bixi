@@ -16,7 +16,8 @@ command -v npm >/dev/null 2>&1 || fail 'npm is required to build the matching fr
 command -v node >/dev/null 2>&1 || fail 'Node.js 22.18+ is required to build the matching frontend'
 node -e 'const [major, minor] = process.versions.node.split(".").map(Number); process.exit(major > 22 || (major === 22 && minor >= 18) ? 0 : 1)' \
     || fail "Node.js 22.18+ is required; found $(node --version)"
-version="$(cd "$root" && mvn -q -B -N -Dstyle.color=never -DforceStdout \
+version="$(cd "$root" && mvn -q -B -N -f bixi-common/bixi-common-bom/pom.xml \
+    -Dstyle.color=never -DforceStdout \
     -Dexpression=project.version help:evaluate)" || fail 'unable to resolve Maven version'
 ui_version="$(cd "$root/bixi-ui" && node -p 'require("./package.json").version')" \
     || fail 'unable to resolve frontend version'

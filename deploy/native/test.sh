@@ -197,7 +197,11 @@ git -C "$tmp/package-root" -c user.name=Test -c user.email=test@example.invalid 
 cat > "$tmp/package-bin/mvn" <<'MVN'
 #!/bin/sh
 case "$*" in
-    *help:evaluate*) printf '1.0.0\n' ;;
+    *help:evaluate*)
+        case "$*" in
+            *'-f bixi-common/bixi-common-bom/pom.xml'*) printf '1.0.0\n' ;;
+            *) echo 'root model cannot resolve the BOM before build' >&2; exit 7 ;;
+        esac ;;
     *) printf '%s\n' "$*" > "$BIXI_TEST_BUILD_LOG"; exit 17 ;;
 esac
 MVN

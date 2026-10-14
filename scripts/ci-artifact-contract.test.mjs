@@ -74,6 +74,38 @@ test('artifact helper rejects builds with no distributable jar', () => {
 	}
 });
 
+test('artifact helper resolves version before the root BOM is installed', () => {
+	const root = mkdtempSync(join(tmpdir(), 'bixi-ci-artifacts-version-'));
+	try {
+		const bin = join(root, 'bin');
+		const jar = join(root, 'module-a/target/module-a.jar');
+		mkdirSync(bin);
+		mkdirSync(dirname(jar), { recursive: true });
+		writeFileSync(jar, 'verified build');
+		writeFileSync(join(bin, 'mvn'), `#!/bin/sh
+case "$*" in
+  *'-f bixi-common/bixi-common-bom/pom.xml'*) printf '1.0.0\\n' ;;
+  *) echo 'root model cannot resolve the BOM' >&2; exit 7 ;;
+esac
+`, { mode: 0o755 });
+		const result = spawnSync('sh', [helper, 'create', 'cloud'], {
+			cwd: root,
+			encoding: 'utf8',
+			env: {
+				...process.env,
+				BIXI_PROJECT_VERSION: '',
+				CI_COMMIT_SHA: commit,
+				CI_PROJECT_DIR: root,
+				PATH: `${bin}:${process.env.PATH}`,
+			},
+		});
+		assert.equal(result.status, 0, result.stderr);
+		assert.match(readFileSync(join(root, 'target/ci-artifacts/cloud/manifest.env'), 'utf8'), /project_version=1\.0\.0/);
+	} finally {
+		rmSync(root, { recursive: true, force: true });
+	}
+});
+
 test('single mode records only the verified single-process jar', () => {
 	const root = mkdtempSync(join(tmpdir(), 'bixi-ci-artifacts-single-'));
 	try {
