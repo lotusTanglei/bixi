@@ -1,0 +1,2257 @@
+{
+  "source": "Surefire XML after sequential make backend-cloud-ci then make backend-single-ci",
+  "single_totals": {
+    "tests": 1197,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 79
+  },
+  "suites": [
+    {
+      "path": "bixi-auth/target/surefire-reports/TEST-com.lotus.bixi.auth.security.AuthenticationSecurityChainTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.auth.security.AuthenticationSecurityChainTest",
+      "tests": "23",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-auth/target/surefire-reports/TEST-com.lotus.bixi.auth.support.core.BixiDaoAuthenticationProviderTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.auth.support.core.BixiDaoAuthenticationProviderTest",
+      "tests": "15",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-auth/target/surefire-reports/TEST-com.lotus.bixi.auth.support.filter.RefreshTokenAccountStatusFilterTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.auth.support.filter.RefreshTokenAccountStatusFilterTest",
+      "tests": "9",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-auth/target/surefire-reports/TEST-com.lotus.bixi.auth.support.filter.ValidateCodeFilterTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.auth.support.filter.ValidateCodeFilterTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-auth/target/surefire-reports/TEST-com.lotus.bixi.auth.support.handler.AuthenticationAuditTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.auth.support.handler.AuthenticationAuditTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-auth/target/surefire-reports/TEST-com.lotus.bixi.auth.support.handler.FormRedirectTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.auth.support.handler.FormRedirectTest",
+      "tests": "8",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-auth/target/surefire-reports/TEST-com.lotus.bixi.auth.support.sms.SmsAuthenticationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.auth.support.sms.SmsAuthenticationTest",
+      "tests": "10",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-common/bixi-common-core/target/surefire-reports/TEST-com.lotus.bixi.common.core.annotation.SensitiveSerializerTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.core.annotation.SensitiveSerializerTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-common/bixi-common-core/target/surefire-reports/TEST-com.lotus.bixi.common.core.cache.TenantCacheAutoConfigurationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.core.cache.TenantCacheAutoConfigurationTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-common/bixi-common-core/target/surefire-reports/TEST-com.lotus.bixi.common.core.cache.TenantCacheInvalidatorTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.core.cache.TenantCacheInvalidatorTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-common/bixi-common-core/target/surefire-reports/TEST-com.lotus.bixi.common.core.config.DynamicTpConfigurationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.core.config.DynamicTpConfigurationTest",
+      "tests": "7",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-common/bixi-common-core/target/surefire-reports/TEST-com.lotus.bixi.common.core.constant.CacheConstantsTenantTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.core.constant.CacheConstantsTenantTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-common/bixi-common-core/target/surefire-reports/TEST-com.lotus.bixi.common.core.crypto.AesPayloadCodecTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.core.crypto.AesPayloadCodecTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-common/bixi-common-core/target/surefire-reports/TEST-com.lotus.bixi.common.core.sensitive.SensitiveWordAspectTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.core.sensitive.SensitiveWordAspectTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-common/bixi-common-core/target/surefire-reports/TEST-com.lotus.bixi.common.core.sensitive.SensitiveWordAutoConfigurationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.core.sensitive.SensitiveWordAutoConfigurationTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-common/bixi-common-core/target/surefire-reports/TEST-com.lotus.bixi.common.core.sensitive.SensitiveWordEngineTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.core.sensitive.SensitiveWordEngineTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-common/bixi-common-core/target/surefire-reports/TEST-com.lotus.bixi.common.core.servlet.RepeatBodyRequestWrapperTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.core.servlet.RepeatBodyRequestWrapperTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-common/bixi-common-datasource/target/surefire-reports/TEST-com.lotus.bixi.common.datasource.DynamicDataSourceTenantIsolationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.datasource.DynamicDataSourceTenantIsolationTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-common/bixi-common-feign/target/surefire-reports/TEST-com.lotus.bixi.common.feign.BixiFeignAutoConfigurationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.feign.BixiFeignAutoConfigurationTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-common/bixi-common-feign/target/surefire-reports/TEST-com.lotus.bixi.common.feign.sentinel.handle.GlobalBizExceptionHandlerTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.feign.sentinel.handle.GlobalBizExceptionHandlerTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-common/bixi-common-log/target/surefire-reports/TEST-com.lotus.bixi.common.log.aspect.SysLogArgumentSanitizationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.log.aspect.SysLogArgumentSanitizationTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-common/bixi-common-log/target/surefire-reports/TEST-com.lotus.bixi.common.log.util.SysLogActorPropagationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.log.util.SysLogActorPropagationTest",
+      "tests": "7",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-common/bixi-common-log/target/surefire-reports/TEST-com.lotus.bixi.common.log.util.SysLogSensitiveFieldsTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.log.util.SysLogSensitiveFieldsTest",
+      "tests": "11",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-common/bixi-common-log/target/surefire-reports/TEST-com.lotus.bixi.common.log.util.SysLogTenantContextTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.log.util.SysLogTenantContextTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-common/bixi-common-mq/target/surefire-reports/TEST-com.lotus.bixi.common.mq.reliable.DurableMessageTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.mq.reliable.DurableMessageTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-common/bixi-common-mq/target/surefire-reports/TEST-com.lotus.bixi.common.mq.reliable.IdempotencyAspectIntegrationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.mq.reliable.IdempotencyAspectIntegrationTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-common/bixi-common-mq/target/surefire-reports/TEST-com.lotus.bixi.common.mq.reliable.IdempotencyExecutorTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.mq.reliable.IdempotencyExecutorTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-common/bixi-common-mq/target/surefire-reports/TEST-com.lotus.bixi.common.mq.reliable.InboxExecutorTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.mq.reliable.InboxExecutorTest",
+      "tests": "20",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "20",
+      "skip_reasons": [
+        "Environment variable [OUTBOX_TEST_JDBC_URL] does not exist"
+      ]
+    },
+    {
+      "path": "bixi-common/bixi-common-mq/target/surefire-reports/TEST-com.lotus.bixi.common.mq.reliable.JdbcIdempotencyStoreTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.mq.reliable.JdbcIdempotencyStoreTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-common/bixi-common-mq/target/surefire-reports/TEST-com.lotus.bixi.common.mq.reliable.JdbcInboxStoreTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.mq.reliable.JdbcInboxStoreTest",
+      "tests": "7",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "7",
+      "skip_reasons": [
+        "Environment variable [OUTBOX_TEST_JDBC_URL] does not exist"
+      ]
+    },
+    {
+      "path": "bixi-common/bixi-common-mq/target/surefire-reports/TEST-com.lotus.bixi.common.mq.reliable.JdbcOutboxStoreTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.mq.reliable.JdbcOutboxStoreTest",
+      "tests": "19",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "19",
+      "skip_reasons": [
+        "Environment variable [OUTBOX_TEST_JDBC_URL] does not exist"
+      ]
+    },
+    {
+      "path": "bixi-common/bixi-common-mq/target/surefire-reports/TEST-com.lotus.bixi.common.mq.reliable.JdbcQuarantineStoreTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.mq.reliable.JdbcQuarantineStoreTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-common/bixi-common-mq/target/surefire-reports/TEST-com.lotus.bixi.common.mq.reliable.LocalDurableTransportTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.mq.reliable.LocalDurableTransportTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "4",
+      "skip_reasons": [
+        "Environment variable [OUTBOX_TEST_JDBC_URL] does not exist"
+      ]
+    },
+    {
+      "path": "bixi-common/bixi-common-mq/target/surefire-reports/TEST-com.lotus.bixi.common.mq.reliable.LocalProcessRestartIntegrationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.mq.reliable.LocalProcessRestartIntegrationTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "2",
+      "skip_reasons": [
+        "Environment variable [OUTBOX_TEST_JDBC_URL] does not exist"
+      ]
+    },
+    {
+      "path": "bixi-common/bixi-common-mq/target/surefire-reports/TEST-com.lotus.bixi.common.mq.reliable.OutboxDispatcherTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.mq.reliable.OutboxDispatcherTest",
+      "tests": "8",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "8",
+      "skip_reasons": [
+        "Environment variable [OUTBOX_TEST_JDBC_URL] does not exist"
+      ]
+    },
+    {
+      "path": "bixi-common/bixi-common-mq/target/surefire-reports/TEST-com.lotus.bixi.common.mq.reliable.RabbitAckCrashIntegrationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.mq.reliable.RabbitAckCrashIntegrationTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "3",
+      "skip_reasons": [
+        "Environment variable [OUTBOX_TEST_JDBC_URL] does not exist"
+      ]
+    },
+    {
+      "path": "bixi-common/bixi-common-mq/target/surefire-reports/TEST-com.lotus.bixi.common.mq.reliable.RabbitBrokerRestartIntegrationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.mq.reliable.RabbitBrokerRestartIntegrationTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "2",
+      "skip_reasons": [
+        "Environment variable [OUTBOX_TEST_JDBC_URL] does not exist"
+      ]
+    },
+    {
+      "path": "bixi-common/bixi-common-mq/target/surefire-reports/TEST-com.lotus.bixi.common.mq.reliable.RabbitInboxListenerTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.mq.reliable.RabbitInboxListenerTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-common/bixi-common-mq/target/surefire-reports/TEST-com.lotus.bixi.common.mq.reliable.RabbitOwnerEndpointConfigurationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.mq.reliable.RabbitOwnerEndpointConfigurationTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-common/bixi-common-mq/target/surefire-reports/TEST-com.lotus.bixi.common.mq.reliable.RabbitOwnerEndpointIntegrationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.mq.reliable.RabbitOwnerEndpointIntegrationTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "4",
+      "skip_reasons": [
+        "Environment variable [OUTBOX_TEST_JDBC_URL] does not exist"
+      ]
+    },
+    {
+      "path": "bixi-common/bixi-common-mq/target/surefire-reports/TEST-com.lotus.bixi.common.mq.reliable.RabbitProcessRestartIntegrationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.mq.reliable.RabbitProcessRestartIntegrationTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "2",
+      "skip_reasons": [
+        "Environment variable [OUTBOX_TEST_JDBC_URL] does not exist"
+      ]
+    },
+    {
+      "path": "bixi-common/bixi-common-mq/target/surefire-reports/TEST-com.lotus.bixi.common.mq.reliable.RecoveryTenantScopeTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.mq.reliable.RecoveryTenantScopeTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-common/bixi-common-mq/target/surefire-reports/TEST-com.lotus.bixi.common.mq.reliable.ReliableDeliveryPropertiesTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.mq.reliable.ReliableDeliveryPropertiesTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-common/bixi-common-mybatis/target/surefire-reports/TEST-com.lotus.bixi.common.mybatis.config.MybatisPlusMetaObjectHandlerTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.mybatis.config.MybatisPlusMetaObjectHandlerTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-common/bixi-common-mybatis/target/surefire-reports/TEST-com.lotus.bixi.common.mybatis.plugins.AllTenantsReadOnlyInterceptorTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.mybatis.plugins.AllTenantsReadOnlyInterceptorTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-common/bixi-common-mybatis/target/surefire-reports/TEST-com.lotus.bixi.common.mybatis.plugins.BixiTenantLineHandlerTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.mybatis.plugins.BixiTenantLineHandlerTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-common/bixi-common-mybatis/target/surefire-reports/TEST-com.lotus.bixi.common.mybatis.plugins.DataScopeInterceptorMatrixTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.mybatis.plugins.DataScopeInterceptorMatrixTest",
+      "tests": "9",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-common/bixi-common-mybatis/target/surefire-reports/TEST-com.lotus.bixi.common.mybatis.plugins.DataScopeInterceptorTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.mybatis.plugins.DataScopeInterceptorTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-common/bixi-common-mybatis/target/surefire-reports/TEST-com.lotus.bixi.common.mybatis.plugins.TenantLineParameterMappingTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.mybatis.plugins.TenantLineParameterMappingTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-common/bixi-common-mybatis/target/surefire-reports/TEST-com.lotus.bixi.common.mybatis.plugins.TenantLineSqlMatrixTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.mybatis.plugins.TenantLineSqlMatrixTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-common/bixi-common-security/target/surefire-reports/TEST-com.lotus.bixi.common.security.component.BixiActuatorSecurityConfigurationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.security.component.BixiActuatorSecurityConfigurationTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-common/bixi-common-security/target/surefire-reports/TEST-com.lotus.bixi.common.security.component.BixiCustomOpaqueTokenIntrospectorTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.security.component.BixiCustomOpaqueTokenIntrospectorTest",
+      "tests": "41",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-common/bixi-common-security/target/surefire-reports/TEST-com.lotus.bixi.common.security.component.BixiSecurityInnerAspectTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.security.component.BixiSecurityInnerAspectTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-common/bixi-common-security/target/surefire-reports/TEST-com.lotus.bixi.common.security.component.ResourceIntrospectionFailureTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.security.component.ResourceIntrospectionFailureTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-common/bixi-common-security/target/surefire-reports/TEST-com.lotus.bixi.common.security.component.TenantContextFilterTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.security.component.TenantContextFilterTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-common/bixi-common-security/target/surefire-reports/TEST-com.lotus.bixi.common.security.feign.BixiOAuthRequestInterceptorTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.security.feign.BixiOAuthRequestInterceptorTest",
+      "tests": "7",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-common/bixi-common-security/target/surefire-reports/TEST-com.lotus.bixi.common.security.service.BixiAppUserDetailsServiceImplTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.security.service.BixiAppUserDetailsServiceImplTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-common/bixi-common-security/target/surefire-reports/TEST-com.lotus.bixi.common.security.service.BixiUserDetailsFreshnessTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.security.service.BixiUserDetailsFreshnessTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-common/bixi-common-security/target/surefire-reports/TEST-com.lotus.bixi.common.security.util.PasswordPolicyValidatorTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.security.util.PasswordPolicyValidatorTest",
+      "tests": "10",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-common/bixi-common-workflow/target/surefire-reports/TEST-com.lotus.bixi.common.workflow.config.WorkflowEngineConfigurationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.common.workflow.config.WorkflowEngineConfigurationTest",
+      "tests": "13",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-gateway/target/surefire-reports/TEST-com.lotus.bixi.gateway.config.WorkflowRouteConfigurationTest.xml",
+      "report_snapshot": "cloud-only (15:47 gate)",
+      "name": "com.lotus.bixi.gateway.config.WorkflowRouteConfigurationTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-gateway/target/surefire-reports/TEST-com.lotus.bixi.gateway.handler.RateLimitExceptionHandlerTest.xml",
+      "report_snapshot": "cloud-only (15:47 gate)",
+      "name": "com.lotus.bixi.gateway.handler.RateLimitExceptionHandlerTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-gateway/target/surefire-reports/TEST-com.lotus.bixi.gateway.security.GatewayReactiveOpaqueTokenIntrospectorTest.xml",
+      "report_snapshot": "cloud-only (15:47 gate)",
+      "name": "com.lotus.bixi.gateway.security.GatewayReactiveOpaqueTokenIntrospectorTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-gateway/target/surefire-reports/TEST-com.lotus.bixi.gateway.security.GatewaySecurityConfigurationTest.xml",
+      "report_snapshot": "cloud-only (15:47 gate)",
+      "name": "com.lotus.bixi.gateway.security.GatewaySecurityConfigurationTest",
+      "tests": "12",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-ai-biz/target/surefire-reports/TEST-com.lotus.bixi.ai.AiConditionalConfigurationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.ai.AiConditionalConfigurationTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-ai-biz/target/surefire-reports/TEST-com.lotus.bixi.ai.controller.AiControllerSecurityContractTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.ai.controller.AiControllerSecurityContractTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-ai-biz/target/surefire-reports/TEST-com.lotus.bixi.ai.schema.AiSchemaContractTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.ai.schema.AiSchemaContractTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-ai-biz/target/surefire-reports/TEST-com.lotus.bixi.ai.service.impl.AiOwnershipIntegrationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.ai.service.impl.AiOwnershipIntegrationTest",
+      "tests": "12",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-ai-biz/target/surefire-reports/TEST-com.lotus.bixi.ai.service.impl.ChatServiceImplTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.ai.service.impl.ChatServiceImplTest",
+      "tests": "19",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-ai-biz/target/surefire-reports/TEST-com.lotus.bixi.ai.service.impl.DocumentContentExtractorTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.ai.service.impl.DocumentContentExtractorTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-ai-biz/target/surefire-reports/TEST-com.lotus.bixi.ai.service.impl.MessageServiceImplTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.ai.service.impl.MessageServiceImplTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-ai-biz/target/surefire-reports/TEST-com.lotus.bixi.ai.service.impl.ModelConfigPersistenceIntegrationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.ai.service.impl.ModelConfigPersistenceIntegrationTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-ai-biz/target/surefire-reports/TEST-com.lotus.bixi.ai.service.impl.ModelConfigServiceImplTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.ai.service.impl.ModelConfigServiceImplTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-ai-biz/target/surefire-reports/TEST-com.lotus.bixi.ai.service.impl.SessionServiceImplTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.ai.service.impl.SessionServiceImplTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-ai-biz/target/surefire-reports/TEST-com.lotus.bixi.ai.service.impl.VectorStoreProviderIntegrationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.ai.service.impl.VectorStoreProviderIntegrationTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-ai-biz/target/surefire-reports/TEST-com.lotus.bixi.ai.service.impl.VectorStoreServiceImplTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.ai.service.impl.VectorStoreServiceImplTest",
+      "tests": "7",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-generator/target/surefire-reports/TEST-com.lotus.bixi.generator.config.BixiGeneratorDefaultPropertiesTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.generator.config.BixiGeneratorDefaultPropertiesTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-generator/target/surefire-reports/TEST-com.lotus.bixi.generator.config.GeneratorEnabledAssemblyTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.generator.config.GeneratorEnabledAssemblyTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-generator/target/surefire-reports/TEST-com.lotus.bixi.generator.controller.GenTemplateControllerSecurityTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.generator.controller.GenTemplateControllerSecurityTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-generator/target/surefire-reports/TEST-com.lotus.bixi.generator.controller.GeneratorControllerSecurityTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.generator.controller.GeneratorControllerSecurityTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-generator/target/surefire-reports/TEST-com.lotus.bixi.generator.controller.GeneratorManagementSecurityTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.generator.controller.GeneratorManagementSecurityTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-generator/target/surefire-reports/TEST-com.lotus.bixi.generator.entity.GenDatasourceConfigSecretContractTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.generator.entity.GenDatasourceConfigSecretContractTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-generator/target/surefire-reports/TEST-com.lotus.bixi.generator.service.impl.GenDatasourceConfigServiceImplTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.generator.service.impl.GenDatasourceConfigServiceImplTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-generator/target/surefire-reports/TEST-com.lotus.bixi.generator.service.impl.GenTableColumnPhysicalMetadataPersistenceTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.generator.service.impl.GenTableColumnPhysicalMetadataPersistenceTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-generator/target/surefire-reports/TEST-com.lotus.bixi.generator.service.impl.GenTableColumnServiceImplTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.generator.service.impl.GenTableColumnServiceImplTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-generator/target/surefire-reports/TEST-com.lotus.bixi.generator.service.impl.GenTableServiceImplTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.generator.service.impl.GenTableServiceImplTest",
+      "tests": "21",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-generator/target/surefire-reports/TEST-com.lotus.bixi.generator.service.impl.GenTableSynchronizationTransactionTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.generator.service.impl.GenTableSynchronizationTransactionTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-generator/target/surefire-reports/TEST-com.lotus.bixi.generator.service.impl.GenTemplateServiceImplTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.generator.service.impl.GenTemplateServiceImplTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-generator/target/surefire-reports/TEST-com.lotus.bixi.generator.service.impl.GenTemplateServiceTransactionTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.generator.service.impl.GenTemplateServiceTransactionTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-generator/target/surefire-reports/TEST-com.lotus.bixi.generator.service.impl.GeneratorServiceImplTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.generator.service.impl.GeneratorServiceImplTest",
+      "tests": "12",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-generator/target/surefire-reports/TEST-com.lotus.bixi.generator.service.impl.GeneratorTemplateSnapshotTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.generator.service.impl.GeneratorTemplateSnapshotTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-generator/target/surefire-reports/TEST-com.lotus.bixi.generator.service.output.AtomicGeneratorWriterTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.generator.service.output.AtomicGeneratorWriterTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-generator/target/surefire-reports/TEST-com.lotus.bixi.generator.service.output.GeneratorOutputPolicyTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.generator.service.output.GeneratorOutputPolicyTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-generator/target/surefire-reports/TEST-com.lotus.bixi.generator.template.BuiltInTemplateCatalogTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.generator.template.BuiltInTemplateCatalogTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-generator/target/surefire-reports/TEST-com.lotus.bixi.generator.template.BuiltInTemplateResourceContractTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.generator.template.BuiltInTemplateResourceContractTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-generator/target/surefire-reports/TEST-com.lotus.bixi.generator.template.GeneratedImportExportContractTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.generator.template.GeneratedImportExportContractTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-generator/target/surefire-reports/TEST-com.lotus.bixi.generator.template.GeneratedParentChildContractTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.generator.template.GeneratedParentChildContractTest",
+      "tests": "14",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-generator/target/surefire-reports/TEST-com.lotus.bixi.generator.template.GeneratedSingleTableTemplateTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.generator.template.GeneratedSingleTableTemplateTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-generator/target/surefire-reports/TEST-com.lotus.bixi.generator.template.remote.HttpTemplateSourceDownloaderTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.generator.template.remote.HttpTemplateSourceDownloaderTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-generator/target/surefire-reports/TEST-com.lotus.bixi.generator.template.remote.TemplateUpdatePackageLoaderTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.generator.template.remote.TemplateUpdatePackageLoaderTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-monitor/target/surefire-reports/TEST-com.lotus.bixi.monitor.config.SecuritySecureConfigTest.xml",
+      "report_snapshot": "cloud-only (15:47 gate)",
+      "name": "com.lotus.bixi.monitor.config.SecuritySecureConfigTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-quartz/target/surefire-reports/TEST-com.lotus.bixi.quartz.QuartzDualModeConfigurationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.quartz.QuartzDualModeConfigurationTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-quartz/target/surefire-reports/TEST-com.lotus.bixi.quartz.QuartzExecutionSemanticsTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.quartz.QuartzExecutionSemanticsTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-quartz/target/surefire-reports/TEST-com.lotus.bixi.quartz.QuartzJdbcFailoverIntegrationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.quartz.QuartzJdbcFailoverIntegrationTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "1",
+      "skip_reasons": [
+        "org.opentest4j.TestAbortedException: Assumption failed: Set BIXI_QUARTZ_HA_JDBC_URL to run the opt-in two-node exercise\n\tat org.junit.jupiter.api.Assumptions.throwAssumptionFailed(Assumptions.java:316)\n\tat org.junit.jupiter.api.Assumptions.assumeTrue(Assumptions.java:115)\n\tat com.lotus.bixi.quartz.QuartzJdbcFailoverIntegrationTest.killingOwnerLetsAnotherJdbcNodeRecoverAndPersistsFailureHistory(QuartzJdbcFailoverIntegrationTest.java:54)\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:568)\n\tat java.base/java.util.ArrayList.forEach(ArrayList.java:1511)\n\tat java.base/java.util.ArrayList.forEach(ArrayList.java:1511)\n"
+      ]
+    },
+    {
+      "path": "bixi-module/bixi-quartz/target/surefire-reports/TEST-com.lotus.bixi.quartz.config.BixiInitQuartzJobTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.quartz.config.BixiInitQuartzJobTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-quartz/target/surefire-reports/TEST-com.lotus.bixi.quartz.config.BixiQuartzFactoryConcurrencyTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.quartz.config.BixiQuartzFactoryConcurrencyTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-quartz/target/surefire-reports/TEST-com.lotus.bixi.quartz.config.QuartzSchedulerHealthIndicatorTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.quartz.config.QuartzSchedulerHealthIndicatorTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-quartz/target/surefire-reports/TEST-com.lotus.bixi.quartz.controller.QuartzControllerSecurityTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.quartz.controller.QuartzControllerSecurityTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-quartz/target/surefire-reports/TEST-com.lotus.bixi.quartz.controller.SysJobControllerFilterTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.quartz.controller.SysJobControllerFilterTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-quartz/target/surefire-reports/TEST-com.lotus.bixi.quartz.controller.SysJobControllerMutationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.quartz.controller.SysJobControllerMutationTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-quartz/target/surefire-reports/TEST-com.lotus.bixi.quartz.dto.SysJobMutationDTOTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.quartz.dto.SysJobMutationDTOTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-quartz/target/surefire-reports/TEST-com.lotus.bixi.quartz.util.JarTaskInvokTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.quartz.util.JarTaskInvokTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-quartz/target/surefire-reports/TEST-com.lotus.bixi.quartz.util.RestTaskInvokTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.quartz.util.RestTaskInvokTest",
+      "tests": "8",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-quartz/target/surefire-reports/TEST-com.lotus.bixi.quartz.util.RestTaskUrlPolicyTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.quartz.util.RestTaskUrlPolicyTest",
+      "tests": "7",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-quartz/target/surefire-reports/TEST-com.lotus.bixi.quartz.util.TaskInvokUtilRetryTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.quartz.util.TaskInvokUtilRetryTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-quartz/target/surefire-reports/TEST-com.lotus.bixi.quartz.util.TaskInvokUtilSpringWiringTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.quartz.util.TaskInvokUtilSpringWiringTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-quartz/target/surefire-reports/TEST-com.lotus.bixi.quartz.util.TaskUtilSchedulerFailureTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.quartz.util.TaskUtilSchedulerFailureTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-quartz/target/surefire-reports/TEST-com.lotus.bixi.quartz.util.TaskUtilSchedulingSemanticsTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.quartz.util.TaskUtilSchedulingSemanticsTest",
+      "tests": "8",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-api/target/surefire-reports/TEST-com.lotus.bixi.upms.api.CandidateIdentityContractTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.api.CandidateIdentityContractTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-api/target/surefire-reports/TEST-com.lotus.bixi.upms.api.CandidateRoleContractTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.api.CandidateRoleContractTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-api/target/surefire-reports/TEST-com.lotus.bixi.upms.api.entity.SysOauthClientDetailsSecretContractTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.api.entity.SysOauthClientDetailsSecretContractTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-api/target/surefire-reports/TEST-com.lotus.bixi.upms.api.entity.SysUserJsonTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.api.entity.SysUserJsonTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-api/target/surefire-reports/TEST-com.lotus.bixi.upms.api.service.TenantStatusSerializationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.api.service.TenantStatusSerializationTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.acceptance.service.AcceptanceServiceBehaviorTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.acceptance.service.AcceptanceServiceBehaviorTest",
+      "tests": "10",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.controller.LegacyPublicParamControllerTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.controller.LegacyPublicParamControllerTest",
+      "tests": "9",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.controller.SysClientManagedBrowserTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.controller.SysClientManagedBrowserTest",
+      "tests": "7",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.controller.SysClientSecretResponseTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.controller.SysClientSecretResponseTest",
+      "tests": "9",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.controller.SysFileControllerSecurityTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.controller.SysFileControllerSecurityTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.controller.UpmsImportAuditTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.controller.UpmsImportAuditTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.controller.UpmsManagementPermissionTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.controller.UpmsManagementPermissionTest",
+      "tests": "85",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.controller.UpmsRecoveryControllerPermissionTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.controller.UpmsRecoveryControllerPermissionTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.demo.controller.DemoTaskControllerTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.demo.controller.DemoTaskControllerTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.demo.leave.LeaveAdapterConfigurationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.demo.leave.LeaveAdapterConfigurationTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.demo.leave.LeaveRequestIntegrationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.demo.leave.LeaveRequestIntegrationTest",
+      "tests": "25",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.demo.leave.config.LeaveReliableConfigurationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.demo.leave.config.LeaveReliableConfigurationTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.demo.leave.controller.LeaveRecoveryControllerTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.demo.leave.controller.LeaveRecoveryControllerTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.demo.leave.event.LeaveBusinessTaskEventHandlerTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.demo.leave.event.LeaveBusinessTaskEventHandlerTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.demo.leave.event.LeaveWorkflowEventHandlerTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.demo.leave.event.LeaveWorkflowEventHandlerTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.demo.leave.service.LeaveBookingMapperIntegrationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.demo.leave.service.LeaveBookingMapperIntegrationTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.demo.leave.service.LeaveBookingServiceTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.demo.leave.service.LeaveBookingServiceTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.mapper.SysUserMapperDataScopeIntegrationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.mapper.SysUserMapperDataScopeIntegrationTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.mq.NoticeConsumerTenantContextTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.mq.NoticeConsumerTenantContextTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.mq.NoticeDeliveryModeTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.mq.NoticeDeliveryModeTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.mq.PublishedNoticeNotifierTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.mq.PublishedNoticeNotifierTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.notification.NoticeChannelDispatcherTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.notification.NoticeChannelDispatcherTest",
+      "tests": "12",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.notification.NoticeReceiptServiceTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.notification.NoticeReceiptServiceTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.notification.NoticeReceiptSignatureTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.notification.NoticeReceiptSignatureTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.service.AiMenuVisibilityTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.service.AiMenuVisibilityTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.service.GeneratorMenuVisibilityTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.service.GeneratorMenuVisibilityTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.service.NoticeLocalDeliveryIntegrationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.service.NoticeLocalDeliveryIntegrationTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.service.NoticePublicationIntegrationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.service.NoticePublicationIntegrationTest",
+      "tests": "19",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.service.PublicParamCacheIsolationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.service.PublicParamCacheIsolationTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.service.RoleMenuCacheIntegrationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.service.RoleMenuCacheIntegrationTest",
+      "tests": "17",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.service.SensitiveWordRefreshNotifierTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.service.SensitiveWordRefreshNotifierTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.service.UpmsRecoveryAuditStoreTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.service.UpmsRecoveryAuditStoreTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.service.UpmsRecoveryServiceTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.service.UpmsRecoveryServiceTest",
+      "tests": "14",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.service.UpmsRecoveryTenantIsolationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.service.UpmsRecoveryTenantIsolationTest",
+      "tests": "8",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.service.WorkflowMenuVisibilityTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.service.WorkflowMenuVisibilityTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.service.WorkflowUserCacheRestartTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.service.WorkflowUserCacheRestartTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.service.impl.NoopSmsSenderTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.service.impl.NoopSmsSenderTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.service.impl.NoticeSseRedisBroadcasterTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.service.impl.NoticeSseRedisBroadcasterTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.service.impl.RoleMenuDeletionAtomicityTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.service.impl.RoleMenuDeletionAtomicityTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.service.impl.SysFileServiceImplAuthorizationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.service.impl.SysFileServiceImplAuthorizationTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.service.impl.SysFileServiceImplCompensationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.service.impl.SysFileServiceImplCompensationTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.service.impl.SysMobileServiceImplTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.service.impl.SysMobileServiceImplTest",
+      "tests": "11",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.service.impl.SysOauthClientDetailsServiceImplTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.service.impl.SysOauthClientDetailsServiceImplTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.service.impl.SysSensitiveWordServiceImplTransactionTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.service.impl.SysSensitiveWordServiceImplTransactionTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.service.impl.SysTenantServiceImplWriteGuardTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.service.impl.SysTenantServiceImplWriteGuardTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.service.impl.SysUserCacheTransactionTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.service.impl.SysUserCacheTransactionTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.service.impl.SysUserNoticeSseServiceImplTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.service.impl.SysUserNoticeSseServiceImplTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.service.impl.SysUserRelationOwnershipTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.service.impl.SysUserRelationOwnershipTest",
+      "tests": "7",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.service.impl.SysUserServiceUsernameTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.service.impl.SysUserServiceUsernameTest",
+      "tests": "9",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.service.local.LocalCandidateIdentityQueryServiceTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.service.local.LocalCandidateIdentityQueryServiceTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.service.local.LocalCandidateRoleQueryServiceTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.service.local.LocalCandidateRoleQueryServiceTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-upms-biz/target/surefire-reports/TEST-com.lotus.bixi.upms.workflow.WorkflowTaskNotificationHandlerTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.upms.workflow.WorkflowTaskNotificationHandlerTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-workflow-api/target/surefire-reports/TEST-com.lotus.bixi.workflow.api.FormPermissionPersistenceContractTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.workflow.api.FormPermissionPersistenceContractTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-workflow-api/target/surefire-reports/TEST-com.lotus.bixi.workflow.api.WorkflowFormBindingPersistenceContractTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.workflow.api.WorkflowFormBindingPersistenceContractTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-workflow-api/target/surefire-reports/TEST-com.lotus.bixi.workflow.api.WorkflowRemoteContractTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.workflow.api.WorkflowRemoteContractTest",
+      "tests": "21",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-workflow-api/target/surefire-reports/TEST-com.lotus.bixi.workflow.api.WorkflowResultContractTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.workflow.api.WorkflowResultContractTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-workflow-api/target/surefire-reports/TEST-com.lotus.bixi.workflow.api.WorkflowStartJsonContractTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.workflow.api.WorkflowStartJsonContractTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-workflow-api/target/surefire-reports/TEST-com.lotus.bixi.workflow.api.event.WorkflowEventCodecTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.workflow.api.event.WorkflowEventCodecTest",
+      "tests": "10",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-workflow-api/target/surefire-reports/TEST-com.lotus.bixi.workflow.api.event.WorkflowRecoveryMetadataTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.workflow.api.event.WorkflowRecoveryMetadataTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-workflow-api/target/surefire-reports/TEST-com.lotus.bixi.workflow.api.event.WorkflowTaskNotificationCodecTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.workflow.api.event.WorkflowTaskNotificationCodecTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-workflow-api/target/surefire-reports/TEST-com.lotus.bixi.workflow.api.identity.WorkflowCandidateGroupTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.workflow.api.identity.WorkflowCandidateGroupTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-workflow-biz/target/surefire-reports/TEST-com.lotus.bixi.workflow.command.WorkflowCommandExecutorTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.workflow.command.WorkflowCommandExecutorTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-workflow-biz/target/surefire-reports/TEST-com.lotus.bixi.workflow.command.WorkflowRequestHasherTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.workflow.command.WorkflowRequestHasherTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-workflow-biz/target/surefire-reports/TEST-com.lotus.bixi.workflow.config.WorkflowBusinessConfigurationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.workflow.config.WorkflowBusinessConfigurationTest",
+      "tests": "8",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-workflow-biz/target/surefire-reports/TEST-com.lotus.bixi.workflow.controller.ProcessInstanceControllerTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.workflow.controller.ProcessInstanceControllerTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-workflow-biz/target/surefire-reports/TEST-com.lotus.bixi.workflow.controller.WorkflowRecoveryControllerTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.workflow.controller.WorkflowRecoveryControllerTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-workflow-biz/target/surefire-reports/TEST-com.lotus.bixi.workflow.event.LeaveBusinessTaskOccurrenceTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.workflow.event.LeaveBusinessTaskOccurrenceTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-workflow-biz/target/surefire-reports/TEST-com.lotus.bixi.workflow.event.WorkflowBusinessTaskEventPublisherTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.workflow.event.WorkflowBusinessTaskEventPublisherTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-workflow-biz/target/surefire-reports/TEST-com.lotus.bixi.workflow.event.WorkflowBusinessTaskResultHandlerTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.workflow.event.WorkflowBusinessTaskResultHandlerTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-workflow-biz/target/surefire-reports/TEST-com.lotus.bixi.workflow.event.WorkflowBusinessTaskStoreTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.workflow.event.WorkflowBusinessTaskStoreTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-workflow-biz/target/surefire-reports/TEST-com.lotus.bixi.workflow.event.WorkflowTaskNotificationPublisherTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.workflow.event.WorkflowTaskNotificationPublisherTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-workflow-biz/target/surefire-reports/TEST-com.lotus.bixi.workflow.listener.TaskCreateListenerTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.workflow.listener.TaskCreateListenerTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-workflow-biz/target/surefire-reports/TEST-com.lotus.bixi.workflow.service.FormPermissionServiceImplTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.workflow.service.FormPermissionServiceImplTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-workflow-biz/target/surefire-reports/TEST-com.lotus.bixi.workflow.service.FormServiceImplTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.workflow.service.FormServiceImplTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-workflow-biz/target/surefire-reports/TEST-com.lotus.bixi.workflow.service.FormVersionServiceImplTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.workflow.service.FormVersionServiceImplTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-workflow-biz/target/surefire-reports/TEST-com.lotus.bixi.workflow.service.WfTaskServiceCandidateAuthorizationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.workflow.service.WfTaskServiceCandidateAuthorizationTest",
+      "tests": "8",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-workflow-biz/target/surefire-reports/TEST-com.lotus.bixi.workflow.service.WorkflowApprovalIntegrationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.workflow.service.WorkflowApprovalIntegrationTest",
+      "tests": "54",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-workflow-biz/target/surefire-reports/TEST-com.lotus.bixi.workflow.service.WorkflowFormRuntimeServiceTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.workflow.service.WorkflowFormRuntimeServiceTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-workflow-biz/target/surefire-reports/TEST-com.lotus.bixi.workflow.service.WorkflowLeaveBusinessTaskIntegrationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.workflow.service.WorkflowLeaveBusinessTaskIntegrationTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-workflow-biz/target/surefire-reports/TEST-com.lotus.bixi.workflow.service.WorkflowResultWithoutHistoryTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.workflow.service.WorkflowResultWithoutHistoryTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-workflow-biz/target/surefire-reports/TEST-com.lotus.bixi.workflow.service.WorkflowStartIdempotencyTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.workflow.service.WorkflowStartIdempotencyTest",
+      "tests": "28",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-workflow-biz/target/surefire-reports/TEST-com.lotus.bixi.workflow.service.WorkflowTaskNotificationReliabilityIntegrationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.workflow.service.WorkflowTaskNotificationReliabilityIntegrationTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "2",
+      "skip_reasons": [
+        "Environment variable [OUTBOX_TEST_JDBC_URL] does not exist"
+      ]
+    },
+    {
+      "path": "bixi-module/bixi-workflow-biz/target/surefire-reports/TEST-com.lotus.bixi.workflow.service.WorkflowUpmsAutomaticTaskIntegrationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.workflow.service.WorkflowUpmsAutomaticTaskIntegrationTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-workflow-biz/target/surefire-reports/TEST-com.lotus.bixi.workflow.service.WorkflowUpmsAutomaticTaskRabbitIntegrationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.workflow.service.WorkflowUpmsAutomaticTaskRabbitIntegrationTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "5",
+      "skip_reasons": [
+        "Environment variable [OUTBOX_TEST_JDBC_URL] does not exist"
+      ]
+    },
+    {
+      "path": "bixi-module/bixi-workflow-biz/target/surefire-reports/TEST-com.lotus.bixi.workflow.service.impl.ProcessDefinitionFormBindingTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.workflow.service.impl.ProcessDefinitionFormBindingTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-workflow-biz/target/surefire-reports/TEST-com.lotus.bixi.workflow.service.impl.ProcessDefinitionServiceCandidateValidationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.workflow.service.impl.ProcessDefinitionServiceCandidateValidationTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-workflow-biz/target/surefire-reports/TEST-com.lotus.bixi.workflow.service.impl.ProcessDefinitionUploadTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.workflow.service.impl.ProcessDefinitionUploadTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-workflow-biz/target/surefire-reports/TEST-com.lotus.bixi.workflow.service.impl.WorkflowCandidateResolverTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.workflow.service.impl.WorkflowCandidateResolverTest",
+      "tests": "12",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-workflow-biz/target/surefire-reports/TEST-com.lotus.bixi.workflow.service.impl.WorkflowDefinitionCandidateValidatorTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.workflow.service.impl.WorkflowDefinitionCandidateValidatorTest",
+      "tests": "10",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-workflow-biz/target/surefire-reports/TEST-com.lotus.bixi.workflow.service.impl.WorkflowFormSchemaTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.workflow.service.impl.WorkflowFormSchemaTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-workflow-biz/target/surefire-reports/TEST-com.lotus.bixi.workflow.service.impl.WorkflowRecoveryAuditStoreTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.workflow.service.impl.WorkflowRecoveryAuditStoreTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-workflow-biz/target/surefire-reports/TEST-com.lotus.bixi.workflow.service.impl.WorkflowRecoveryServiceTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.workflow.service.impl.WorkflowRecoveryServiceTest",
+      "tests": "17",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-workflow-biz/target/surefire-reports/TEST-com.lotus.bixi.workflow.service.impl.WorkflowRecoveryTenantIsolationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.workflow.service.impl.WorkflowRecoveryTenantIsolationTest",
+      "tests": "11",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-workflow-biz/target/surefire-reports/TEST-com.lotus.bixi.workflow.service.impl.WorkflowTerminalEventPublisherTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.workflow.service.impl.WorkflowTerminalEventPublisherTest",
+      "tests": "3",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-workflow-biz/target/surefire-reports/TEST-com.lotus.bixi.workflow.service.local.WorkflowAdapterConfigurationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.workflow.service.local.WorkflowAdapterConfigurationTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-workflow-biz/target/surefire-reports/TEST-com.lotus.bixi.workflow.service.local.WorkflowLocalAdapterTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.workflow.service.local.WorkflowLocalAdapterTest",
+      "tests": "5",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-module/bixi-workflow-biz/target/surefire-reports/TEST-com.lotus.bixi.workflow.service.local.WorkflowLocalSecurityTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.workflow.service.local.WorkflowLocalSecurityTest",
+      "tests": "11",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-single/target/surefire-reports/TEST-com.lotus.bixi.DualModeArchitectureTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.DualModeArchitectureTest",
+      "tests": "2",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    },
+    {
+      "path": "bixi-single/target/surefire-reports/TEST-com.lotus.bixi.WorkflowSingleConfigurationTest.xml",
+      "report_snapshot": "single/shared (15:50 gate)",
+      "name": "com.lotus.bixi.WorkflowSingleConfigurationTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "skip_reasons": []
+    }
+  ]
+}

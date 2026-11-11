@@ -1,0 +1,7 @@
+command: make runtime-config-check
+fixture: deploy/maintenance-personal-path-probe.yml
+./scripts/verify-runtime-config.sh
+Runtime resources must not contain personal absolute paths
+deploy/maintenance-personal-path-probe.yml:1:path: /Users/maintenance-probe
+make: *** [runtime-config-check] Error 1
+command_exit=2

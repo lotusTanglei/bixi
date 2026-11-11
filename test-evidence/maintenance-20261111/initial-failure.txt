@@ -1,0 +1,6 @@
+command: make runtime-config-check
+baseline: c740b8335b85ad99603df6b4d3f85968742b6b1e
+Runtime resources must not contain personal absolute paths
+.idea/workspace.xml:101: last_opened_file_path contains a local /Users/ path
+make: *** [runtime-config-check] Error 1
+command_exit=2

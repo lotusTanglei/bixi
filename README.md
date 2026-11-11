@@ -19,6 +19,8 @@ Java 17 · Spring Boot 3 · Vue 3 · cloud / single 双模式
 
 Bixi（碧玺）是一套面向企业后台和 SaaS 场景的前后端开发脚手架，后端基于 Java 17、Spring Boot 3.4、Spring Cloud Alibaba 构建，前端基于 Vue 3、TypeScript 和 Vite 构建。
 
+当前维护范围（2026-11-11，文档声明）：完善既有能力、回归验证和证据绑定；**发行暂不处理**。当前维护结果见[项目状态总账](.docs/PROJECT_STATUS.md)，历史本机预验证不能代替当前提交或四环境发行证据。
+
 项目支持两种部署形态：
 
 - **微服务模式**：各业务服务独立运行，通过 Nacos 注册与配置，通过 Spring Cloud Gateway 统一入口。

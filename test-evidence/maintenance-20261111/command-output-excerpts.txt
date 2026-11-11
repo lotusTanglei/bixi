@@ -1,0 +1,75 @@
+Bixi maintenance command output excerpts from the 2026-11-11 execution session.
+Paths and intermediate build/debug output omitted; exit codes are the tool-reported process exit codes.
+
+$ git status --short --branch
+## main...origin/main [ahead 1]
+exit=0
+$ git log -1 --oneline
+c740b83 docs(bixi): record current release gates
+exit=0
+$ git log --oneline origin/main..main
+c740b83 docs(bixi): record current release gates
+exit=0
+
+$ make architecture-check
+Validating Maven reactor graphs for cloud and single profiles.
+Architecture checks passed.
+exit=0
+
+$ make runtime-config-check (after .idea prune)
+Bixi runtime configuration contract tests passed.
+Bixi release entry contract tests passed.
+Nacos publisher ACL tests passed.
+Bixi HTTPS lifecycle checks passed.
+Generator cloud runtime configuration contract tests passed.
+AI cloud runtime configuration checks passed.
+Bixi Workflow lifecycle contract tests passed.
+Quartz cloud runtime configuration contract tests passed.
+Runtime configuration checks passed.
+exit=0
+
+$ make frontend-ci
+added 445 packages in 25s
+# AI session, streaming recovery, model config, and knowledge selection UI contract: 5/5
+# notice UI contract: 1/1
+# tests 6 (Quartz UI); pass 6; fail 0; skipped 0
+# tests 2 (Quartz schema); pass 2; fail 0; skipped 0
+# tests 2 (Quartz migration); pass 2; fail 0; skipped 0
+# tests 8 (bixi-ui/tests/*.mjs); pass 8; fail 0; skipped 0
+> eslint ./src --fix
+> cross-env NODE_OPTIONS=--max-old-space-size=4096 BROWSERSLIST_IGNORE_OLD_DATA=1 vite build --mode production
+vite v5.3.3 building for production...
+✓ 2750 modules transformed.
+exit=0
+Note: vform3-builds emitted existing eval warnings; frontend build completed successfully.
+
+$ make backend-cloud-ci
+JAVA_HOME=<Java17> mvn -Pcloud clean verify
+[INFO] Reactor Summary for bixi 1.0.0:
+[INFO] bixi-gateway ....................................... SUCCESS [  6.773 s]
+[INFO] BUILD SUCCESS
+[INFO] Total time:  02:37 min
+[INFO] Finished at: 2026-11-11T15:47:18+08:00
+exit=0
+All 28 reactor modules reported SUCCESS. Environment-conditioned tests were skipped; see surefire-summary.json and README.md.
+
+$ make backend-single-ci
+JAVA_HOME=<Java17> mvn -Psingle -pl bixi-single -am clean verify
+[INFO] Reactor Summary for bixi 1.0.0:
+[INFO] bixi-single ........................................ SUCCESS [  4.930 s]
+[INFO] BUILD SUCCESS
+[INFO] Total time:  02:16 min
+[INFO] Finished at: 2026-11-11T15:50:27+08:00
+exit=0
+All 25 reactor modules reported SUCCESS. Environment-conditioned tests were skipped; see surefire-summary.json and README.md.
+
+$ rg 'VITE_OAUTH2_|VITE_PWD_ENC_KEY|basicAuth' bixi-ui/dist
+(no matches)
+secret_scan_exit=1
+exit=1 (expected no-match status)
+
+$ codegraph sync .
+Synced 95 changed files
+Added: 35, Modified: 60 — 2,644 nodes in 3.4s
+Done
+exit=0
