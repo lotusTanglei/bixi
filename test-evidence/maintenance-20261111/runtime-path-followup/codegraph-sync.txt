@@ -1,0 +1,16 @@
+┌  Syncing CodeGraph
+│
+
+│  · Scanning files...
+│  · Scanning files...
+│  · Scanning files...
+│  · Scanning files...
+│  · Scanning files...
+│  ◆ Scanning files
+│
+●  Already up to date
+│
+└  Done
+
+
+EXIT_CODE=0

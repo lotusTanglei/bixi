@@ -247,4 +247,31 @@ case "${credentials}" in
     *) echo 'credentials command must print the administrator password' >&2; exit 1 ;;
 esac
 
+# Exercise the real verifier's path check against isolated runtime resources.
+personal_path_check="${TEST_DIR}/personal-path-check.sh"
+awk '
+    /^personal_paths=/ { inside = 1 }
+    inside && /^legacy_docker=/ { exit }
+    inside { print }
+' "${ROOT}/scripts/verify-runtime-config.sh" >"${personal_path_check}"
+[ -s "${personal_path_check}" ] \
+    || { echo 'Runtime personal path check was not found' >&2; exit 1; }
+path_fixture="${TEST_DIR}/personal-paths"
+mkdir -p "${path_fixture}/.idea" "${path_fixture}/deploy/nginx" "${path_fixture}/deploy/nacos"
+printf 'local=/Users/ide-fixture/workspace\n' >"${path_fixture}/.idea/workspace.xml"
+ROOT="${path_fixture}" sh "${personal_path_check}"
+for runtime_resource in deploy/nacos/application.yml deploy/nginx/cloud.conf deploy/nginx/https.conf.template; do
+    printf '# path probe /Users/runtime-fixture/private\n' >"${path_fixture}/${runtime_resource}"
+    if output="$(ROOT="${path_fixture}" sh "${personal_path_check}" 2>&1)"; then
+        printf 'Runtime personal path check missed %s\n' "${runtime_resource}" >&2
+        exit 1
+    fi
+    case "${output}" in
+        *'Runtime resources must not contain personal absolute paths'*"${runtime_resource}"*) ;;
+        *) printf 'Runtime personal path check returned the wrong failure: %s\n' "${output}" >&2; exit 1 ;;
+    esac
+    rm "${path_fixture}/${runtime_resource}"
+done
+ROOT="${path_fixture}" sh "${personal_path_check}"
+
 printf 'Bixi runtime configuration contract tests passed.\n'

@@ -399,7 +399,7 @@ done
 
 personal_paths="$(find "${ROOT}" \
     \( -path "${ROOT}/.git" -o -path "${ROOT}/.codegraph" -o -path "${ROOT}/.idea" -o -path '*/target' -o -path '*/node_modules' -o -path '*/dist' \) -prune \
-    -o -type f \( -name '*.xml' -o -name '*.yml' -o -name '*.yaml' -o -name '*.properties' -o -name '*.sql' \) \
+    -o -type f \( -name '*.xml' -o -name '*.yml' -o -name '*.yaml' -o -name '*.properties' -o -name '*.sql' -o -name '*.conf' -o -name '*.conf.template' \) \
     -exec grep -Hn '/Users/' {} + 2>/dev/null || true)"
 if [ -n "${personal_paths}" ]; then
     printf '%s\n%s\n' 'Runtime resources must not contain personal absolute paths' "${personal_paths}" >&2

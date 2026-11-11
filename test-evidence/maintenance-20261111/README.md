@@ -1,5 +1,7 @@
 # Bixi 收敛维护执行记录（2026-11-11，Asia/Shanghai）
 
+**有证据**：本文件记录首次 `.idea` 修复；后续在 `a1ed48c` 发现并修复 Nginx 配置个人路径漏检，当前最终维护提交与完整新证据见[运行配置维护补充](runtime-path-followup/README.md)。本文件下面的基线和命令归属保持原样，不替代后续提交证据。
+
 ## 基线与修改
 
 - **有证据**：开工 `git status --short --branch` 为 `## main...origin/main [ahead 1]`；HEAD 为 `c740b8335b85ad99603df6b4d3f85968742b6b1e`，`git log --oneline origin/main..main` 只有该提交，工作区干净。见 `command-output-excerpts.txt`。

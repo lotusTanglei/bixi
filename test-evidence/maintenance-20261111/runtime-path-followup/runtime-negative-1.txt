@@ -1,0 +1,347 @@
+./scripts/verify-runtime-config.sh
+Bixi runtime configuration contract tests passed.
+Bixi release entry contract tests passed.
+Nacos publisher ACL tests passed.
+Bixi HTTPS lifecycle checks passed.
+Generator cloud runtime configuration contract tests passed.
+AI cloud runtime configuration checks passed.
+[bixi] starting two Workflow replicas with distinct lock owners
+Bixi Workflow lifecycle contract tests passed.
+TAP version 13
+# Subtest: process restart script fails fast when Docker is unavailable
+ok 1 - process restart script fails fast when Docker is unavailable
+  ---
+  duration_ms: 0.45675
+  type: 'test'
+  ...
+# Subtest: invalid Docker host exits before creating a disposable container
+ok 2 - invalid Docker host exits before creating a disposable container
+  ---
+  duration_ms: 180.02475
+  type: 'test'
+  ...
+# Subtest: process restart script bounds the preflight and records an observed recovery interval
+ok 3 - process restart script bounds the preflight and records an observed recovery interval
+  ---
+  duration_ms: 0.133042
+  type: 'test'
+  ...
+# Subtest: cleanup is limited to the temporary database created by this invocation
+ok 4 - cleanup is limited to the temporary database created by this invocation
+  ---
+  duration_ms: 0.251667
+  type: 'test'
+  ...
+# Subtest: evidence names every remaining 2G runtime dimension and keeps partial status explicit
+ok 5 - evidence names every remaining 2G runtime dimension and keeps partial status explicit
+  ---
+  duration_ms: 0.198084
+  type: 'test'
+  ...
+# Subtest: static gate runs this audit before the runtime process-restart test
+ok 6 - static gate runs this audit before the runtime process-restart test
+  ---
+  duration_ms: 0.070416
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 248.487958
+TAP version 13
+# Subtest: local process restart script uses bounded disposable resources and both JVM phases
+ok 1 - local process restart script uses bounded disposable resources and both JVM phases
+  ---
+  duration_ms: 0.432416
+  type: 'test'
+  ...
+# Subtest: local restart integration test proves outbox and inbox recovery in one local transport path
+ok 2 - local restart integration test proves outbox and inbox recovery in one local transport path
+  ---
+  duration_ms: 0.184709
+  type: 'test'
+  ...
+# Subtest: invalid Docker host exits before creating local restart resources
+ok 3 - invalid Docker host exits before creating local restart resources
+  ---
+  duration_ms: 210.219375
+  type: 'test'
+  ...
+1..3
+# tests 3
+# suites 0
+# pass 3
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 271.769292
+TAP version 13
+# Subtest: reliable Rabbit script fails fast when Docker is unavailable
+ok 1 - reliable Rabbit script fails fast when Docker is unavailable
+  ---
+  duration_ms: 0.497458
+  type: 'test'
+  ...
+# Subtest: invalid Docker host exits before creating disposable containers
+ok 2 - invalid Docker host exits before creating disposable containers
+  ---
+  duration_ms: 200.27575
+  type: 'test'
+  ...
+# Subtest: Docker command timeout and cleanup scope are explicit
+ok 3 - Docker command timeout and cleanup scope are explicit
+  ---
+  duration_ms: 0.261333
+  type: 'test'
+  ...
+# Subtest: bounded wrapper is used for every runtime Docker operation
+ok 4 - bounded wrapper is used for every runtime Docker operation
+  ---
+  duration_ms: 0.682375
+  type: 'test'
+  ...
+# Subtest: Rabbit bootstrap does not demote an admin reused as the app user
+ok 5 - Rabbit bootstrap does not demote an admin reused as the app user
+  ---
+  duration_ms: 0.168083
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 315.388459
+TAP version 13
+# Subtest: cloud OpenAPI paths match gateway routes and AI documentation follows AI_ENABLED
+ok 1 - cloud OpenAPI paths match gateway routes and AI documentation follows AI_ENABLED
+  ---
+  duration_ms: 5.033834
+  type: 'test'
+  ...
+# Subtest: SBA exposes protected log endpoints backed by the application logfile
+ok 2 - SBA exposes protected log endpoints backed by the application logfile
+  ---
+  duration_ms: 4.316291
+  type: 'test'
+  ...
+# Subtest: SBA status changes use built-in logging alerts with DOWN and OFFLINE reminders
+ok 3 - SBA status changes use built-in logging alerts with DOWN and OFFLINE reminders
+  ---
+  duration_ms: 3.700083
+  type: 'test'
+  ...
+# Subtest: phase2 migration preview includes every ordered additive migration
+ok 4 - phase2 migration preview includes every ordered additive migration
+  ---
+  duration_ms: 26.306083
+  type: 'test'
+  ...
+# Subtest: workflow scope remains backward compatible and does not silently select unrelated modules
+ok 5 - workflow scope remains backward compatible and does not silently select unrelated modules
+  ---
+  duration_ms: 20.448417
+  type: 'test'
+  ...
+# Subtest: migration runner keeps maintenance guards and ledger semantics
+ok 6 - migration runner keeps maintenance guards and ledger semantics
+  ---
+  duration_ms: 1.844958
+  type: 'test'
+  ...
+# Subtest: phase2 scope rejects workflow-only maintenance confirmation
+ok 7 - phase2 scope rejects workflow-only maintenance confirmation
+  ---
+  duration_ms: 38.386417
+  type: 'test'
+  ...
+# Subtest: phase2 scope rejects every related running application including workflow replicas
+ok 8 - phase2 scope rejects every related running application including workflow replicas
+  ---
+  duration_ms: 96.374584
+  type: 'test'
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 285.796542
+TAP version 13
+# Subtest: Quartz JDBC failover harness is opt-in and bounded
+ok 1 - Quartz JDBC failover harness is opt-in and bounded
+  ---
+  duration_ms: 0.559041
+  type: 'test'
+  ...
+# Subtest: Java harness proves kill-owner recovery and persisted failure history
+ok 2 - Java harness proves kill-owner recovery and persisted failure history
+  ---
+  duration_ms: 0.162708
+  type: 'test'
+  ...
+# Subtest: static gate exposes the runtime harness without making normal CI depend on Docker
+ok 3 - static gate exposes the runtime harness without making normal CI depend on Docker
+  ---
+  duration_ms: 0.07125
+  type: 'test'
+  ...
+# Subtest: harness uses the project Quartz schema and does not claim application-level HA
+ok 4 - harness uses the project Quartz schema and does not claim application-level HA
+  ---
+  duration_ms: 3.334292
+  type: 'test'
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 72.066083
+TAP version 13
+# Subtest: selects distinct healthy instances for one service
+ok 1 - selects distinct healthy instances for one service
+  ---
+  duration_ms: 1.269958
+  type: 'test'
+  ...
+# Subtest: rejects insufficient healthy instances and records a reviewable evidence shape
+ok 2 - rejects insufficient healthy instances and records a reviewable evidence shape
+  ---
+  duration_ms: 13.7445
+  type: 'test'
+  ...
+# Subtest: shared business-service Actuator endpoints are exposed behind Basic auth
+ok 3 - shared business-service Actuator endpoints are exposed behind Basic auth
+  ---
+  duration_ms: 2.335416
+  type: 'test'
+  ...
+1..3
+# tests 3
+# suites 0
+# pass 3
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 82.128917
+TAP version 13
+# Subtest: artifact helper verifies exact build output and fails closed
+ok 1 - artifact helper verifies exact build output and fails closed
+  ---
+  duration_ms: 430.434083
+  type: 'test'
+  ...
+# Subtest: artifact helper rejects builds with no distributable jar
+ok 2 - artifact helper rejects builds with no distributable jar
+  ---
+  duration_ms: 50.379709
+  type: 'test'
+  ...
+# Subtest: artifact helper resolves version before the root BOM is installed
+ok 3 - artifact helper resolves version before the root BOM is installed
+  ---
+  duration_ms: 138.910459
+  type: 'test'
+  ...
+# Subtest: single mode records only the verified single-process jar
+ok 4 - single mode records only the verified single-process jar
+  ---
+  duration_ms: 166.869083
+  type: 'test'
+  ...
+# Subtest: GitLab promotes the artifacts created by the verified backend jobs
+ok 5 - GitLab promotes the artifacts created by the verified backend jobs
+  ---
+  duration_ms: 0.792542
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 847.28925
+TAP version 13
+# Subtest: active public parameter keys are unique per tenant without blocking soft-delete reuse
+ok 1 - active public parameter keys are unique per tenant without blocking soft-delete reuse
+  ---
+  duration_ms: 52.866458
+  type: 'test'
+  ...
+# Subtest: administrator public parameter view permission belongs to tenant 1
+ok 2 - administrator public parameter view permission belongs to tenant 1
+  ---
+  duration_ms: 1.756417
+  type: 'test'
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 2
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 155.797667
+TAP version 13
+# Subtest: cloud SMS fixture login works with unconfigured sender without sending to fixture phone
+ok 1 - cloud SMS fixture login works with unconfigured sender without sending to fixture phone
+  ---
+  duration_ms: 3.378084
+  type: 'test'
+  ...
+# Subtest: cloud SMS fixture login works with configured sender without sending to fixture phone
+ok 2 - cloud SMS fixture login works with configured sender without sending to fixture phone
+  ---
+  duration_ms: 0.753583
+  type: 'test'
+  ...
+# Subtest: single SMS fixture login works with unconfigured sender without sending to fixture phone
+ok 3 - single SMS fixture login works with unconfigured sender without sending to fixture phone
+  ---
+  duration_ms: 1.246208
+  type: 'test'
+  ...
+# Subtest: single SMS fixture login works with configured sender without sending to fixture phone
+ok 4 - single SMS fixture login works with configured sender without sending to fixture phone
+  ---
+  duration_ms: 0.627208
+  type: 'test'
+  ...
+# Subtest: occupied fixture phones are rejected before an SMS challenge
+ok 5 - occupied fixture phones are rejected before an SMS challenge
+  ---
+  duration_ms: 1.301209
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 74.145459
+Quartz cloud runtime configuration contract tests passed.
+Runtime configuration checks passed.

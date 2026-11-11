@@ -10,7 +10,8 @@
 
 ## 2026-11-11 收敛维护
 
-- **有证据**：修复 `scripts/verify-runtime-config.sh` 运行时个人路径检查误扫被忽略 `.idea/workspace.xml` 的问题，仅排除 IDE 元数据；真实运行资源仍拒绝个人路径，前端密钥产物扫描没有放宽。
+- **有证据**：首次修复 `scripts/verify-runtime-config.sh` 个人路径检查误扫被忽略 `.idea/workspace.xml` 的问题；当时的 YAML 负向探针仍被拒绝，前端密钥产物扫描没有放宽。
+- **有证据**：随后对已跟踪运行配置做负向验证，发现 Nginx `.conf` 与 `.conf.template` 漏检个人路径；已补齐这两种后缀，并在既有脚本测试中验证 YAML/Nginx 拒绝与 `.idea` 排除。失败重现、修复后回归和本次门禁见[运行配置维护补充](../test-evidence/maintenance-20261111/runtime-path-followup/README.md)。
 - **有证据**：`make architecture-check`、修复后 `make runtime-config-check`、`make backend-cloud-ci`（28 模块）、`make backend-single-ci`（25 模块）、`make frontend-ci` 和前端产物密钥扫描完成。后端环境条件跳过 79 项，原因和逐套件数据明确归档，不把这些项目写成通过。
 - **有证据**：变更和命令、退出码、失败重现、负向探针、跳过项见[维护执行记录](../test-evidence/maintenance-20261111/README.md)。本轮没有运行应用发行、没有创建 tag 或推送。
 - **文档声明（用户已确认）**：发行状态为“暂不处理”；不推进四环境发行门禁，不将历史本机运行结果绑定为当前发行 `PASS`。

@@ -1,0 +1,46 @@
+TAP version 13
+# Subtest: auth tokens stay in each tab and old token cookies are removed
+ok 1 - auth tokens stay in each tab and old token cookies are removed
+  ---
+  duration_ms: 174.560125
+  type: 'test'
+  ...
+# Subtest: browser auth source has no published credentials or internal token check
+ok 2 - browser auth source has no published credentials or internal token check
+  ---
+  duration_ms: 2.895792
+  type: 'test'
+  ...
+# Subtest: logout keeps browser auth state when server revocation fails
+ok 3 - logout keeps browser auth state when server revocation fails
+  ---
+  duration_ms: 1.152166
+  type: 'test'
+  ...
+# Subtest: refresh target comes from expires_in and stays before expiry
+ok 4 - refresh target comes from expires_in and stays before expiry
+  ---
+  duration_ms: 38.784709
+  type: 'test'
+  ...
+# Subtest: concurrent refreshes share one request and can retry after failure
+ok 5 - concurrent refreshes share one request and can retry after failure
+  ---
+  duration_ms: 0.27175
+  type: 'test'
+  ...
+# Subtest: transient refresh errors preserve a session but rejected credentials end it
+ok 6 - transient refresh errors preserve a session but rejected credentials end it
+  ---
+  duration_ms: 0.102916
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 290.437959

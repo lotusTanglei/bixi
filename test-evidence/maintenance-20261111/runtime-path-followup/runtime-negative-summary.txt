@@ -1,0 +1,5 @@
+deploy/nacos/bixi-auth-dev.yml: exit=2, personal_path_rejected=True, log=/tmp/bixi-focused-runtime-negative-0.log
+deploy/nginx/cloud.conf: exit=0, personal_path_rejected=False, log=/tmp/bixi-focused-runtime-negative-1.log
+deploy/nginx/https.conf.template: exit=0, personal_path_rejected=False, log=/tmp/bixi-focused-runtime-negative-2.log
+EXPECTED: each tracked runtime probe is rejected; all original bytes restored
+MISSED: deploy/nginx/cloud.conf, deploy/nginx/https.conf.template

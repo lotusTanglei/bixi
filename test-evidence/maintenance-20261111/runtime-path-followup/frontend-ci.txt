@@ -1,0 +1,656 @@
+cd /Users/dundundebaba/sync/code/open/bixi/bixi-ui && npm ci
+npm warn deprecated sourcemap-codec@1.4.8: Please use @jridgewell/sourcemap-codec instead
+
+added 445 packages in 14s
+
+114 packages are looking for funding
+  run `npm fund` for details
+node --test scripts/test-ai-session-ui.mjs
+TAP version 13
+# AI session, streaming recovery, model config, and knowledge selection UI contract: 5/5
+# Subtest: scripts/test-ai-session-ui.mjs
+ok 1 - scripts/test-ai-session-ui.mjs
+  ---
+  duration_ms: 109.126667
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 117.091833
+node --test scripts/test-notice-ui.mjs
+TAP version 13
+# notice UI contract: 1/1
+# Subtest: scripts/test-notice-ui.mjs
+ok 1 - scripts/test-notice-ui.mjs
+  ---
+  duration_ms: 42.476917
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 48.00925
+node --test scripts/test-quartz-ui.mjs
+TAP version 13
+# Subtest: job actions use the current status and id fields
+ok 1 - job actions use the current status and id fields
+  ---
+  duration_ms: 0.582458
+  type: 'test'
+  ...
+# Subtest: job buttons expose the same permissions enforced by backend endpoints
+ok 2 - job buttons expose the same permissions enforced by backend endpoints
+  ---
+  duration_ms: 0.796458
+  type: 'test'
+  ...
+# Subtest: job record dialog only offers operations backed by its controller
+ok 3 - job record dialog only offers operations backed by its controller
+  ---
+  duration_ms: 0.17875
+  type: 'test'
+  ...
+# Subtest: job form configures bounded retries and submits a writable-field whitelist
+ok 4 - job form configures bounded retries and submits a writable-field whitelist
+  ---
+  duration_ms: 0.192875
+  type: 'test'
+  ...
+# Subtest: job history exposes retry and node-recovery evidence
+ok 5 - job history exposes retry and node-recovery evidence
+  ---
+  duration_ms: 0.164125
+  type: 'test'
+  ...
+# Subtest: Quartz API wrappers target the protected job and record endpoints
+ok 6 - Quartz API wrappers target the protected job and record endpoints
+  ---
+  duration_ms: 0.140292
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 60.746833
+node --test scripts/test-quartz-schema.mjs
+TAP version 13
+# Subtest: clean database schemas persist retry and recovery history
+ok 1 - clean database schemas persist retry and recovery history
+  ---
+  duration_ms: 1.155292
+  type: 'test'
+  ...
+# Subtest: existing databases have an additive guarded migration
+ok 2 - existing databases have an additive guarded migration
+  ---
+  duration_ms: 0.979167
+  type: 'test'
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 2
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 60.526375
+node --test scripts/test-quartz-migration.test.mjs
+TAP version 13
+# Subtest: Quartz migration runtime harness exists and covers guarded retry schema
+ok 1 - Quartz migration runtime harness exists and covers guarded retry schema
+  ---
+  duration_ms: 2.9485
+  type: 'test'
+  ...
+# Subtest: Quartz migration harness bounds Docker calls and cleans only its disposable container
+ok 2 - Quartz migration harness bounds Docker calls and cleans only its disposable container
+  ---
+  duration_ms: 1.05875
+  type: 'test'
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 2
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 56.825583
+node --test bixi-ui/tests/*.mjs
+TAP version 13
+# Subtest: auth tokens stay in each tab and old token cookies are removed
+ok 1 - auth tokens stay in each tab and old token cookies are removed
+  ---
+  duration_ms: 148.453416
+  type: 'test'
+  ...
+# Subtest: browser auth source has no published credentials or internal token check
+ok 2 - browser auth source has no published credentials or internal token check
+  ---
+  duration_ms: 2.196
+  type: 'test'
+  ...
+# Subtest: logout keeps browser auth state when server revocation fails
+ok 3 - logout keeps browser auth state when server revocation fails
+  ---
+  duration_ms: 0.637542
+  type: 'test'
+  ...
+# Subtest: refresh target comes from expires_in and stays before expiry
+ok 4 - refresh target comes from expires_in and stays before expiry
+  ---
+  duration_ms: 22.5895
+  type: 'test'
+  ...
+# Subtest: concurrent refreshes share one request and can retry after failure
+ok 5 - concurrent refreshes share one request and can retry after failure
+  ---
+  duration_ms: 0.295917
+  type: 'test'
+  ...
+# Subtest: transient refresh errors preserve a session but rejected credentials end it
+ok 6 - transient refresh errors preserve a session but rejected credentials end it
+  ---
+  duration_ms: 0.115667
+  type: 'test'
+  ...
+# Subtest: an older page response cannot replace the latest page
+ok 7 - an older page response cannot replace the latest page
+  ---
+  duration_ms: 3.604583
+  type: 'test'
+  ...
+# Subtest: a failed page request leaves a persistent error state
+ok 8 - a failed page request leaves a persistent error state
+  ---
+  duration_ms: 1.177541
+  type: 'test'
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 230.311875
+cd /Users/dundundebaba/sync/code/open/bixi/bixi-ui && npm run lint:eslint && npm run build:prod
+
+> bixi-ui@1.0.0 lint:eslint
+> eslint ./src --fix
+
+
+> bixi-ui@1.0.0 build:prod
+> cross-env NODE_OPTIONS=--max-old-space-size=4096 BROWSERSLIST_IGNORE_OLD_DATA=1 vite build --mode production
+
+vite v5.3.3 building for production...
+transforming...
+node_modules/vform3-builds/dist/designer.umd.js (7:65230): Use of eval in "node_modules/vform3-builds/dist/designer.umd.js" is strongly discouraged as it poses security risks and may cause issues with minification.
+node_modules/vform3-builds/dist/designer.umd.js (7:66522): Use of eval in "node_modules/vform3-builds/dist/designer.umd.js" is strongly discouraged as it poses security risks and may cause issues with minification.
+node_modules/vform3-builds/dist/designer.umd.js (179:21): Use of eval in "node_modules/vform3-builds/dist/designer.umd.js" is strongly discouraged as it poses security risks and may cause issues with minification.
+node_modules/vform3-builds/dist/designer.umd.js (183:22): Use of eval in "node_modules/vform3-builds/dist/designer.umd.js" is strongly discouraged as it poses security risks and may cause issues with minification.
+✓ 2750 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/assets/logo-mini.DHxPHdnQ.svg                                                                           5.36 kB │ gzip:     4.06 kB
+dist/index.html                                                                                             13.71 kB │ gzip:     5.08 kB
+dist/assets/lockScreen.CyHfKH-_.png                                                                        199.44 kB
+dist/assets/index.BxiUCzOx.css                                                                               0.02 kB │ gzip:     0.04 kB
+dist/assets/index.B1HfEVei.css                                                                               0.04 kB │ gzip:     0.06 kB
+dist/assets/UploadDialog.C7DqQ96v.css                                                                        0.04 kB │ gzip:     0.06 kB
+dist/assets/FormRenderer.Bz_7e-3V.css                                                                        0.04 kB │ gzip:     0.06 kB
+dist/assets/approve-dialog.D_RD-bRw.css                                                                      0.05 kB │ gzip:     0.07 kB
+dist/assets/index._3mEZs1v.css                                                                               0.05 kB │ gzip:     0.07 kB
+dist/assets/index.DLV1KJmQ.css                                                                               0.05 kB │ gzip:     0.07 kB
+dist/assets/index.BXZEKCl7.css                                                                               0.06 kB │ gzip:     0.08 kB
+dist/assets/cache.MRkH9xjM.css                                                                               0.06 kB │ gzip:     0.07 kB
+dist/assets/detail.DxnjMWRy.css                                                                              0.07 kB │ gzip:     0.09 kB
+dist/assets/detail-dialog.DHiyn8sg.css                                                                       0.07 kB │ gzip:     0.09 kB
+dist/assets/generator.Ot5ILuLw.css                                                                           0.08 kB │ gzip:     0.10 kB
+dist/assets/schedule.BmdUdQS4.css                                                                            0.08 kB │ gzip:     0.08 kB
+dist/assets/pending-commands.CorfC3b1.css                                                                    0.08 kB │ gzip:     0.10 kB
+dist/assets/preview.Cb8CXzXo.css                                                                             0.09 kB │ gzip:     0.10 kB
+dist/assets/index.Qh0fh3Wx.css                                                                               0.10 kB │ gzip:     0.11 kB
+dist/assets/approval-history.C3vh7huv.css                                                                    0.13 kB │ gzip:     0.12 kB
+dist/assets/index.cNd8mx24.css                                                                               0.15 kB │ gzip:     0.12 kB
+dist/assets/sys-log.DO2thEkW.css                                                                             0.15 kB │ gzip:     0.13 kB
+dist/assets/form.DgPanCn9.css                                                                                0.16 kB │ gzip:     0.15 kB
+dist/assets/index.DVt8hnKt.css                                                                               0.16 kB │ gzip:     0.14 kB
+dist/assets/form.ZN7FErdn.css                                                                                0.17 kB │ gzip:     0.15 kB
+dist/assets/index.auL-BMlq.css                                                                               0.18 kB │ gzip:     0.16 kB
+dist/assets/index.DAQQN5G0.css                                                                               0.19 kB │ gzip:     0.16 kB
+dist/assets/index.CgKdVfsj.css                                                                               0.20 kB │ gzip:     0.14 kB
+dist/assets/start-dialog.DV5DcP15.css                                                                        0.21 kB │ gzip:     0.15 kB
+dist/assets/edit.C67m8gIS.css                                                                                0.24 kB │ gzip:     0.18 kB
+dist/assets/list.DgcGQCHQ.css                                                                                0.26 kB │ gzip:     0.18 kB
+dist/assets/MessageInput.DAAE6ENu.css                                                                        0.27 kB │ gzip:     0.20 kB
+dist/assets/contextmenu.9LS23e3w.css                                                                         0.29 kB │ gzip:     0.17 kB
+dist/assets/MessageList.Nk2lhrHW.css                                                                         0.31 kB │ gzip:     0.18 kB
+dist/assets/index.BUWMX-_Q.css                                                                               0.34 kB │ gzip:     0.20 kB
+dist/assets/ParamSlider.C4DsTYGE.css                                                                         0.35 kB │ gzip:     0.21 kB
+dist/assets/horizontal.C05FRvOV.css                                                                          0.35 kB │ gzip:     0.19 kB
+dist/assets/index.48JHxSHj.css                                                                               0.46 kB │ gzip:     0.23 kB
+dist/assets/index.BOde8lQS.css                                                                               0.50 kB │ gzip:     0.19 kB
+dist/assets/search.TxRsd0mS.css                                                                              0.53 kB │ gzip:     0.20 kB
+dist/assets/SessionItem.CEf06wyu.css                                                                         0.55 kB │ gzip:     0.29 kB
+dist/assets/closeFull.BJz3IwE_.css                                                                           0.63 kB │ gzip:     0.26 kB
+dist/assets/index.B7C5i_d4.css                                                                               0.64 kB │ gzip:     0.31 kB
+dist/assets/current-user.Bpwkvu9L.css                                                                        0.65 kB │ gzip:     0.29 kB
+dist/assets/index.o3LgK3oS.css                                                                               0.68 kB │ gzip:     0.28 kB
+dist/assets/designer.BGUrFepZ.css                                                                            0.68 kB │ gzip:     0.32 kB
+dist/assets/index.CtjSUZFK.css                                                                               0.71 kB │ gzip:     0.31 kB
+dist/assets/favorite.CHEUx30_.css                                                                            0.73 kB │ gzip:     0.35 kB
+dist/assets/SessionList.DCkqZSLr.css                                                                         0.76 kB │ gzip:     0.34 kB
+dist/assets/start.dmq0tN3L.css                                                                               0.81 kB │ gzip:     0.33 kB
+dist/assets/link.D8LAbrLK.css                                                                                0.81 kB │ gzip:     0.36 kB
+dist/assets/index.CrcZ3TLV.css                                                                               0.91 kB │ gzip:     0.34 kB
+dist/assets/version.CUmbb90S.css                                                                             1.06 kB │ gzip:     0.37 kB
+dist/assets/list.CKn3JA9S.css                                                                                1.09 kB │ gzip:     0.33 kB
+dist/assets/404.DIk3rsk4.css                                                                                 1.10 kB │ gzip:     0.36 kB
+dist/assets/401.IBRbN7H6.css                                                                                 1.10 kB │ gzip:     0.36 kB
+dist/assets/SourceReference.gz6J_omF.css                                                                     1.11 kB │ gzip:     0.43 kB
+dist/assets/breadcrumb.qE1byKZP.css                                                                          1.14 kB │ gzip:     0.36 kB
+dist/assets/MessageItem.CvcoHPNC.css                                                                         1.25 kB │ gzip:     0.42 kB
+dist/assets/permission.B6YgTGvs.css                                                                          1.30 kB │ gzip:     0.45 kB
+dist/assets/user.NiuRE39x.css                                                                                1.33 kB │ gzip:     0.44 kB
+dist/assets/columnsAside.BokBWLlT.css                                                                        1.86 kB │ gzip:     0.50 kB
+dist/assets/index.D-vIr10N.css                                                                               2.00 kB │ gzip:     0.57 kB
+dist/assets/userNews.qTzD623K.css                                                                            2.82 kB │ gzip:     0.58 kB
+dist/assets/index.B6tHGk8A.css                                                                               3.23 kB │ gzip:     0.83 kB
+dist/assets/index.WWwat1cY.css                                                                               3.93 kB │ gzip:     1.00 kB
+dist/assets/personal.BSPPZPgD.css                                                                            5.14 kB │ gzip:     0.99 kB
+dist/assets/setings.B-nQiG44.css                                                                             5.24 kB │ gzip:     0.82 kB
+dist/assets/tagsView.Uf2MBk_N.css                                                                            6.69 kB │ gzip:     2.19 kB
+dist/assets/index.CNMlPwkF.css                                                                               9.42 kB │ gzip:     2.28 kB
+dist/assets/index.rwuLcr6q.css                                                                             551.15 kB │ gzip:    78.84 kB
+dist/assets/index.eN98-KsJ.js                                                                                0.18 kB │ gzip:     0.17 kB
+dist/assets/log.BqqkOgCY.js                                                                                  0.26 kB │ gzip:     0.21 kB
+dist/assets/category.XZjS-sJc.js                                                                             0.29 kB │ gzip:     0.21 kB
+dist/assets/form.xAhBMW-i.js                                                                                 0.37 kB │ gzip:     0.24 kB
+dist/assets/schedule.CdBKj5Im.js                                                                             0.42 kB │ gzip:     0.30 kB
+dist/assets/dept.DFd3MZrM.js                                                                                 0.43 kB │ gzip:     0.25 kB
+dist/assets/process-dialog.DTwqolqS.js                                                                       0.49 kB │ gzip:     0.29 kB
+dist/assets/document.CY8WvqEE.js                                                                             0.49 kB │ gzip:     0.31 kB
+dist/assets/user-notice.D3AQ06i-.js                                                                          0.54 kB │ gzip:     0.27 kB
+dist/assets/task.Dv_HABiB.js                                                                                 0.55 kB │ gzip:     0.27 kB
+dist/assets/index.GTbhGRL4.js                                                                                0.55 kB │ gzip:     0.38 kB
+dist/assets/notice.p_0c8ntE.js                                                                               0.56 kB │ gzip:     0.28 kB
+dist/assets/group.sS3DCsvi.js                                                                                0.58 kB │ gzip:     0.27 kB
+dist/assets/publicParam.LFGv0g1P.js                                                                          0.60 kB │ gzip:     0.34 kB
+dist/assets/dictAggregate.DWKY48S7.js                                                                        0.60 kB │ gzip:     0.34 kB
+dist/assets/datasource.Dgp_a04Y.js                                                                           0.61 kB │ gzip:     0.27 kB
+dist/assets/closeFull.Besv3fAn.js                                                                            0.70 kB │ gzip:     0.46 kB
+dist/assets/definition.Dtf2q77-.js                                                                           0.71 kB │ gzip:     0.33 kB
+dist/assets/index.CDZI71sZ.js                                                                                0.71 kB │ gzip:     0.45 kB
+dist/assets/detail-dialog.BwqZjU94.js                                                                        0.72 kB │ gzip:     0.35 kB
+dist/assets/transfer-dialog.C5El7eF5.js                                                                      0.73 kB │ gzip:     0.34 kB
+dist/assets/template.BW3J0OkX.js                                                                             0.76 kB │ gzip:     0.31 kB
+dist/assets/detail-dialog.vue_vue_type_script_name_workflowTaskDetailDialog_setup_true_lang.B-SzhVC0.js      0.76 kB │ gzip:     0.49 kB
+dist/assets/job.CxqB-OrQ.js                                                                                  0.77 kB │ gzip:     0.30 kB
+dist/assets/client.BCJxX2f1.js                                                                               0.78 kB │ gzip:     0.38 kB
+dist/assets/dict.DwCoULj_.js                                                                                 0.80 kB │ gzip:     0.47 kB
+dist/assets/header.qByHXpv4.js                                                                               0.82 kB │ gzip:     0.49 kB
+dist/assets/index.VkEtz4MN.js                                                                                0.83 kB │ gzip:     0.52 kB
+dist/assets/fieldtype.BfFjxWd6.js                                                                            0.83 kB │ gzip:     0.39 kB
+dist/assets/leave.DG5PPJDb.js                                                                                0.84 kB │ gzip:     0.53 kB
+dist/assets/ModelSelect.CXAFhtm0.js                                                                          0.90 kB │ gzip:     0.51 kB
+dist/assets/process.D6ZGOf3Q.js                                                                              0.93 kB │ gzip:     0.42 kB
+dist/assets/post.DOkBlTSe.js                                                                                 0.97 kB │ gzip:     0.42 kB
+dist/assets/param.Czi_bIAE.js                                                                                0.98 kB │ gzip:     0.42 kB
+dist/assets/ParamSlider.BALd289p.js                                                                          0.99 kB │ gzip:     0.56 kB
+dist/assets/role.CRDLbI6M.js                                                                                 1.01 kB │ gzip:     0.46 kB
+dist/assets/ai.BQaabDTl.js                                                                                   1.02 kB │ gzip:     0.49 kB
+dist/assets/task.WEwUqYcg.js                                                                                 1.09 kB │ gzip:     0.41 kB
+dist/assets/index.BDeYkXEa.js                                                                                1.11 kB │ gzip:     0.62 kB
+dist/assets/link.BMRAdAm6.js                                                                                 1.17 kB │ gzip:     0.71 kB
+dist/assets/table.p9ADfRko.js                                                                                1.18 kB │ gzip:     0.46 kB
+dist/assets/approval-history.C3H4pBgA.js                                                                     1.18 kB │ gzip:     0.71 kB
+dist/assets/form.Bog97yhb.js                                                                                 1.18 kB │ gzip:     0.42 kB
+dist/assets/MessageList.mSBlz1sv.js                                                                          1.19 kB │ gzip:     0.71 kB
+dist/assets/transverse.DT89Yvb0.js                                                                           1.21 kB │ gzip:     0.66 kB
+dist/assets/subItem.D_BIxrN9.js                                                                              1.22 kB │ gzip:     0.65 kB
+dist/assets/list.CiO6N3pp.js                                                                                 1.24 kB │ gzip:     0.74 kB
+dist/assets/form.C4OkRtNw.js                                                                                 1.24 kB │ gzip:     0.72 kB
+dist/assets/sys-log.BQczvJYc.js                                                                              1.27 kB │ gzip:     0.74 kB
+dist/assets/index.ByVk65IM.js                                                                                1.27 kB │ gzip:     0.72 kB
+dist/assets/index.CfYHU7jP.js                                                                                1.29 kB │ gzip:     0.77 kB
+dist/assets/404.BKFKc4DU.js                                                                                  1.31 kB │ gzip:     0.74 kB
+dist/assets/401.CwJd91pw.js                                                                                  1.33 kB │ gzip:     0.75 kB
+dist/assets/index.Bt04auBK.js                                                                                1.34 kB │ gzip:     0.67 kB
+dist/assets/user.Dcsvu3YC.js                                                                                 1.37 kB │ gzip:     0.58 kB
+dist/assets/current-user.DRpWeTJA.js                                                                         1.38 kB │ gzip:     0.75 kB
+dist/assets/MessageInput.PQQJbuTe.js                                                                         1.38 kB │ gzip:     0.82 kB
+dist/assets/SessionItem.se6yycBc.js                                                                          1.39 kB │ gzip:     0.79 kB
+dist/assets/SourceReference.B31RCGUH.js                                                                      1.40 kB │ gzip:     0.79 kB
+dist/assets/index.BWrm6ShY.js                                                                                1.53 kB │ gzip:     0.68 kB
+dist/assets/defaults.CJNrdysS.js                                                                             1.58 kB │ gzip:     0.74 kB
+dist/assets/iframes.2_jZRVGn.js                                                                              1.62 kB │ gzip:     0.85 kB
+dist/assets/dict.C_Vv4KJG.js                                                                                 1.67 kB │ gzip:     0.56 kB
+dist/assets/todo.Cxh7dS9J.js                                                                                 1.70 kB │ gzip:     0.59 kB
+dist/assets/index.DHNSvWrR.js                                                                                1.71 kB │ gzip:     0.94 kB
+dist/assets/done.Cy0PUq9D.js                                                                                 1.71 kB │ gzip:     0.60 kB
+dist/assets/classic.CeM8b2wK.js                                                                              1.77 kB │ gzip:     0.85 kB
+dist/assets/columns.BngJUrT_.js                                                                              1.77 kB │ gzip:     0.78 kB
+dist/assets/process-dialog.vue_vue_type_script_name_workflowProcessDialog_setup_true_lang.DM5vQ7uk.js        1.79 kB │ gzip:     1.04 kB
+dist/assets/chat.hb0Q9jah.js                                                                                 1.83 kB │ gzip:     0.97 kB
+dist/assets/index.BJFOxa69.js                                                                                1.83 kB │ gzip:     0.78 kB
+dist/assets/DocumentTable.WTmXWnWU.js                                                                        1.85 kB │ gzip:     0.97 kB
+dist/assets/search.CnoHi6jm.js                                                                               1.90 kB │ gzip:     1.04 kB
+dist/assets/main.Daf_NMMz.js                                                                                 1.92 kB │ gzip:     0.92 kB
+dist/assets/MessageItem.Cw4lXWmF.js                                                                          1.94 kB │ gzip:     1.01 kB
+dist/assets/favorite.BUl4RQUd.js                                                                             2.10 kB │ gzip:     1.09 kB
+dist/assets/UploadDialog.CRU7sOL5.js                                                                         2.10 kB │ gzip:     1.17 kB
+dist/assets/form.BB6ZG1B_.js                                                                                 2.11 kB │ gzip:     1.13 kB
+dist/assets/table.DrYRnOi7.js                                                                                2.29 kB │ gzip:     1.06 kB
+dist/assets/parent.BXlkaayB.js                                                                               2.30 kB │ gzip:     1.08 kB
+dist/assets/FormRenderer.Pvh4tXO4.js                                                                         2.34 kB │ gzip:     1.07 kB
+dist/assets/vertical.Cy6a4S4A.js                                                                             2.34 kB │ gzip:     1.17 kB
+dist/assets/SessionList.J9pETCzx.js                                                                          2.40 kB │ gzip:     1.27 kB
+dist/assets/detail.gXtupfEH.js                                                                               2.40 kB │ gzip:     0.90 kB
+dist/assets/detail.lPSEs93U.js                                                                               2.42 kB │ gzip:     1.21 kB
+dist/assets/index.8yt0is8V.js                                                                                2.51 kB │ gzip:     1.16 kB
+dist/assets/form.DTkHV9iK.js                                                                                 2.59 kB │ gzip:     1.22 kB
+dist/assets/workflow-intent-dialog.CyvUFSvg.js                                                               2.60 kB │ gzip:     1.25 kB
+dist/assets/index.Be_DHduj.js                                                                                2.60 kB │ gzip:     1.38 kB
+dist/assets/permession.Dt11TWg9.js                                                                           2.66 kB │ gzip:     1.38 kB
+dist/assets/contextmenu.D9HjN74C.js                                                                          2.72 kB │ gzip:     1.31 kB
+dist/assets/index.CTe4fERV.js                                                                                2.77 kB │ gzip:     1.39 kB
+dist/assets/breadcrumb.DjizhsZn.js                                                                           2.85 kB │ gzip:     1.27 kB
+dist/assets/index.Bdk47Y3I.js                                                                                2.95 kB │ gzip:     1.44 kB
+dist/assets/mobile.1lVD3GFA.js                                                                               2.99 kB │ gzip:     1.35 kB
+dist/assets/start.GSQAleYY.js                                                                                3.02 kB │ gzip:     1.50 kB
+dist/assets/form.DleKXAtE.js                                                                                 3.05 kB │ gzip:     1.33 kB
+dist/assets/index.C9I4A31u.js                                                                                3.12 kB │ gzip:     1.49 kB
+dist/assets/preview.DU_AaTS5.js                                                                              3.17 kB │ gzip:     1.58 kB
+dist/assets/detail-dialog.DYWQZEJq.js                                                                        3.25 kB │ gzip:     1.49 kB
+dist/assets/index.DqoeDRw7.js                                                                                3.27 kB │ gzip:     1.52 kB
+dist/assets/index.Cv8Wsdju.js                                                                                3.27 kB │ gzip:     1.39 kB
+dist/assets/form.CD4ouBcY.js                                                                                 3.27 kB │ gzip:     1.48 kB
+dist/assets/horizontal.l5iN-U-E.js                                                                           3.28 kB │ gzip:     1.62 kB
+dist/assets/password.BBnVcBIv.js                                                                             3.34 kB │ gzip:     1.29 kB
+dist/assets/form-dialog.9SWBIBLq.js                                                                          3.38 kB │ gzip:     1.47 kB
+dist/assets/form.B0S9r-G4.js                                                                                 3.47 kB │ gzip:     1.41 kB
+dist/assets/aside.BLow5Rgr.js                                                                                3.48 kB │ gzip:     1.62 kB
+dist/assets/index.CfaoZL73.js                                                                                3.65 kB │ gzip:     1.60 kB
+dist/assets/columnsAside.Bhug-zdc.js                                                                         3.68 kB │ gzip:     1.63 kB
+dist/assets/form.CDX8ggIx.js                                                                                 3.71 kB │ gzip:     1.54 kB
+dist/assets/index.COHLB6sx.js                                                                                3.76 kB │ gzip:     1.61 kB
+dist/assets/form.B0dRSX4X.js                                                                                 3.82 kB │ gzip:     1.57 kB
+dist/assets/form.0Mue-LjK.js                                                                                 3.90 kB │ gzip:     1.61 kB
+dist/assets/index.CMn89Pga.js                                                                                3.97 kB │ gzip:     1.76 kB
+dist/assets/index.A-0koUtm.js                                                                                4.02 kB │ gzip:     1.68 kB
+dist/assets/register.JFJX3bWi.js                                                                             4.06 kB │ gzip:     1.56 kB
+dist/assets/job-record.CwShjwSM.js                                                                           4.06 kB │ gzip:     1.71 kB
+dist/assets/pending-commands.DIf6qKJn.js                                                                     4.07 kB │ gzip:     1.79 kB
+dist/assets/index.D-5tGzp2.js                                                                                4.14 kB │ gzip:     1.84 kB
+dist/assets/form.BflhD2ZB.js                                                                                 4.21 kB │ gzip:     1.51 kB
+dist/assets/form.B5SvtUi9.js                                                                                 4.25 kB │ gzip:     1.70 kB
+dist/assets/designer.B2XMPbEh.js                                                                             4.39 kB │ gzip:     1.94 kB
+dist/assets/index.DkiFCXMY.js                                                                                4.41 kB │ gzip:     1.83 kB
+dist/assets/form.CCc8xpV-.js                                                                                 4.49 kB │ gzip:     1.66 kB
+dist/assets/index.C_bGV-eN.js                                                                                4.52 kB │ gzip:     1.84 kB
+dist/assets/index.BQ9YBUNv.js                                                                                4.54 kB │ gzip:     1.86 kB
+dist/assets/deploy-dialog.BW1kll4m.js                                                                        4.66 kB │ gzip:     2.05 kB
+dist/assets/index.D3893Zlt.js                                                                                4.67 kB │ gzip:     1.91 kB
+dist/assets/form.vue_vue_type_script_setup_true_lang.35QiOF6T.js                                             4.68 kB │ gzip:     1.97 kB
+dist/assets/index.BiqBxBX8.js                                                                                4.70 kB │ gzip:     1.94 kB
+dist/assets/add-dict.DT7a1wZ-.js                                                                             4.71 kB │ gzip:     1.83 kB
+dist/assets/index.Br_dUzU8.js                                                                                4.71 kB │ gzip:     1.86 kB
+dist/assets/index.CZ7zC8eN.js                                                                                4.78 kB │ gzip:     2.17 kB
+dist/assets/record-dialog.Bw4eUFjR.js                                                                        4.90 kB │ gzip:     1.78 kB
+dist/assets/index.Ch-zHZBu.js                                                                                4.96 kB │ gzip:     1.99 kB
+dist/assets/index.BNwTc_pF.js                                                                                5.01 kB │ gzip:     1.98 kB
+dist/assets/form.BaoLUoql.js                                                                                 5.15 kB │ gzip:     1.65 kB
+dist/assets/index.DGHcVfCK.js                                                                                5.25 kB │ gzip:     2.12 kB
+dist/assets/transfer-dialog.vue_vue_type_script_name_workflowTransferDialog_setup_true_lang.DWOr14se.js      5.48 kB │ gzip:     2.38 kB
+dist/assets/index.BJKAWY7o.js                                                                                5.50 kB │ gzip:     1.99 kB
+dist/assets/index.BCCckWDe.js                                                                                5.50 kB │ gzip:     2.14 kB
+dist/assets/form.DInriT-K.js                                                                                 5.54 kB │ gzip:     1.81 kB
+dist/assets/index.qrjRqZte.js                                                                                5.59 kB │ gzip:     2.18 kB
+dist/assets/index.CABZm6Lb.js                                                                                5.73 kB │ gzip:     2.25 kB
+dist/assets/index.DKNsnFxK.js                                                                                5.75 kB │ gzip:     2.20 kB
+dist/assets/index.BlArMKBc.js                                                                                5.90 kB │ gzip:     2.26 kB
+dist/assets/index.RdJLgNHO.js                                                                                6.03 kB │ gzip:     2.31 kB
+dist/assets/permission.BUQja1LI.js                                                                           6.03 kB │ gzip:     2.42 kB
+dist/assets/index.BdcJU07Z.js                                                                                6.18 kB │ gzip:     2.37 kB
+dist/assets/approve-dialog.R38iSysF.js                                                                       6.46 kB │ gzip:     2.70 kB
+dist/assets/workflow-intent.55ARBxsF.js                                                                      6.56 kB │ gzip:     2.70 kB
+dist/assets/index.C6eYDjEF.js                                                                                6.60 kB │ gzip:     2.24 kB
+dist/assets/index.aiWsc1wr.js                                                                                6.61 kB │ gzip:     2.35 kB
+dist/assets/version.CWtLyETP.js                                                                              6.67 kB │ gzip:     2.55 kB
+dist/assets/personal.DTzl8eTg.js                                                                             6.83 kB │ gzip:     2.08 kB
+dist/assets/instance.BviCxhzL.js                                                                             6.85 kB │ gzip:     2.81 kB
+dist/assets/form.Dz7a-y1X.js                                                                                 6.90 kB │ gzip:     2.13 kB
+dist/assets/index.D_cI-Fc1.js                                                                                6.98 kB │ gzip:     3.01 kB
+dist/assets/list.COuinOVh.js                                                                                 7.10 kB │ gzip:     2.72 kB
+dist/assets/form.MhR2C4_n.js                                                                                 7.21 kB │ gzip:     2.44 kB
+dist/assets/form.BhTWxqRw.js                                                                                 7.35 kB │ gzip:     2.29 kB
+dist/assets/index.Cvx4bhqH.js                                                                                7.39 kB │ gzip:     2.80 kB
+dist/assets/form.BhS7rsGO.js                                                                                 7.53 kB │ gzip:     2.25 kB
+dist/assets/index.B5qJFnOL.js                                                                                7.62 kB │ gzip:     2.77 kB
+dist/assets/index.BEXdz35Y.js                                                                                7.80 kB │ gzip:     2.90 kB
+dist/assets/form.B6JwT8Nq.js                                                                                 7.89 kB │ gzip:     2.34 kB
+dist/assets/index.DFcXkCXF.js                                                                                8.16 kB │ gzip:     2.80 kB
+dist/assets/form.Byhri10A.js                                                                                 8.27 kB │ gzip:     2.49 kB
+dist/assets/form.BqiNReKt.js                                                                                 9.37 kB │ gzip:     2.66 kB
+dist/assets/index.zDmttFzV.js                                                                                9.42 kB │ gzip:     3.08 kB
+dist/assets/start-dialog.Bvyv9zev.js                                                                         9.46 kB │ gzip:     3.56 kB
+dist/assets/index.BlX-eHL4.js                                                                                9.57 kB │ gzip:     2.98 kB
+dist/assets/user.DvlWYkqa.js                                                                                 9.78 kB │ gzip:     3.79 kB
+dist/assets/cache.D4VHUZiS.js                                                                                9.94 kB │ gzip:     2.60 kB
+dist/assets/commonFunction.BJc5o99w.js                                                                      10.09 kB │ gzip:     3.69 kB
+dist/assets/userNews.jRSbk8EX.js                                                                            10.61 kB │ gzip:     3.70 kB
+dist/assets/tagsView.BzjhymHG.js                                                                            11.11 kB │ gzip:     3.85 kB
+dist/assets/generator.DC3aPKkp.js                                                                           11.66 kB │ gzip:     3.42 kB
+dist/assets/edit.DGMXm-tV.js                                                                                12.05 kB │ gzip:     2.99 kB
+dist/assets/purify.es.B7c_OFEs.js                                                                           22.50 kB │ gzip:     8.61 kB
+dist/assets/index.2aWZyVIB.js                                                                               24.62 kB │ gzip:     4.45 kB
+dist/assets/setings.B3YOcT__.js                                                                             26.92 kB │ gzip:     5.80 kB
+dist/assets/sortable.esm.BGML4dzN.js                                                                        35.93 kB │ gzip:    12.59 kB
+dist/assets/vue.B6G-7x_T.js                                                                                133.01 kB │ gzip:    52.31 kB
+dist/assets/index.Clw6AD68.js                                                                              181.65 kB │ gzip:    61.16 kB
+dist/assets/echarts.Cxf-fif1.js                                                                          1,020.51 kB │ gzip:   340.57 kB
+dist/assets/index.Dn1L-3jO.js                                                                            4,138.10 kB │ gzip: 1,108.68 kB
+
+(!) Some chunks are larger than 2500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 35.60s
+
+✨ [vite-plugin-compression]:algorithm=gzip - compressed file successfully:
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/401.IBRbN7H6.css.gz                                                                              1.07kb / gzip: 0.34kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/404.BKFKc4DU.js.gz                                                                               1.28kb / gzip: 0.72kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/401.CwJd91pw.js.gz                                                                               1.30kb / gzip: 0.73kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/FormRenderer.Pvh4tXO4.js.gz                                                                      2.28kb / gzip: 1.04kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/DocumentTable.WTmXWnWU.js.gz                                                                     1.81kb / gzip: 0.94kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/MessageInput.PQQJbuTe.js.gz                                                                      1.35kb / gzip: 0.80kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/404.DIk3rsk4.css.gz                                                                              1.07kb / gzip: 0.34kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/MessageList.mSBlz1sv.js.gz                                                                       1.16kb / gzip: 0.69kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/SourceReference.B31RCGUH.js.gz                                                                   1.36kb / gzip: 0.77kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/SourceReference.gz6J_omF.css.gz                                                                  1.08kb / gzip: 0.42kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/MessageItem.CvcoHPNC.css.gz                                                                      1.22kb / gzip: 0.41kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/SessionList.J9pETCzx.js.gz                                                                       2.34kb / gzip: 1.24kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/add-dict.DT7a1wZ-.js.gz                                                                          4.60kb / gzip: 1.79kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/breadcrumb.qE1byKZP.css.gz                                                                       1.12kb / gzip: 0.35kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/UploadDialog.CRU7sOL5.js.gz                                                                      2.05kb / gzip: 1.14kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/MessageItem.Cw4lXWmF.js.gz                                                                       1.89kb / gzip: 0.98kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/SessionItem.se6yycBc.js.gz                                                                       1.35kb / gzip: 0.77kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/approval-history.C3H4pBgA.js.gz                                                                  1.15kb / gzip: 0.69kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/classic.CeM8b2wK.js.gz                                                                           1.73kb / gzip: 0.83kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/aside.BLow5Rgr.js.gz                                                                             3.40kb / gzip: 1.58kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/columns.BngJUrT_.js.gz                                                                           1.73kb / gzip: 0.76kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/chat.hb0Q9jah.js.gz                                                                              1.79kb / gzip: 0.94kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/cache.D4VHUZiS.js.gz                                                                             9.71kb / gzip: 2.53kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/contextmenu.D9HjN74C.js.gz                                                                       2.66kb / gzip: 1.27kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/columnsAside.BokBWLlT.css.gz                                                                     1.82kb / gzip: 0.48kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/breadcrumb.DjizhsZn.js.gz                                                                        2.78kb / gzip: 1.24kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/current-user.DRpWeTJA.js.gz                                                                      1.34kb / gzip: 0.73kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/defaults.CJNrdysS.js.gz                                                                          1.54kb / gzip: 0.72kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/columnsAside.Bhug-zdc.js.gz                                                                      3.60kb / gzip: 1.60kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/deploy-dialog.BW1kll4m.js.gz                                                                     4.55kb / gzip: 2.00kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/detail.gXtupfEH.js.gz                                                                            2.34kb / gzip: 0.88kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/detail-dialog.DYWQZEJq.js.gz                                                                     3.18kb / gzip: 1.46kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/detail.lPSEs93U.js.gz                                                                            2.36kb / gzip: 1.18kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/commonFunction.BJc5o99w.js.gz                                                                    9.86kb / gzip: 3.61kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/designer.B2XMPbEh.js.gz                                                                          4.28kb / gzip: 1.89kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/done.Cy0PUq9D.js.gz                                                                              1.67kb / gzip: 0.59kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/dict.C_Vv4KJG.js.gz                                                                              1.63kb / gzip: 0.55kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/favorite.BUl4RQUd.js.gz                                                                          2.05kb / gzip: 1.06kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/approve-dialog.R38iSysF.js.gz                                                                    6.31kb / gzip: 2.63kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/form.0Mue-LjK.js.gz                                                                              3.81kb / gzip: 1.57kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/form.B0S9r-G4.js.gz                                                                              3.39kb / gzip: 1.38kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/edit.DGMXm-tV.js.gz                                                                              11.77kb / gzip: 2.91kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/form.B5SvtUi9.js.gz                                                                              4.15kb / gzip: 1.66kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/form.BB6ZG1B_.js.gz                                                                              2.06kb / gzip: 1.10kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/form.B0dRSX4X.js.gz                                                                              3.73kb / gzip: 1.53kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/form.BflhD2ZB.js.gz                                                                              4.11kb / gzip: 1.48kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/form.BaoLUoql.js.gz                                                                              5.03kb / gzip: 1.61kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/form-dialog.9SWBIBLq.js.gz                                                                       3.30kb / gzip: 1.44kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/form.B6JwT8Nq.js.gz                                                                              7.71kb / gzip: 2.28kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/form.BhS7rsGO.js.gz                                                                              7.35kb / gzip: 2.19kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/form.BhTWxqRw.js.gz                                                                              7.18kb / gzip: 2.23kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/form.C4OkRtNw.js.gz                                                                              1.21kb / gzip: 0.71kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/form.CD4ouBcY.js.gz                                                                              3.19kb / gzip: 1.44kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/form.BqiNReKt.js.gz                                                                              9.15kb / gzip: 2.59kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/form.Bog97yhb.js.gz                                                                              1.15kb / gzip: 0.41kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/form.CCc8xpV-.js.gz                                                                              4.39kb / gzip: 1.62kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/form.DInriT-K.js.gz                                                                              5.41kb / gzip: 1.77kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/form.DTkHV9iK.js.gz                                                                              2.53kb / gzip: 1.19kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/form.Byhri10A.js.gz                                                                              8.08kb / gzip: 2.43kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/form.CDX8ggIx.js.gz                                                                              3.63kb / gzip: 1.51kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/form.DleKXAtE.js.gz                                                                              2.97kb / gzip: 1.30kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/form.Dz7a-y1X.js.gz                                                                              6.73kb / gzip: 2.08kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/form.MhR2C4_n.js.gz                                                                              7.04kb / gzip: 2.38kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/horizontal.l5iN-U-E.js.gz                                                                        3.21kb / gzip: 1.58kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/iframes.2_jZRVGn.js.gz                                                                           1.58kb / gzip: 0.83kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.A-0koUtm.js.gz                                                                             3.93kb / gzip: 1.64kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.8yt0is8V.js.gz                                                                             2.45kb / gzip: 1.13kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/form.vue_vue_type_script_setup_true_lang.35QiOF6T.js.gz                                          4.57kb / gzip: 1.92kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.B6tHGk8A.css.gz                                                                            3.15kb / gzip: 0.80kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/generator.DC3aPKkp.js.gz                                                                         11.38kb / gzip: 3.33kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.BJKAWY7o.js.gz                                                                             5.37kb / gzip: 1.94kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.BDeYkXEa.js.gz                                                                             1.08kb / gzip: 0.60kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.B5qJFnOL.js.gz                                                                             7.44kb / gzip: 2.70kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.BCCckWDe.js.gz                                                                             5.37kb / gzip: 2.09kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.2aWZyVIB.js.gz                                                                             24.04kb / gzip: 4.33kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.BQ9YBUNv.js.gz                                                                             4.43kb / gzip: 1.81kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.BJFOxa69.js.gz                                                                             1.79kb / gzip: 0.76kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.BdcJU07Z.js.gz                                                                             6.04kb / gzip: 2.31kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.BEXdz35Y.js.gz                                                                             7.62kb / gzip: 2.83kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.Bdk47Y3I.js.gz                                                                             2.88kb / gzip: 1.41kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.Bt04auBK.js.gz                                                                             1.31kb / gzip: 0.66kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.Be_DHduj.js.gz                                                                             2.54kb / gzip: 1.35kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.BWrm6ShY.js.gz                                                                             1.50kb / gzip: 0.66kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.BiqBxBX8.js.gz                                                                             4.59kb / gzip: 1.89kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.BlArMKBc.js.gz                                                                             5.76kb / gzip: 2.20kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.ByVk65IM.js.gz                                                                             1.24kb / gzip: 0.70kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.Br_dUzU8.js.gz                                                                             4.60kb / gzip: 1.81kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.BNwTc_pF.js.gz                                                                             4.89kb / gzip: 1.94kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.CMn89Pga.js.gz                                                                             3.87kb / gzip: 1.72kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.CABZm6Lb.js.gz                                                                             5.60kb / gzip: 2.19kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.CfYHU7jP.js.gz                                                                             1.26kb / gzip: 0.76kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.CZ7zC8eN.js.gz                                                                             4.67kb / gzip: 2.12kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.CNMlPwkF.css.gz                                                                            9.20kb / gzip: 2.21kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.BlX-eHL4.js.gz                                                                             9.34kb / gzip: 2.91kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.COHLB6sx.js.gz                                                                             3.67kb / gzip: 1.57kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.C_bGV-eN.js.gz                                                                             4.41kb / gzip: 1.79kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.CfaoZL73.js.gz                                                                             3.56kb / gzip: 1.56kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.Ch-zHZBu.js.gz                                                                             4.84kb / gzip: 1.94kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.C6eYDjEF.js.gz                                                                             6.45kb / gzip: 2.19kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.CTe4fERV.js.gz                                                                             2.70kb / gzip: 1.36kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.C9I4A31u.js.gz                                                                             3.05kb / gzip: 1.45kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.D-5tGzp2.js.gz                                                                             4.04kb / gzip: 1.79kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.D-vIr10N.css.gz                                                                            1.96kb / gzip: 0.55kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.DFcXkCXF.js.gz                                                                             7.97kb / gzip: 2.72kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.Cvx4bhqH.js.gz                                                                             7.21kb / gzip: 2.73kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.DKNsnFxK.js.gz                                                                             5.61kb / gzip: 2.15kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.DHNSvWrR.js.gz                                                                             1.67kb / gzip: 0.91kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.D3893Zlt.js.gz                                                                             4.56kb / gzip: 1.86kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.DGHcVfCK.js.gz                                                                             5.13kb / gzip: 2.07kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.Cv8Wsdju.js.gz                                                                             3.19kb / gzip: 1.35kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.DkiFCXMY.js.gz                                                                             4.30kb / gzip: 1.79kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.WWwat1cY.css.gz                                                                            3.84kb / gzip: 0.97kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.RdJLgNHO.js.gz                                                                             5.89kb / gzip: 2.26kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.DqoeDRw7.js.gz                                                                             3.19kb / gzip: 1.49kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.D_cI-Fc1.js.gz                                                                             6.82kb / gzip: 2.93kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.aiWsc1wr.js.gz                                                                             6.45kb / gzip: 2.30kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/list.CKn3JA9S.css.gz                                                                             1.07kb / gzip: 0.33kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.zDmttFzV.js.gz                                                                             9.20kb / gzip: 3.00kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/job-record.CwShjwSM.js.gz                                                                        3.97kb / gzip: 1.66kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/instance.BviCxhzL.js.gz                                                                          6.69kb / gzip: 2.75kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.qrjRqZte.js.gz                                                                             5.46kb / gzip: 2.12kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/list.COuinOVh.js.gz                                                                              6.93kb / gzip: 2.65kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/main.Daf_NMMz.js.gz                                                                              1.87kb / gzip: 0.90kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/mobile.1lVD3GFA.js.gz                                                                            2.92kb / gzip: 1.31kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/list.CiO6N3pp.js.gz                                                                              1.21kb / gzip: 0.72kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/parent.BXlkaayB.js.gz                                                                            2.25kb / gzip: 1.05kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/password.BBnVcBIv.js.gz                                                                          3.27kb / gzip: 1.26kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/link.BMRAdAm6.js.gz                                                                              1.14kb / gzip: 0.69kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/permession.Dt11TWg9.js.gz                                                                        2.59kb / gzip: 1.35kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/pending-commands.DIf6qKJn.js.gz                                                                  3.97kb / gzip: 1.75kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/personal.BSPPZPgD.css.gz                                                                         5.02kb / gzip: 0.96kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/preview.DU_AaTS5.js.gz                                                                           3.09kb / gzip: 1.54kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/process-dialog.vue_vue_type_script_name_workflowProcessDialog_setup_true_lang.DM5vQ7uk.js.gz     1.75kb / gzip: 1.01kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/personal.DTzl8eTg.js.gz                                                                          6.67kb / gzip: 2.03kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/permission.B6YgTGvs.css.gz                                                                       1.27kb / gzip: 0.44kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/search.CnoHi6jm.js.gz                                                                            1.85kb / gzip: 1.01kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/record-dialog.Bw4eUFjR.js.gz                                                                     4.78kb / gzip: 1.74kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/register.JFJX3bWi.js.gz                                                                          3.96kb / gzip: 1.52kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/setings.B-nQiG44.css.gz                                                                          5.12kb / gzip: 0.79kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/permission.BUQja1LI.js.gz                                                                        5.89kb / gzip: 2.36kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/purify.es.B7c_OFEs.js.gz                                                                         21.98kb / gzip: 8.40kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/start-dialog.Bvyv9zev.js.gz                                                                      9.24kb / gzip: 3.48kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/start.GSQAleYY.js.gz                                                                             2.95kb / gzip: 1.46kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/table.DrYRnOi7.js.gz                                                                             2.23kb / gzip: 1.03kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/table.p9ADfRko.js.gz                                                                             1.15kb / gzip: 0.45kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/task.WEwUqYcg.js.gz                                                                              1.07kb / gzip: 0.40kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/sys-log.BQczvJYc.js.gz                                                                           1.24kb / gzip: 0.72kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/tagsView.BzjhymHG.js.gz                                                                          10.85kb / gzip: 3.76kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/subItem.D_BIxrN9.js.gz                                                                           1.20kb / gzip: 0.63kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/sortable.esm.BGML4dzN.js.gz                                                                      35.08kb / gzip: 12.29kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/todo.Cxh7dS9J.js.gz                                                                              1.66kb / gzip: 0.58kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/user.Dcsvu3YC.js.gz                                                                              1.34kb / gzip: 0.57kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/user.NiuRE39x.css.gz                                                                             1.30kb / gzip: 0.43kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/transfer-dialog.vue_vue_type_script_name_workflowTransferDialog_setup_true_lang.DWOr14se.js.gz   5.35kb / gzip: 2.32kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/user.DvlWYkqa.js.gz                                                                              9.55kb / gzip: 3.70kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/userNews.qTzD623K.css.gz                                                                         2.76kb / gzip: 0.56kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/tagsView.Uf2MBk_N.css.gz                                                                         6.53kb / gzip: 2.14kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/version.CUmbb90S.css.gz                                                                          1.04kb / gzip: 0.36kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/setings.B3YOcT__.js.gz                                                                           26.29kb / gzip: 5.65kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/transverse.DT89Yvb0.js.gz                                                                        1.19kb / gzip: 0.64kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/userNews.jRSbk8EX.js.gz                                                                          10.36kb / gzip: 3.61kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/version.CWtLyETP.js.gz                                                                           6.52kb / gzip: 2.48kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/workflow-intent-dialog.CyvUFSvg.js.gz                                                            2.53kb / gzip: 1.22kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/index.html.gz                                                                                           14.04kb / gzip: 4.96kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/vertical.Cy6a4S4A.js.gz                                                                          2.29kb / gzip: 1.14kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/styles/font-awesome.min.css.gz                                                                   30.27kb / gzip: 6.71kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/workflow-intent.55ARBxsF.js.gz                                                                   6.41kb / gzip: 2.63kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.Clw6AD68.js.gz                                                                             177.39kb / gzip: 59.63kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/vue.B6G-7x_T.js.gz                                                                               129.90kb / gzip: 51.04kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.rwuLcr6q.css.gz                                                                            538.28kb / gzip: 76.42kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/echarts.Cxf-fif1.js.gz                                                                           996.59kb / gzip: 331.75kb
+dist//Users/dundundebaba/sync/code/open/bixi/bixi-ui/assets/index.Dn1L-3jO.js.gz                                                                             4041.14kb / gzip: 1079.79kb
+
+
+
+EXIT_CODE=0

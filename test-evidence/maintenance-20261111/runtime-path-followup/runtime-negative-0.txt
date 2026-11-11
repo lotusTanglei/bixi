@@ -1,0 +1,4 @@
+./scripts/verify-runtime-config.sh
+Runtime resources must not contain personal absolute paths
+/Users/dundundebaba/sync/code/open/bixi/deploy/nacos/bixi-auth-dev.yml:39:# maintenance-boundary-probe /Users/runtime-probe/private
+make: *** [runtime-config-check] Error 1
