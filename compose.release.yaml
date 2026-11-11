@@ -1,0 +1,98 @@
+# Applied last by start-cloud-release/start-single-release. Image values come
+# from the frozen .env.release manifest; !reset removes development build paths.
+x-nacos-client-auth: &nacos-client-auth
+  NACOS_USERNAME: bixi-prod-client
+  NACOS_PASSWORD: ${NACOS_CLIENT_PASSWORD:?set NACOS_CLIENT_PASSWORD}
+
+services:
+  mysql:
+    image: ${BIXI_RELEASE_MYSQL_IMAGE:?set BIXI_RELEASE_MYSQL_IMAGE}
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /var/lib/mysql/.bixi-init-complete && MYSQL_PWD=$${MYSQL_ROOT_PASSWORD} mysqladmin ping -h 127.0.0.1 -uroot --silent"]
+  redis:
+    image: ${BIXI_RELEASE_REDIS_IMAGE:?set BIXI_RELEASE_REDIS_IMAGE}
+  rabbitmq:
+    image: ${BIXI_RELEASE_RABBITMQ_IMAGE:?set BIXI_RELEASE_RABBITMQ_IMAGE}
+  rabbitmq-config:
+    image: ${BIXI_RELEASE_RABBITMQ_IMAGE:?set BIXI_RELEASE_RABBITMQ_IMAGE}
+  nacos:
+    image: ${BIXI_RELEASE_NACOS_IMAGE:?set BIXI_RELEASE_NACOS_IMAGE}
+    environment:
+      NACOS_AUTH_ENABLE: "true"
+      NACOS_AUTH_TOKEN: ${NACOS_AUTH_TOKEN:?set NACOS_AUTH_TOKEN}
+      NACOS_AUTH_IDENTITY_KEY: ${NACOS_AUTH_IDENTITY_KEY:?set NACOS_AUTH_IDENTITY_KEY}
+      NACOS_AUTH_IDENTITY_VALUE: ${NACOS_AUTH_IDENTITY_VALUE:?set NACOS_AUTH_IDENTITY_VALUE}
+  nacos-config:
+    image: ${BIXI_RELEASE_NACOS_IMAGE:?set BIXI_RELEASE_NACOS_IMAGE}
+    environment:
+      NACOS_USERNAME: ${NACOS_USERNAME:?set NACOS_USERNAME}
+      NACOS_PASSWORD: ${NACOS_PASSWORD:?set NACOS_PASSWORD}
+      NACOS_CLIENT_PASSWORD: ${NACOS_CLIENT_PASSWORD:?set NACOS_CLIENT_PASSWORD}
+      NACOS_AUTH_ENABLE: "true"
+      NACOS_CONFIG_DIR: /prod-config
+    volumes:
+      - ./deploy/native/nacos:/prod-config:ro
+  monitor:
+    build: !reset null
+    image: ${BIXI_RELEASE_MONITOR_IMAGE:?set BIXI_RELEASE_MONITOR_IMAGE}
+    environment: *nacos-client-auth
+  gateway:
+    build: !reset null
+    image: ${BIXI_RELEASE_GATEWAY_IMAGE:?set BIXI_RELEASE_GATEWAY_IMAGE}
+    environment: *nacos-client-auth
+  auth:
+    build: !reset null
+    image: ${BIXI_RELEASE_AUTH_IMAGE:?set BIXI_RELEASE_AUTH_IMAGE}
+    environment: *nacos-client-auth
+  upms:
+    build: !reset null
+    image: ${BIXI_RELEASE_UPMS_IMAGE:?set BIXI_RELEASE_UPMS_IMAGE}
+    environment: *nacos-client-auth
+  generator:
+    build: !reset null
+    image: ${BIXI_RELEASE_GENERATOR_IMAGE:?set BIXI_RELEASE_GENERATOR_IMAGE}
+    environment: *nacos-client-auth
+  quartz:
+    build: !reset null
+    image: ${BIXI_RELEASE_QUARTZ_IMAGE:?set BIXI_RELEASE_QUARTZ_IMAGE}
+    environment: *nacos-client-auth
+  ai:
+    build: !reset null
+    image: ${BIXI_RELEASE_AI_IMAGE:?set BIXI_RELEASE_AI_IMAGE}
+    environment: *nacos-client-auth
+  workflow:
+    build: !reset null
+    image: ${BIXI_RELEASE_WORKFLOW_IMAGE:?set BIXI_RELEASE_WORKFLOW_IMAGE}
+    environment: *nacos-client-auth
+  workflow-a:
+    profiles: [workflow-cluster]
+    build: !reset null
+    image: ${BIXI_RELEASE_WORKFLOW_IMAGE:?set BIXI_RELEASE_WORKFLOW_IMAGE}
+    environment: *nacos-client-auth
+  workflow-b:
+    profiles: [workflow-cluster]
+    build: !reset null
+    image: ${BIXI_RELEASE_WORKFLOW_IMAGE:?set BIXI_RELEASE_WORKFLOW_IMAGE}
+    environment: *nacos-client-auth
+  frontend-cloud:
+    build: !reset null
+    image: ${BIXI_RELEASE_FRONTEND_CLOUD_IMAGE:?set BIXI_RELEASE_FRONTEND_CLOUD_IMAGE}
+  single:
+    build: !reset null
+    image: ${BIXI_RELEASE_SINGLE_IMAGE:?set BIXI_RELEASE_SINGLE_IMAGE}
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+  frontend-single:
+    build: !reset null
+    image: ${BIXI_RELEASE_FRONTEND_SINGLE_IMAGE:?set BIXI_RELEASE_FRONTEND_SINGLE_IMAGE}
+  https-cloud:
+    profiles: [cloud]
+    image: ${BIXI_RELEASE_NGINX_IMAGE:?set BIXI_RELEASE_NGINX_IMAGE}
+  https-single:
+    profiles: [single]
+    image: ${BIXI_RELEASE_NGINX_IMAGE:?set BIXI_RELEASE_NGINX_IMAGE}
+
+volumes:
+  mysql-data:
+    labels:
+      com.bixi.release.commit: ${commit:?set frozen release commit}

@@ -46,7 +46,7 @@
 				:cell-style="tableStyle.cellStyle"
 				:header-cell-style="tableStyle.headerCellStyle"
 			>
-				<el-table-column align="center" type="selection" width="40" />
+				<el-table-column :selectable="handleSelectable" align="center" type="selection" width="40" />
 				<el-table-column :label="t('client.index')" type="index" width="60" />
 				<el-table-column :label="t('client.clientId')" prop="clientId" show-overflow-tooltip />
 				<el-table-column :label="t('client.scope')" prop="scope" show-overflow-tooltip />
@@ -59,10 +59,10 @@
 				<el-table-column :label="t('client.refreshTokenValidity')" prop="refreshTokenValidity" show-overflow-tooltip />
 				<el-table-column :label="$t('common.action')" width="150">
 					<template #default="scope">
-						<el-button icon="edit-pen" @click="formDialogRef.openDialog(scope.row.clientId)" text type="primary" v-auth="'sys_client_edit'"
+						<el-button v-if="handleSelectable(scope.row)" icon="edit-pen" @click="formDialogRef.openDialog(scope.row.clientId)" text type="primary" v-auth="'sys_client_edit'"
 							>{{ $t('common.editBtn') }}
 						</el-button>
-						<el-button icon="delete" @click="handleDelete([scope.row.id])" text type="primary" v-auth="'sys_client_del'">
+						<el-button v-if="handleSelectable(scope.row)" icon="delete" @click="handleDelete([scope.row.id])" text type="primary" v-auth="'sys_client_del'">
 							{{ $t('common.delBtn') }}
 						</el-button>
 					</template>
@@ -96,6 +96,8 @@ const showSearch = ref(true);
 // 多选变量
 const selectObjs = ref([]) as any;
 const multiple = ref(true);
+
+const handleSelectable = (row: { clientId: string }) => row.clientId !== 'bixi-browser';
 
 const state: BasicTableProps = reactive<BasicTableProps>({
 	queryForm: {},

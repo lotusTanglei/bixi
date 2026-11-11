@@ -83,6 +83,13 @@ class GatewaySecurityConfigurationTest {
     }
 
     @Test
+    void onlySmsChallengeGetReachesUpmsWithoutBearer() {
+        client.get().uri("/admin/mobile/13800138000").exchange().expectStatus().isOk();
+        client.post().uri("/admin/mobile/13800138000").exchange().expectStatus().isUnauthorized();
+        client.get().uri("/admin/mobile/13800138000/extra").exchange().expectStatus().isUnauthorized();
+    }
+
+    @Test
     void browserLogoutReachesAuthWithoutBearerForDownstreamCsrfCheck() {
         client.post().uri("/auth/logout").exchange().expectStatus().isOk();
     }
@@ -155,6 +162,21 @@ class GatewaySecurityConfigurationTest {
 
         @org.springframework.web.bind.annotation.PostMapping("/admin/notice/delivery/receipt")
         String noticeReceiptEndpoint() {
+            return "ok";
+        }
+
+        @GetMapping("/admin/mobile/13800138000")
+        String smsChallengeEndpoint() {
+            return "ok";
+        }
+
+        @org.springframework.web.bind.annotation.PostMapping("/admin/mobile/13800138000")
+        String smsChallengePostEndpoint() {
+            return "ok";
+        }
+
+        @GetMapping("/admin/mobile/13800138000/extra")
+        String smsChallengeNestedEndpoint() {
             return "ok";
         }
 

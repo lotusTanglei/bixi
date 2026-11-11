@@ -1,0 +1,10 @@
+file:
+  bucket: bixi
+  local:
+    enable: true
+    base-path: /var/lib/bixi/files
+  oss:
+    enable: ${MINIO_ENABLED:false}
+    endpoint: ${MINIO_ENDPOINT:}
+    access-key: ${MINIO_ACCESS_KEY:}
+    secret-key: ${MINIO_SECRET_KEY:}

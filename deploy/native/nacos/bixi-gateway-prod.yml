@@ -1,0 +1,81 @@
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: bixi-auth
+          uri: lb://bixi-auth
+          predicates:
+            - Path=/auth/**
+          filters:
+            - PreserveHostHeader
+        - id: bixi-upms
+          uri: lb://bixi-upms-biz
+          predicates:
+            - Path=/admin/**
+        - id: bixi-generator
+          uri: lb://bixi-generator
+          predicates:
+            - Path=/gen/**
+        - id: bixi-quartz
+          uri: lb://bixi-quartz
+          predicates:
+            - Path=/job/**
+      httpclient:
+        connect-timeout: 5000
+        response-timeout: 30s
+
+bixi:
+  gateway:
+    security:
+      introspection-uri: ${BIXI_GATEWAY_SECURITY_INTROSPECTION_URI}
+      request-timeout: ${BIXI_GATEWAY_SECURITY_REQUEST_TIMEOUT:3s}
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+---
+spring:
+  config:
+    activate:
+      on-profile: ai
+  cloud:
+    gateway:
+      routes:
+        - id: bixi-auth
+          uri: lb://bixi-auth
+          predicates:
+            - Path=/auth/**
+          filters:
+            - PreserveHostHeader
+        - id: bixi-upms
+          uri: lb://bixi-upms-biz
+          predicates:
+            - Path=/admin/**
+        - id: bixi-generator
+          uri: lb://bixi-generator
+          predicates:
+            - Path=/gen/**
+        - id: bixi-quartz
+          uri: lb://bixi-quartz
+          predicates:
+            - Path=/job/**
+        - id: bixi-ai
+          uri: lb://bixi-ai-biz
+          predicates:
+            - Path=/ai/**
+          filters:
+            - PrefixPath=/ai

@@ -1,10 +1,12 @@
 package com.lotus.bixi.auth.config;
 
 import com.lotus.bixi.auth.support.CustomeOAuth2AccessTokenGenerator;
+import com.lotus.bixi.auth.support.BrowserClientAuthenticationConverter;
 import com.lotus.bixi.auth.support.core.CustomeOAuth2TokenCustomizer;
 import com.lotus.bixi.auth.support.core.FormIdentityLoginConfigurer;
 import com.lotus.bixi.auth.support.core.BixiDaoAuthenticationProvider;
 import com.lotus.bixi.auth.support.filter.PasswordDecoderFilter;
+import com.lotus.bixi.auth.support.filter.AuthSecurityConfigProperties;
 import com.lotus.bixi.auth.support.filter.RefreshTokenAccountStatusFilter;
 import com.lotus.bixi.auth.support.filter.ValidateCodeFilter;
 import com.lotus.bixi.auth.support.handler.BixiAuthenticationFailureEventHandler;
@@ -54,6 +56,8 @@ public class AuthorizationServerConfiguration {
 
     private final PasswordDecoderFilter passwordDecoderFilter;
 
+    private final AuthSecurityConfigProperties authSecurityConfigProperties;
+
     private final ValidateCodeFilter validateCodeFilter;
 
     @Bean
@@ -81,7 +85,10 @@ public class AuthorizationServerConfiguration {
                             .accessTokenResponseHandler(new BixiAuthenticationSuccessEventHandler()) // 登录成功处理器
                             .errorResponseHandler(new BixiAuthenticationFailureEventHandler());// 登录失败处理器
                 }).clientAuthentication(oAuth2ClientAuthenticationConfigurer -> // 个性化客户端认证
-                        oAuth2ClientAuthenticationConfigurer.errorResponseHandler(new BixiAuthenticationFailureEventHandler()))// 处理客户端认证异常
+                        oAuth2ClientAuthenticationConfigurer
+                                .authenticationConverter(new BrowserClientAuthenticationConverter(
+                                        authSecurityConfigProperties.getBrowserClientSecret()))
+                                .errorResponseHandler(new BixiAuthenticationFailureEventHandler()))// 处理客户端认证异常
                 .authorizationEndpoint(authorizationEndpoint -> authorizationEndpoint// 授权码端点个性化confirm页面
                         .consentPage(SecurityConstants.CUSTOM_CONSENT_PAGE_URI)), Customizer.withDefaults());
 

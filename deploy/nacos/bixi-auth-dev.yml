@@ -17,6 +17,7 @@ management:
 security:
   micro: true
   encode-key: ${BIXI_ENCODE_KEY}
+  browser-client-secret: ${OAUTH_BROWSER_CLIENT_SECRET}
   ignore-clients:
     - bixi
     - test

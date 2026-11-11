@@ -94,9 +94,10 @@ async function run() {
 	const userId = String(user.id);
 	assert(userId && userId !== 'undefined', 'authenticated user ID missing');
 
-	const streamController = new AbortController();
+	let streamController = new AbortController();
 	let reader;
-	let noticeId;
+	const notices = new Map();
+	let failure;
 	try {
 		const stream = await fetch(`${apiBase}/admin/user-notice/stream`, {
 			headers: { Authorization: `Bearer ${token}`, Accept: 'text/event-stream' },
@@ -105,7 +106,7 @@ async function run() {
 		assert.equal(stream.status, 200, `SSE HTTP ${stream.status}`);
 		assert.match(stream.headers.get('content-type') || '', /text\/event-stream/);
 		reader = stream.body.getReader();
-		const decoder = new TextDecoder();
+		let decoder = new TextDecoder();
 		let pending = '';
 		const nextEvent = async (timeoutMs) => {
 			const deadline = Date.now() + timeoutMs;
@@ -132,6 +133,7 @@ async function run() {
 		assert.equal(opened.data, 'ok');
 
 		const title = `cloud-blackbox-${Date.now()}`;
+		notices.set(title, undefined);
 		api(await request('/admin/notice', {
 			token,
 			method: 'POST',
@@ -154,7 +156,8 @@ async function run() {
 			await new Promise(resolve => setTimeout(resolve, 250));
 		}
 		assert(notice?.id, 'notice ID missing');
-		noticeId = String(notice.id);
+		const noticeId = String(notice.id);
+		notices.set(title, noticeId);
 		assert.equal(api(await request(`/admin/notice/send/${noticeId}`, { token, method: 'POST' }), 'send notice'), true);
 
 		let recipient;
@@ -186,6 +189,77 @@ async function run() {
 		assert.equal(String(sameRecipient.id), recipientId);
 		assert.equal(sameRecipient.isRead, '1');
 
+		streamController.abort();
+		try {
+			await reader.cancel();
+		} catch {
+			// The abort may already have closed the stream.
+		}
+		streamController = new AbortController();
+		const reconnected = await fetch(`${apiBase}/admin/user-notice/stream`, {
+			headers: { Authorization: `Bearer ${token}`, Accept: 'text/event-stream' },
+			signal: streamController.signal,
+		});
+		assert.equal(reconnected.status, 200, `reconnected SSE HTTP ${reconnected.status}`);
+		assert.match(reconnected.headers.get('content-type') || '', /text\/event-stream/);
+		reader = reconnected.body.getReader();
+		decoder = new TextDecoder();
+		pending = '';
+		const reopened = await nextEvent(10000);
+		assert.equal(reopened.event, 'open');
+		assert.equal(reopened.data, 'ok');
+
+		const secondTitle = `${title}-reconnect`;
+		notices.set(secondTitle, undefined);
+		api(await request('/admin/notice', {
+			token,
+			method: 'POST',
+			body: {
+				title: secondTitle,
+				content: 'cloud SSE reconnect blackbox',
+				type: '0',
+				priority: '0',
+				deliveryChannel: 'IN_APP',
+				targetType: '3',
+				targetIds: userId,
+			},
+		}), 'create reconnect notice');
+		let secondNotice;
+		for (let attempt = 0; attempt < 20; attempt++) {
+			const page = api(await request(`/admin/notice/page?title=${encodeURIComponent(secondTitle)}&current=1&size=10`, { token }), 'find reconnect notice');
+			secondNotice = page.records?.find(candidate => candidate.title === secondTitle);
+			if (secondNotice) break;
+			await new Promise(resolve => setTimeout(resolve, 250));
+		}
+		assert(secondNotice?.id, 'reconnect notice ID missing');
+		const secondNoticeId = String(secondNotice.id);
+		notices.set(secondTitle, secondNoticeId);
+		assert.equal(api(await request(`/admin/notice/send/${secondNoticeId}`, { token, method: 'POST' }), 'send reconnect notice'), true);
+		let secondInbox;
+		let secondRecipient;
+		for (let attempt = 0; attempt < 40; attempt++) {
+			secondInbox = api(await request(`/admin/user-notice/page?noticeId=${secondNoticeId}&current=1&size=10`, { token }), 'reconnect inbox');
+			secondRecipient = secondInbox.records?.find(candidate => String(candidate.userId) === userId);
+			if (secondRecipient?.deliveryStatus === 'DELIVERED') break;
+			await new Promise(resolve => setTimeout(resolve, 500));
+		}
+		assert(secondRecipient, 'reconnect recipient row missing');
+		assert.equal(secondRecipient.deliveryStatus, 'DELIVERED');
+		const secondRecipients = api(await request(`/admin/user-notice/record/page?noticeId=${secondNoticeId}&current=1&size=10`,
+			{ token }), 'reconnect recipient isolation');
+		assert.equal(secondRecipients.records?.length, 1, 'reconnect notice must have only the intended recipient');
+		assert.equal(String(secondRecipients.records[0].userId), userId);
+		let secondRefreshData;
+		const refreshDeadline = Date.now() + 15000;
+		while (!secondRefreshData && Date.now() < refreshDeadline) {
+			const event = await nextEvent(Math.max(1, refreshDeadline - Date.now()));
+			if (event.event !== 'message') continue;
+			const data = JSON.parse(event.data);
+			if (String(data.noticeId) === secondNoticeId) secondRefreshData = data;
+		}
+		assert(secondRefreshData, 'reconnected stream did not receive the new notice');
+		assert.equal(String(secondRefreshData.userNoticeId), String(secondRecipient.id));
+
 		return {
 			status: 'passed',
 			apiBase,
@@ -194,11 +268,17 @@ async function run() {
 			recipientId,
 			sseOpen: true,
 			refresh: refreshData,
+			reconnectOpen: true,
+			reconnectRefresh: secondRefreshData,
+			secondNoticeId,
 			deliveryStatus: recipient.deliveryStatus,
 			resend: true,
 			retry: true,
 			cleanup: true,
 		};
+	} catch (error) {
+		failure = error;
+		throw error;
 	} finally {
 		streamController.abort();
 		if (reader) {
@@ -208,13 +288,18 @@ async function run() {
 				// The abort may already have closed the stream.
 			}
 		}
-		if (noticeId) {
+		let cleanupFailure;
+		for (const [title, id] of notices) {
 			try {
-				await request(`/admin/notice/${noticeId}`, { token, method: 'DELETE' });
-			} catch {
-				// Preserve the primary assertion failure; cleanup is best effort.
+				const cleanupId = id || api(await request(`/admin/notice/page?title=${encodeURIComponent(title)}&current=1&size=10`, { token }),
+					'find notice for cleanup').records?.find(candidate => candidate.title === title)?.id;
+				if (cleanupId) assert.equal(api(await request(`/admin/notice/${cleanupId}`, { token, method: 'DELETE' }),
+					'cleanup notice'), true);
+			} catch (error) {
+				cleanupFailure ||= error;
 			}
 		}
+		if (cleanupFailure && !failure) throw cleanupFailure;
 	}
 }
 

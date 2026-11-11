@@ -32,7 +32,7 @@ printf '%s\n' "${commit}" | grep -Eq '^[0-9a-fA-F]{7,64}$' \
 project_version="${BIXI_PROJECT_VERSION:-}"
 if [ -z "${project_version}" ]; then
     command -v mvn >/dev/null 2>&1 || fail 'mvn is required to resolve the project version'
-    project_version="$(cd "${root}" && mvn -q -B -N -Dstyle.color=never \
+    project_version="$(cd "${root}" && mvn -q -B -N -f bixi-common/bixi-common-bom/pom.xml -Dstyle.color=never \
         -DforceStdout -Dexpression=project.version help:evaluate)"
 fi
 printf '%s\n' "${project_version}" | grep -Eq '^[0-9A-Za-z][0-9A-Za-z._+-]*$' \

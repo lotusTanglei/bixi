@@ -1,0 +1,30 @@
+# Add this file to the matching cloud or single Compose profile after placing
+# a trusted certificate and private key in BIXI_TLS_DIR.
+x-https-edge: &https-edge
+  image: ${BIXI_REGISTRY_MIRROR:-}library/nginx:1.27.3-alpine3.20
+  restart: unless-stopped
+  ports:
+    - "${BIXI_HTTPS_PORT:-443}:8443"
+  volumes:
+    - ./deploy/nginx/https.conf.template:/etc/nginx/templates/default.conf.template:ro
+    - ${BIXI_TLS_DIR:?set BIXI_TLS_DIR to the directory containing fullchain.pem and privkey.pem}:/etc/nginx/tls:ro
+  networks: [bixi]
+
+services:
+  https-cloud:
+    <<: *https-edge
+    profiles: [cloud]
+    environment:
+      BIXI_FRONTEND_UPSTREAM: frontend-cloud:8080
+    depends_on:
+      frontend-cloud:
+        condition: service_healthy
+
+  https-single:
+    <<: *https-edge
+    profiles: [single]
+    environment:
+      BIXI_FRONTEND_UPSTREAM: frontend-single:8080
+    depends_on:
+      frontend-single:
+        condition: service_healthy

@@ -2,7 +2,7 @@
 
 import assert from 'node:assert/strict';
 import { createCipheriv, createHash, randomBytes } from 'node:crypto';
-import { readFile } from 'node:fs/promises';
+import { access, readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFile, spawn } from 'node:child_process';
@@ -20,10 +20,23 @@ const fileEnv = Object.fromEntries((await readFile(envFile, 'utf8')).split(/\r?\
 const env = { ...fileEnv, ...process.env };
 const mode = env.BIXI_MODE || 'single';
 assert(['cloud', 'single'].includes(mode), 'BIXI_MODE must be cloud or single');
+const fixtureDriver = env.BIXI_FIXTURE_DRIVER || 'docker';
+assert(['docker', 'native'].includes(fixtureDriver), 'BIXI_FIXTURE_DRIVER must be docker or native');
 const origin = (env.BIXI_ORIGIN || `http://localhost:${env.BIXI_HTTP_PORT || '8080'}`).replace(/\/$/, '');
 const apiBase = (env.BIXI_API_BASE_URL || `${origin}/api`).replace(/\/$/, '');
 for (const key of ['ADMIN_USERNAME', 'ADMIN_PASSWORD', 'OAUTH_PASSWORD_CLIENT_SECRET', 'BIXI_ENCODE_KEY']) {
 	assert(env[key], `Missing ${key}`);
+}
+if (fixtureDriver === 'native') {
+	for (const key of ['MYSQL_HOST', 'MYSQL_PORT', 'MYSQL_DATABASE', 'MYSQL_ROOT_PASSWORD',
+		'REDIS_HOST', 'REDIS_PORT', 'REDIS_PASSWORD']) {
+		assert(env[key], `Native fixtures require ${key}`);
+	}
+}
+const remoteMysql = fixtureDriver === 'native' && !['localhost', '127.0.0.1'].includes(env.MYSQL_HOST);
+if (remoteMysql) {
+	assert(env.MYSQL_SSL_CA, 'Remote MySQL fixtures require MYSQL_SSL_CA');
+	await access(env.MYSQL_SSL_CA);
 }
 
 const suffix = randomBytes(5).toString('hex');
@@ -49,8 +62,10 @@ let mysqlContainer;
 let redisContainer;
 
 try {
-	mysqlContainer = await resolveMysqlContainer();
-	redisContainer = await resolveRedisContainer();
+	if (fixtureDriver === 'docker') {
+		mysqlContainer = await resolveMysqlContainer();
+		redisContainer = await resolveRedisContainer();
+	}
 	await seedFixtures();
 	adminToken = (await login(env.ADMIN_USERNAME, env.ADMIN_PASSWORD)).accessToken;
 	const adminInfo = api(await call('/admin/user/info', { token: adminToken }), 'administrator identity');
@@ -186,7 +201,7 @@ VALUES (${roleId},'Tenant matrix role','${roleCode}',1,'0','0','0',${tenantId},'
 }
 
 async function cleanupFixtures() {
-	if (!mysqlContainer) return;
+	if (fixtureDriver === 'docker' && !mysqlContainer) return;
 	await mysqlSql(`
 DELETE FROM sys_user_role WHERE user_id IN (${userId},${tenantOneUserId}) OR role_id=${roleId};
 DELETE FROM sys_role_menu WHERE role_id=${roleId} OR menu_id IN (${menuIds.join(',')});
@@ -206,6 +221,13 @@ async function setTenantStatusFixture(status) {
 }
 
 async function evictTenantStatusCache() {
+	if (fixtureDriver === 'native') {
+		await exec('redis-cli', ['-h', env.REDIS_HOST, '-p', env.REDIS_PORT,
+			'-n', env.REDIS_DATABASE || '0', '--no-auth-warning', 'DEL', `tenant_status::${tenantId}`], {
+			env: { ...process.env, REDISCLI_AUTH: env.REDIS_PASSWORD },
+		});
+		return;
+	}
 	if (!redisContainer) return;
 	await exec('docker', ['exec', redisContainer, 'sh', '-c',
 		`redis-cli -a "$REDIS_PASSWORD" --no-auth-warning DEL "tenant_status::${tenantId}"`]);
@@ -213,8 +235,18 @@ async function evictTenantStatusCache() {
 
 async function mysqlSql(sql) {
 	await new Promise((resolvePromise, reject) => {
-		const child = spawn('docker', ['exec', '-i', mysqlContainer, 'sh', '-c', 'mysql --protocol=TCP -uroot -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE"'], {
+		const native = fixtureDriver === 'native';
+		const command = native ? 'mysql' : 'docker';
+		const args = native
+			? ['--batch', '--silent', '--protocol=TCP',
+				...(remoteMysql ? ['--ssl-mode=VERIFY_IDENTITY', `--ssl-ca=${env.MYSQL_SSL_CA}`] : []),
+				`--host=${env.MYSQL_HOST}`,
+				`--port=${env.MYSQL_PORT}`, `--user=${env.MYSQL_ROOT_USERNAME || 'root'}`, env.MYSQL_DATABASE]
+			: ['exec', '-i', mysqlContainer, 'sh', '-c',
+				'mysql --protocol=TCP -uroot -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE"'];
+		const child = spawn(command, args, {
 			stdio: ['pipe', 'pipe', 'pipe'],
+			env: native ? { ...process.env, MYSQL_PWD: env.MYSQL_ROOT_PASSWORD } : process.env,
 		});
 		let stderr = '';
 		child.stderr.on('data', data => { stderr += data.toString(); });

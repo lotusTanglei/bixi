@@ -6,6 +6,7 @@ import cn.hutool.crypto.Mode;
 import cn.hutool.crypto.Padding;
 import cn.hutool.crypto.SecureUtil;
 import cn.hutool.crypto.symmetric.AES;
+import com.lotus.bixi.auth.support.BrowserClientAuthenticationConverter;
 import com.lotus.bixi.common.core.constant.SecurityConstants;
 import com.lotus.bixi.common.core.servlet.RepeatBodyRequestWrapper;
 import jakarta.servlet.FilterChain;
@@ -14,6 +15,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
+import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientAuthenticationToken;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -87,6 +91,16 @@ public class PasswordDecoderFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         // 不是登录请求，直接向下执行
         if (!StrUtil.containsAnyIgnoreCase(request.getRequestURI(), SecurityConstants.OAUTH_TOKEN_URL)) {
+            chain.doFilter(request, response);
+            return;
+        }
+
+        var principal = SecurityContextHolder.getContext().getAuthentication();
+        if (SecurityConstants.OAUTH_TOKEN_URL.equals(request.getServletPath())
+                && SecurityConstants.PASSWORD.equals(request.getParameter(OAuth2ParameterNames.GRANT_TYPE))
+                && principal instanceof OAuth2ClientAuthenticationToken client && client.isAuthenticated()
+                && client.getRegisteredClient() != null
+                && BrowserClientAuthenticationConverter.CLIENT_ID.equals(client.getRegisteredClient().getClientId())) {
             chain.doFilter(request, response);
             return;
         }

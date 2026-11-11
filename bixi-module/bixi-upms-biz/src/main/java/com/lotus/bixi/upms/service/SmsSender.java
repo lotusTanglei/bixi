@@ -8,6 +8,10 @@ package com.lotus.bixi.upms.service;
  */
 public interface SmsSender {
 
+    default boolean isConfigured() {
+        return true;
+    }
+
     /**
      * 发送短信验证码
      *

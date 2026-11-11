@@ -16,10 +16,10 @@
 			<el-form-item label="系统标志" prop="systemFlag">
 				<el-input v-model="form.systemFlag" clearable placeholder="输入系统标志" />
 			</el-form-item>
-			<el-form-item label="状态（0正常 1停用）" prop="status">
+			<el-form-item label="状态" prop="status">
 				<el-input v-model="form.status" clearable placeholder="输入状态（0正常 1停用）" />
 			</el-form-item>
-			<el-form-item label="数据状态（用来标识数据状态，可用于割接，特殊数据处理）" prop="dataStatus">
+			<el-form-item label="数据状态" prop="dataStatus">
 				<el-input v-model="form.dataStatus" clearable placeholder="输入数据状态（用来标识数据状态，可用于割接，特殊数据处理）" />
 			</el-form-item>
 			<el-form-item label="备注" prop="remark">
@@ -61,21 +61,21 @@
 				<el-table-column label="排序" min-width="150">
 					<template #default="scope">
 							<el-form-item :prop="`children.${scope.$index}.sn`">
-							<el-input-number v-model="scope.row.sn" />
+							<el-input-number v-model="scope.row.sn" style="width: 100%" />
 						</el-form-item>
 					</template>
 				</el-table-column>
-				<el-table-column label="状态（0正常 1停用）" min-width="150">
+				<el-table-column label="状态" min-width="150">
 					<template #default="scope">
 							<el-form-item :prop="`children.${scope.$index}.status`">
-							<el-input v-model="scope.row.status" clearable />
+							<el-input v-model="scope.row.status" clearable placeholder="0正常 1停用" />
 						</el-form-item>
 					</template>
 				</el-table-column>
-				<el-table-column label="数据状态（用来标识数据状态，可用于割接，特殊数据处理）" min-width="150">
+				<el-table-column label="数据状态" min-width="150">
 					<template #default="scope">
 							<el-form-item :prop="`children.${scope.$index}.dataStatus`">
-							<el-input v-model="scope.row.dataStatus" clearable />
+							<el-input v-model="scope.row.dataStatus" clearable placeholder="用于割接等特殊处理" />
 						</el-form-item>
 					</template>
 				</el-table-column>

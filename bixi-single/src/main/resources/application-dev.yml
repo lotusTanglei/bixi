@@ -6,6 +6,7 @@ server:
 
 ## spring security 对外暴露接口设置（不鉴权直接可访问）
 security:
+  browser-client-secret: ${OAUTH_BROWSER_CLIENT_SECRET}
   oauth2:
     ignore:
       urls:
@@ -35,6 +36,7 @@ spring:
       host: ${REDIS_HOST:127.0.0.1}
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DATABASE:0}
   ai:
     dashscope:
       api-key: ${DASHSCOPE_API_KEY:}

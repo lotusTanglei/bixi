@@ -15,7 +15,7 @@
 - 配置加密：Jasypt 3.0.5
 - 监控：Spring Boot Admin 3.4.1 + Actuator
 - 构建工具：Maven，使用 flatten-maven-plugin 统一 revision 版本管理
-- 数据库：MySQL 8.0+
+- 数据库：MySQL 8.0.16+
 
 **前端**
 

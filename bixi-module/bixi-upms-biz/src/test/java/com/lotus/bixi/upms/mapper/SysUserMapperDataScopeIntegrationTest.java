@@ -97,6 +97,13 @@ class SysUserMapperDataScopeIntegrationTest {
                 .isEqualTo("0");
     }
 
+    @Test
+    void batchLookupOnlyReturnsUsersInTheCurrentDepartmentAndTenant() {
+        assertThat(mapper.selectByIds(List.of(1L, 2L, 3L)))
+                .extracting(SysUser::getId)
+                .containsExactly(1L);
+    }
+
     private void insert(long id, String name, long deptId, long tenantId) {
         jdbc.update("""
                 INSERT INTO sys_user (id, username, name, dept_id, create_time, update_time,

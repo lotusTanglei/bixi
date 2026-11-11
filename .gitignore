@@ -110,6 +110,7 @@ log/
 
 # Env
 .env
+.env.release
 .env.local
 .env.*.local
 

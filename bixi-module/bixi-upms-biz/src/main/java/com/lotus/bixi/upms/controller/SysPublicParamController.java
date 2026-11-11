@@ -19,7 +19,9 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -47,7 +49,7 @@ public class SysPublicParamController {
      * @param publicKey
      * @return
      */
-    @Inner(value = false)
+    @Inner
     @Operation(description = "查询公共参数值", summary = "根据key查询公共参数值")
     @GetMapping("/publicValue/{publicKey}")
     public R publicKey(@PathVariable("publicKey") String publicKey) {
@@ -63,6 +65,7 @@ public class SysPublicParamController {
      */
     @Operation(description = "分页查询", summary = "分页查询")
     @GetMapping("/page")
+    @HasPermission("sys_syspublicparam_view")
     public R getSysPublicParamPage(@ParameterObject Page page, @ParameterObject SysPublicParam sysPublicParam) {
         LambdaUpdateWrapper<SysPublicParam> wrapper = Wrappers.<SysPublicParam>lambdaUpdate()
                 .like(StrUtil.isNotBlank(sysPublicParam.getName()), SysPublicParam::getName,
@@ -83,11 +86,13 @@ public class SysPublicParamController {
      */
     @Operation(description = "通过id查询公共参数", summary = "通过id查询公共参数")
     @GetMapping("/details/{publicId}")
+    @HasPermission("sys_syspublicparam_view")
     public R getById(@PathVariable("publicId") Long publicId) {
         return R.ok(sysPublicParamService.getById(publicId));
     }
 
     @GetMapping("/details")
+    @HasPermission("sys_syspublicparam_view")
     public R getDetail(@ParameterObject SysPublicParam param) {
         return R.ok(sysPublicParamService.getOne(Wrappers.query(param), false));
     }
@@ -102,8 +107,11 @@ public class SysPublicParamController {
     @SysLog("新增公共参数")
     @PostMapping
     @HasPermission("sys_syspublicparam_add")
-    public R save(@RequestBody SysPublicParam sysPublicParam) {
-        return R.ok(sysPublicParamService.save(sysPublicParam));
+    public ResponseEntity<R> save(@RequestBody SysPublicParam sysPublicParam) {
+        if (StrUtil.isBlank(sysPublicParam.getKey())) {
+            return ResponseEntity.badRequest().body(R.failed("参数键不能为空"));
+        }
+        return ResponseEntity.ok(R.ok(sysPublicParamService.save(sysPublicParam)));
     }
 
     /**
@@ -116,8 +124,16 @@ public class SysPublicParamController {
     @SysLog("修改公共参数")
     @PutMapping
     @HasPermission("sys_syspublicparam_edit")
-    public R updateById(@RequestBody SysPublicParam sysPublicParam) {
-        return sysPublicParamService.updateParam(sysPublicParam);
+    public ResponseEntity<R> updateById(@RequestBody SysPublicParam sysPublicParam) {
+        if (StrUtil.isBlank(sysPublicParam.getKey())) {
+            return ResponseEntity.badRequest().body(R.failed("参数键不能为空"));
+        }
+        return ResponseEntity.ok(sysPublicParamService.updateParam(sysPublicParam));
+    }
+
+    @ExceptionHandler(DuplicateKeyException.class)
+    public ResponseEntity<R<Void>> duplicateKey(DuplicateKeyException collision) {
+        return ResponseEntity.status(409).body(R.failed("参数键已存在"));
     }
 
     /**

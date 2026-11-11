@@ -91,6 +91,13 @@ class DataScopeInterceptorMatrixTest {
                 .contains("create_by = 42");
     }
 
+    @Test
+    void annotatedOverloadIsUsedWhenAnUnannotatedOverloadHasTheSameStatementName() throws Throwable {
+        assertThat(rewrite(OverloadedMapper.class, "selectByIds",
+                DataScopeType.SELF, "SELECT id FROM sys_user", SqlCommandType.SELECT))
+                .contains("id = 42");
+    }
+
     private String rewrite(String methodName, DataScopeType scope) throws Throwable {
         return rewrite(methodName, scope,
                 "SELECT u.id FROM sys_user u LEFT JOIN sys_dept d ON d.id = u.dept_id", SqlCommandType.SELECT);
@@ -156,6 +163,13 @@ class DataScopeInterceptorMatrixTest {
     @DataScope(userAlias = "", userColumn = "create_by", creatorScope = true)
     interface TypeScopedMapper {
         Object selectList();
+    }
+
+    interface OverloadedMapper {
+        Object selectByIds(List<Long> ids, Object resultHandler);
+
+        @DataScope(userAlias = "")
+        Object selectByIds(List<Long> ids);
     }
 
     public record Principal(Long id, Long deptId, String dataScope) {

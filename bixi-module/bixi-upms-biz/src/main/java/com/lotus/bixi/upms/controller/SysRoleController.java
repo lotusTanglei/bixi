@@ -88,7 +88,6 @@ public class SysRoleController {
     @SysLog("修改角色")
     @PutMapping
     @HasPermission("sys_role_edit")
-    @CacheEvict(value = CacheConstants.ROLE_DETAILS, allEntries = true)
     public R update(@Valid @RequestBody SysRole sysRole) {
         return R.ok(sysRoleService.updateById(sysRole));
     }
@@ -102,7 +101,6 @@ public class SysRoleController {
     @SysLog("删除角色")
     @DeleteMapping
     @HasPermission("sys_role_del")
-    @CacheEvict(value = CacheConstants.ROLE_DETAILS, allEntries = true)
     public R removeById(@RequestBody Long[] ids) {
         return R.ok(sysRoleService.removeRoleByIds(ids));
     }

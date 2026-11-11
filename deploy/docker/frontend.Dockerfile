@@ -1,12 +1,9 @@
 ARG REGISTRY_MIRROR
-FROM ${REGISTRY_MIRROR}library/node:20.18.1-alpine3.20 AS build
+FROM ${REGISTRY_MIRROR}library/node:22.23.1-alpine AS build
 
 WORKDIR /workspace
 
 ARG PUBLIC_MICRO_MODE=true
-ARG PUBLIC_WEB_CLIENT
-ARG PUBLIC_MOBILE_CLIENT
-ARG PUBLIC_CIPHER_CONFIG
 
 COPY bixi-ui/package.json bixi-ui/package-lock.json ./
 RUN npm ci --no-audit --no-fund

@@ -15,7 +15,7 @@ cache:
     - bixi-ui/node_modules/
 
 build_frontend:
-  image: node:18
+  image: node:22.23.1
   stage: build
   before_script:
     - apt-get update && apt-get install -y make

@@ -37,14 +37,6 @@ service.interceptors.request.use(
 			config.headers![CommonHeaderEnum.X_TENANT_ID] = tenant;
 		}
 
-		// 请求报文加密
-		if (config.headers![CommonHeaderEnum.ENC_FLAG]) {
-			const enc = other.encryption(JSON.stringify(config.data), import.meta.env.VITE_PWD_ENC_KEY);
-			config.data = {
-				encryption: enc,
-			};
-		}
-
 		// 自动适配单体和微服务架构不同的URL
 		config.url = other.adaptationUrl(config.url);
 
@@ -69,13 +61,6 @@ const handleResponse = (response: AxiosResponse<any>) => {
 
 	if (response.data.code === 1) {
 		throw response.data;
-	}
-
-	// 针对密文返回解密
-	if (response.data.encryption) {
-		const originData = JSON.parse(other.decryption(response.data.encryption, import.meta.env.VITE_PWD_ENC_KEY));
-		response.data = originData;
-		return response.data;
 	}
 
 	return response.data;
@@ -103,7 +88,6 @@ service.interceptors.response.use(handleResponse, (error) => {
 export enum CommonHeaderEnum {
 	'TENANT_ID' = 'TENANT-ID',
 	'X_TENANT_ID' = 'X-Tenant-Id',
-	'ENC_FLAG' = 'Enc-Flag',
 	'AUTHORIZATION' = 'Authorization',
 }
 

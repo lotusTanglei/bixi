@@ -3,6 +3,7 @@ package com.lotus.bixi.auth.security;
 import cn.hutool.extra.spring.SpringUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lotus.bixi.auth.support.filter.*;
+import com.lotus.bixi.auth.support.BrowserClientAuthenticationConverter;
 import com.lotus.bixi.auth.endpoint.BixiTokenEndpoint;
 import com.lotus.bixi.upms.api.service.ClientDetailsQueryService;
 import com.lotus.bixi.upms.api.service.TokenManagementService;
@@ -19,6 +20,9 @@ import jakarta.servlet.Filter;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.context.annotation.*;
 import org.springframework.context.support.StaticMessageSource;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -50,6 +54,16 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 class AuthenticationSecurityChainTest {
+    private static final String BROWSER_SECRET = "0123456789abcdef0123456789abcdef0123456789abcdef";
+
+    @Test
+    void browserClientSecretRequiresGeneratedHexValue() {
+        for (String invalid : List.of("", "change-me", "a".repeat(47), "g".repeat(48))) {
+            assertThatThrownBy(() -> new BrowserClientAuthenticationConverter(invalid))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+    }
+
     @ParameterizedTest(name = "form login, resource server = {0}")
     @ValueSource(booleans = {false, true})
     void scannedConfigurationHandlesFormLogin(boolean single) throws Exception {
@@ -84,6 +98,88 @@ class AuthenticationSecurityChainTest {
             if (single) {
                 mvc.perform(get("/business").header("Authorization", "Bearer resource-token"))
                         .andExpect(status().isOk()).andExpect(content().string("alice"));
+            }
+        }
+    }
+
+    @Test
+    @ExtendWith(OutputCaptureExtension.class)
+    void browserPasswordLoginAndRefreshUseServerClientSecretInSharedOAuthSecurityChain(CapturedOutput output) throws Exception {
+        try (var context = context(false)) {
+            context.getBean(AuthSecurityConfigProperties.class).setEncodeKey("legacy-aes-key");
+            MockMvc mvc = mvc(context);
+            RedisTemplate<String, Object> redis = context.getBean(RedisTemplate.class);
+            when(redis.opsForValue().getAndDelete(CacheConstants.DEFAULT_CODE_KEY + "browser-captcha"))
+                    .thenReturn("123456");
+
+            mvc.perform(browserTokenRequest("password")
+                            .param("username", "alice").param("password", "correct-password"))
+                    .andExpect(status().isUnauthorized()).andExpect(jsonPath("$.access_token").doesNotExist());
+            mvc.perform(browserTokenRequest("password")
+                            .param("username", "alice").param("password", "correct-password")
+                            .param("code", "wrong").param("randomStr", "browser-captcha"))
+                    .andExpect(status().isUnauthorized()).andExpect(jsonPath("$.access_token").doesNotExist());
+
+            var login = mvc.perform(browserTokenRequest("password")
+                            .param("username", "alice").param("password", "correct-password")
+                            .param("code", "123456").param("randomStr", "browser-captcha"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.access_token").isNotEmpty())
+                    .andExpect(jsonPath("$.refresh_token").isNotEmpty())
+                    .andReturn();
+            String refreshToken = context.getBean(ObjectMapper.class).readTree(login.getResponse().getContentAsString())
+                    .get("refresh_token").asText();
+            mvc.perform(post("/oauth2/token").servletPath("/oauth2/token")
+                            .header("Authorization", basic()).param("grant_type", "refresh_token")
+                            .param("refresh_token", refreshToken))
+                    .andExpect(status().isUnauthorized()).andExpect(jsonPath("$.access_token").doesNotExist());
+            mvc.perform(browserTokenRequest("refresh_token").param("refresh_token", refreshToken))
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.access_token").isNotEmpty());
+            assertThat(output).doesNotContain("Password decryption failed");
+        }
+    }
+
+    @Test
+    void browserSmsLoginRequiresValidCodeInSharedOAuthSecurityChain() throws Exception {
+        try (var context = context(false)) {
+            MockMvc mvc = mvc(context);
+            RedisTemplate<String, Object> redis = context.getBean(RedisTemplate.class);
+            when(redis.opsForValue().getAndDelete(CacheConstants.tenantKey(CacheConstants.SMS_CODE_KEY, 1L)
+                    + "13800138000")).thenReturn("123456");
+
+            mvc.perform(browserTokenRequest("mobile").param("mobile", "13800138000").param("code", "wrong"))
+                    .andExpect(status().isUnauthorized()).andExpect(jsonPath("$.access_token").doesNotExist());
+            mvc.perform(browserTokenRequest("mobile").param("mobile", "13800138000").param("code", "123456"))
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.access_token").isNotEmpty());
+        }
+    }
+
+    @Test
+    void browserClientRejectsPrivilegedOrMalformedRequests() throws Exception {
+        try (var context = context(false)) {
+            MockMvc mvc = mvc(context);
+            RedisTemplate<String, Object> redis = context.getBean(RedisTemplate.class);
+            when(redis.opsForValue().getAndDelete(CacheConstants.DEFAULT_CODE_KEY + "browser-captcha"))
+                    .thenReturn("123456");
+
+            List<MockHttpServletRequestBuilder> rejected = List.of(
+                    browserTokenRequest("client_credentials"),
+                    browserTokenRequest("password").param("grant_type", "mobile"),
+                    post("/oauth2/token").servletPath("/oauth2/token").param("client_id", "bixi-browser"),
+                    browserTokenRequest("password").param("client_id", "bixi-browser"),
+                    browserTokenRequest("password").param("client_secret", BROWSER_SECRET),
+                    browserTokenRequest("password").header("Authorization", wrongBrowserBasic()),
+                    browserTokenRequest("password").header("Authorization", browserBasic()),
+                    post("/oauth2/token").servletPath("/oauth2/token").header("Authorization", wrongBrowserBasic())
+                            .param("grant_type", "password"),
+                    post("/oauth2/token").servletPath("/oauth2/token").header("Authorization", browserBasic())
+                            .param("grant_type", "client_credentials"),
+                    post("/oauth2/token").servletPath("/oauth2/token").param("client_id", "foreign-client")
+                            .param("grant_type", "password"));
+            for (MockHttpServletRequestBuilder request : rejected) {
+                mvc.perform(request.param("username", "alice").param("password", "correct-password")
+                                .param("code", "123456").param("randomStr", "browser-captcha"))
+                        .andExpect(status().isUnauthorized()).andExpect(jsonPath("$.access_token").doesNotExist());
             }
         }
     }
@@ -306,6 +402,21 @@ class AuthenticationSecurityChainTest {
         return "Basic " + Base64.getEncoder().encodeToString("ignored-client:secret".getBytes(java.nio.charset.StandardCharsets.UTF_8));
     }
 
+    private String wrongBrowserBasic() {
+        return "Basic " + Base64.getEncoder().encodeToString(
+                "bixi-browser:wrong-secret".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+    }
+
+    private String browserBasic() {
+        return "Basic " + Base64.getEncoder().encodeToString(
+                ("bixi-browser:" + BROWSER_SECRET).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+    }
+
+    private MockHttpServletRequestBuilder browserTokenRequest(String grant) {
+        return post("/oauth2/token").servletPath("/oauth2/token")
+                .param("client_id", "bixi-browser").param("grant_type", grant);
+    }
+
     @Configuration(proxyBeanMethods = false)
     @EnableWebMvc
     @EnableWebSecurity
@@ -330,6 +441,7 @@ class AuthenticationSecurityChainTest {
         @Bean AuthSecurityConfigProperties authProperties() {
             var properties = new AuthSecurityConfigProperties();
             properties.setIgnoreClients(List.of("ignored-client"));
+            properties.setBrowserClientSecret(BROWSER_SECRET);
             return properties;
         }
         @Bean PasswordDecoderFilter passwordDecoderFilter(AuthSecurityConfigProperties properties) { return new PasswordDecoderFilter(properties); }
@@ -342,7 +454,7 @@ class AuthenticationSecurityChainTest {
         @Bean OAuth2AuthorizationService authorizationService() { return new InMemoryOAuth2AuthorizationService(); }
         @Bean ClientLookupProbe clientLookupProbe() { return new ClientLookupProbe(); }
         @Bean RegisteredClientRepository clients(ClientLookupProbe probe) {
-            var delegate = new InMemoryRegisteredClientRepository(RegisteredClient.withId("client-id")
+            var confidentialClient = RegisteredClient.withId("client-id")
                     .clientId("ignored-client").clientSecret("{noop}secret")
                     .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                     .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
@@ -352,7 +464,16 @@ class AuthenticationSecurityChainTest {
                     .authorizationGrantType(new AuthorizationGrantType("mobile"))
                     .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
                     .tokenSettings(TokenSettings.builder().accessTokenFormat(OAuth2TokenFormat.REFERENCE).build())
-                    .scope("server").build());
+                    .scope("server").build();
+            var browserClient = RegisteredClient.withId("browser-client-id")
+                    .clientId("bixi-browser").clientSecret("{noop}" + BROWSER_SECRET)
+                    .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+                    .authorizationGrantType(AuthorizationGrantType.PASSWORD)
+                    .authorizationGrantType(new AuthorizationGrantType("mobile"))
+                    .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
+                    .tokenSettings(TokenSettings.builder().accessTokenFormat(OAuth2TokenFormat.REFERENCE).build())
+                    .scope("server").build();
+            var delegate = new InMemoryRegisteredClientRepository(confidentialClient, browserClient);
             return new RegisteredClientRepository() {
                 @Override
                 public void save(RegisteredClient registeredClient) { delegate.save(registeredClient); }

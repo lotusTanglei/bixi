@@ -6,7 +6,11 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lotus.bixi.upms.api.entity.SysRoleMenu;
+import com.lotus.bixi.upms.api.entity.SysRole;
+import com.lotus.bixi.upms.api.entity.SysMenu;
 import com.lotus.bixi.upms.mapper.SysRoleMenuMapper;
+import com.lotus.bixi.upms.mapper.SysRoleMapper;
+import com.lotus.bixi.upms.mapper.SysMenuMapper;
 import com.lotus.bixi.upms.service.SysRoleMenuService;
 import com.lotus.bixi.common.core.constant.CacheConstants;
 import lombok.AllArgsConstructor;
@@ -18,6 +22,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -33,6 +38,8 @@ import java.util.stream.Collectors;
 public class SysRoleMenuServiceImpl extends ServiceImpl<SysRoleMenuMapper, SysRoleMenu> implements SysRoleMenuService {
 
     private final CacheManager cacheManager;
+    private final SysRoleMapper roleMapper;
+    private final SysMenuMapper menuMapper;
 
     /**
      * @param roleId  角色
@@ -42,13 +49,24 @@ public class SysRoleMenuServiceImpl extends ServiceImpl<SysRoleMenuMapper, SysRo
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Boolean saveRoleMenus(Long roleId, String menuIds) {
+        if (roleId == null || roleMapper.selectCount(Wrappers.<SysRole>lambdaQuery()
+                .eq(SysRole::getId, roleId)) != 1) {
+            throw new IllegalArgumentException("角色不存在或不属于当前租户");
+        }
+        List<Long> requestedMenus = StrUtil.isBlank(menuIds) ? List.of() : Arrays.stream(menuIds.split(StrUtil.COMMA))
+                .map(Long::valueOf).toList();
+        Set<Long> distinctMenus = Set.copyOf(requestedMenus);
+        if (!distinctMenus.isEmpty() && menuMapper.selectCount(Wrappers.<SysMenu>lambdaQuery()
+                .in(SysMenu::getId, distinctMenus)) != distinctMenus.size()) {
+            throw new IllegalArgumentException("菜单不存在或不属于当前租户");
+        }
         this.remove(Wrappers.<SysRoleMenu>query().lambda().eq(SysRoleMenu::getRoleId, roleId));
 
-        if (StrUtil.isNotBlank(menuIds)) {
-            List<SysRoleMenu> roleMenuList = Arrays.stream(menuIds.split(StrUtil.COMMA)).map(menuId -> {
+        if (!requestedMenus.isEmpty()) {
+            List<SysRoleMenu> roleMenuList = requestedMenus.stream().map(menuId -> {
                 SysRoleMenu roleMenu = new SysRoleMenu();
                 roleMenu.setRoleId(roleId);
-                roleMenu.setMenuId(Long.valueOf(menuId));
+                roleMenu.setMenuId(menuId);
                 return roleMenu;
             }).collect(Collectors.toList());
             this.saveBatch(roleMenuList);

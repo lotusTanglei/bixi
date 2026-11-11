@@ -2,9 +2,7 @@
 
 package com.lotus.bixi.common.security.service;
 
-import com.lotus.bixi.common.core.constant.CacheConstants;
 import com.lotus.bixi.common.core.constant.SecurityConstants;
-import com.lotus.bixi.common.core.context.TenantContextHolder;
 import com.lotus.bixi.common.core.util.R;
 import com.lotus.bixi.upms.api.dto.UserDTO;
 import com.lotus.bixi.upms.api.dto.UserInfo;
@@ -12,8 +10,6 @@ import com.lotus.bixi.upms.api.service.UserQueryService;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
 import org.springframework.security.core.userdetails.UserDetails;
 
 /**
@@ -27,7 +23,7 @@ public class BixiAppUserDetailsServiceImpl implements BixiUserDetailsService {
 
     private final UserQueryService userQueryService;
 
-    private final CacheManager cacheManager;
+    private final BixiUserDetailsServiceImpl usernameUserDetailsService;
 
     /**
      * 手机号登录
@@ -38,21 +34,10 @@ public class BixiAppUserDetailsServiceImpl implements BixiUserDetailsService {
     @Override
     @SneakyThrows
     public UserDetails loadUserByUsername(String phone) {
-        String cacheKey = CacheConstants.tenantKey(CacheConstants.USER_DETAILS, TenantContextHolder.get()) + phone;
-        Cache cache = cacheManager.getCache(CacheConstants.USER_DETAILS);
-        if (cache != null && cache.get(cacheKey) != null) {
-            return (BixiUser) cache.get(cacheKey).get();
-        }
-
         UserDTO userDTO = new UserDTO();
         userDTO.setPhone(phone);
         R<UserInfo> result = userQueryService.info(userDTO);
-
-        UserDetails userDetails = getUserDetails(result);
-        if (cache != null) {
-            cache.put(cacheKey, userDetails);
-        }
-        return userDetails;
+        return getUserDetails(result);
     }
 
     /**
@@ -63,14 +48,7 @@ public class BixiAppUserDetailsServiceImpl implements BixiUserDetailsService {
      */
     @Override
     public UserDetails loadUserByUser(BixiUser bixiUser) {
-        Long previous = TenantContextHolder.get();
-        try {
-            TenantContextHolder.set(bixiUser.getTenantId());
-            return this.loadUserByUsername(bixiUser.getPhone());
-        }
-        finally {
-            if (previous == null) TenantContextHolder.clear(); else TenantContextHolder.set(previous);
-        }
+        return usernameUserDetailsService.loadUserByUser(bixiUser);
     }
 
     /**

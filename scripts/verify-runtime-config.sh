@@ -5,11 +5,15 @@ ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
 
 required_files="
 compose.yaml
+compose.https.yaml
 compose.workflow-cluster.yaml
 compose.workflow-fault-test.yaml
 .env.example
 deploy/docker/backend.Dockerfile
 deploy/docker/frontend.Dockerfile
+deploy/nginx/https.conf.template
+deploy/nginx/cloud.conf
+deploy/nginx/single.conf
 deploy/rabbitmq/configure-access.sh
 deploy/nacos/publish.sh
 deploy/nacos/application-dev.yml
@@ -25,6 +29,9 @@ deploy/nacos/bixi-common-mq-dev.yml
 deploy/mysql/05_runtime_secrets.sh
 scripts/acceptance.mjs
 scripts/bixi-runtime-config.test.sh
+scripts/bixi-release.test.sh
+scripts/nacos-publish.test.sh
+scripts/bixi-https-lifecycle.test.sh
 scripts/generator-cloud-runtime-config.test.sh
 scripts/ai-cloud-runtime-config.test.sh
 scripts/verify-workflow-cluster-config.sh
@@ -57,6 +64,94 @@ for file in ${required_files}; do
         exit 1
     fi
 done
+
+assert_nginx_location_limit() {
+    if ! awk -v location="$2" -v limit="$3" '
+        index($0, "location " location " {") { found = 1; inside = 1; next }
+        inside && index($0, "client_max_body_size " limit ";") { bounded = 1 }
+        inside && /^[[:space:]]*}/ { exit }
+        END { exit !(found && bounded) }
+    ' "${ROOT}/$1"; then
+        echo "Missing ${3} body limit for ${2}: ${1}" >&2
+        exit 1
+    fi
+}
+
+for nginx_config in \
+    deploy/nginx/cloud.conf \
+    deploy/nginx/single.conf \
+    deploy/nginx/https.conf.template \
+    deploy/native/nginx/cloud.conf \
+    deploy/native/nginx/single.conf; do
+    if [ "$(grep -Ec '^[[:space:]]*client_max_body_size 11m;' "${ROOT}/${nginx_config}")" -ne 1 ] || \
+        [ "$(grep -Ec '^[[:space:]]*client_max_body_size 100m;' "${ROOT}/${nginx_config}")" -ne 2 ]; then
+        echo "Nginx must bound ordinary requests to 11m and reserve 100m for file upload and legacy imports: ${nginx_config}" >&2
+        exit 1
+    fi
+    assert_nginx_location_limit "${nginx_config}" '/api/auth/' 1m
+    assert_nginx_location_limit "${nginx_config}" '= /api/admin/file/upload' 100m
+    assert_nginx_location_limit "${nginx_config}" '~ ^/api/admin/(user|role|post|dept)/import$' 100m
+done
+
+browser_client="$(grep -F "'bixi-browser'" "${ROOT}/bixi-project-documents/sql/02_data.sql" || true)"
+case "${browser_client}" in
+    *"'RUNTIME_SECRET_REQUIRED', 'server', 'password,mobile,refresh_token'"*) ;;
+    *) echo 'Browser OAuth client must have only password, mobile and refresh grants' >&2; exit 1 ;;
+esac
+case "${browser_client}" in
+    *'"enc_flag":"0","captcha_flag":"1"'*) ;;
+    *) echo 'Browser OAuth client must keep plaintext password and existing captcha policy' >&2; exit 1 ;;
+esac
+if printf '%s' "${browser_client}" | grep -F 'client_credentials' >/dev/null; then
+    echo 'Browser OAuth client must not allow service grants' >&2
+    exit 1
+fi
+grep -F 'OAUTH_BROWSER_CLIENT_SECRET=GENERATE_ON_FIRST_RUN' "${ROOT}/.env.example" >/dev/null \
+    || { echo 'Missing generated browser OAuth secret template' >&2; exit 1; }
+grep -F 'browser_hex="$(hex "${OAUTH_BROWSER_CLIENT_SECRET}")"' "${ROOT}/deploy/mysql/05_runtime_secrets.sh" >/dev/null \
+    || { echo 'Database bootstrap must encode the browser OAuth secret' >&2; exit 1; }
+grep -F "SET client_secret = CONVERT(UNHEX('\${browser_hex}') USING utf8mb4)" "${ROOT}/deploy/mysql/05_runtime_secrets.sh" >/dev/null \
+    || { echo 'Database bootstrap must set the browser OAuth secret' >&2; exit 1; }
+grep -F "WHERE client_id = 'bixi-browser';" "${ROOT}/deploy/mysql/05_runtime_secrets.sh" >/dev/null \
+    || { echo 'Database bootstrap must target the browser OAuth client' >&2; exit 1; }
+grep -F 'browser-client-secret: ${OAUTH_BROWSER_CLIENT_SECRET}' "${ROOT}/deploy/nacos/bixi-auth-dev.yml" >/dev/null \
+    || { echo 'Cloud Auth must receive the browser OAuth secret at runtime' >&2; exit 1; }
+grep -F 'browser-client-secret: ${OAUTH_BROWSER_CLIENT_SECRET}' "${ROOT}/bixi-single/src/main/resources/application-dev.yml" >/dev/null \
+    || { echo 'Single Auth must receive the browser OAuth secret at runtime' >&2; exit 1; }
+grep -F 'database: ${REDIS_DATABASE:0}' "${ROOT}/bixi-single/src/main/resources/application-dev.yml" >/dev/null \
+    || { echo 'Single Redis must use the configured database for browser captcha challenges' >&2; exit 1; }
+for config in deploy/nacos/bixi-auth-dev.yml bixi-single/src/main/resources/application-dev.yml; do
+    if grep -F -- '- bixi-browser' "${ROOT}/${config}" >/dev/null; then
+        echo "Browser OAuth client must pass image captcha validation: ${config}" >&2
+        exit 1
+    fi
+done
+for service in mysql auth single; do
+    service_block="$(awk -v service="${service}" '
+        $0 == "  " service ":" { inside = 1 }
+        inside && /^  [a-zA-Z0-9_-]+:$/ && $0 != "  " service ":" { exit }
+        inside { print }
+    ' "${ROOT}/compose.yaml")"
+    printf '%s\n' "${service_block}" | grep -F 'OAUTH_BROWSER_CLIENT_SECRET: ${OAUTH_BROWSER_CLIENT_SECRET}' >/dev/null \
+        || { echo "Compose ${service} must receive the browser OAuth secret" >&2; exit 1; }
+done
+for service in frontend-cloud frontend-single; do
+    service_block="$(awk -v service="${service}" '
+        $0 == "  " service ":" { inside = 1 }
+        inside && /^  [a-zA-Z0-9_-]+:$/ && $0 != "  " service ":" { exit }
+        inside { print }
+    ' "${ROOT}/compose.yaml")"
+    if printf '%s\n' "${service_block}" | grep -E 'OAUTH_|BIXI_ENCODE_KEY|SECRET|CIPHER' >/dev/null; then
+        echo "Compose ${service} must not receive server secrets" >&2
+        exit 1
+    fi
+done
+if grep -E 'PUBLIC_(WEB_CLIENT|MOBILE_CLIENT|CIPHER_CONFIG)|VITE_OAUTH2_|VITE_PWD_ENC_KEY' \
+    "${ROOT}/compose.yaml" "${ROOT}/deploy/docker/frontend.Dockerfile" \
+    "${ROOT}/bixi-ui/docker-build.sh" "${ROOT}/README.md" >/dev/null; then
+    echo 'Frontend delivery must not contain public secret build inputs' >&2
+    exit 1
+fi
 
 for data_id in application-dev.yml bixi-gateway-dev.yml bixi-auth-dev.yml \
     bixi-generator-dev.yml bixi-quartz-dev.yml bixi-ai-biz-dev.yml bixi-upms-biz-dev.yml bixi-monitor-dev.yml \
@@ -161,7 +256,7 @@ for contract in biz_demo_task demo_task_view demo_task_add demo_task_edit demo_t
         || { echo "Missing sample business contract: ${contract}" >&2; exit 1; }
 done
 
-for secret_key in TENANT_DEFAULT_PASSWORD DRUID_PASSWORD MINIO_ACCESS_KEY MINIO_SECRET_KEY; do
+for secret_key in DRUID_PASSWORD MINIO_ACCESS_KEY MINIO_SECRET_KEY; do
     grep -F "${secret_key}=GENERATE_ON_FIRST_RUN" "${ROOT}/.env.example" >/dev/null \
         || { echo "Missing generated secret template: ${secret_key}" >&2; exit 1; }
 done
@@ -193,7 +288,20 @@ for permission_contract in \
         || { echo "Missing directional Rabbit permission: ${permission_contract}" >&2; exit 1; }
 done
 
-grep -F "SET value = '\${TENANT_DEFAULT_PASSWORD}'" "${ROOT}/deploy/mysql/05_runtime_secrets.sh" >/dev/null
+if grep -F 'TENANT_DEFAULT_PASSWORD' \
+    "${ROOT}/bixi-project-documents/sql/02_data.sql" \
+    "${ROOT}/deploy/mysql/05_runtime_secrets.sh" \
+    "${ROOT}/deploy/native/init-db.sh" \
+    "${ROOT}/compose.yaml" \
+    "${ROOT}/.env.example" \
+    "${ROOT}/scripts/bixi.sh" >/dev/null; then
+    echo 'Unused tenant default password must not be seeded or injected into public parameters' >&2
+    exit 1
+fi
+grep -F "'sys_syspublicparam_view'" "${ROOT}/bixi-project-documents/sql/02_data.sql" >/dev/null \
+    || { echo 'Legacy public parameter reads need a seeded view permission' >&2; exit 1; }
+grep -F 'VALUES (1, 2214,' "${ROOT}/bixi-project-documents/sql/02_data.sql" >/dev/null \
+    || { echo 'Seed administrator must receive the legacy public parameter view permission' >&2; exit 1; }
 
 if grep -F 'gen_datasource_config' "${ROOT}/deploy/mysql/05_runtime_secrets.sh" \
     "${ROOT}/bixi-project-documents/sql/02_data.sql" >/dev/null; then
@@ -207,8 +315,7 @@ if grep -E 'RABBITMQ_PASSWORD:guest|MYSQL_PASSWORD:(bixi|123456)|MINIO_SECRET_KE
     exit 1
 fi
 
-if grep -F "'TENANT_DEFAULT_PASSWORD', '123456'" "${ROOT}/bixi-project-documents/sql/02_data.sql" >/dev/null \
-    || grep -F "'root', '123456', 'mysql'" "${ROOT}/bixi-project-documents/sql/02_data.sql" >/dev/null; then
+if grep -F "'root', '123456', 'mysql'" "${ROOT}/bixi-project-documents/sql/02_data.sql" >/dev/null; then
     echo 'Database seed contains a known default password' >&2
     exit 1
 fi
@@ -319,6 +426,9 @@ fi
 
 grep -F 'BIXI_ENV_FILE' "${ROOT}/scripts/bixi.sh" "${ROOT}/scripts/acceptance.mjs" >/dev/null
 "${ROOT}/scripts/bixi-runtime-config.test.sh"
+sh "${ROOT}/scripts/bixi-release.test.sh"
+sh "${ROOT}/scripts/nacos-publish.test.sh"
+"${ROOT}/scripts/bixi-https-lifecycle.test.sh"
 "${ROOT}/scripts/generator-cloud-runtime-config.test.sh"
 "${ROOT}/scripts/ai-cloud-runtime-config.test.sh"
 "${ROOT}/scripts/test-bixi-workflow-lifecycle.test.sh"
@@ -330,6 +440,8 @@ node --test "${ROOT}/scripts/test-phase2-delivery-config.test.mjs" \
 node --test "${ROOT}/scripts/test-quartz-jdbc-failover.test.mjs"
 node --test "${ROOT}/scripts/test-sba-multi-instance-acceptance.test.mjs"
 node --test "${ROOT}/scripts/ci-artifact-contract.test.mjs"
+node --test "${ROOT}/scripts/public-param-schema.test.mjs"
+node --test "${ROOT}/scripts/acceptance-sms.test.mjs"
 bash -n "${ROOT}/scripts/test-quartz-jdbc-failover.sh"
 "${ROOT}/scripts/quartz-cloud-runtime-config.test.sh"
 grep -F 'QuartzJdbcFailoverIntegrationTest' "${ROOT}/scripts/test-quartz-jdbc-failover.sh" >/dev/null

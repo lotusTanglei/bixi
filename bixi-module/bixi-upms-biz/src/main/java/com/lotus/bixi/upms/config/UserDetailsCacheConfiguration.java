@@ -14,7 +14,7 @@ public class UserDetailsCacheConfiguration {
     ApplicationRunner invalidateUserDetailsOnStartup(CacheManager cacheManager) {
         return args -> {
             // Redis survives restarts, but cached permissions reflect the previous workflow switch.
-            // Invalidate both username and phone entries without touching authorizations or sessions.
+            // Refresh username authorities without touching authorizations or sessions.
             Cache cache = cacheManager.getCache(CacheConstants.USER_DETAILS);
             if (cache != null) cache.clear();
         };

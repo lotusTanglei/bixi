@@ -82,7 +82,7 @@ public class DataScopeInterceptor implements Interceptor {
 			for (Method method : mapper.getMethods()) {
 				if (method.getName().equals(methodName)) {
 					DataScope methodScope = method.getAnnotation(DataScope.class);
-					return methodScope != null ? methodScope : mapper.getAnnotation(DataScope.class);
+					if (methodScope != null) return methodScope;
 				}
 			}
 			return mapper.getAnnotation(DataScope.class);

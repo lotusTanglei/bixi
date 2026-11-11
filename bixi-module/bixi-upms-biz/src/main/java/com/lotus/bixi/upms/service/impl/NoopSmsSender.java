@@ -6,8 +6,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.stereotype.Component;
 
 /**
- * No-op SMS sender. Logs the code for development/testing purposes.
- * Replace with a real implementation for production use.
+ * Fallback SMS sender when no provider is configured.
  *
  * @author 唐磊
  */
@@ -17,8 +16,13 @@ import org.springframework.stereotype.Component;
 public class NoopSmsSender implements SmsSender {
 
     @Override
+    public boolean isConfigured() {
+        return false;
+    }
+
+    @Override
     public boolean send(String mobile, String code) {
-        log.warn("SMS sender not configured — code {} for {} logged but NOT delivered", code, mobile);
+        log.warn("SMS sender not configured; message not delivered");
         return false;
     }
 

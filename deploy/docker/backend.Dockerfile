@@ -7,11 +7,13 @@ ENV MAVEN_OPTS="-Xmx1024m"
 
 ARG MODULE
 ARG MAVEN_PROFILE=cloud
+ARG CONFIG_PROFILE=dev
 
 COPY . .
 
 RUN --mount=type=cache,target=/root/.m2 \
-    mvn -B -ntp -P"${MAVEN_PROFILE}" -pl "${MODULE}" -am package -Dmaven.test.skip=true \
+    mvn -B -ntp -P"${MAVEN_PROFILE}" -Dprofiles.active="${CONFIG_PROFILE}" \
+        -pl "${MODULE}" -am package -Dmaven.test.skip=true \
     && JAR_FILE="$(find "${MODULE}/target" -maxdepth 1 -type f -name '*-exec.jar' -print -quit)" \
     && if [ -z "${JAR_FILE}" ]; then JAR_FILE="$(find "${MODULE}/target" -maxdepth 1 -type f -name '*.jar' \
         ! -name 'original-*' ! -name '*-sources.jar' | head -n 1)"; fi \

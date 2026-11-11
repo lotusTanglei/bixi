@@ -16,7 +16,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.boot.Banner;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.context.annotation.Bean;
@@ -85,11 +84,12 @@ class WorkflowUserCacheRestartTest {
             });
             return query;
         }
-        @Bean BixiUserDetailsServiceImpl usernameUsers(UserQueryService query, CacheManager caches) {
-            return new BixiUserDetailsServiceImpl(query, caches);
+        @Bean BixiUserDetailsServiceImpl usernameUsers(UserQueryService query) {
+            return new BixiUserDetailsServiceImpl(query);
         }
-        @Bean BixiAppUserDetailsServiceImpl phoneUsers(UserQueryService query, CacheManager caches) {
-            return new BixiAppUserDetailsServiceImpl(query, caches);
+        @Bean BixiAppUserDetailsServiceImpl phoneUsers(UserQueryService query,
+                                                        BixiUserDetailsServiceImpl usernameUsers) {
+            return new BixiAppUserDetailsServiceImpl(query, usernameUsers);
         }
     }
 }

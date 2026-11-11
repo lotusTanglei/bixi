@@ -26,7 +26,7 @@
 					<right-toolbar v-model:showSearch="showSearch" class="ml10" style="margin-left: auto" @queryTable="getDataList" />
 			</el-row>
 
-			<el-alert v-if="loadError" :closable="false" show-icon :title="loadError" type="error" />
+			<el-alert v-if="state.loadError" :closable="false" show-icon :title="state.loadError" type="error" />
 			<el-table v-loading="state.loading" :data="state.dataList" border empty-text="暂无数据" @selection-change="handleSelectionChange">
 				<el-table-column align="center" type="selection" width="44" />
 				<el-table-column label="字典类型" min-width="120" prop="type" show-overflow-tooltip />
@@ -34,8 +34,8 @@
 				<el-table-column label="字典描述" min-width="120" prop="description" show-overflow-tooltip />
 				<el-table-column label="排序号" min-width="120" prop="sn" show-overflow-tooltip />
 				<el-table-column label="系统标志" min-width="120" prop="systemFlag" show-overflow-tooltip />
-				<el-table-column label="状态（0正常 1停用）" min-width="120" prop="status" show-overflow-tooltip />
-				<el-table-column label="数据状态（用来标识数据状态，可用于割接，特殊数据处理）" min-width="120" prop="dataStatus" show-overflow-tooltip />
+				<el-table-column label="状态" min-width="120" prop="status" show-overflow-tooltip />
+				<el-table-column label="数据状态" min-width="120" prop="dataStatus" show-overflow-tooltip />
 				<el-table-column label="备注" min-width="120" prop="remark" show-overflow-tooltip />
 					<el-table-column align="center" fixed="right" label="操作" width="170">
 						<template #default="scope">
@@ -73,17 +73,13 @@ const formDialogRef = ref();
 const queryRef = ref();
 const showSearch = ref(true);
 const selectedIds = ref<string[]>([]);
-const loadError = ref('');
 const fileInputRef = ref<HTMLInputElement>();
 const importResult = ref<SysDictImportResult>();
 const importResultVisible = ref(false);
 const state = reactive<BasicTableProps>({ queryForm: { type: '', name: '', systemFlag: '' }, pageList: fetchList });
 const { getDataList, currentChangeHandle, sizeChangeHandle } = useTable(state);
 
-const loadPage = async () => {
-	loadError.value = '';
-	try { await getDataList(); } catch (error: any) { loadError.value = error?.msg || '加载失败'; }
-};
+const loadPage = () => getDataList();
 const resetQuery = () => { queryRef.value?.resetFields(); loadPage(); };
 const handleSelectionChange = (rows: Array<{ id: string }>) => { selectedIds.value = rows.map((row) => row.id); };
 const handleDelete = async (ids: string[]) => {

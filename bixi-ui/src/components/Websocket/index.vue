@@ -50,7 +50,7 @@ const initWebSocket = () => {
 	let host = window.location.host;
 	//  baseURL
 	let baseURL = import.meta.env.VITE_API_URL;
-	let wsUri = `ws://${host}${baseURL}${other.adaptationUrl(props.uri)}?access_token=${token.value}&TENANT-ID=${tenant.value}`;
+	let wsUri = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${host}${baseURL}${other.adaptationUrl(props.uri)}?access_token=${token.value}&TENANT-ID=${tenant.value}`;
 	// 建立连接
 	state.webSocket = new WebSocket(wsUri);
 	// 连接成功

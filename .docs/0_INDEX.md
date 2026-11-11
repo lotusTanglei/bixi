@@ -19,6 +19,7 @@
 | [BLACKBOX_TEST_PLAN.md](BLACKBOX_TEST_PLAN.md) | HTTP、迁移和浏览器黑盒测试矩阵与退出条件 | 按测试切片更新 |
 | [workflow/PROGRESS.md](workflow/PROGRESS.md) | Flowable 双模四阶段需求、差距、实施与验收证据 | 按实际测试结果更新 |
 | [security/PROGRESS.md](security/PROGRESS.md) | 第一阶段认证、权限、Token、审计连续开发与双模验收证据 | 按实际测试结果更新 |
+| [security/BROWSER_AUTH_SECRET_2026-10-14.md](security/BROWSER_AUTH_SECRET_2026-10-14.md) | 浏览器密钥边界切片的冻结范围、证据与稳定版剩余门禁 | 按实际测试结果更新 |
 | users/@{{username}}/ | 个人空间 | 个人维护 |
 
 ## 外部资源链接

@@ -5,7 +5,7 @@ JAVA_17_HOME ?= $(shell if [ -x /usr/libexec/java_home ]; then /usr/libexec/java
 JAVA_ENV := $(if $(JAVA_17_HOME),JAVA_HOME="$(JAVA_17_HOME)",)
 MVN := $(JAVA_ENV) mvn
 
-.PHONY: init-env doctor doctor-dev start-cloud start-single verify-cloud verify-single status diagnose logs stop reset credentials backend-dev backend-test backend-prod frontend-dev frontend-test frontend-prod frontend-deps architecture-check runtime-config-check backend-cloud-ci backend-single-ci backend-ci frontend-ci generator-ci generator-migration-test quartz-migration-test quartz-cloud-runtime-config-test quartz-jdbc-failover-static-test quartz-jdbc-failover-test ci-gate workflow-test workflow-cluster-config workflow-process-restart-static-test workflow-process-restart-test local-process-restart-static-test local-process-restart-test workflow-cluster-static-test workflow-cluster-failover-test workflow-schema-migrate phase2-schema-migrate phase2-migration-list reliable-rabbit-static-test reliable-rabbit-test sba-multi-instance-static-test full-application-restart-static-test local-test-preflight local-test-preflight-static-test
+.PHONY: init-env doctor doctor-dev start-cloud start-single start-cloud-release start-single-release verify-cloud verify-single status diagnose logs stop reset credentials backend-dev backend-test backend-prod frontend-dev frontend-test frontend-prod frontend-deps architecture-check runtime-config-check backend-cloud-ci backend-single-ci backend-ci frontend-ci generator-ci generator-migration-test quartz-migration-test quartz-cloud-runtime-config-test quartz-jdbc-failover-static-test quartz-jdbc-failover-test ci-gate workflow-test workflow-cluster-config workflow-process-restart-static-test workflow-process-restart-test local-process-restart-static-test local-process-restart-test workflow-cluster-static-test workflow-cluster-failover-test workflow-schema-migrate phase2-schema-migrate phase2-migration-list reliable-rabbit-static-test reliable-rabbit-test sba-multi-instance-static-test full-application-restart-static-test local-test-preflight local-test-preflight-static-test
 
 init-env:
 	./scripts/bixi.sh init-env
@@ -22,18 +22,30 @@ start-cloud:
 start-single:
 	./scripts/bixi.sh start-single
 
+start-cloud-release:
+	./scripts/bixi.sh start-cloud-release
+
+start-single-release:
+	./scripts/bixi.sh start-single-release
+
 verify-cloud:
 	BIXI_MODE=cloud node ./scripts/acceptance.mjs
 
 verify-single:
 	BIXI_MODE=single node ./scripts/acceptance.mjs
 
-.PHONY: verify-security-cloud verify-security-single
+.PHONY: verify-security-cloud verify-security-single verify-negative-cloud verify-negative-single
 verify-security-cloud:
 	BIXI_MODE=cloud node ./scripts/security-acceptance.mjs
 
 verify-security-single:
 	BIXI_MODE=single node ./scripts/security-acceptance.mjs
+
+verify-negative-cloud:
+	BIXI_MODE=cloud node ./scripts/acceptance-negative.mjs
+
+verify-negative-single:
+	BIXI_MODE=single node ./scripts/acceptance-negative.mjs
 
 status:
 	./scripts/bixi.sh status
@@ -162,6 +174,7 @@ frontend-ci: frontend-deps
 	node --test scripts/test-quartz-ui.mjs
 	node --test scripts/test-quartz-schema.mjs
 	node --test scripts/test-quartz-migration.test.mjs
+	node --test bixi-ui/tests/*.mjs
 	cd $(FRONTEND_DIR) && npm run lint:eslint && npm run build:prod
 
 generator-ci: frontend-deps

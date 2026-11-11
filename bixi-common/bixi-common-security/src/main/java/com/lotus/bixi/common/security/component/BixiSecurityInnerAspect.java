@@ -14,6 +14,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.core.env.Environment;
 import org.springframework.security.access.AccessDeniedException;
 
 /**
@@ -28,6 +29,7 @@ import org.springframework.security.access.AccessDeniedException;
 public class BixiSecurityInnerAspect implements Ordered {
 
     private final HttpServletRequest request;
+    private final Environment environment;
 
     @SneakyThrows
     @Before("@within(inner) || @annotation(inner)")
@@ -38,7 +40,8 @@ public class BixiSecurityInnerAspect implements Ordered {
             inner = AnnotationUtils.findAnnotation(clazz, Inner.class);
         }
         String header = request.getHeader(SecurityConstants.FROM);
-        if (inner.value() && !StrUtil.equals(SecurityConstants.FROM_IN, header)) {
+        if (inner.value() && (!"cloud".equals(environment.getProperty("bixi.deployment.mode", "cloud"))
+                || !StrUtil.equals(SecurityConstants.FROM_IN, header))) {
             log.warn("访问接口 {} 没有权限", point.getSignature().getName());
             throw new AccessDeniedException("Access is denied");
         }
