@@ -1,8 +1,8 @@
 # Bixi 项目状态总账
 
-> 冻结日期：2026-10-05
+> 冻结范围日期：2026-10-05；本轮复验：2026-11-11
 >
-> 唯一代码基线：`main` / `origin/main`，`925be02 feat: add phase2 acceptance CRUD resources`
+> 唯一代码基线：`main` / `origin/main`，`2b5649d docs(release): align ledger with four environments`
 
 本文档是本轮开发范围和验收状态的唯一总账。路线图、专项计划和旧续接提示词继续保留为历史材料；它们不能覆盖这里记录的冻结范围和实际证据。本轮不处理暂存区，也不把工作树中的其他未提交改动纳入本切片判断。
 
@@ -35,8 +35,9 @@
 - 前端 API、页面表单校验、按钮权限、加载/错误/空状态和生产构建通过；前端契约测试通过。
 - `make architecture-check` 通过。
 - `make runtime-config-check` 通过。
-- `make verify-cloud` 通过：登录、用户信息、菜单、管理员权限、示例任务 CRUD、两组 Acceptance 资源 CRUD、筛选、详情、非法请求、未知 ID、空删除、非法导入、XLSX 导出和 6 条 Acceptance 写审计日志均通过；Workflow 关闭态菜单隐藏和接口缺失检查通过。
-- `make verify-single` 通过同一套 `scripts/acceptance.mjs`，覆盖与 cloud 相同的业务断言和审计检查。
+- `make backend-cloud-ci` 与 `make backend-single-ci` 在当前 `2b5649d` 上均退出 0；分别完成 28/28、25/25 模块的完整 `clean verify`，未使用测试跳过参数。
+- `bixi-ui` `npm run build:prod` 退出 0，`node --test tests/browser-auth.test.mjs` 为 6/6；产物扫描未命中 `VITE_OAUTH2_*`、`VITE_PWD_ENC_KEY` 或 `basicAuth`。
+- 使用全新临时 Compose 项目和数据库卷，`make verify-cloud` 与 `make verify-single` 均退出 0，覆盖登录、刷新、短信拒绝、管理员权限、示例任务 CRUD、两组 Acceptance 资源 CRUD、筛选、详情、非法请求、未知 ID、空删除、非法导入、XLSX 导出、写审计日志和 Workflow 关闭态检查；详见 [`test-evidence/verify-20261111/README.md`](../test-evidence/verify-20261111/README.md)。
 
 ## 当前切片结论
 
@@ -44,8 +45,8 @@ Acceptance 切片达到退出条件，可以进入黑盒测试计划阶段。两
 
 | 模式 | 入口 | 运行验收 | 结论 |
 | --- | --- | --- | --- |
-| cloud | `http://localhost:8080`，Gateway/Auth/UPMS | `make verify-cloud` | 通过 |
-| single | `http://localhost:8080`，single/Auth/UPMS | `make verify-single` | 通过 |
+| cloud | `http://localhost:8080`，Gateway/Auth/UPMS | 临时全新卷 `make verify-cloud` | 通过（有证据） |
+| single | `http://localhost:8080`，single/Auth/UPMS | 临时全新卷 `make verify-single` | 通过（有证据） |
 
 `scripts/acceptance.mjs` 是当前切片的统一黑盒入口；它按运行模式读取 `.env`，不会把某一种部署实现复制到另一种模式。
 
@@ -55,18 +56,20 @@ Acceptance 切片达到退出条件，可以进入黑盒测试计划阶段。两
 - 前端已完成静态契约和生产构建验证；真实浏览器尺寸、键盘操作、跨页面并发点击和网络抖动仍按 [黑盒测试计划](BLACKBOX_TEST_PLAN.md) 执行。
 - 租户隔离的完整跨租户正负矩阵、低权限角色全量矩阵、导入大小/行数上限、重复业务键和真实存量迁移冲突环境仍需按计划补跑。
 - 外部短信、邮件、微信、Webhook 的供应商送达，Quartz/SBA 故障接管和生产级恢复目标不在本轮退出条件内。
+- 直接复用旧 `bixi` 数据卷时，`make verify-cloud` 曾因缺少 `bixi-browser` 数据行返回 401；全新卷按当前 SQL 初始化后通过。旧卷迁移或重置策略待单独确认。
 
 ## 下一步门禁
 
 下一次开发前先从 [黑盒测试计划](BLACKBOX_TEST_PLAN.md) 选择一个测试切片，明确环境、用例编号和退出条件；没有新的范围决策，不继续扩展 Acceptance 业务代码。任何新功能必须重新建立独立范围、契约、测试和双模证据。
 
-## 收口检查
+## 本轮收口检查
 
-交接前仍需在最终工作树执行并记录：
+本轮已在最终工作树执行并记录：
 
 ```bash
-codegraph sync .
+make architecture-check
+make runtime-config-check
 git diff --check
 ```
 
-不修改 `.docs/.chiwen.state.json`，不提交、不推送、不部署。
+不修改 `.docs/.chiwen.state.json`。本轮提交可在上述门禁通过后创建；推送仍需维护者确认。
